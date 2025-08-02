@@ -1,16 +1,18 @@
-import Column from "@/components/Column";
-import Nav from "@/components/Nav";
+import { useDb } from "@/lib/database";
+import { PostsRepo } from "@/lib/posts/posts.queries";
+import HomePageLayout from "@/components/HomePageLayout";
+import PostsList from "@/components/PostsList";
 
-export default function Home() {
+export default async function HomePage() {
+  const db = useDb();
+  const posts = await new PostsRepo(db).frontpagePostsList();
   return (
-    <Column className="grid grid-cols-[min-content_1fr_min-content] gap-10">
-      <Nav />
-      <div>
-        Main
-      </div>
-      <div>
-        RHS
-      </div>
-    </Column>
+    <HomePageLayout
+      mainPostsList={<PostsList posts={posts} />}
+      communityPostsList={null}
+      quickTakesList={null}
+      popularCommentsList={null}
+      recentDiscussionList={null}
+    />
   );
 }

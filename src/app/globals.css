@@ -16,7 +16,13 @@
   --color-gray-900: #212121;
   --color-gray-1000: #000000;
 
+  --color-postitemhover: #fafafa;
+  --color-postitemhover-border: #e8e8e8;
+
   --spacing: 4px;
+
+  --radius-sm: 6px;
+  --radius-xs: 4px;
 
   --font-stack-sans: GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-stack-serif: Merriweather, Baskerville, "Libre Baskerville", Georgia, serif;

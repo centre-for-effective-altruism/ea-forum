@@ -1,8 +1,10 @@
 import type { ElementType, ReactNode } from "react";
 
 const styles = {
-  body: "font-sans text-sm font-[450]",
-  bodySmall: "font-sans text-xs font-[450]",
+  body: "font-sans text-[14px] font-[450]",
+  bodySmall: "font-sans text-[13px] font-[450]",
+  postTitle: "font-sans text-[16px] font-[600]",
+  sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
 } as const satisfies Record<string, string>;
 
 type TextStyle = keyof typeof styles;
