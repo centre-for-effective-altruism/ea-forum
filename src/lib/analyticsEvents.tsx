@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { createContext, ReactNode, useCallback } from "react";
 
 type PostsViewTerms = {};
 
@@ -16,6 +16,7 @@ export type AnalyticsProps = {
   documentSlug?: string,
   notificationId?: string,
   postId?: string,
+  isSticky?: boolean,
   forumEventId?: string,
   sequenceId?: string,
   commentId?: string,
@@ -94,4 +95,17 @@ export const useTracking = ({
     })
   }, [trackingContext, eventProps, eventType]);
   return { captureEvent: track };
+}
+
+const analyticsContext = createContext(null);
+
+export function AnalyticsContext({children, ...props}: Readonly<AnalyticsProps & {
+  children: ReactNode
+}>) {
+  void props; // TODO
+  return (
+    <analyticsContext.Provider value={null}>
+      {children}
+    </analyticsContext.Provider>
+  );
 }

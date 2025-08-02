@@ -13,6 +13,7 @@ export interface IFrontpagePostsList {
   curatedDate: Date | null,
   isEvent: boolean,
   groupId: string | null,
+  sticky: boolean,
   user: {
     _id: string,
     displayName: string | null,
@@ -31,6 +32,7 @@ SELECT
   p."curatedDate",
   p."isEvent",
   p."groupId",
+  p."sticky",
   (u."_id", u."displayName") "user"
 FROM "Posts" p
 JOIN "Users" u ON p."userId" = u."_id" AND NOT u."deleted"

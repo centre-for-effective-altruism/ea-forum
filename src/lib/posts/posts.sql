@@ -12,6 +12,7 @@ SELECT
   p."curatedDate",
   p."isEvent",
   p."groupId",
+  p."sticky",
   (u."_id", u."displayName") "user"
 FROM "Posts" p
 JOIN "Users" u ON p."userId" = u."_id" AND NOT u."deleted"
