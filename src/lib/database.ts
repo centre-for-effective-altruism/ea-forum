@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { PgPostgresClient } from "tradukisto";
 
 let client: PgPostgresClient | null = null;
@@ -16,5 +15,3 @@ export const getDatabaseOrThrow = () => {
   }
   return client;
 }
-
-export const useDb = () => useMemo(getDatabaseOrThrow, []);

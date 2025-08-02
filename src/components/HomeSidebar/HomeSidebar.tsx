@@ -1,7 +1,7 @@
-import { useDb } from "@/lib/database";
+import { getDatabaseOrThrow } from "@/lib/database";
 import { PostsRepo } from "@/lib/posts/posts.queries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { useEAVirtualPrograms } from "@/lib/hooks/useEAVirtualPrograms";
+import { getIntroCourseDetails } from "@/lib/introCourseDetails";
 import HomeSidebarDigestAd from "./HomeSidebarDigestAd";
 import HomeSidebarPost from "./HomeSidebarPost";
 import HomeSidebarEvent from "./HomeSidebarEvent";
@@ -10,13 +10,13 @@ import Type from "../Type";
 import Link from "../Link";
 
 export default async function HomeSidebar() {
-  const db = useDb();
+  const db = getDatabaseOrThrow();
   const postsRepo = new PostsRepo(db);
   const [opportunities, upcomingEvents] = await Promise.all([
     postsRepo.sidebarOpportunities({limit: 3}),
     postsRepo.sidebarEvents({limit: 3}),
   ]);
-  const introCourse = useEAVirtualPrograms();
+  const introCourse = getIntroCourseDetails();
   return (
     <AnalyticsContext pageSectionContext="homeRhs">
       <section className="w-[310px]" data-component="HomeSidebar">

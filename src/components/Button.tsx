@@ -45,7 +45,7 @@ export default function Button({
       captureEvent('buttonClicked', eventProps)
       onClick_?.(e);
     }
-  }, [captureEvent, router, disabled, href, onClick_]);
+  }, [captureEvent, router, disabled, href, onClick_, eventProps]);
   return (
     <button
       type={type}

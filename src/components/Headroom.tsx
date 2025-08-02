@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/no-explicit-any: 0 */
+
 /**
  * Vendored from react-headroom, which doesn't support react 19
  */
@@ -17,26 +19,23 @@ const shallowequal = (objA: unknown, objB: unknown) => {
     return false;
   }
 
-  let keysA = Object.keys(objA);
-  let keysB = Object.keys(objB);
-
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
   if (keysA.length !== keysB.length) {
     return false;
   }
 
-  let bHasOwnProperty = Object.prototype.hasOwnProperty.bind(objB);
+  const bHasOwnProperty = Object.prototype.hasOwnProperty.bind(objB);
 
   // Test for A's keys different from B.
   for (let idx = 0; idx < keysA.length; idx++) {
-    let key = keysA[idx];
-
+    const key = keysA[idx];
     if (!bHasOwnProperty(key)) {
       return false;
     }
 
-    let valueA = (objA as any)[key];
-    let valueB = (objB as any)[key];
-
+    const valueA = (objA as any)[key];
+    const valueB = (objB as any)[key];
     if (!Object.is(valueA, valueB)) {
       return false;
     }

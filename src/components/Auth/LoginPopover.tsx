@@ -3,6 +3,7 @@ import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import Image from "next/image";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import BlurredBackgroundModal from "../BlurredBackgroundModal";
 import LightbulbIcon from "../icons/LightbulbIcon";
@@ -14,7 +15,7 @@ import Type from "../Type";
 import Link from "../Link";
 
 // TODO Setup sentry
-const captureException = (_error: any, _context: any) => {}
+const captureException = (_error: unknown, _context: unknown) => {}
 
 export default function LoginPopover() {
   const {loginAction: action, setLoginAction: setAction} = useLoginPopoverContext();
@@ -54,7 +55,6 @@ export default function LoginPopover() {
       setMessage("Password reset email sent");
     } catch(err) {
       const e = err as Error & {description?: string};
-      // eslint-disable-next-line no-console
       console.error(e);
       captureException(e, {
         tags: {
@@ -98,7 +98,6 @@ export default function LoginPopover() {
       await refetchCurrentUser();
     } catch (err) {
       const e = err as Error & {description?: string, policy?: string};
-      // eslint-disable-next-line no-console
       console.error(e);
       captureException(e, {
         tags: {
@@ -232,7 +231,13 @@ export default function LoginPopover() {
             onClick={onClickGoogle}
             className="w-full h-[50px] px-[17px] py-[15px] font-[600] flex gap-2"
           >
-            <img src="/googleLogo.png" alt="Containue with google" />
+            <Image
+              src="/googleLogo.png"
+              alt="Containue with google"
+              width={20}
+              height={20}
+              className="w-[20px] h-[20px]"
+            />
             <Type>Continue with Google</Type>
           </Button>
           {isSignup ? (
@@ -250,7 +255,7 @@ export default function LoginPopover() {
             </Type>
           ) : (
             <Type>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a
                 onClick={onLinkToSignup}
                 className={`

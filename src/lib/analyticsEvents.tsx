@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useEffect } from "react";
+import { createContext, ReactNode, useCallback, useEffect, useMemo } from "react";
 import { useIsInView } from "./hooks/useIsInView";
 import type { Json } from "./json";
 
-type PostsViewTerms = {};
+type PostsViewTerms = Record<string, unknown>;
 
 export type AnalyticsProps = {
   pageContext?: string,
@@ -83,7 +83,7 @@ export const useTracking = ({
   eventType?: string,
   eventProps?: EventProps,
 } = {}) => {
-  const trackingContext = {}; // TODO Add tracking context
+  const trackingContext = useMemo(() => ({}), []); // TODO Add tracking context
   const track = useCallback((
     type?: string|undefined,
     trackingData?: Record<string, Json>,
@@ -118,8 +118,8 @@ export const AnalyticsInViewTracker = ({
   children,
 }: {
   eventType?: string,
-  eventProps?: Record<string,any>,
-  observerProps?: Record<string,any>,
+  eventProps?: Record<string, Json>,
+  observerProps?: Record<string, Json>,
   skip?: boolean,
   children?: React.ReactNode,
 }) => {
@@ -127,11 +127,12 @@ export const AnalyticsInViewTracker = ({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const captureInViewEvent = useCallback(
-    useTracking({ eventType: eventType || "inViewEvent", eventProps: {...eventProps, ...observerProps}}).captureEvent,
-    // absolutely no reason for eventType or props to change for InView tracker
-    // once created, easiest way to prevent rerender because of object props
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [])
+    useTracking({
+      eventType: eventType || "inViewEvent",
+      eventProps: {...eventProps, ...observerProps},
+    }).captureEvent,
+    [],
+  );
 
   useEffect(() => {
     if (!skip && !!entry) {

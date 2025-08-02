@@ -37,10 +37,11 @@ export const getEventLocation = ({onlineEvent, googleLocation}: {
   }
   if (googleLocation) {
     const locationTypePreferenceOrdering = ["locality", "political", "country"];
-    for (let locationType of locationTypePreferenceOrdering) {
-      for (let addressComponent of googleLocation.address_components) {
-        if (addressComponent.types.indexOf(locationType) >= 0)
+    for (const locationType of locationTypePreferenceOrdering) {
+      for (const addressComponent of googleLocation.address_components) {
+        if (addressComponent.types.indexOf(locationType) >= 0) {
           return addressComponent.long_name;
+        }
       }
     }
     return null;

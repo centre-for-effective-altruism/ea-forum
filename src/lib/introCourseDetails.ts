@@ -1,9 +1,9 @@
-import { useTimezone } from "./useTimezone";
+import { getTimezone } from "./hooks/useTimezone";
 
 // See https://www.effectivealtruism.org/virtual-programs for more info,
 // including the current deadline / start / end dates.
-export const useEAVirtualPrograms = () => {
-  const { timezone } = useTimezone();
+export const getIntroCourseDetails = () => {
+  const { timezone } = getTimezone();
   const now = new Date();
 
   // Helper function to convert a date to the specified timezone
