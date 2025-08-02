@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Nav from "@/components/Nav";
+import Header from "@/components/Header";
 import "./globals.css";
 
-const geistSans = Inter({
+const inter = Inter({
   variable: "--font-inter",
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -30,16 +32,13 @@ export default function RootLayout({
       </head>
       <body
         className={`
-          ${geistSans.variable} antialiased w-screen min-h-screen flex flex-col
+          ${inter.variable} antialiased w-screen min-h-screen flex flex-col
         `}
       >
-        <Nav />
-        <main className="grow">
+        <Header />
+        <main className="grow py-3">
           {children}
         </main>
-        <footer>
-          Footer
-        </footer>
       </body>
     </html>
   );

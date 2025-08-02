@@ -1,7 +1,8 @@
 import type { ElementType, ReactNode } from "react";
 
 const styles = {
-  body: "--font-sans",
+  body: "font-sans text-sm font-[450]",
+  bodySmall: "font-sans text-xs font-[450]",
 } as const satisfies Record<string, string>;
 
 type TextStyle = keyof typeof styles;
@@ -9,7 +10,7 @@ type TextStyle = keyof typeof styles;
 export default function Type({
   style = "body",
   As = "div",
-  className,
+  className = "",
   children,
 }: Readonly<{
   style?: TextStyle,
