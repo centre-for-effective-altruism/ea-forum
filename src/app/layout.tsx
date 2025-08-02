@@ -36,7 +36,7 @@ export default function RootLayout({
         `}
       >
         <Header />
-        <main className="grow py-3">
+        <main className="grow py-8">
           {children}
         </main>
       </body>

@@ -20,3 +20,30 @@ export const postGetPageUrl = ({ post, sequenceId, isAbsolute }: {
   }
   return `${prefix}/posts/${post._id}/${post.slug}`;
 }
+
+type GoogleLocation = {
+  address_components: {
+    types: string,
+    long_name: string,
+  }[],
+}
+
+export const getEventLocation = ({onlineEvent, googleLocation}: {
+  onlineEvent: boolean,
+  googleLocation?: GoogleLocation | null,
+}) => {
+  if (onlineEvent) {
+    return "Online";
+  }
+  if (googleLocation) {
+    const locationTypePreferenceOrdering = ["locality", "political", "country"];
+    for (let locationType of locationTypePreferenceOrdering) {
+      for (let addressComponent of googleLocation.address_components) {
+        if (addressComponent.types.indexOf(locationType) >= 0)
+          return addressComponent.long_name;
+      }
+    }
+    return null;
+  }
+  return "Online";
+}

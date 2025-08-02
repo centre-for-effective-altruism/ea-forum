@@ -112,7 +112,7 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   return (
-    <nav className="w-[250px] px-4" data-component="Nav">
+    <nav className="w-[250px]" data-component="Nav">
       {items.map(({href, ...props}) => (
         <NavItem
           key={href}

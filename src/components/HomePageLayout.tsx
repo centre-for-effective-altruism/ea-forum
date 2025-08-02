@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import Nav from "./Nav";
-import Type from "./Type";
+import HomeSidebar from "./HomeSidebar/HomeSidebar";
 import Column from "./Column";
-import HomeRightHandSide from "./HomeRightHandSide";
+import Type from "./Type";
+import Nav from "./Nav";
 
 export default async function HomePageLayout({
   mainPostsList,
@@ -21,7 +21,7 @@ export default async function HomePageLayout({
   return (
     <AnalyticsContext pageContext="homePage">
       <Column
-        className="grid grid-cols-[min-content_1fr_min-content] gap-10"
+        className="grid grid-cols-[min-content_1fr_min-content] gap-10 px-8"
         data-component="HomePageLayout"
       >
         <Nav />
@@ -47,7 +47,7 @@ export default async function HomePageLayout({
             {recentDiscussionList}
           </div>
         </div>
-        <HomeRightHandSide />
+        <HomeSidebar />
       </Column>
     </AnalyticsContext>
   );

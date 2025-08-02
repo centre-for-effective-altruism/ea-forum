@@ -8,7 +8,7 @@ export default function Link({href, className, children}: Readonly<{
 }>) {
   // TODO Analytics
   return (
-    <NextLink href={href} className={className}>
+    <NextLink href={href} className={className ?? "hover:opacity-70"}>
       {children}
     </NextLink>
   );

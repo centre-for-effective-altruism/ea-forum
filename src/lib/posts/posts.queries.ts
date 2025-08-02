@@ -16,56 +16,50 @@ export interface IFrontpagePostsList {
   sticky: boolean,
   user: {
     _id: string,
-    displayName: string | null,
+    displayName: string,
   },
 }
 
+export interface IFrontpagePostsListParams {
+  limit: unknown | null,
+}
+
 export const frontpagePostsListSql = `-- frontpagePostsListSql
-SELECT
-  p."_id",
-  p."slug",
-  p."title",
-  p."baseScore",
-  p."voteCount",
-  p."commentCount",
-  p."postedAt",
-  p."curatedDate",
-  p."isEvent",
-  p."groupId",
-  p."sticky",
-  (u."_id", u."displayName") "user"
-FROM "Posts" p
-JOIN "Users" u ON p."userId" = u."_id" AND NOT u."deleted"
-WHERE
-  NOT "isEvent"
-  AND NOT "sticky"
-  AND "status" = 2
-  AND NOT "draft"
-  AND NOT "isFuture"
-  AND NOT "unlisted"
-  AND NOT "shortform"
-  AND NOT "authorIsUnreviewed"
-  AND NOT "rejected"
-  AND NOT "hiddenRelatedQuestion"
-  AND "groupId" IS NULL
-  AND "frontpageDate" > TO_TIMESTAMP(0)
-  AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(NULL, 21))
-ORDER BY
-  "sticky" DESC,
-  "stickyPriority" DESC,
-  -- New and upvoted sorting:
-  -- Calculate score from karma with bonuses for frontpage/curated posts, then
-  -- divide by a time decay factor.
-  -- scoreBias should default to 2, timeDecayFactor to 0.8.
-  (
-    "baseScore"
-    + (CASE WHEN "frontpageDate" IS NOT NULL THEN 10 ELSE 0 END)
-    + (CASE WHEN "curatedDate" IS NOT NULL THEN 10 ELSE 0 END)
-    ) / POW(
-    EXTRACT(EPOCH FROM NOW() - "postedAt") / 3600000 + COALESCE(NULL, 2),
-    COALESCE(NULL, 0.8)
-  ) DESC,
-  "_id" DESC`;
+SELECT "p"."_id", "p"."slug", "p"."title", "p"."baseScore", "p"."voteCount", "p"."commentCount", "p"."postedAt", "p"."curatedDate", "p"."isEvent", "p"."groupId", "p"."sticky", ("u"."_id", "u"."displayName") AS "user" FROM "Posts" AS "p" INNER JOIN "Users" AS "u" ON "p"."userId" = "u"."_id" AND NOT "u"."deleted" WHERE NOT "isEvent" AND NOT "sticky" AND "status" = 2 AND NOT "draft" AND NOT "isFuture" AND NOT "unlisted" AND NOT "shortform" AND NOT "authorIsUnreviewed" AND NOT "rejected" AND NOT "hiddenRelatedQuestion" AND "groupId" IS NULL AND "frontpageDate" > TO_TIMESTAMP(0) AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(NULL, 21)) ORDER BY "sticky" DESC, "stickyPriority" DESC, ("baseScore" + (CASE WHEN "frontpageDate" IS NOT NULL THEN 10 ELSE 0 END) + (CASE WHEN "curatedDate" IS NOT NULL THEN 10 ELSE 0 END)) / POW(EXTRACT(EPOCH FROM NOW() - "postedAt") / 3600000 + COALESCE(NULL, 2), COALESCE(NULL, 0.8)) DESC, "_id" DESC LIMIT $1`;
+
+export interface ISidebarOpportunities {
+  _id: string,
+  slug: string,
+  title: string,
+  postedAt: Date,
+  isEvent: boolean,
+  groupId: string | null,
+}
+
+export interface ISidebarOpportunitiesParams {
+  limit: unknown | null,
+}
+
+export const sidebarOpportunitiesSql = `-- sidebarOpportunitiesSql
+SELECT "_id", "slug", "title", "postedAt", "isEvent", "groupId" FROM "Posts" WHERE NOT "isEvent" AND NOT "sticky" AND "status" = 2 AND NOT "draft" AND NOT "isFuture" AND NOT "unlisted" AND NOT "shortform" AND NOT "authorIsUnreviewed" AND NOT "rejected" AND NOT "hiddenRelatedQuestion" AND "groupId" IS NULL AND "frontpageDate" > TO_TIMESTAMP(0) AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(NULL, 24)) AND ("tagRelevance" -> 'z8qFsGt5iXyZiLbjN')::INTEGER >= 1 ORDER BY "sticky" DESC, "stickyPriority" DESC, ("baseScore" + (CASE WHEN "frontpageDate" IS NOT NULL THEN 10 ELSE 0 END) + (CASE WHEN "curatedDate" IS NOT NULL THEN 10 ELSE 0 END)) / POW(EXTRACT(EPOCH FROM NOW() - "postedAt") / 3600000 + COALESCE(NULL, 2), COALESCE(NULL, 0.8)) DESC, "_id" DESC LIMIT $1`;
+
+export interface ISidebarEvents {
+  _id: string,
+  slug: string,
+  title: string,
+  startTime: Date | null,
+  onlineEvent: boolean,
+  googleLocation: any | null,
+  isEvent: boolean,
+  groupId: string | null,
+}
+
+export interface ISidebarEventsParams {
+  limit: unknown | null,
+}
+
+export const sidebarEventsSql = `-- sidebarEventsSql
+SELECT "_id", "slug", "title", "startTime", "onlineEvent", "googleLocation", "isEvent", "groupId" FROM "Posts" WHERE "isEvent" AND NOT "sticky" AND "status" = 2 AND NOT "draft" AND NOT "isFuture" AND NOT "unlisted" AND NOT "shortform" AND NOT "authorIsUnreviewed" AND NOT "rejected" AND NOT "hiddenRelatedQuestion" AND "startTime" > NOW() ORDER BY "startTime" ASC, "baseScore" DESC, "_id" DESC LIMIT $1`;
 
 export class PostsRepo {
   protected client: PostgresClient;
@@ -74,7 +68,15 @@ export class PostsRepo {
     this.client = client;
   }
 
-  frontpagePostsList(): Promise<IFrontpagePostsList[]> {
-    return this.client.fetchRows(frontpagePostsListSql);
+  frontpagePostsList(params: IFrontpagePostsListParams): Promise<IFrontpagePostsList[]> {
+    return this.client.fetchRows(frontpagePostsListSql, [params.limit]);
+  }
+
+  sidebarOpportunities(params: ISidebarOpportunitiesParams): Promise<ISidebarOpportunities[]> {
+    return this.client.fetchRows(sidebarOpportunitiesSql, [params.limit]);
+  }
+
+  sidebarEvents(params: ISidebarEventsParams): Promise<ISidebarEvents[]> {
+    return this.client.fetchRows(sidebarEventsSql, [params.limit]);
   }
 }

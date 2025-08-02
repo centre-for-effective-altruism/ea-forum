@@ -5,6 +5,7 @@ const styles = {
   bodySmall: "font-sans text-[13px] font-[450]",
   postTitle: "font-sans text-[16px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
+  sectionTitleSmall: "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
 } as const satisfies Record<string, string>;
 
 type TextStyle = keyof typeof styles;

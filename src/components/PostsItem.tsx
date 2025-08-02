@@ -57,7 +57,7 @@ export default function PostsItem({ post, openInNewTab }: Readonly<{
           </div>
           <div className="flex items-center gap-1 hover:text-black">
             <ChatBubbleLeftIcon className="w-[18px]" />
-            {commentCount}
+            <Type>{commentCount}</Type>
           </div>
           <div className="flex items-center hover:text-black">
             <EllipsisVerticalIcon className="w-[20px]" />
