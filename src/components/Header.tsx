@@ -6,6 +6,7 @@ import Headroom from "./Headroom";
 import Column from "./Column";
 import Type from "./Type";
 import Link from "./Link";
+import Button from "./Button";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
@@ -42,8 +43,13 @@ export default function Header({stayAtTop}: Readonly<{
                 Effective Altruism Forum
               </Link>
             </Type>
-            <div>
-              Buttons
+            <div className="flex gap-2">
+              <Button variant="greyFilled">
+                Login
+              </Button>
+              <Button variant="primaryFilled">
+                Sign up
+              </Button>
             </div>
           </Column>
         </header>

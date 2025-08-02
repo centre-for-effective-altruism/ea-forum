@@ -19,6 +19,10 @@
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
 
+  --color-primary: #0c869b;
+  --color-primary-light: #00b2be;
+  --color-primary-dark: #085d6c;
+
   --spacing: 4px;
 
   --radius-sm: 6px;

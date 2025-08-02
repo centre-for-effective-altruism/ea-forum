@@ -1,7 +1,7 @@
 import { AnalyticsContext, AnalyticsInViewTracker } from "@/lib/analyticsEvents";
 import Type from "../Type";
 
-export default function HomeSidebarDigestAd({ className }: Readonly<{
+export default function HomeSidebarDigestAd({ className = "" }: Readonly<{
   className?: string,
 }>) {
   // TODO: This needs a lot of logic when auth is working - see useDigestAd

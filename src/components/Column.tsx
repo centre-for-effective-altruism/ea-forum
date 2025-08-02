@@ -1,6 +1,6 @@
 import type { ElementType, ReactNode } from "react";
 
-export default function Column({As = "div", className, children}: Readonly<{
+export default function Column({As = "div", className = "", children}: Readonly<{
   As?: ElementType
   className?: string,
   children: ReactNode,
