@@ -1,7 +1,7 @@
 import { useDb } from "@/lib/database";
 import { PostsRepo } from "@/lib/posts/posts.queries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { useEAVirtualPrograms } from "@/lib/useEAVirtualPrograms";
+import { useEAVirtualPrograms } from "@/lib/hooks/useEAVirtualPrograms";
 import HomeSidebarDigestAd from "./HomeSidebarDigestAd";
 import HomeSidebarPost from "./HomeSidebarPost";
 import HomeSidebarEvent from "./HomeSidebarEvent";

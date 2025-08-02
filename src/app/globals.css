@@ -18,6 +18,9 @@
 
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
+  --color-login-backdrop: rgba(217,217,217,0.5);
+  --color-login-input: #efefef;
+  --color-outline-button-hover: rgba(0, 0, 0, 0.035);
 
   --color-primary: #0c869b;
   --color-primary-light: #00b2be;

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, ReactNode, useCallback, useEffect } from "react";
-import { useIsInView } from "./useIsInView";
+import { useIsInView } from "./hooks/useIsInView";
 import type { Json } from "./json";
 
 type PostsViewTerms = {};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useClickableCell } from "@/lib/useClickableCell";
+import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
