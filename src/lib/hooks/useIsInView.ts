@@ -1,32 +1,35 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react";
 
 export const useIsInView = <T extends HTMLElement>({
-  rootMargin = '0px',
+  rootMargin = "0px",
   threshold = 0,
 } = {}) => {
-  const [entry, setEntry] = useState<IntersectionObserverEntry | null>(null)
-  const [node, setNode] = useState<T | null>(null)
+  const [entry, setEntry] = useState<IntersectionObserverEntry | null>(null);
+  const [node, setNode] = useState<T | null>(null);
 
-  const observer = useRef<IntersectionObserver | null>(null)
+  const observer = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    if (!window.IntersectionObserver) return
+    if (!window.IntersectionObserver) return;
 
-    if (observer.current && node) observer.current.disconnect()
+    if (observer.current && node) observer.current.disconnect();
 
-    observer.current = new window.IntersectionObserver(([ entry ]) => {
-      setEntry(entry)
-    }, {
-      rootMargin,
-      threshold
-    })
+    observer.current = new window.IntersectionObserver(
+      ([entry]) => {
+        setEntry(entry);
+      },
+      {
+        rootMargin,
+        threshold,
+      },
+    );
 
-    const { current: currentObserver } = observer
+    const { current: currentObserver } = observer;
 
-    if (node) currentObserver.observe(node)
+    if (node) currentObserver.observe(node);
 
-    return () => currentObserver.disconnect()
-  }, [node, rootMargin, threshold])
+    return () => currentObserver.disconnect();
+  }, [node, rootMargin, threshold]);
 
-  return { setNode, entry, node }
-}
+  return { setNode, entry, node };
+};

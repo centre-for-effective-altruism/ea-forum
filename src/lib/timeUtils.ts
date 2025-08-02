@@ -1,4 +1,4 @@
-const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 const intervals = {
   year: 31536000,
@@ -7,7 +7,7 @@ const intervals = {
   day: 86400,
   hour: 3600,
   minute: 60,
-  second: 1
+  second: 1,
 };
 
 export const formatRelativeTime = (date: Date) => {
@@ -19,8 +19,8 @@ export const formatRelativeTime = (date: Date) => {
       return rtf.format(-interval, unit as keyof typeof intervals);
     }
   }
-  return 'just now';
-}
+  return "just now";
+};
 
 export const formatShortDate = (date: Date) =>
   date.toLocaleDateString(undefined, {

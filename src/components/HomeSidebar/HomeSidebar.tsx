@@ -13,8 +13,8 @@ export default async function HomeSidebar() {
   const db = getDatabaseOrThrow();
   const postsRepo = new PostsRepo(db);
   const [opportunities, upcomingEvents] = await Promise.all([
-    postsRepo.sidebarOpportunities({limit: 3}),
-    postsRepo.sidebarEvents({limit: 3}),
+    postsRepo.sidebarOpportunities({ limit: 3 }),
+    postsRepo.sidebarEvents({ limit: 3 }),
   ]);
   const introCourse = getIntroCourseDetails();
   return (
@@ -63,11 +63,9 @@ export default async function HomeSidebar() {
         </AnalyticsContext>
 
         <Type style="body" className="font-[600] text-gray-600">
-          <Link href="mailto:forum@effectivealtruism.org">
-            Send feedback
-          </Link>
+          <Link href="mailto:forum@effectivealtruism.org">Send feedback</Link>
         </Type>
       </section>
     </AnalyticsContext>
-  )
+  );
 }

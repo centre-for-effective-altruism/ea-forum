@@ -8,28 +8,25 @@ import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIc
 import SoftArrowUpIcon from "./icons/SoftArrowUpIcon";
 import Type from "./Type";
 
-export default function PostsItem({ post, openInNewTab }: Readonly<{
+export default function PostsItem({
+  post,
+  openInNewTab,
+}: Readonly<{
   post: {
-    _id: string,
-    slug: string,
-    title: string,
-    baseScore: number,
-    commentCount: number,
-    isEvent?: boolean,
-    groupId?: string | null,
-    sticky?: boolean,
-  },
-  openInNewTab?: boolean,
+    _id: string;
+    slug: string;
+    title: string;
+    baseScore: number;
+    commentCount: number;
+    isEvent?: boolean;
+    groupId?: string | null;
+    sticky?: boolean;
+  };
+  openInNewTab?: boolean;
 }>) {
-  const {
-    _id,
-    title,
-    baseScore,
-    commentCount,
-    sticky,
-  } = post;
+  const { _id, title, baseScore, commentCount, sticky } = post;
   const postLink = postGetPageUrl({ post });
-  const {onClick} = useClickableCell({href: postLink, openInNewTab});
+  const { onClick } = useClickableCell({ href: postLink, openInNewTab });
   return (
     <AnalyticsContext
       pageElementContext="postItem"
@@ -53,7 +50,9 @@ export default function PostsItem({ post, openInNewTab }: Readonly<{
             <Type style="bodySmall">{baseScore}</Type>
           </div>
           <div className="grow">
-            <Type style="postTitle" className="text-black">{title}</Type>
+            <Type style="postTitle" className="text-black">
+              {title}
+            </Type>
           </div>
           <div className="flex items-center gap-1 hover:text-black">
             <ChatBubbleLeftIcon className="w-[18px]" />

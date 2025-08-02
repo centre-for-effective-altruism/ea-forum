@@ -18,7 +18,7 @@
 
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
-  --color-login-backdrop: rgba(217,217,217,0.5);
+  --color-login-backdrop: rgba(217, 217, 217, 0.5);
   --color-login-input: #efefef;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
 
@@ -31,7 +31,8 @@
   --radius-sm: 6px;
   --radius-xs: 4px;
 
-  --font-stack-sans: GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-stack-sans:
+    GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-stack-serif: Merriweather, Baskerville, "Libre Baskerville", Georgia, serif;
 
   --zindex-headroom: 1300;
@@ -59,7 +60,7 @@ body {
   top: unset;
   left: 0;
   right: 0;
-  zIndex: var(--zindex-headroom);
+  zindex: var(--zindex-headroom);
 }
 .headroom-root .headroom--unfixed {
   position: relative;

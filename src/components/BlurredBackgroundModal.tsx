@@ -9,21 +9,20 @@ export default function BlurredBackgroundModal({
   onClose,
   children,
 }: Readonly<{
-  open: boolean,
-  onClose: () => void,
-  children: ReactNode
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
 }>) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    const target = document.getElementById("modal-target")
+    const target = document.getElementById("modal-target");
     if (target) {
       setTarget(target);
     } else {
       console.error("Modal target not found");
     }
   }, [open]);
-
 
   if (!target || !open) {
     return null;
@@ -43,6 +42,6 @@ export default function BlurredBackgroundModal({
         </div>
       </ClickAwayListener>
     </div>,
-    target
+    target,
   );
 }

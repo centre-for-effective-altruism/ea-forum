@@ -3,7 +3,7 @@ import type { FC } from "react";
 type Tree = {
   root: string;
   content: Tree[];
-}
+};
 
 const treeify = (data: string): Tree[] => {
   const result: Tree[] = [];
@@ -14,17 +14,17 @@ const treeify = (data: string): Tree[] => {
     const root = trimmed.match(/(\*\s*)?(.*)/)?.[2] ?? trimmed;
     if (root) {
       const content: Tree[] = [];
-      levels[level].push({root, content});
+      levels[level].push({ root, content });
       levels[++level] = content;
     }
   }
   return result;
-}
+};
 
 const TreeDisplay: FC<{ tree: Tree[] }> = ({ tree }) => {
   return (
     <ul>
-      {tree.map(({root, content}) => (
+      {tree.map(({ root, content }) => (
         <>
           <li>{root}</li>
           <TreeDisplay tree={content} />
@@ -32,9 +32,9 @@ const TreeDisplay: FC<{ tree: Tree[] }> = ({ tree }) => {
       ))}
     </ul>
   );
-}
+};
 
-export default function PasswordPolicy({policy}: Readonly<{ policy?: string }>) {
+export default function PasswordPolicy({ policy }: Readonly<{ policy?: string }>) {
   if (!policy) {
     return null;
   }

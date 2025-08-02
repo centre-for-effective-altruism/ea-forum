@@ -9,13 +9,13 @@ export default function NavItem({
   SelectedIcon,
   isSelected,
 }: Readonly<{
-  title: string,
-  href: string,
-  description: string,
-  UnselectedIcon: ComponentType<{className: string}>,
-  SelectedIcon: ComponentType<{className: string}>,
-  isSelected: boolean,
-  loggedOutOnly?: boolean, // TODO
+  title: string;
+  href: string;
+  description: string;
+  UnselectedIcon: ComponentType<{ className: string }>;
+  SelectedIcon: ComponentType<{ className: string }>;
+  isSelected: boolean;
+  loggedOutOnly?: boolean; // TODO
 }>) {
   const Icon = isSelected ? SelectedIcon : UnselectedIcon;
   const className = isSelected ? "text-black font-[600]" : "text-gray-600";

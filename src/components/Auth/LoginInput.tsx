@@ -11,13 +11,13 @@ export default function LoginInput({
   secure,
   onToggleRevealed,
 }: Readonly<{
-  value: string,
-  onChange: (ev: ChangeEvent<HTMLInputElement>) => void,
-  testId: string,
-  placeholder: string,
-  autoFocus?: boolean,
-  secure?: "revealed" | "hidden",
-  onToggleRevealed?: () => void,
+  value: string;
+  onChange: (ev: ChangeEvent<HTMLInputElement>) => void;
+  testId: string;
+  placeholder: string;
+  autoFocus?: boolean;
+  secure?: "revealed" | "hidden";
+  onToggleRevealed?: () => void;
 }>) {
   const Icon = secure === "revealed" ? EyeSlashIcon : EyeIcon;
   return (
@@ -38,13 +38,13 @@ export default function LoginInput({
           placeholder:text-gray-600 outline-none
         `}
       />
-      {secure &&
+      {secure && (
         <Icon
           onClick={onToggleRevealed}
           title="Reveal password"
           className="w-4 cursor-pointer text-gray-600"
         />
-      }
+      )}
     </div>
   );
 }

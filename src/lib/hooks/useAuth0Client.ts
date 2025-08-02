@@ -2,7 +2,10 @@ import { JsonRecord } from "../json";
 import { combineUrls } from "../routeHelpers";
 
 class Auth0ClientError extends Error {
-  constructor(message?: string | null, public policy?: string | null) {
+  constructor(
+    message?: string | null,
+    public policy?: string | null,
+  ) {
     super(message || "Something went wrong");
   }
 }
@@ -18,10 +21,11 @@ class Auth0Client {
     });
     if (result.status !== 200) {
       const data = await result.json();
-      let message = data.error
-        || data.description
-        || data.error_description
-        || "Something went wrong";
+      let message =
+        data.error ||
+        data.description ||
+        data.error_description ||
+        "Something went wrong";
       // Remove the ugly full-stop that auth0 appends to its error messages
       if (message[message.length - 1] === ".") {
         message = message.slice(0, -1);
@@ -31,11 +35,11 @@ class Auth0Client {
   }
 
   async login(email: string, password: string): Promise<void> {
-    await this.post("/auth/auth0/embedded-login", {email, password});
+    await this.post("/auth/auth0/embedded-login", { email, password });
   }
 
   async signup(email: string, password: string): Promise<void> {
-    await this.post("/auth/auth0/embedded-signup", {email, password});
+    await this.post("/auth/auth0/embedded-signup", { email, password });
   }
 
   socialLogin(connection: "google-oauth2" | "facebook"): void {
@@ -61,7 +65,9 @@ class Auth0Client {
 
   async resetPassword(email: string): Promise<void> {
     if (!email) {
-      throw new Auth0ClientError("Enter your email above to receive password reset instructions");
+      throw new Auth0ClientError(
+        "Enter your email above to receive password reset instructions",
+      );
     }
 
     const settings = this.getClientSettings();
@@ -90,4 +96,4 @@ export const useAuth0Client = () => {
     client = new Auth0Client();
   }
   return client;
-}
+};

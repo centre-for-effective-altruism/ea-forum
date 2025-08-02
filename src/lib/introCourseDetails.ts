@@ -8,7 +8,7 @@ export const getIntroCourseDetails = () => {
 
   // Helper function to convert a date to the specified timezone
   const convertToTimezone = (date: Date, timezone: string) => {
-    return new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+    return new Date(date.toLocaleString("en-US", { timeZone: timezone }));
   };
 
   // Find the next deadline for applying to the Intro VP, which is usually the
@@ -48,4 +48,4 @@ export const getIntroCourseDetails = () => {
   end.setDate(end.getDate() + 7 * 8 - 1);
 
   return { deadline, start, end };
-}
+};

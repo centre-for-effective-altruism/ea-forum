@@ -13,13 +13,15 @@ import Button from "./Button";
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
 
-export default function Header({stayAtTop}: Readonly<{
-  stayAtTop?: boolean,
+export default function Header({
+  stayAtTop,
+}: Readonly<{
+  stayAtTop?: boolean;
 }>) {
   const [_isUnfixed, setIsUnfixed] = useState(true);
   const setUnfixed = useCallback(() => setIsUnfixed(true), []);
   const setFixed = useCallback(() => setIsUnfixed(false), []);
-  const {onLogin, onSignup} = useLoginPopoverContext();
+  const { onLogin, onSignup } = useLoginPopoverContext();
 
   return (
     <div className="w-screen" data-component="Header">

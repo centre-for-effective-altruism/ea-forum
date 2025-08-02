@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { usePathname } from 'next/navigation'
+import { usePathname } from "next/navigation";
 import HomeIcon from "@heroicons/react/24/outline/HomeIcon";
 import HomeSelectedIcon from "@heroicons/react/20/solid/HomeIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
@@ -24,7 +24,8 @@ const items = [
   {
     title: "Home",
     href: "/",
-    description: "See recent posts on strategies for doing the most good, plus recent activity from all across the Forum",
+    description:
+      "See recent posts on strategies for doing the most good, plus recent activity from all across the Forum",
     UnselectedIcon: HomeIcon,
     SelectedIcon: HomeSelectedIcon,
   },
@@ -45,7 +46,8 @@ const items = [
   {
     title: "Topics",
     href: "/topics",
-    description: "A sorted list of pages — “Topics” — in the EA Forum Wiki, which explains topics in EA and collects posts tagged with those topics",
+    description:
+      "A sorted list of pages — “Topics” — in the EA Forum Wiki, which explains topics in EA and collects posts tagged with those topics",
     UnselectedIcon: TagIcon,
     SelectedIcon: TagSelectedIcon,
   },
@@ -113,16 +115,11 @@ export default function Nav() {
   const pathname = usePathname();
   return (
     <nav className="w-[250px]" data-component="Nav">
-      {items.map(({href, ...props}) => (
-        <NavItem
-          key={href}
-          href={href}
-          isSelected={pathname === href}
-          {...props}
-        />
+      {items.map(({ href, ...props }) => (
+        <NavItem key={href} href={href} isSelected={pathname === href} {...props} />
       ))}
       <NavHr />
-      {links.map(({title, href}) => (
+      {links.map(({ title, href }) => (
         <NavLink
           key={href}
           title={title}
@@ -137,5 +134,5 @@ export default function Nav() {
         isSelected={pathname === "/contact"}
       />
     </nav>
-  )
+  );
 }

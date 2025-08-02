@@ -12,11 +12,11 @@ export default async function HomePageLayout({
   popularCommentsList,
   recentDiscussionList,
 }: Readonly<{
-  mainPostsList: ReactNode
-  communityPostsList: ReactNode
-  quickTakesList: ReactNode
-  popularCommentsList: ReactNode
-  recentDiscussionList: ReactNode
+  mainPostsList: ReactNode;
+  communityPostsList: ReactNode;
+  quickTakesList: ReactNode;
+  popularCommentsList: ReactNode;
+  recentDiscussionList: ReactNode;
 }>) {
   return (
     <AnalyticsContext pageContext="homePage">
@@ -26,26 +26,26 @@ export default async function HomePageLayout({
       >
         <Nav />
         <div>
-          <Type className="mb-2" style="sectionTitleLarge">New &amp; upvoted</Type>
-          <div className="mb-10">
-            {mainPostsList}
-          </div>
-          <Type className="mb-2" style="sectionTitleLarge">Posts tagged community</Type>
-          <div className="mb-10">
-            {communityPostsList}
-          </div>
-          <Type className="mb-2" style="sectionTitleLarge">Quick takes</Type>
-          <div className="mb-10">
-            {quickTakesList}
-          </div>
-          <Type className="mb-2" style="sectionTitleLarge">Popular comments</Type>
-          <div className="mb-10">
-            {popularCommentsList}
-          </div>
-          <Type className="mb-2" style="sectionTitleLarge">Recent discussion</Type>
-          <div>
-            {recentDiscussionList}
-          </div>
+          <Type className="mb-2" style="sectionTitleLarge">
+            New &amp; upvoted
+          </Type>
+          <div className="mb-10">{mainPostsList}</div>
+          <Type className="mb-2" style="sectionTitleLarge">
+            Posts tagged community
+          </Type>
+          <div className="mb-10">{communityPostsList}</div>
+          <Type className="mb-2" style="sectionTitleLarge">
+            Quick takes
+          </Type>
+          <div className="mb-10">{quickTakesList}</div>
+          <Type className="mb-2" style="sectionTitleLarge">
+            Popular comments
+          </Type>
+          <div className="mb-10">{popularCommentsList}</div>
+          <Type className="mb-2" style="sectionTitleLarge">
+            Recent discussion
+          </Type>
+          <div>{recentDiscussionList}</div>
         </div>
         <HomeSidebar />
       </Column>

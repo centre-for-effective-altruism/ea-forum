@@ -13,10 +13,13 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "EA Forum",
-  description: "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
+  description:
+    "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
 };
 
-export default function RootLayout({ children }: Readonly<{
+export default function RootLayout({
+  children,
+}: Readonly<{
   children: ReactNode;
 }>) {
   return (
@@ -35,9 +38,7 @@ export default function RootLayout({ children }: Readonly<{
         <Providers>
           <div id="modal-target" className="relative" />
           <Header />
-          <main className="grow py-8">
-            {children}
-          </main>
+          <main className="grow py-8">{children}</main>
         </Providers>
       </body>
     </html>

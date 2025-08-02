@@ -21,31 +21,34 @@ export default function Button({
   className = "",
   children,
 }: Readonly<{
-  variant?: ButtonVariant,
-  type?: "submit" | "reset" | "button",
-  disabled?: boolean,
-  eventProps?: Record<string, string>,
-  href?: string,
-  onClick?: (ev: MouseEvent<HTMLButtonElement>) => void,
-  testId?: string,
-  className?: string,
-  children: ReactNode,
+  variant?: ButtonVariant;
+  type?: "submit" | "reset" | "button";
+  disabled?: boolean;
+  eventProps?: Record<string, string>;
+  href?: string;
+  onClick?: (ev: MouseEvent<HTMLButtonElement>) => void;
+  testId?: string;
+  className?: string;
+  children: ReactNode;
 }>) {
   const router = useRouter();
   const { captureEvent } = useTracking();
-  const onClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    if (href) {
-      captureEvent('linkClicked', {to: href, ...eventProps})
-      onClick_?.(e);
-      router.push(href);
-    } else {
-      captureEvent('buttonClicked', eventProps)
-      onClick_?.(e);
-    }
-  }, [captureEvent, router, disabled, href, onClick_, eventProps]);
+  const onClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      if (disabled) {
+        return;
+      }
+      if (href) {
+        captureEvent("linkClicked", { to: href, ...eventProps });
+        onClick_?.(e);
+        router.push(href);
+      } else {
+        captureEvent("buttonClicked", eventProps);
+        onClick_?.(e);
+      }
+    },
+    [captureEvent, router, disabled, href, onClick_, eventProps],
+  );
   return (
     <button
       type={type}

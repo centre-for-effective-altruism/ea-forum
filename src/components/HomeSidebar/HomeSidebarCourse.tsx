@@ -9,10 +9,10 @@ export default function HomeSidebarCourse({
   applicationDeadline,
   startDate,
 }: Readonly<{
-  title: string,
-  href: string,
-  applicationDeadline: Date,
-  startDate: Date,
+  title: string;
+  href: string;
+  applicationDeadline: Date;
+  startDate: Date;
 }>) {
   return (
     <Link
@@ -24,8 +24,8 @@ export default function HomeSidebarCourse({
         <ComputerDesktopIcon className="w-[16px]" /> {title}
       </Type>
       <Type style="bodySmall" className="text-gray-600">
-        Apply by {formatShortDate(applicationDeadline)},{" "}
-        starting {formatShortDate(startDate)}
+        Apply by {formatShortDate(applicationDeadline)}, starting{" "}
+        {formatShortDate(startDate)}
       </Type>
     </Link>
   );

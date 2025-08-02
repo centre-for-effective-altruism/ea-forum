@@ -17,17 +17,17 @@ const eslintConfig = [
     rules: {
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
-        'error',
+        "error",
         {
           ignoreRestSiblings: true,
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
         },
       ],
       "no-console": [
-        'error',
+        "error",
         {
-          allow: ['warn', 'error'],
+          allow: ["warn", "error"],
         },
       ],
     },

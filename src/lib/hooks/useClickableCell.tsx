@@ -7,16 +7,19 @@ export type ClickableCellProps<T extends HTMLElement = HTMLDivElement> = {
    * If true, the custom handler will not be triggered when the target of the
    * event is either a link, or a child tag of a link.
    */
-  ignoreLinks?: boolean,
-} & ({
-  href: string,
-  onClick?: never,
-  openInNewTab?: boolean,
-} | {
-  href?: never,
-  onClick: (e: MouseEvent<T>) => void,
-  openInNewTab?: never,
-});
+  ignoreLinks?: boolean;
+} & (
+  | {
+      href: string;
+      onClick?: never;
+      openInNewTab?: boolean;
+    }
+  | {
+      href?: never;
+      onClick: (e: MouseEvent<T>) => void;
+      openInNewTab?: never;
+    }
+);
 
 export const useClickableCell = <T extends HTMLElement = HTMLDivElement>({
   ignoreLinks,
@@ -29,34 +32,37 @@ export const useClickableCell = <T extends HTMLElement = HTMLDivElement>({
   // Note that we only trigger this event if an href is provided
   const { captureEvent } = useTracking({
     eventType: "linkClicked",
-    eventProps: {to: href}
+    eventProps: { to: href },
   });
 
   // We make the entire "cell" a link. In sub-items need to be separately
   // clickable then wrap them in an `InteractionWrapper`.
-  const wrappedOnClick = useCallback((e: MouseEvent<T>) => {
-    if (ignoreLinks && (e.target as HTMLElement).closest("a")) {
-      return true;
-    }
+  const wrappedOnClick = useCallback(
+    (e: MouseEvent<T>) => {
+      if (ignoreLinks && (e.target as HTMLElement).closest("a")) {
+        return true;
+      }
 
-    e.preventDefault();
-    e.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
 
-    if (onClick) {
-      onClick(e);
-    } else if ((e.metaKey || e.ctrlKey) || openInNewTab) {
-      captureEvent();
-      window.open(href, "_blank");
-    } else {
-      captureEvent();
-      router.push(href);
-    }
-  }, [router, ignoreLinks, href, onClick, openInNewTab, captureEvent]);
+      if (onClick) {
+        onClick(e);
+      } else if (e.metaKey || e.ctrlKey || openInNewTab) {
+        captureEvent();
+        window.open(href, "_blank");
+      } else {
+        captureEvent();
+        router.push(href);
+      }
+    },
+    [router, ignoreLinks, href, onClick, openInNewTab, captureEvent],
+  );
 
   return {
     onClick: wrappedOnClick,
   };
-}
+};
 
 /**
  * By default, clicking anywhere on the clickable cell will navigate to the target
@@ -64,25 +70,28 @@ export const useClickableCell = <T extends HTMLElement = HTMLDivElement>({
  * in an InteractionWrapper.
  */
 export const InteractionWrapper: FC<{
-  href?: string,
-  openInNewTab?: boolean,
-  children: ReactNode,
-  className?: string,
-}> = ({href, openInNewTab, children, className}) => {
+  href?: string;
+  openInNewTab?: boolean;
+  children: ReactNode;
+  className?: string;
+}> = ({ href, openInNewTab, children, className }) => {
   const router = useRouter();
-  const onClick = useCallback((e: MouseEvent) => {
-    e.stopPropagation();
-    if (href) {
-      if (openInNewTab) {
-        window.open(href, "_blank");
-      } else {
-        router.push(href);
+  const onClick = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      if (href) {
+        if (openInNewTab) {
+          window.open(href, "_blank");
+        } else {
+          router.push(href);
+        }
       }
-    }
-  }, [router, href, openInNewTab]);
+    },
+    [router, href, openInNewTab],
+  );
   return (
     <div onClick={onClick} className={className}>
       {children}
     </div>
   );
-}
+};

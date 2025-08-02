@@ -3,59 +3,59 @@
 import type { PostgresClient } from "tradukisto";
 
 export interface IFrontpagePostsList {
-  _id: string,
-  slug: string,
-  title: string,
-  baseScore: number,
-  voteCount: number,
-  commentCount: number,
-  postedAt: Date,
-  curatedDate: Date | null,
-  isEvent: boolean,
-  groupId: string | null,
-  sticky: boolean,
+  _id: string;
+  slug: string;
+  title: string;
+  baseScore: number;
+  voteCount: number;
+  commentCount: number;
+  postedAt: Date;
+  curatedDate: Date | null;
+  isEvent: boolean;
+  groupId: string | null;
+  sticky: boolean;
   user: {
-    _id: string,
-    displayName: string,
-  },
+    _id: string;
+    displayName: string;
+  };
 }
 
 export interface IFrontpagePostsListParams {
-  limit: unknown | null,
+  limit: unknown | null;
 }
 
 export const frontpagePostsListSql = `-- frontpagePostsListSql
 SELECT "p"."_id", "p"."slug", "p"."title", "p"."baseScore", "p"."voteCount", "p"."commentCount", "p"."postedAt", "p"."curatedDate", "p"."isEvent", "p"."groupId", "p"."sticky", ("u"."_id", "u"."displayName") AS "user" FROM "Posts" AS "p" INNER JOIN "Users" AS "u" ON "p"."userId" = "u"."_id" AND NOT "u"."deleted" WHERE NOT "isEvent" AND NOT "sticky" AND "status" = 2 AND NOT "draft" AND NOT "isFuture" AND NOT "unlisted" AND NOT "shortform" AND NOT "authorIsUnreviewed" AND NOT "rejected" AND NOT "hiddenRelatedQuestion" AND "groupId" IS NULL AND "frontpageDate" > TO_TIMESTAMP(0) AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(NULL, 21)) ORDER BY "sticky" DESC, "stickyPriority" DESC, ("baseScore" + (CASE WHEN "frontpageDate" IS NOT NULL THEN 10 ELSE 0 END) + (CASE WHEN "curatedDate" IS NOT NULL THEN 10 ELSE 0 END)) / POW(EXTRACT(EPOCH FROM NOW() - "postedAt") / 3600000 + COALESCE(NULL, 2), COALESCE(NULL, 0.8)) DESC, "_id" DESC LIMIT $1`;
 
 export interface ISidebarOpportunities {
-  _id: string,
-  slug: string,
-  title: string,
-  postedAt: Date,
-  isEvent: boolean,
-  groupId: string | null,
+  _id: string;
+  slug: string;
+  title: string;
+  postedAt: Date;
+  isEvent: boolean;
+  groupId: string | null;
 }
 
 export interface ISidebarOpportunitiesParams {
-  limit: unknown | null,
+  limit: unknown | null;
 }
 
 export const sidebarOpportunitiesSql = `-- sidebarOpportunitiesSql
 SELECT "_id", "slug", "title", "postedAt", "isEvent", "groupId" FROM "Posts" WHERE NOT "isEvent" AND NOT "sticky" AND "status" = 2 AND NOT "draft" AND NOT "isFuture" AND NOT "unlisted" AND NOT "shortform" AND NOT "authorIsUnreviewed" AND NOT "rejected" AND NOT "hiddenRelatedQuestion" AND "groupId" IS NULL AND "frontpageDate" > TO_TIMESTAMP(0) AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(NULL, 24)) AND ("tagRelevance" -> 'z8qFsGt5iXyZiLbjN')::INTEGER >= 1 ORDER BY "sticky" DESC, "stickyPriority" DESC, ("baseScore" + (CASE WHEN "frontpageDate" IS NOT NULL THEN 10 ELSE 0 END) + (CASE WHEN "curatedDate" IS NOT NULL THEN 10 ELSE 0 END)) / POW(EXTRACT(EPOCH FROM NOW() - "postedAt") / 3600000 + COALESCE(NULL, 2), COALESCE(NULL, 0.8)) DESC, "_id" DESC LIMIT $1`;
 
 export interface ISidebarEvents {
-  _id: string,
-  slug: string,
-  title: string,
-  startTime: Date | null,
-  onlineEvent: boolean,
-  googleLocation: any | null,
-  isEvent: boolean,
-  groupId: string | null,
+  _id: string;
+  slug: string;
+  title: string;
+  startTime: Date | null;
+  onlineEvent: boolean;
+  googleLocation: any | null;
+  isEvent: boolean;
+  groupId: string | null;
 }
 
 export interface ISidebarEventsParams {
-  limit: unknown | null,
+  limit: unknown | null;
 }
 
 export const sidebarEventsSql = `-- sidebarEventsSql
@@ -68,11 +68,15 @@ export class PostsRepo {
     this.client = client;
   }
 
-  frontpagePostsList(params: IFrontpagePostsListParams): Promise<IFrontpagePostsList[]> {
+  frontpagePostsList(
+    params: IFrontpagePostsListParams,
+  ): Promise<IFrontpagePostsList[]> {
     return this.client.fetchRows(frontpagePostsListSql, [params.limit]);
   }
 
-  sidebarOpportunities(params: ISidebarOpportunitiesParams): Promise<ISidebarOpportunities[]> {
+  sidebarOpportunities(
+    params: ISidebarOpportunitiesParams,
+  ): Promise<ISidebarOpportunities[]> {
     return this.client.fetchRows(sidebarOpportunitiesSql, [params.limit]);
   }
 

@@ -15,10 +15,11 @@ import Type from "../Type";
 import Link from "../Link";
 
 // TODO Setup sentry
-const captureException = (_error: unknown, _context: unknown) => {}
+const captureException = (_error: unknown, _context: unknown) => {};
 
 export default function LoginPopover() {
-  const {loginAction: action, setLoginAction: setAction} = useLoginPopoverContext();
+  const { loginAction: action, setLoginAction: setAction } =
+    useLoginPopoverContext();
   const open = !!action;
   const isSignup = action === "signup";
 
@@ -53,8 +54,8 @@ export default function LoginPopover() {
       setLoading(true);
       await client.resetPassword(email);
       setMessage("Password reset email sent");
-    } catch(err) {
-      const e = err as Error & {description?: string};
+    } catch (err) {
+      const e = err as Error & { description?: string };
       console.error(e);
       captureException(e, {
         tags: {
@@ -72,50 +73,60 @@ export default function LoginPopover() {
     setLoading(false);
   }, [client, email, action, isSignup, isResettingPassword]);
 
-  const onSubmit = useCallback(async (ev: FormEvent<HTMLFormElement>) => {
-    ev.preventDefault();
+  const onSubmit = useCallback(
+    async (ev: FormEvent<HTMLFormElement>) => {
+      ev.preventDefault();
 
-    if (isResettingPassword) {
-      return onSendPasswordReset();
-    }
+      if (isResettingPassword) {
+        return onSendPasswordReset();
+      }
 
-    if (!email || !password) {
-      setError("Email and password are required");
-      return;
-    }
+      if (!email || !password) {
+        setError("Email and password are required");
+        return;
+      }
 
-    setMessage(null);
-    setError(null);
-    setPolicy(null);
+      setMessage(null);
+      setError(null);
+      setPolicy(null);
 
-    try {
-      setLoading(true);
-      await (
-        isSignup
+      try {
+        setLoading(true);
+        await (isSignup
           ? client.signup(email, password)
-          : client.login(email, password)
-      );
-      await refetchCurrentUser();
-    } catch (err) {
-      const e = err as Error & {description?: string, policy?: string};
-      console.error(e);
-      captureException(e, {
-        tags: {
-          component: "EALoginPopover",
-          action: action || "unknown",
-        },
-        extra: {
-          email,
-          isSignup,
-          isResettingPassword,
-        },
-      });
-      setError(e.description || e.message || String(e) || "An error occurred");
-      setPolicy(e.policy ?? null);
-    } finally {
-      setLoading(false);
-    }
-  }, [isResettingPassword, email, password, onSendPasswordReset, isSignup, client, refetchCurrentUser, action]);
+          : client.login(email, password));
+        await refetchCurrentUser();
+      } catch (err) {
+        const e = err as Error & { description?: string; policy?: string };
+        console.error(e);
+        captureException(e, {
+          tags: {
+            component: "EALoginPopover",
+            action: action || "unknown",
+          },
+          extra: {
+            email,
+            isSignup,
+            isResettingPassword,
+          },
+        });
+        setError(e.description || e.message || String(e) || "An error occurred");
+        setPolicy(e.policy ?? null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      isResettingPassword,
+      email,
+      password,
+      onSendPasswordReset,
+      isSignup,
+      client,
+      refetchCurrentUser,
+      action,
+    ],
+  );
 
   const onClickGoogle = useCallback(async () => {
     setMessage(null);
@@ -153,9 +164,7 @@ export default function LoginPopover() {
     }
   }, [open]);
 
-  const title = isSignup
-    ? "Sign up to get more from the EA Forum"
-    : "Welcome back";
+  const title = isSignup ? "Sign up to get more from the EA Forum" : "Welcome back";
 
   const canSubmit = !!email && (!!password || isResettingPassword) && !loading;
   return (
@@ -187,18 +196,14 @@ export default function LoginPopover() {
               secure={showPassword ? "revealed" : "hidden"}
               onToggleRevealed={toggleShowPassword}
             />
-            {!isSignup && !isResettingPassword &&
+            {!isSignup && !isResettingPassword && (
               <Type className="mt-1 mb-2 font-[600] text-(--color-primary)">
                 <a className="cursor-pointer" onClick={onForgotPassword}>
                   Forgot password?
                 </a>
               </Type>
-            }
-            {message &&
-              <Type className="mb-1">
-                {message}
-              </Type>
-            }
+            )}
+            {message && <Type className="mb-1">{message}</Type>}
             {error && (
               <Type className="mb-4 text-red-500">
                 {error}
@@ -211,19 +216,22 @@ export default function LoginPopover() {
               testId="login-submit"
               className="w-full h-[50px] px-[17px] py-[15px] font-[600]"
             >
-              {loading
-                ? <Loading />
-                : isResettingPassword
-                  ? "Request password reset"
-                  : isSignup
-                    ? "Sign up"
-                    : "Login"
-              }
+              {loading ? (
+                <Loading />
+              ) : isResettingPassword ? (
+                "Request password reset"
+              ) : isSignup ? (
+                "Sign up"
+              ) : (
+                "Login"
+              )}
             </Button>
           </form>
           <div className="flex items-center gap-3 w-full text-gray-600">
             <span className="grow border-t border-gray-600" />
-            <Type As="span" style="bodySmall">OR</Type>
+            <Type As="span" style="bodySmall">
+              OR
+            </Type>
             <span className="grow border-t border-gray-600" />
           </div>
           <Button
@@ -284,7 +292,8 @@ export default function LoginPopover() {
                 className="underline hover:no-underline"
               >
                 Privacy Policy
-              </Link>.
+              </Link>
+              .
             </Type>
           )}
         </div>

@@ -5,7 +5,7 @@ import PostsList from "@/components/PostsList";
 
 export default async function HomePage() {
   const db = getDatabaseOrThrow();
-  const posts = await new PostsRepo(db).frontpagePostsList({limit: 10});
+  const posts = await new PostsRepo(db).frontpagePostsList({ limit: 10 });
   return (
     <HomePageLayout
       mainPostsList={<PostsList posts={posts} />}

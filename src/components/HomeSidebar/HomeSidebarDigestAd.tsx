@@ -1,13 +1,15 @@
 import { AnalyticsContext, AnalyticsInViewTracker } from "@/lib/analyticsEvents";
 import Type from "../Type";
 
-export default function HomeSidebarDigestAd({ className = "" }: Readonly<{
-  className?: string,
+export default function HomeSidebarDigestAd({
+  className = "",
+}: Readonly<{
+  className?: string;
 }>) {
   // TODO: This needs a lot of logic when auth is working - see useDigestAd
   return (
     <AnalyticsContext pageSubSectionContext="digestAd">
-      <AnalyticsInViewTracker eventProps={{inViewType: "sidebarDigestAd"}}>
+      <AnalyticsInViewTracker eventProps={{ inViewType: "sidebarDigestAd" }}>
         <div
           className={`bg-gray-200 px-4 py-3 rounded ${className}`}
           data-component="HomeSidebarDigestAd"

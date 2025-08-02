@@ -7,55 +7,55 @@ import type { Json } from "./json";
 type PostsViewTerms = Record<string, unknown>;
 
 export type AnalyticsProps = {
-  pageContext?: string,
-  pageSectionContext?: string,
-  pageSubSectionContext?: string,
-  pageElementContext?: string,
-  pageElementSubContext?: string,
-  reviewYear?: string,
-  path?: string,
-  resourceName?: string,
-  resourceUrl?: string,
-  chapter?: string,
-  documentSlug?: string,
-  notificationId?: string,
-  postId?: string,
-  isSticky?: boolean,
-  forumEventId?: string,
-  sequenceId?: string,
-  commentId?: string,
-  spotlightId?: string,
-  tagId?: string,
-  tagName?: string,
-  tagSlug?: string,
-  tagGroupName?: string,
-  userIdDisplayed?: string,
-  hoverPreviewType?: string,
-  sortedBy?: string,
-  branch?: string,
-  siteEvent?: string,
-  href?: string,
-  limit?: number,
-  capturePostItemOnMount?: boolean,
-  singleLineComment?: boolean,
-  feedType?: string,
-  onsite?: boolean,
-  terms?: PostsViewTerms,
-  viewType?: string,
-  searchQuery?: string,
-  componentName?: string,
+  pageContext?: string;
+  pageSectionContext?: string;
+  pageSubSectionContext?: string;
+  pageElementContext?: string;
+  pageElementSubContext?: string;
+  reviewYear?: string;
+  path?: string;
+  resourceName?: string;
+  resourceUrl?: string;
+  chapter?: string;
+  documentSlug?: string;
+  notificationId?: string;
+  postId?: string;
+  isSticky?: boolean;
+  forumEventId?: string;
+  sequenceId?: string;
+  commentId?: string;
+  spotlightId?: string;
+  tagId?: string;
+  tagName?: string;
+  tagSlug?: string;
+  tagGroupName?: string;
+  userIdDisplayed?: string;
+  hoverPreviewType?: string;
+  sortedBy?: string;
+  branch?: string;
+  siteEvent?: string;
+  href?: string;
+  limit?: number;
+  capturePostItemOnMount?: boolean;
+  singleLineComment?: boolean;
+  feedType?: string;
+  onsite?: boolean;
+  terms?: PostsViewTerms;
+  viewType?: string;
+  searchQuery?: string;
+  componentName?: string;
   /**
    * WARNING: read the documentation before using this. Avoid unless you have a
    * very good reason.
    */
-  nestedPageElementContext?: string,
+  nestedPageElementContext?: string;
   /** @deprecated Use `pageSectionContext` instead */
-  listContext?: string,
+  listContext?: string;
   /** @deprecated Use `pageSectionContext` instead */
-  pageSection?: "karmaChangeNotifer",
+  pageSection?: "karmaChangeNotifer";
   /** @deprecated Use `pageSubSectionContext` instead */
-  pageSubsectionContext?: "latestReview",
-}
+  pageSubsectionContext?: "latestReview";
+};
 
 export type EventProps = AnalyticsProps | Record<string, Json | undefined>;
 
@@ -68,7 +68,7 @@ export const captureEvent = (
   void eventType;
   void eventProps;
   void suppressConsoleLog;
-}
+};
 
 // An empty object, used as an argument default value. If the argument default
 // value were set to {} in the usual way, it would be a new instance of {} each
@@ -77,36 +77,39 @@ export const captureEvent = (
 const emptyEventProps: EventProps = {};
 
 export const useTracking = ({
-  eventType="unnamed",
+  eventType = "unnamed",
   eventProps = emptyEventProps,
 }: {
-  eventType?: string,
-  eventProps?: EventProps,
+  eventType?: string;
+  eventProps?: EventProps;
 } = {}) => {
   const trackingContext = useMemo(() => ({}), []); // TODO Add tracking context
-  const track = useCallback((
-    type?: string|undefined,
-    trackingData?: Record<string, Json>,
-  ) => {
-    captureEvent(type || eventType, {
-      ...trackingContext,
-      ...eventProps,
-      ...trackingData
-    })
-  }, [trackingContext, eventProps, eventType]);
+  const track = useCallback(
+    (type?: string | undefined, trackingData?: Record<string, Json>) => {
+      captureEvent(type || eventType, {
+        ...trackingContext,
+        ...eventProps,
+        ...trackingData,
+      });
+    },
+    [trackingContext, eventProps, eventType],
+  );
   return { captureEvent: track };
-}
+};
 
 const analyticsContext = createContext(null);
 
-export function AnalyticsContext({children, ...props}: Readonly<AnalyticsProps & {
-  children: ReactNode
-}>) {
+export function AnalyticsContext({
+  children,
+  ...props
+}: Readonly<
+  AnalyticsProps & {
+    children: ReactNode;
+  }
+>) {
   void props; // TODO
   return (
-    <analyticsContext.Provider value={null}>
-      {children}
-    </analyticsContext.Provider>
+    <analyticsContext.Provider value={null}>{children}</analyticsContext.Provider>
   );
 }
 
@@ -117,33 +120,29 @@ export const AnalyticsInViewTracker = ({
   skip,
   children,
 }: {
-  eventType?: string,
-  eventProps?: Record<string, Json>,
-  observerProps?: Record<string, Json>,
-  skip?: boolean,
-  children?: React.ReactNode,
+  eventType?: string;
+  eventProps?: Record<string, Json>;
+  observerProps?: Record<string, Json>;
+  skip?: boolean;
+  children?: React.ReactNode;
 }) => {
-  const { setNode, entry } = useIsInView(observerProps)
+  const { setNode, entry } = useIsInView(observerProps);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const captureInViewEvent = useCallback(
     useTracking({
       eventType: eventType || "inViewEvent",
-      eventProps: {...eventProps, ...observerProps},
+      eventProps: { ...eventProps, ...observerProps },
     }).captureEvent,
     [],
   );
 
   useEffect(() => {
     if (!skip && !!entry) {
-      const {time, isIntersecting, intersectionRatio} = entry
-      captureInViewEvent(undefined, {time, isIntersecting, intersectionRatio})
+      const { time, isIntersecting, intersectionRatio } = entry;
+      captureInViewEvent(undefined, { time, isIntersecting, intersectionRatio });
     }
-  }, [entry, captureInViewEvent, skip])
+  }, [entry, captureInViewEvent, skip]);
 
-  return (
-    <span ref={setNode}>
-      { children }
-    </span>
-  )
-}
+  return <span ref={setNode}>{children}</span>;
+};

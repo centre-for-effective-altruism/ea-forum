@@ -2,9 +2,20 @@ import type { HTMLAttributes } from "react";
 
 export default function LightbulbIcon(props: HTMLAttributes<SVGElement>) {
   return (
-    <svg version="1.1" x="0px" y="0px" viewBox="0 0 1200 1200" fill="currentColor" {...props}>
-      <g transform="translate(0.000000,1200.000000) scale(0.100000,-0.100000)" stroke="none">
-        <path d="M5783 11560 c-712 -53 -1385 -317 -1948 -766 -141 -113 -426 -398
+    <svg
+      version="1.1"
+      x="0px"
+      y="0px"
+      viewBox="0 0 1200 1200"
+      fill="currentColor"
+      {...props}
+    >
+      <g
+        transform="translate(0.000000,1200.000000) scale(0.100000,-0.100000)"
+        stroke="none"
+      >
+        <path
+          d="M5783 11560 c-712 -53 -1385 -317 -1948 -766 -141 -113 -426 -398
           -539 -539 -286 -359 -508 -784 -631 -1205 -187 -645 -188 -1318 -5 -1959 134
           -466 350 -874 675 -1276 220 -272 342 -531 510 -1080 144 -469 443 -749 903
           -842 76 -16 147 -18 552 -18 l465 0 87 31 c300 107 650 497 1243 1384 211 315
