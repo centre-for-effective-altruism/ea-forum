@@ -1,3 +1,4 @@
+import type { JsonValue } from "../dbTypes";
 import { getSiteUrl } from "../routeHelpers";
 
 export const postGetPageUrl = ({
@@ -25,7 +26,7 @@ export const postGetPageUrl = ({
   return `${prefix}/posts/${post._id}/${post.slug}`;
 };
 
-type GoogleLocation = {
+export type GoogleLocation = {
   address_components: {
     types: string;
     long_name: string;
@@ -37,15 +38,16 @@ export const getEventLocation = ({
   googleLocation,
 }: {
   onlineEvent: boolean;
-  googleLocation?: GoogleLocation | null;
+  googleLocation?: JsonValue | null;
 }) => {
   if (onlineEvent) {
     return "Online";
   }
   if (googleLocation) {
+    const location = googleLocation as GoogleLocation;
     const locationTypePreferenceOrdering = ["locality", "political", "country"];
     for (const locationType of locationTypePreferenceOrdering) {
-      for (const addressComponent of googleLocation.address_components) {
+      for (const addressComponent of location.address_components) {
         if (addressComponent.types.indexOf(locationType) >= 0) {
           return addressComponent.long_name;
         }

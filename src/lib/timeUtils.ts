@@ -27,3 +27,9 @@ export const formatShortDate = (date: Date) =>
     month: "short",
     day: "numeric",
   });
+
+export const nDaysAgo = (n: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - n);
+  return date;
+};

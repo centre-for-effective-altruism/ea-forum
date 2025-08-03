@@ -1,4 +1,4 @@
-import type { ISidebarOpportunities } from "@/lib/posts/posts.queries";
+import type { SidebarOpportunity } from "@/lib/posts/PostsRepo";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import Type from "../Type";
@@ -7,7 +7,7 @@ import Link from "../Link";
 export default function HomeSidebarPost({
   post,
 }: Readonly<{
-  post: ISidebarOpportunities;
+  post: SidebarOpportunity;
 }>) {
   const { title, postedAt } = post;
   const pageUrl = postGetPageUrl({ post });
