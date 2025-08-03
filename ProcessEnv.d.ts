@@ -8,5 +8,9 @@ declare namespace NodeJS {
     NEXT_PUBLIC_AUTH0_DOMAIN: string;
     NEXT_PUBLIC_AUTH0_CLIENT_ID: string;
     NEXT_PUBLIC_AUTH0_CONNECTION: string;
+    AUTH_CLIENT_ID: string; // Note: this is different from the _public_ client id
+    AUTH0_CLIENT_SECRET: string;
+    AUTH0_ORIGINAL_DOMAIN: string;
+    AUTH0_SCOPE: string;
   }
 }

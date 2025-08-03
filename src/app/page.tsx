@@ -5,11 +5,15 @@ import PostsList from "@/components/PostsList";
 
 export default async function HomePage() {
   const db = getDatabaseOrThrow();
-  const posts = await new PostsRepo(db).frontpagePostsList({ limit: 10 });
+  const postsRepo = new PostsRepo(db);
+  const [mainPosts, communityPosts] = await Promise.all([
+    postsRepo.frontpagePostsList({ limit: 11 }),
+    postsRepo.frontpagePostsList({ limit: 5 }),
+  ]);
   return (
     <HomePageLayout
-      mainPostsList={<PostsList posts={posts} />}
-      communityPostsList={null}
+      mainPostsList={<PostsList posts={mainPosts} />}
+      communityPostsList={<PostsList posts={communityPosts} />}
       quickTakesList={null}
       popularCommentsList={null}
       recentDiscussionList={null}

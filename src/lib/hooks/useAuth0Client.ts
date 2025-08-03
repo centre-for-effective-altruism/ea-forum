@@ -35,16 +35,16 @@ class Auth0Client {
   }
 
   async login(email: string, password: string): Promise<void> {
-    await this.post("/auth/auth0/embedded-login", { email, password });
+    await this.post("/api/auth/login", { email, password });
   }
 
   async signup(email: string, password: string): Promise<void> {
-    await this.post("/auth/auth0/embedded-signup", { email, password });
+    await this.post("/api/auth/signup", { email, password });
   }
 
-  socialLogin(connection: "google-oauth2" | "facebook"): void {
+  googleLogin(): void {
     const returnTo = encodeURIComponent(window.location.href);
-    window.location.href = `/auth/auth0?returnTo=${returnTo}&connection=${connection}`;
+    window.location.href = `/api/auth?returnTo=${returnTo}&connection=google-oauth2`;
   }
 
   private getClientSettings() {

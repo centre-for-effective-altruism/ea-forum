@@ -132,7 +132,7 @@ export default function LoginPopover() {
     setMessage(null);
     setError(null);
     setPolicy(null);
-    client.socialLogin("google-oauth2");
+    client.googleLogin();
   }, [client]);
 
   const onForgotPassword = useCallback(() => {
