@@ -1,5 +1,6 @@
 "use client";
 
+import type { PostsListItem } from "@/lib/posts/PostsRepo";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
@@ -12,19 +13,10 @@ export default function PostsItem({
   post,
   openInNewTab,
 }: Readonly<{
-  post: {
-    _id: string;
-    slug: string;
-    title: string;
-    baseScore: number;
-    commentCount: number;
-    isEvent?: boolean;
-    groupId?: string | null;
-    sticky?: boolean;
-  };
+  post: PostsListItem;
   openInNewTab?: boolean;
 }>) {
-  const { _id, title, baseScore, commentCount, sticky } = post;
+  const { _id, title, baseScore, commentCount, sticky, user } = post;
   const postLink = postGetPageUrl({ post });
   const { onClick } = useClickableCell({ href: postLink, openInNewTab });
   return (
@@ -43,9 +35,12 @@ export default function PostsItem({
       >
         <div
           onClick={onClick}
-          className="cursor-pointer w-full h-full flex gap-4 px-4 py-2 text-gray-600"
+          className={`
+            cursor-pointer w-full h-full px-4 py-2 text-gray-600
+            grid grid-cols-[min-content_1fr_min-content_min-content] gap-4
+          `}
         >
-          <div className="flex flex-col items-center justify-center gap-1">
+          <div className="flex flex-col items-center justify-center gap-1 px-2">
             <SoftArrowUpIcon className="text-gray-400" />
             <Type style="bodySmall">{baseScore}</Type>
           </div>
@@ -53,6 +48,7 @@ export default function PostsItem({
             <Type style="postTitle" className="text-black">
               {title}
             </Type>
+            <div>{user.displayName}</div>
           </div>
           <div className="flex items-center gap-1 hover:text-black">
             <ChatBubbleLeftIcon className="w-[18px]" />

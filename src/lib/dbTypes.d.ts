@@ -1752,6 +1752,7 @@ export interface Posts {
   canonicalSource: string | null;
   clickCount: Generated<number>;
   coauthorStatuses: ArrayType<Json> | null;
+  coauthorUserIds: Generated<string[]>;
   collabEditorDialogue: Generated<boolean>;
   collectionTitle: string | null;
   commentCount: Generated<number>;
@@ -1925,6 +1926,7 @@ export interface Posts2 {
   canonicalsource: string | null;
   clickcount: number | null;
   coauthorstatuses: ArrayType<Json> | null;
+  coauthoruserids: string[] | null;
   collabeditordialogue: boolean | null;
   collectiontitle: string | null;
   commentcount: number | null;
