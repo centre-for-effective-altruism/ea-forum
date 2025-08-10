@@ -1,12 +1,13 @@
-import { PostsRepo } from "@/lib/posts/PostsRepo";
 import HomePageLayout from "@/components/HomePageLayout";
 import PostsList from "@/components/PostsList";
+import { PostsRepo } from "@/lib/posts/postQueries.queries";
+import { getDbOrThrow } from "@/lib/db";
 
 export default async function HomePage() {
-  const postsRepo = new PostsRepo();
+  const postsRepo = new PostsRepo(getDbOrThrow());
   const [mainPosts, communityPosts] = await Promise.all([
-    postsRepo.getFrontpagePostsList({ limit: 11 }),
-    postsRepo.getFrontpagePostsList({ limit: 5 }),
+    postsRepo.frontpagePostsList({ limit: 11 }),
+    postsRepo.frontpagePostsList({ limit: 5 }), // TODO Filter community
   ]);
   return (
     <HomePageLayout

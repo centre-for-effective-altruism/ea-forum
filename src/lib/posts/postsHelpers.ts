@@ -1,4 +1,4 @@
-import type { JsonValue } from "../dbTypes";
+import type { JsonRecord } from "../json";
 import { getSiteUrl } from "../routeHelpers";
 
 export const postGetPageUrl = ({
@@ -38,7 +38,7 @@ export const getEventLocation = ({
   googleLocation,
 }: {
   onlineEvent: boolean;
-  googleLocation?: JsonValue | null;
+  googleLocation?: JsonRecord | null;
 }) => {
   if (onlineEvent) {
     return "Online";

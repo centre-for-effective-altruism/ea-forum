@@ -1,6 +1,6 @@
 "use client";
 
-import type { PostsListItem } from "@/lib/posts/PostsRepo";
+import type { IFrontpagePostsList } from "@/lib/posts/postQueries.queries";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
@@ -13,7 +13,7 @@ export default function PostsItem({
   post,
   openInNewTab,
 }: Readonly<{
-  post: PostsListItem;
+  post: IFrontpagePostsList;
   openInNewTab?: boolean;
 }>) {
   const { _id, title, baseScore, commentCount, sticky, user } = post;
