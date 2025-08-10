@@ -8,6 +8,7 @@ import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import SoftArrowUpIcon from "./icons/SoftArrowUpIcon";
 import Type from "./Type";
+import Tooltip from "./Tooltip";
 
 export default function PostsItem({
   post,
@@ -16,7 +17,7 @@ export default function PostsItem({
   post: IFrontpagePostsList;
   openInNewTab?: boolean;
 }>) {
-  const { _id, title, baseScore, commentCount, sticky, user } = post;
+  const { _id, title, baseScore, commentCount, voteCount, sticky, user } = post;
   const postLink = postGetPageUrl({ post });
   const { onClick } = useClickableCell({ href: postLink, openInNewTab });
   return (
@@ -42,13 +43,24 @@ export default function PostsItem({
         >
           <div className="flex flex-col items-center justify-center gap-1 px-2">
             <SoftArrowUpIcon className="text-gray-400" />
-            <Type style="bodySmall">{baseScore}</Type>
+            <Tooltip
+              title={
+                <div className="text-center">
+                  <Type style="bodySmall">{baseScore} karma</Type>
+                  <Type style="bodySmall">
+                    ({voteCount} {voteCount === 1 ? "vote" : "votes"})
+                  </Type>
+                </div>
+              }
+            >
+              <Type style="bodySmall">{baseScore}</Type>
+            </Tooltip>
           </div>
           <div className="grow">
             <Type style="postTitle" className="text-black">
               {title}
             </Type>
-            <div>{user.displayName}</div>
+            <Type style="bodySmall">{user.displayName}</Type>
           </div>
           <div className="flex items-center gap-1 hover:text-black">
             <ChatBubbleLeftIcon className="w-[18px]" />
