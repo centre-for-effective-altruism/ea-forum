@@ -3,6 +3,7 @@ declare namespace NodeJS {
     // General settings
     NEXT_PUBLIC_SITE_URL: string;
     DATABASE_URL: string;
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
 
     // Auth0 settings
     NEXT_PUBLIC_AUTH0_DOMAIN: string;

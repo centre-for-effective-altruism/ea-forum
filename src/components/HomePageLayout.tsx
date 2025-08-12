@@ -21,7 +21,7 @@ export default async function HomePageLayout({
   return (
     <AnalyticsContext pageContext="homePage">
       <Column
-        className="grid grid-cols-[min-content_1fr_min-content] gap-10 px-8"
+        className="grid grid-cols-[min-content_780px_min-content] gap-10 px-8"
         data-component="HomePageLayout"
       >
         <Nav />

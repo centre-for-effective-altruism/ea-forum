@@ -26,6 +26,14 @@ JSON_BUILD_OBJECT(
   'commentCount', users_table."commentCount"
 )
 
+-- @partial tagJsonSelector(tags_table)
+JSON_BUILD_OBJECT(
+  '_id', tags_table."_id",
+  'name', tags_table."name",
+  'slug', tags_table."slug",
+  'core', tags_table."core"
+)
+
 -- @partial magicSort(posts_table)
   posts_table."sticky" DESC,
   posts_table."stickyPriority" DESC,
@@ -56,11 +64,24 @@ SELECT
   p."isEvent",
   p."groupId",
   p."sticky",
+  p."eventImageId",
+  p."socialPreview",
+  p."socialPreviewImageAutoUrl",
+  p."readTimeMinutesOverride",
+  contents."wordCount",
+  SUBSTRING(contents."html", 1, 200) "htmlHighlight",
   userJsonSelector(u) "user",
-  ARRAY_AGG(userJsonSelector(coauthor)) "coauthors"
+  ARRAY_AGG(userJsonSelector(coauthor)) "coauthors",
+  ARRAY_AGG(tagJsonSelector(tag)) "tags"
 FROM "Posts" p
+LEFT JOIN "Revisions" contents ON p."contents_latest" = contents."_id"
 LEFT JOIN "Users" u ON p."userId" = u."_id" AND NOT u."deleted"
-LEFT JOIN "Users" coauthor ON coauthor."_id" = ANY(p."coauthorUserIds")
+LEFT JOIN "Users" coauthor ON
+  coauthor."_id" = ''-- TODO ANY(p."coauthorUserIds")
+  AND NOT coauthor."deleted"
+LEFT JOIN "Tags" tag ON
+  (p."tagRelevance"->tag."_id")::INTEGER >= 1
+  AND NOT tag."deleted"
 WHERE
   viewablePostFilter(p)
   AND NOT p."isEvent"
@@ -68,7 +89,7 @@ WHERE
   AND p."groupId" IS NULL
   AND p."frontpageDate" > TO_TIMESTAMP(0)
   AND p."postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays::INTEGER, 21))
-GROUP BY p."_id", u."_id"
+GROUP BY p."_id", contents."_id", u."_id"
 ORDER BY magicSort(p)
 LIMIT :limit
 

@@ -14,6 +14,12 @@ export interface IFrontpagePostsList {
   isEvent: boolean;
   groupId: string | null;
   sticky: boolean;
+  eventImageId: string | null;
+  socialPreview: any | null;
+  socialPreviewImageAutoUrl: string | null;
+  readTimeMinutesOverride: number | null;
+  wordCount: number | null;
+  htmlHighlight: string | null;
   user: {
     _id: string | null;
     slug: string | null;
@@ -38,6 +44,12 @@ export interface IFrontpagePostsList {
     postCount: number | null;
     commentCount: number | null;
   }[];
+  tags: {
+    _id: string | null;
+    name: string | null;
+    slug: string | null;
+    core: boolean | null;
+  }[];
 }
 
 export interface IFrontpagePostsListParams {
@@ -48,7 +60,7 @@ export interface IFrontpagePostsListParams {
 }
 
 export const frontpagePostsListSql = `-- Posts.frontpagePostsList
-SELECT "p"."_id", "p"."slug", "p"."title", "p"."baseScore", "p"."voteCount", "p"."commentCount", "p"."postedAt", "p"."curatedDate", "p"."isEvent", "p"."groupId", "p"."sticky", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount") AS "user", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "coauthor"."_id", 'slug', "coauthor"."slug", 'displayName', "coauthor"."displayName", 'createdAt', "coauthor"."createdAt", 'profileImageId', "coauthor"."profileImageId", 'karma', "coauthor"."karma", 'jobTitle', "coauthor"."jobTitle", 'organization', "coauthor"."organization", 'postCount', "coauthor"."postCount", 'commentCount', "coauthor"."commentCount")) AS "coauthors" FROM "Posts" AS "p" LEFT JOIN "Users" AS "u" ON "p"."userId" = "u"."_id" AND NOT "u"."deleted" LEFT JOIN "Users" AS "coauthor" ON "coauthor"."_id" = ANY("p"."coauthorUserIds") WHERE NOT "p"."draft" AND NOT "p"."deletedDraft" AND NOT "p"."isFuture" AND NOT "p"."unlisted" AND NOT "p"."shortform" AND NOT "p"."rejected" AND NOT "p"."authorIsUnreviewed" AND NOT "p"."hiddenRelatedQuestion" AND "p"."postedAt" IS NOT NULL AND "p"."status" = 2 AND NOT "p"."isEvent" AND NOT "p"."sticky" AND "p"."groupId" IS NULL AND "p"."frontpageDate" > TO_TIMESTAMP(0) AND "p"."postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE($1::INTEGER, 21)) GROUP BY "p"."_id", "u"."_id" ORDER BY "p"."sticky" DESC, "p"."stickyPriority" DESC, ("p"."baseScore" + (CASE WHEN "p"."frontpageDate" IS NOT NULL THEN 10 ELSE 0 END) + (CASE WHEN "p"."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)) / POW(EXTRACT(EPOCH FROM NOW() - "p"."postedAt") / 3600000 + COALESCE($2::DOUBLE PRECISION, 2), COALESCE($3::DOUBLE PRECISION, 0.8)) DESC, "p"."_id" DESC LIMIT $4`;
+SELECT "p"."_id", "p"."slug", "p"."title", "p"."baseScore", "p"."voteCount", "p"."commentCount", "p"."postedAt", "p"."curatedDate", "p"."isEvent", "p"."groupId", "p"."sticky", "p"."eventImageId", "p"."socialPreview", "p"."socialPreviewImageAutoUrl", "p"."readTimeMinutesOverride", "contents"."wordCount", SUBSTRING("contents"."html", 1, 200) AS "htmlHighlight", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount") AS "user", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "coauthor"."_id", 'slug', "coauthor"."slug", 'displayName', "coauthor"."displayName", 'createdAt', "coauthor"."createdAt", 'profileImageId', "coauthor"."profileImageId", 'karma', "coauthor"."karma", 'jobTitle', "coauthor"."jobTitle", 'organization', "coauthor"."organization", 'postCount', "coauthor"."postCount", 'commentCount', "coauthor"."commentCount")) AS "coauthors", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "tag"."_id", 'name', "tag"."name", 'slug', "tag"."slug", 'core', "tag"."core")) AS "tags" FROM "Posts" AS "p" LEFT JOIN "Revisions" AS "contents" ON "p"."contents_latest" = "contents"."_id" LEFT JOIN "Users" AS "u" ON "p"."userId" = "u"."_id" AND NOT "u"."deleted" LEFT JOIN "Users" AS "coauthor" ON "coauthor"."_id" = '' AND NOT "coauthor"."deleted" LEFT JOIN "Tags" AS "tag" ON ("p"."tagRelevance" -> "tag"."_id")::INTEGER >= 1 AND NOT "tag"."deleted" WHERE NOT "p"."draft" AND NOT "p"."deletedDraft" AND NOT "p"."isFuture" AND NOT "p"."unlisted" AND NOT "p"."shortform" AND NOT "p"."rejected" AND NOT "p"."authorIsUnreviewed" AND NOT "p"."hiddenRelatedQuestion" AND "p"."postedAt" IS NOT NULL AND "p"."status" = 2 AND NOT "p"."isEvent" AND NOT "p"."sticky" AND "p"."groupId" IS NULL AND "p"."frontpageDate" > TO_TIMESTAMP(0) AND "p"."postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE($1::INTEGER, 21)) GROUP BY "p"."_id", "contents"."_id", "u"."_id" ORDER BY "p"."sticky" DESC, "p"."stickyPriority" DESC, ("p"."baseScore" + (CASE WHEN "p"."frontpageDate" IS NOT NULL THEN 10 ELSE 0 END) + (CASE WHEN "p"."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)) / POW(EXTRACT(EPOCH FROM NOW() - "p"."postedAt") / 3600000 + COALESCE($2::DOUBLE PRECISION, 2), COALESCE($3::DOUBLE PRECISION, 0.8)) DESC, "p"."_id" DESC LIMIT $4`;
 
 export interface ISidebarOpportunities {
   _id: string;

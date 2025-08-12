@@ -7,6 +7,7 @@ const styles = {
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
   sectionTitleSmall:
     "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
+  logo: "font-sans text-[19px] font-[400]",
 } as const satisfies Record<string, string>;
 
 type TextStyle = keyof typeof styles;

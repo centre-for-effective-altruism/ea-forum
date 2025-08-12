@@ -1,8 +1,11 @@
+"use client";
+
 import { ReactNode, useState } from "react";
 import {
   autoUpdate,
   flip,
   offset,
+  Placement,
   shift,
   useDismiss,
   useFloating,
@@ -11,18 +14,24 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
+import { createPortal } from "react-dom";
 
 export default function Tooltip({
-  className,
+  placement,
+  className = "",
+  tooltipClassName = "",
   title,
   children,
 }: Readonly<{
+  placement?: Placement;
   className?: string;
+  tooltipClassName?: string;
   title: ReactNode;
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
+    placement,
     open: isOpen,
     onOpenChange: setIsOpen,
     middleware: [offset(10), flip(), shift()],
@@ -40,22 +49,30 @@ export default function Tooltip({
   ]);
   return (
     <>
-      <div ref={refs.setReference} {...getReferenceProps()} className={className}>
+      <div
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        className={className}
+        data-component="Tooltip"
+      >
         {children}
       </div>
-      {isOpen && (
-        <div
-          ref={refs.setFloating}
-          style={floatingStyles}
-          {...getFloatingProps()}
-          className={`
+      {isOpen &&
+        createPortal(
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className={`
             absolute bg-(--color-tooltip-background) text-gray-50 rounded
-            px-2 py-1
+            px-2 py-1 overflow-hidden ${tooltipClassName}
           `}
-        >
-          {title}
-        </div>
-      )}
+            data-component="Tooltip"
+          >
+            {title}
+          </div>,
+          document.getElementById("tooltip-target")!,
+        )}
     </>
   );
 }

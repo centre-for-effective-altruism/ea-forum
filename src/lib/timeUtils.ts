@@ -1,4 +1,5 @@
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+const longRtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+const shortRtf = new Intl.RelativeTimeFormat("en", { style: "narrow" });
 
 const intervals = {
   year: 31536000,
@@ -10,19 +11,35 @@ const intervals = {
   second: 1,
 };
 
-export const formatRelativeTime = (date: Date) => {
+export const formatRelativeTime = (
+  date: Date,
+  {
+    style,
+  }: {
+    style: "long" | "short";
+  } = { style: "long" },
+) => {
+  const isLong = style === "long";
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
   for (const [unit, seconds] of Object.entries(intervals)) {
     const interval = Math.floor(diffInSeconds / seconds);
     if (interval >= 1) {
-      return rtf.format(-interval, unit as keyof typeof intervals);
+      const rtf = isLong ? longRtf : shortRtf;
+      const formatted = rtf.format(-interval, unit as keyof typeof intervals);
+      return isLong ? formatted : formatted.replace(" ago", "");
     }
   }
-  return "just now";
+  return isLong ? "just now" : "now";
 };
 
 export const formatShortDate = (date: Date) =>
+  date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+
+export const formatLongDate = (date: Date) =>
   date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",

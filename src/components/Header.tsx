@@ -37,8 +37,8 @@ export default function Header({
       >
         <header className={`${HEADER_HEIGHT_CLASS} static bg-gray-50 shadow-xs`}>
           <Column As="nav" className="h-full px-5 flex items-center">
-            <Type className="grow">
-              <Link href="/" className="inline-flex items-center gap-1">
+            <Type style="logo" className="grow">
+              <Link href="/" className="flex items-center gap-1">
                 <Image
                   src="/ea-logo-square.png"
                   alt="Effective Altruism Forum"

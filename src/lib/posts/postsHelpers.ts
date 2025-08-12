@@ -1,5 +1,6 @@
 import type { JsonRecord } from "../json";
 import { getSiteUrl } from "../routeHelpers";
+import { IFrontpagePostsList } from "./postQueries.queries";
 
 export const postGetPageUrl = ({
   post,
@@ -56,4 +57,44 @@ export const getEventLocation = ({
     return null;
   }
   return "Online";
+};
+
+type PostWithWordCount = Pick<
+  IFrontpagePostsList,
+  "readTimeMinutesOverride" | "wordCount"
+>;
+
+export const getPostReadTime = (post: PostWithWordCount) => {
+  if (typeof post.readTimeMinutesOverride === "number") {
+    return Math.max(1, Math.round(post.readTimeMinutesOverride));
+  }
+  if (post.wordCount) {
+    return Math.max(1, Math.round(post.wordCount / 250));
+  }
+  return 1;
+};
+
+const getSocialImagePreviewPrefix = () => {
+  const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  if (!cloudinaryCloudName) {
+    throw new Error("Cloudinary cloud name not configured");
+  }
+  return `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/c_fill,ar_1.91,g_auto/`;
+};
+
+type PostWithSocialPreview = Pick<
+  IFrontpagePostsList,
+  "isEvent" | "eventImageId" | "socialPreview" | "socialPreviewImageAutoUrl"
+>;
+
+export const getPostSocialImageUrl = (post: PostWithSocialPreview) => {
+  const manualId =
+    post.isEvent && post.eventImageId
+      ? post.eventImageId
+      : "SocialPreview/gegjp59jisldzazzk1cj";
+  //: post.socialPreview?.imageId;
+  if (manualId) {
+    return getSocialImagePreviewPrefix() + manualId;
+  }
+  return post.socialPreviewImageAutoUrl ?? null;
 };
