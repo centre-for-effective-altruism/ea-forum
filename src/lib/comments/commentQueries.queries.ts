@@ -12,7 +12,7 @@ export interface IFrontpageQuickTakes {
   user: {
     _id: string;
     slug: string;
-    displayName: string;
+    displayName: string | null;
     createdAt: Date | null;
     profileImageId: string | null;
     karma: number;
