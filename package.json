@@ -7,7 +7,7 @@
     "check-format": "prettier --check .",
     "dev": "next dev --turbopack",
     "format": "prettier . --write --log-level warn",
-    "generate": "env-cmd -x tradukisto 'src/lib/**/*.sql'",
+    "generate": "npx --node-options='--no-warnings=ExperimentalWarning' env-cmd -x tradukisto tradukisto.config.json",
     "lint": "next lint",
     "prepare": "husky",
     "start": "next start",
@@ -23,7 +23,7 @@
     "react-click-away-listener": "^2.4.0",
     "react-dom": "19.1.0",
     "server-only": "^0.0.1",
-    "tradukisto": "^0.0.7",
+    "tradukisto": "^0.0.9",
     "zod": "^4.0.14"
   },
   "devDependencies": {

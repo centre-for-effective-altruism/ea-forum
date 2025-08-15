@@ -32,3 +32,6 @@ export const makeCloudinaryImageUrl = (
   cloudinaryProps: CloudinaryPropsType,
 ) =>
   `https://res.cloudinary.com/${getCloudinaryCloudName()}/image/upload/c_crop,g_custom/${cloudinaryPropsToString(cloudinaryProps)}/${publicId}`;
+
+export const getSocialImagePreviewPrefix = () =>
+  `https://res.cloudinary.com/${getCloudinaryCloudName()}/image/upload/c_fill,ar_1.91,g_auto/`;

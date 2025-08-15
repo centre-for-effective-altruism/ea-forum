@@ -5,6 +5,7 @@ import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import { hashLoginToken } from "@/lib/authHelpers";
 import { UsersRepo } from "@/lib/users/userQueries.queries";
 import { getDbOrThrow } from "@/lib/db";
+import NotificationsProvider from "./Notifications/NotificationsProvider";
 
 export default async function Providers({
   children,
@@ -20,7 +21,9 @@ export default async function Providers({
     : null;
   return (
     <CurrentUserProvider currentUser={currentUser}>
-      <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
+      <NotificationsProvider>
+        <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
+      </NotificationsProvider>
     </CurrentUserProvider>
   );
 }
