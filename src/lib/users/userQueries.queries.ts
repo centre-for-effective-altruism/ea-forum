@@ -25,6 +25,7 @@ UPDATE "Users" SET "services" = fm_add_to_set("services", '{resume,loginTokens}'
 export interface ICurrentUser {
   _id: string;
   displayName: string | null;
+  profileImageId: string | null;
   slug: string;
   isAdmin: boolean;
   theme: Json;
@@ -43,7 +44,7 @@ export interface ICurrentUserParams {
 }
 
 export const currentUserSql = `-- Users.currentUser
-SELECT "u"."_id", "u"."displayName", "u"."slug", "u"."isAdmin", "u"."theme", "u"."hideIntercom", "u"."acceptedTos", "u"."hideNavigationSidebar", "u"."hideHomeRHS", "u"."currentFrontpageFilter", "u"."frontpageFilterSettings", "u"."lastNotificationsCheck", "u"."expandedFrontpageSections" FROM "Users" AS "u" LEFT JOIN "UserLoginTokens" AS "lt" ON "lt"."userId" = "u"."_id" AND "lt"."hashedToken" = $1::TEXT WHERE "lt"."userId" IS NOT NULL OR "u"."services" -> 'resume' -> 'loginTokens' @> ('[{"hashedToken": "' || $1::TEXT || '"}]')::JSONB LIMIT 1`;
+SELECT "u"."_id", "u"."displayName", "u"."profileImageId", "u"."slug", "u"."isAdmin", "u"."theme", "u"."hideIntercom", "u"."acceptedTos", "u"."hideNavigationSidebar", "u"."hideHomeRHS", "u"."currentFrontpageFilter", "u"."frontpageFilterSettings", "u"."lastNotificationsCheck", "u"."expandedFrontpageSections" FROM "Users" AS "u" LEFT JOIN "UserLoginTokens" AS "lt" ON "lt"."userId" = "u"."_id" AND "lt"."hashedToken" = $1::TEXT WHERE "lt"."userId" IS NOT NULL OR "u"."services" -> 'resume' -> 'loginTokens' @> ('[{"hashedToken": "' || $1::TEXT || '"}]')::JSONB LIMIT 1`;
 
 export class UsersRepo {
   protected client: PostgresClient;

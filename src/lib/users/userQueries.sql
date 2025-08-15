@@ -21,6 +21,7 @@ WHERE "_id" = :userId::TEXT;
 SELECT
   u."_id",
   u."displayName",
+  u."profileImageId",
   u."slug",
   u."isAdmin",
   u."theme",

@@ -1,0 +1,142 @@
+import type { CSSProperties } from "react";
+import {
+  CloudinaryPropsType,
+  makeCloudinaryImageUrl,
+} from "@/lib/cloudinaryHelpers";
+
+const DEFAULT_HEADER_HEIGHT = 300;
+
+export default function CloudinaryImage({
+  width,
+  height,
+  objectFit,
+  publicId,
+  darkPublicId,
+  imgProps,
+  alt = "",
+  fullWidthHeader,
+  loading,
+  className = "",
+  wrapperClassName = "",
+}: Readonly<{
+  /** Overridden if fullWidthHeader is true */
+  width?: number | string;
+  height?: number;
+  objectFit?: "fill" | "contain" | "cover" | "none" | "scale-down";
+  publicId: string;
+  darkPublicId?: string | null;
+  imgProps?: CloudinaryPropsType;
+  alt?: string;
+  /** Overrides width */
+  fullWidthHeader?: boolean;
+  loading?: "lazy" | "eager";
+  className?: string;
+  wrapperClassName?: string;
+}>) {
+  // TODO: Handle dark mode
+  const themeOptions = { name: "default" };
+
+  const cloudinaryProps: CloudinaryPropsType = {
+    c: "fill",
+    dpr: "auto",
+    q: "auto",
+    f: "auto",
+    g: "auto:faces",
+  };
+  const imageStyle: CSSProperties = {};
+
+  if (width) {
+    cloudinaryProps.w = width.toString();
+    imageStyle.width = width;
+  }
+  if (height) {
+    cloudinaryProps.h = height.toString();
+    imageStyle.height = height + "px";
+  }
+
+  // Ignore input width if we're told we have a fullWidthHeader
+  if (fullWidthHeader) {
+    // Cloudinary props will be used for src, but srcset will effectively
+    // overwrite these, unless client is IE
+    cloudinaryProps.h = ((height || DEFAULT_HEADER_HEIGHT) * 2).toString();
+    cloudinaryProps.w = "iw";
+    imageStyle.width = "100%";
+  }
+
+  if (objectFit) {
+    imageStyle.objectFit = objectFit;
+  }
+
+  Object.assign(cloudinaryProps, imgProps);
+
+  // Dark image should be used when:
+  //  - (darkPublicId is defined, obvs)
+  //  - And either:
+  //    - User is in dark mode
+  //    - Or, user is in auto mode, and their browser reports that they prefer
+  //      dark mode
+  // That last condition cannot be determined from the server, sadly. So we will
+  // have to rely on media queries
+  let shouldUseDarkImage: "yes" | "no" | "maybe" = "yes";
+  if (!darkPublicId || themeOptions.name === "default") {
+    shouldUseDarkImage = "no";
+  } else if (themeOptions.name === "auto") {
+    shouldUseDarkImage = "maybe";
+  } // themeOption.name must be dark, defaulting to yes
+  // Cast is safe because if shouldUseDarkImage is "yes" we know that darkPublicId is defined
+  const basicImageUrl = makeCloudinaryImageUrl(
+    shouldUseDarkImage === "yes" ? darkPublicId! : publicId,
+    cloudinaryProps,
+  );
+  const darkImageUrl =
+    darkPublicId && makeCloudinaryImageUrl(darkPublicId, cloudinaryProps);
+
+  // fullWidthHeader images are big and so need srcsets
+  let srcSetFunc: ((publicId: string) => string) | null = null;
+  if (fullWidthHeader) {
+    // We always double the height, to account for high dpi screens. We can't
+    // combine srcset width-checking with DPI-checking unfortunately.
+    const srcSetHeight = cloudinaryProps.h || (DEFAULT_HEADER_HEIGHT * 2).toString();
+    // NB: we lie about the final width here, we don't know it
+    srcSetFunc = (imgId) => `
+      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "450", h: srcSetHeight } })} 450w,
+      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "900", h: srcSetHeight } })} 900w,
+      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "1500", h: srcSetHeight } })} 1500w,
+      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "iw", h: srcSetHeight } })} 3000w,
+    `;
+  }
+
+  return (
+    <picture className={wrapperClassName} data-component="CloudinaryImage">
+      {srcSetFunc &&
+        (shouldUseDarkImage === "maybe" ? (
+          <source
+            // Cast is safe for similar reasons to above
+            srcSet={srcSetFunc(darkPublicId!)}
+            media="(min-width: 600px) and (prefers-color-scheme: dark)"
+          />
+        ) : (
+          <source
+            srcSet={srcSetFunc(
+              shouldUseDarkImage === "yes" ? darkPublicId! : publicId,
+            )}
+            media="(min-width: 600px)"
+          />
+        ))}
+      {shouldUseDarkImage === "maybe" && (
+        <source
+          // Cast is safe for similar reasons to above
+          srcSet={darkImageUrl!}
+          media="(prefers-color-scheme: dark)"
+        />
+      )}
+      <img
+        alt={alt}
+        loading={loading}
+        src={basicImageUrl}
+        style={imageStyle}
+        className={className}
+      />
+    </picture>
+  );
+}

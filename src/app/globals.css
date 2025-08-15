@@ -27,6 +27,9 @@
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
 
+  --always-white: #fff;
+  --always-black: #000;
+
   --spacing: 4px;
 
   --radius-sm: 6px;
@@ -56,6 +59,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-stack-sans);
+}
+
+@keyframes profile-image-loader {
+  0% {
+    background-position: right;
+  }
+}
+.profile-image-loading {
+  background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0) 33%,
+      rgba(255, 255, 255, 0.25) 50%,
+      rgba(0, 0, 0, 0) 66%
+    )
+    var(--color-gray-500);
+  background-size: 300% 100%;
+  animation: profile-image-loader 1s infinite;
 }
 
 .headroom-root .headroom {

@@ -1,6 +1,7 @@
 import type { Json } from "tradukisto";
 import { getSiteUrl } from "../routeHelpers";
 import { IFrontpagePostsList } from "./postQueries.queries";
+import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 
 export const postGetPageUrl = ({
   post,
@@ -75,11 +76,8 @@ export const getPostReadTime = (post: PostWithWordCount) => {
 };
 
 const getSocialImagePreviewPrefix = () => {
-  const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  if (!cloudinaryCloudName) {
-    throw new Error("Cloudinary cloud name not configured");
-  }
-  return `https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/c_fill,ar_1.91,g_auto/`;
+  const cloudName = getCloudinaryCloudName();
+  return `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,ar_1.91,g_auto/`;
 };
 
 type PostWithSocialPreview = Pick<

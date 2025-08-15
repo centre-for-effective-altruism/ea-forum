@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
+import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import Image from "next/image";
 import LoginPopover from "@/components/Auth/LoginPopover";
 import Column from "@/components/Column";
@@ -14,6 +15,7 @@ import Link from "@/components/Link";
 import Button from "@/components/Button";
 import Headroom from "./Headroom";
 import HeaderButton from "./HeaderButton";
+import UserProfileImage from "../UserProfileImage";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
@@ -60,7 +62,15 @@ export default function Header({
                 <>
                   <HeaderButton Icon={BellIcon} description="Notifications" />
                   <HeaderButton Icon={EnvelopeIcon} description="Messages" />
-                  <Type>{currentUser.displayName}</Type>
+                  <button
+                    className={`
+                      cursor-pointer hover:bg-gray-200 rounded p-2
+                      flex item-center gap-1
+                    `}
+                  >
+                    <UserProfileImage user={currentUser} size={32} />
+                    <ChevronDownIcon className="w-[16px] text-gray-600" />
+                  </button>
                 </>
               ) : (
                 <>
