@@ -64,6 +64,7 @@ const items = [
     description: "Opportunities to get involved with impactful work",
     UnselectedIcon: HeartIcon,
     SelectedIcon: HeartSelectedIcon,
+    loggedOutOnly: true,
   },
   {
     title: "Events",
@@ -79,10 +80,7 @@ const items = [
     UnselectedIcon: UserGroupIcon,
     SelectedIcon: UserGroupSelectedIcon,
   },
-] satisfies Pick<
-  ComponentProps<typeof NavItem>,
-  "title" | "href" | "description" | "UnselectedIcon" | "SelectedIcon"
->[];
+] satisfies Omit<ComponentProps<typeof NavItem>, "isSelected">[];
 
 const links = [
   {
@@ -114,25 +112,32 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   return (
-    <nav className="w-[250px]" data-component="Nav">
-      {items.map(({ href, ...props }) => (
-        <NavItem key={href} href={href} isSelected={pathname === href} {...props} />
-      ))}
-      <NavHr />
-      {links.map(({ title, href }) => (
+    <nav className="w-[220px]" data-component="Nav">
+      <div className="w-[min-content]">
+        {items.map(({ href, ...props }) => (
+          <NavItem
+            key={href}
+            href={href}
+            isSelected={pathname === href}
+            {...props}
+          />
+        ))}
+        <NavHr />
+        {links.map(({ title, href }) => (
+          <NavLink
+            key={href}
+            title={title}
+            href={href}
+            isSelected={pathname === href}
+          />
+        ))}
+        <NavHr />
         <NavLink
-          key={href}
-          title={title}
-          href={href}
-          isSelected={pathname === href}
+          title="Contact us"
+          href="/contact"
+          isSelected={pathname === "/contact"}
         />
-      ))}
-      <NavHr />
-      <NavLink
-        title="Contact us"
-        href="/contact"
-        isSelected={pathname === "/contact"}
-      />
+      </div>
     </nav>
   );
 }
