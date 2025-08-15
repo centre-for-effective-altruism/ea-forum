@@ -1,8 +1,8 @@
 import type { ComponentType } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import Type from "./Type";
-import Link from "./Link";
-import Tooltip from "./Tooltip";
+import Type from "@/components/Type";
+import Link from "@/components/Link";
+import Tooltip from "@/components/Tooltip";
 
 export default function NavItem({
   title,

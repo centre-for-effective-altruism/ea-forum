@@ -3,7 +3,7 @@ import { AnalyticsContext } from "@/lib/analyticsEvents";
 import HomeSidebar from "./HomeSidebar/HomeSidebar";
 import Column from "./Column";
 import Type from "./Type";
-import Nav from "./Nav";
+import Nav from "./Nav/Nav";
 
 export default async function HomePageLayout({
   mainPostsList,

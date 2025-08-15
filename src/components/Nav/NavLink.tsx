@@ -1,5 +1,5 @@
-import Link from "./Link";
-import Type from "./Type";
+import Link from "@/components/Link";
+import Type from "@/components/Type";
 
 export default function NavLink({
   title,

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Inter, Merriweather } from "next/font/google";
 import Providers from "@/components/Providers";
-import Header from "@/components/Header";
+import Header from "@/components/Header/Header";
 import "./globals.css";
 
 const inter = Inter({

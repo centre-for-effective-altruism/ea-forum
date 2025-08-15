@@ -1,4 +1,4 @@
-import SoftArrowUpIcon from "./icons/SoftArrowUpIcon";
+import SoftArrowUpIcon from "./Icons/SoftArrowUpIcon";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
 

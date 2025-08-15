@@ -4,12 +4,12 @@ import { useCallback, useState } from "react";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import Image from "next/image";
-import LoginPopover from "./Auth/LoginPopover";
+import LoginPopover from "@/components/Auth/LoginPopover";
+import Column from "@/components/Column";
+import Type from "@/components/Type";
+import Link from "@/components/Link";
+import Button from "@/components/Button";
 import Headroom from "./Headroom";
-import Column from "./Column";
-import Type from "./Type";
-import Link from "./Link";
-import Button from "./Button";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";

@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import Image from "next/image";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import BlurredBackgroundModal from "../BlurredBackgroundModal";
-import LightbulbIcon from "../icons/LightbulbIcon";
+import LightbulbIcon from "../Icons/LightbulbIcon";
 import PasswordPolicy from "./PasswordPolicy";
 import LoginInput from "./LoginInput";
 import Loading from "../Loading";
