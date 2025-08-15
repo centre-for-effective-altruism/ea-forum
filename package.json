@@ -22,7 +22,7 @@
     "react-click-away-listener": "^2.4.0",
     "react-dom": "19.1.0",
     "server-only": "^0.0.1",
-    "tradukisto": "^0.0.5",
+    "tradukisto": "^0.0.7",
     "zod": "^4.0.14"
   },
   "devDependencies": {

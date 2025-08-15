@@ -38,7 +38,7 @@ WHERE
   AND c."shortformFrontpage"
   AND NOT c."deleted"
   AND c."parentCommentId" IS NULL
-  AND c."createdAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays::INTEGER, 5))
+  AND c."createdAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays_::INTEGER, 5))
   -- Quick takes older than 2 hours must have at least 1 karma, quick takes
   -- younger than 2 hours must have at least -5 karma
   AND (

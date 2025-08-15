@@ -46,8 +46,8 @@ JSON_BUILD_OBJECT(
     + (CASE WHEN posts_table."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)
   ) / POW(
     EXTRACT(EPOCH FROM NOW() - posts_table."postedAt") / 3600000 +
-      COALESCE(:scoreBias::DOUBLE PRECISION, 2),
-    COALESCE(:timeDecayFactor::DOUBLE PRECISION, 0.8)
+      COALESCE(:scoreBias_::DOUBLE PRECISION, 2),
+    COALESCE(:timeDecayFactor_::DOUBLE PRECISION, 0.8)
   ) DESC,
   posts_table."_id" DESC
 
@@ -88,7 +88,7 @@ WHERE
   AND NOT p."sticky"
   AND p."groupId" IS NULL
   AND p."frontpageDate" > TO_TIMESTAMP(0)
-  AND p."postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays::INTEGER, 21))
+  AND p."postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays_::INTEGER, 21))
 GROUP BY p."_id", contents."_id", u."_id"
 ORDER BY magicSort(p)
 LIMIT :limit
@@ -102,7 +102,7 @@ WHERE
   AND NOT "sticky"
   AND "groupId" IS NULL
   AND "frontpageDate" > TO_TIMESTAMP(0)
-  AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays::INTEGER, 21))
+  AND "postedAt" > NOW() - MAKE_INTERVAL(days => COALESCE(:cutoffDays_::INTEGER, 21))
   -- "Opportunities to take action" tag
   AND ("tagRelevance"->'z8qFsGt5iXyZiLbjN')::INTEGER >= 1
 ORDER BY magicSort("Posts")

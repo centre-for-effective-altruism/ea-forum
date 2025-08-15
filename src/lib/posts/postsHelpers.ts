@@ -1,4 +1,4 @@
-import type { JsonRecord } from "../json";
+import type { Json } from "tradukisto";
 import { getSiteUrl } from "../routeHelpers";
 import { IFrontpagePostsList } from "./postQueries.queries";
 
@@ -39,7 +39,7 @@ export const getEventLocation = ({
   googleLocation,
 }: {
   onlineEvent: boolean;
-  googleLocation?: JsonRecord | null;
+  googleLocation?: Json | null;
 }) => {
   if (onlineEvent) {
     return "Online";

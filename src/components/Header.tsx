@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import Image from "next/image";
 import LoginPopover from "./Auth/LoginPopover";
 import Headroom from "./Headroom";
@@ -22,6 +23,7 @@ export default function Header({
   const setUnfixed = useCallback(() => setIsUnfixed(true), []);
   const setFixed = useCallback(() => setIsUnfixed(false), []);
   const { onLogin, onSignup } = useLoginPopoverContext();
+  const { currentUser } = useCurrentUser();
 
   return (
     <div className="w-screen" data-component="Header">
@@ -49,13 +51,19 @@ export default function Header({
               </Link>
             </Type>
             <div className="flex gap-2">
-              <Button variant="greyFilled" onClick={onLogin}>
-                Login
-              </Button>
-              <Button variant="primaryFilled" onClick={onSignup}>
-                Sign up
-              </Button>
-              <LoginPopover />
+              {currentUser ? (
+                <>{currentUser.displayName}</>
+              ) : (
+                <>
+                  <Button variant="greyFilled" onClick={onLogin}>
+                    Login
+                  </Button>
+                  <Button variant="primaryFilled" onClick={onSignup}>
+                    Sign up
+                  </Button>
+                  <LoginPopover />
+                </>
+              )}
             </div>
           </Column>
         </header>

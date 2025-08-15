@@ -1,44 +1,19 @@
 import z, { ZodError } from "zod/v4";
-import { AuthenticationClient } from "auth0";
-import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { IUserByAuth0Id, UsersRepo } from "@/lib/users/userQueries.queries";
 import { getDbOrThrow } from "@/lib/db";
-
-const auth0SettingsSchema = z.object({
-  domain: z.string().nonempty(),
-  clientId: z.string().nonempty(),
-  clientSecret: z.string().nonempty(),
-  realm: z.string().nonempty(),
-  scope: z.string().nonempty(),
-});
-
-type Auth0Client = z.infer<typeof auth0SettingsSchema> & {
-  client: AuthenticationClient;
-};
-
-const getAuth0Client = (): Auth0Client => {
-  const settings = auth0SettingsSchema.parse({
-    domain: process.env.AUTH0_ORIGINAL_DOMAIN,
-    clientId: process.env.AUTH0_CLIENT_ID,
-    clientSecret: process.env.AUTH0_CLIENT_SECRET,
-    realm: process.env.NEXT_PUBLIC_AUTH0_CONNECTION,
-    scope: process.env.AUTH0_SCOPE,
-  });
-  return {
-    ...settings,
-    client: new AuthenticationClient(settings),
-  };
-};
+import {
+  generateLoginToken,
+  getAuth0Client,
+  hashLoginToken,
+  parseJwt,
+} from "@/lib/authHelpers";
 
 class UserIsBannedError extends Error {
   constructor() {
     super("User is banned");
   }
 }
-
-const parseJwt = (token: string) =>
-  JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
 
 const auth0IdTokenToProfile = (idToken: string) => {
   const { iss, aud, iat, exp, ...rawProfile } = parseJwt(idToken);
@@ -70,11 +45,9 @@ const getOrCreateUser = async (
   usersRepo: UsersRepo,
   profile: Auth0UserProfile,
 ): Promise<IUserByAuth0Id | null> => {
-  const user = (
-    await usersRepo.userByAuth0Id({
-      auth0Id: profile.id,
-    })
-  )?.[0];
+  const user = await usersRepo.userByAuth0Id({
+    auth0Id: profile.id,
+  });
   if (!user) {
     // TODO: Create user - see getOrCreateForumUser in ForumMagnum
     throw new Error("TODO: Create user");
@@ -86,13 +59,7 @@ const getOrCreateUser = async (
   return user;
 };
 
-const hashLoginToken = (loginToken: string) => {
-  const hash = createHash("sha256");
-  hash.update(loginToken);
-  return hash.digest("base64");
-};
-
-const loginBodySchema = z.object({
+const loginRequestBodySchema = z.object({
   email: z.email(),
   password: z.string().nonempty(),
 });
@@ -102,7 +69,7 @@ export async function POST(request: Request) {
     const { client, realm, scope } = getAuth0Client();
 
     const rawInput = await request.json();
-    const { email, password } = loginBodySchema.parse(rawInput);
+    const { email, password } = loginRequestBodySchema.parse(rawInput);
 
     const grant = await client.oauth.passwordGrant({
       username: email,
@@ -128,7 +95,7 @@ export async function POST(request: Request) {
       throw new Error("User not found");
     }
 
-    const token = randomBytes(32).toString("hex");
+    const token = generateLoginToken();
     const cookieStore = await cookies();
     cookieStore.set("loginToken", token, {
       httpOnly: true,

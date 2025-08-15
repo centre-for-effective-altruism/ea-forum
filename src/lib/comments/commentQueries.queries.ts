@@ -38,12 +38,16 @@ export class CommentsRepo {
     this.client = client;
   }
 
-  frontpageQuickTakes(
+  async frontpageQuickTakes(
     params: IFrontpageQuickTakesParams,
   ): Promise<IFrontpageQuickTakes[]> {
-    return this.client.fetchRows(frontpageQuickTakesSql, [
-      params.cutoffDays === undefined ? null : params.cutoffDays,
-      params.limit === undefined ? null : params.limit,
-    ]);
+    const res: IFrontpageQuickTakes[] = await this.client.fetchRows(
+      frontpageQuickTakesSql,
+      [
+        params.cutoffDays === undefined ? null : params.cutoffDays,
+        params.limit === undefined ? null : params.limit,
+      ],
+    );
+    return res;
   }
 }

@@ -1,14 +1,11 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useMemo } from "react";
-
-type CurrentUser = {
-  _id: string;
-};
+import type { ICurrentUser } from "../users/userQueries.queries";
 
 type CurrentUserContext = {
-  currentUser: CurrentUser | null;
-  refetchCurrentUser: () => Promise<CurrentUser | null>;
+  currentUser: ICurrentUser | null;
+  refetchCurrentUser: () => Promise<ICurrentUser | null>;
 };
 
 const currentUserContext = createContext<CurrentUserContext>({
@@ -17,14 +14,16 @@ const currentUserContext = createContext<CurrentUserContext>({
 });
 
 export function CurrentUserProvider({
+  currentUser,
   children,
-}: Readonly<{ children: ReactNode }>) {
+}: Readonly<{ currentUser: ICurrentUser | null; children: ReactNode }>) {
   const value = useMemo(
     () => ({
-      currentUser: null,
+      currentUser,
+      // TODO: Implement refetching current user
       refetchCurrentUser: () => Promise.resolve(null),
     }),
-    [],
+    [currentUser],
   );
   return (
     <currentUserContext.Provider value={value}>
