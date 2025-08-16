@@ -16,6 +16,7 @@ import Button from "@/components/Button";
 import Headroom from "./Headroom";
 import HeaderButton from "./HeaderButton";
 import UserProfileImage from "../UserProfileImage";
+import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
@@ -62,15 +63,17 @@ export default function Header({
                 <>
                   <HeaderButton Icon={BellIcon} description="Notifications" />
                   <HeaderButton Icon={EnvelopeIcon} description="Messages" />
-                  <button
-                    className={`
-                      cursor-pointer hover:bg-gray-200 rounded p-2
-                      flex item-center gap-1
-                    `}
-                  >
-                    <UserProfileImage user={currentUser} size={32} />
-                    <ChevronDownIcon className="w-[16px] text-gray-600" />
-                  </button>
+                  <UserDropdownMenu>
+                    <button
+                      className={`
+                        cursor-pointer hover:bg-gray-200 rounded p-2
+                        flex item-center gap-1
+                      `}
+                    >
+                      <UserProfileImage user={currentUser} size={32} />
+                      <ChevronDownIcon className="w-[16px] text-gray-600" />
+                    </button>
+                  </UserDropdownMenu>
                 </>
               ) : (
                 <>
