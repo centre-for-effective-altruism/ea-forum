@@ -1,4 +1,4 @@
-import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.queries";
+import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.schemas";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import CommentBody from "./CommentBody";

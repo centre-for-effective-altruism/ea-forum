@@ -1,4 +1,4 @@
-import type { ISidebarEvents } from "@/lib/posts/postQueries.queries";
+import type { ISidebarEvents } from "@/lib/posts/postQueries.schemas";
 import { getEventLocation, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { formatShortDate } from "@/lib/timeUtils";
 import Type from "../Type";

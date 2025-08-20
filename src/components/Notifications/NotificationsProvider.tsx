@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
-import type { INotificationDisplays } from "@/lib/notifications/notificationsQueries.queries";
+import { createContext, ReactNode, useContext, useMemo } from "react";
+import type { INotificationDisplays } from "@/lib/notifications/notificationsQueries.schemas";
+import { getNotifications } from "@/lib/notifications/notificationsApi";
 
 type NotificationsContext = {
   notifications: INotificationDisplays[];
@@ -14,23 +15,29 @@ export default function NotificationsProvider({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const [notifications, setNotifications] = useState<INotificationDisplays[]>([]);
+  const { data } = getNotifications.use({
+    params: {},
+    pollIntervalMs: 30000,
+  });
 
-  useEffect(() => {
-    (async () => {
-      const response = await fetch("/api/notifications");
-      if (response.status !== 200) {
-        throw new Error("Couldn't fetch notifications");
-      }
-      const { notifications } = await response.json();
-      setNotifications(notifications);
-    })();
-  }, []);
+  const value = useMemo(
+    () => ({
+      notifications: data?.notifications ?? [],
+    }),
+    [data],
+  );
 
-  const value = useMemo(() => ({ notifications }), [notifications]);
   return (
     <notificationsContext.Provider value={value}>
       {children}
     </notificationsContext.Provider>
   );
 }
+
+export const useNotifications = (): NotificationsContext => {
+  const context = useContext(notificationsContext);
+  if (!context) {
+    throw new Error("No notifications context found");
+  }
+  return context;
+};

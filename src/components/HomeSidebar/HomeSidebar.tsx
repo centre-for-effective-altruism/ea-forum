@@ -1,5 +1,5 @@
 import { getDbOrThrow } from "@/lib/db";
-import { PostsRepo } from "@/lib/posts/postQueries.queries";
+import { PostsRepo } from "@/lib/posts/postQueries.repo";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getIntroCourseDetails } from "@/lib/introCourseDetails";
 import HomeSidebarDigestAd from "./HomeSidebarDigestAd";

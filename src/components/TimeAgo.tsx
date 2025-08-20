@@ -1,19 +1,22 @@
 import { formatLongDate, formatRelativeTime } from "@/lib/timeUtils";
 import Tooltip from "./Tooltip";
-import Type from "./Type";
+import Type, { TextStyle } from "./Type";
 
 export default function TimeAgo({
   time,
+  textStyle = "body",
   className,
 }: Readonly<{
-  time: Date;
+  time: Date | string;
+  textStyle?: TextStyle;
   className?: string;
 }>) {
+  const date = new Date(time);
   return (
-    <Tooltip title={formatLongDate(time)} className={className}>
-      <Type style="body">
-        <time dateTime={time.toISOString()} data-component="TimeAgo">
-          {formatRelativeTime(time, { style: "short" })}
+    <Tooltip title={formatLongDate(date)} className={className}>
+      <Type style={textStyle}>
+        <time dateTime={date.toISOString()} data-component="TimeAgo">
+          {formatRelativeTime(date, { style: "short" })}
         </time>
       </Type>
     </Tooltip>

@@ -1,4 +1,4 @@
-import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.queries";
+import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.schemas";
 import QuickTakeItem from "./QuickTakeItem";
 
 export default function QuickTakesList({

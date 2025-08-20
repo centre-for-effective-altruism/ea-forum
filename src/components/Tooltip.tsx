@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   autoUpdate,
   flip,
@@ -14,7 +15,6 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
-import { createPortal } from "react-dom";
 
 export default function Tooltip({
   placement,

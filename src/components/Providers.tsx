@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import { hashLoginToken } from "@/lib/authHelpers";
-import { UsersRepo } from "@/lib/users/userQueries.queries";
+import { UsersRepo } from "@/lib/users/userQueries.repo";
 import { getDbOrThrow } from "@/lib/db";
 import NotificationsProvider from "./Notifications/NotificationsProvider";
 

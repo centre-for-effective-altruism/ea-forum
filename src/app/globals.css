@@ -78,6 +78,20 @@ body {
   animation: profile-image-loader 1s infinite;
 }
 
+@keyframes wrapped-notification-shimmer {
+  from {
+    background-position: right;
+  }
+  to {
+    background-position: left;
+  }
+}
+.wrapped-notification {
+  background: linear-gradient(-75deg, #e05200 33%, #f09554 50%, #e05200 66%) #e05200;
+  background-size: 300% 100%;
+  animation: wrapped-notification-shimmer 2s infinite;
+}
+
 .headroom-root .headroom {
   top: unset;
   left: 0;

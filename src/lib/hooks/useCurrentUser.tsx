@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useMemo } from "react";
-import type { ICurrentUser } from "../users/userQueries.queries";
+import type { ICurrentUser } from "../users/userQueries.schemas";
 
 type CurrentUserContext = {
   currentUser: ICurrentUser | null;

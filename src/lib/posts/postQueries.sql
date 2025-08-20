@@ -77,7 +77,7 @@ FROM "Posts" p
 LEFT JOIN "Revisions" contents ON p."contents_latest" = contents."_id"
 LEFT JOIN "Users" u ON p."userId" = u."_id" AND NOT u."deleted"
 LEFT JOIN "Users" coauthor ON
-  coauthor."_id" = ''-- TODO ANY(p."coauthorUserIds")
+  coauthor."_id" = ANY(p."coauthorUserIds")
   AND NOT coauthor."deleted"
 LEFT JOIN "Tags" tag ON
   (p."tagRelevance"->tag."_id")::INTEGER >= 1
@@ -125,3 +125,39 @@ WHERE
   AND "startTime" > NOW()
 ORDER BY "startTime" ASC, "baseScore" DESC, "_id" DESC
 LIMIT :limit
+
+-- @query postById
+SELECT
+  p."_id",
+  p."title",
+  p."slug",
+  p."isEvent",
+  p."groupId",
+  p."eventImageId",
+  p."socialPreview",
+  p."socialPreviewImageAutoUrl",
+  p."readTimeMinutesOverride",
+  contents."wordCount",
+  SUBSTRING(contents."html", 1, 200) "htmlHighlight",
+  userJsonSelector(u) "user",
+  ARRAY_AGG(userJsonSelector(coauthor)) "coauthors",
+  ARRAY_AGG(tagJsonSelector(tag)) "tags"
+FROM "Posts" p
+LEFT JOIN "Revisions" contents ON p."contents_latest" = contents."_id"
+LEFT JOIN "Users" u ON p."userId" = u."_id" AND NOT u."deleted"
+LEFT JOIN "Users" coauthor ON
+  coauthor."_id" = ANY(p."coauthorUserIds")
+  AND NOT coauthor."deleted"
+LEFT JOIN "Tags" tag ON
+  (p."tagRelevance"->tag."_id")::INTEGER >= 1
+  AND NOT tag."deleted"
+WHERE
+  p."_id" = :postId::TEXT
+  AND (
+    (viewablePostFilter(p))
+    OR :currentUserId::TEXT = p."userId"
+    OR :currentUserId::TEXT = ANY(p."coauthorUserIds")
+    OR :currentUserIsAdmin::BOOLEAN
+  )
+GROUP BY p."_id", contents."_id", u."_id"
+LIMIT 1

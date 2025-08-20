@@ -17,6 +17,7 @@ import Headroom from "./Headroom";
 import HeaderButton from "./HeaderButton";
 import UserProfileImage from "../UserProfileImage";
 import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
+import NotificationsDropdown from "../Notifications/NotificationsDropdown";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
@@ -61,7 +62,9 @@ export default function Header({
               <HeaderButton Icon={MagnifyingGlassIcon} description="Search" />
               {currentUser ? (
                 <>
-                  <HeaderButton Icon={BellIcon} description="Notifications" />
+                  <NotificationsDropdown>
+                    <HeaderButton Icon={BellIcon} description="Notifications" />
+                  </NotificationsDropdown>
                   <HeaderButton Icon={EnvelopeIcon} description="Messages" />
                   <UserDropdownMenu>
                     <button

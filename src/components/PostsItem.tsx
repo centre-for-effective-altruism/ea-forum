@@ -1,18 +1,12 @@
 "use client";
 
-import type { IFrontpagePostsList } from "@/lib/posts/postQueries.queries";
+import type { IFrontpagePostsList } from "@/lib/posts/postQueries.schemas";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import {
-  getPostReadTime,
-  getPostSocialImageUrl,
-  postGetPageUrl,
-} from "@/lib/posts/postsHelpers";
+import { getPostReadTime, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
-import Image from "next/image";
-import PostBody from "./PostBody";
-import Tooltip from "./Tooltip";
+import PostsTooltip from "./PostsTooltip";
 import Type from "./Type";
 import Score from "./Score";
 
@@ -23,19 +17,9 @@ export default function PostsItem({
   post: IFrontpagePostsList;
   openInNewTab?: boolean;
 }>) {
-  const {
-    _id,
-    title,
-    baseScore,
-    commentCount,
-    voteCount,
-    sticky,
-    user,
-    htmlHighlight,
-  } = post;
+  const { _id, title, baseScore, commentCount, voteCount, sticky, user } = post;
   const postLink = postGetPageUrl({ post });
   const readTime = getPostReadTime(post);
-  const imageUrl = getPostSocialImageUrl(post);
   const { onClick } = useClickableCell({ href: postLink, openInNewTab });
   return (
     <AnalyticsContext
@@ -60,27 +44,11 @@ export default function PostsItem({
         >
           <Score baseScore={baseScore} voteCount={voteCount} orient="vertical" />
           <div className="truncate">
-            <Tooltip
-              placement="bottom-start"
-              tooltipClassName="bg-white! text-black! p-0! shadow-md w-[330px]"
-              title={
-                <div>
-                  <div className="p-2">
-                    <Type style="postTitle">{title}</Type>
-                    <PostBody html={htmlHighlight} />
-                  </div>
-                  {imageUrl && (
-                    <div className="relative w-[330px] h-[60px] min-h-[60px]">
-                      <Image src={imageUrl} alt={title} fill />
-                    </div>
-                  )}
-                </div>
-              }
-            >
+            <PostsTooltip post={post}>
               <Type style="postTitle" className="text-black truncate">
                 {title}
               </Type>
-            </Tooltip>
+            </PostsTooltip>
             <Type style="bodySmall">
               {user.displayName}
               {" · "}

@@ -2,23 +2,28 @@ import type { PgPostgresClient } from "tradukisto";
 import { cookies } from "next/headers";
 import { getDbOrThrow } from "./db";
 import { hashLoginToken } from "./authHelpers";
-import { ICurrentUser, UsersRepo } from "./users/userQueries.queries";
+import { UsersRepo } from "./users/userQueries.repo";
+import type { ICurrentUser } from "./users/userQueries.schemas";
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+type RequestHandlerResponse = Response | Promise<Response>;
 
 type RequestHandlerArgs = {
   request: Request;
   cookieStore: CookieStore;
   db: PgPostgresClient;
   currentUser: ICurrentUser | null;
+  params: Promise<Record<string, string>>;
 };
-
-type RequestHandlerResponse = Response | Promise<Response>;
 
 type RequestHandler = (args: RequestHandlerArgs) => RequestHandlerResponse;
 
 export const requestHandler = (handler: RequestHandler) => {
-  const wrappedRequestHandler = async (request: Request) => {
+  const wrappedRequestHandler = async (
+    request: Request,
+    { params }: { params: Promise<Record<string, string>> },
+  ) => {
     const db = getDbOrThrow();
     const cookieStore = await cookies();
     const loginToken = cookieStore.get("loginToken")?.value;
@@ -32,6 +37,7 @@ export const requestHandler = (handler: RequestHandler) => {
       cookieStore,
       db,
       currentUser,
+      params,
     });
     return response;
   };
@@ -49,7 +55,7 @@ type LoggedInOnlyRequestHandler = (
 export const loggedInOnlyRequestHandler = (handler: LoggedInOnlyRequestHandler) =>
   requestHandler(({ currentUser, ...args }) => {
     if (!currentUser) {
-      return Response.json({ error: "Unauthorized" }, { status: 403 });
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
     return handler({ ...args, currentUser });
   });
@@ -65,9 +71,9 @@ type AdminOnlyRequestHandler = (
 ) => RequestHandlerResponse;
 
 export const adminOnlyRequestHandler = (handler: AdminOnlyRequestHandler) =>
-  requestHandler(({ currentUser, ...args }) => {
-    if (!currentUser?.isAdmin) {
-      return Response.json({ error: "Unauthorized" }, { status: 403 });
+  loggedInOnlyRequestHandler(({ currentUser, ...args }) => {
+    if (!currentUser.isAdmin) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler({ ...args, currentUser: currentUser as AdminUser });
   });

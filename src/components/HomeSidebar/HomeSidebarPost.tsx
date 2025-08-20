@@ -1,4 +1,4 @@
-import type { ISidebarOpportunities } from "@/lib/posts/postQueries.queries";
+import type { ISidebarOpportunities } from "@/lib/posts/postQueries.schemas";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import Type from "../Type";

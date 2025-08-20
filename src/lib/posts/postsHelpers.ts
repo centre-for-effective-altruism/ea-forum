@@ -1,6 +1,6 @@
 import type { Json } from "tradukisto";
 import { getSiteUrl } from "../routeHelpers";
-import { IFrontpagePostsList } from "./postQueries.queries";
+import { IFrontpagePostsList } from "./postQueries.schemas";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 
 export const postGetPageUrl = ({
@@ -80,7 +80,7 @@ const getSocialImagePreviewPrefix = () => {
   return `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,ar_1.91,g_auto/`;
 };
 
-type PostWithSocialPreview = Pick<
+export type PostWithSocialPreview = Pick<
   IFrontpagePostsList,
   "isEvent" | "eventImageId" | "socialPreview" | "socialPreviewImageAutoUrl"
 >;

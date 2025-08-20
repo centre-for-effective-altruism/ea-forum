@@ -1,4 +1,4 @@
-import type { ICurrentUser } from "./userQueries.queries";
+import type { ICurrentUser } from "./userQueries.schemas";
 
 export const userGetProfileUrl = ({ slug }: Pick<ICurrentUser, "slug">) =>
   `/users/${slug}`;

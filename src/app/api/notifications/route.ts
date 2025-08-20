@@ -1,6 +1,6 @@
 import { loggedInOnlyRequestHandler } from "@/lib/requestHandler";
 import { getSocialImagePreviewPrefix } from "@/lib/cloudinaryHelpers";
-import { NotificationsRepo } from "@/lib/notifications/notificationsQueries.queries";
+import { NotificationsRepo } from "@/lib/notifications/notificationsQueries.repo";
 
 export const GET = loggedInOnlyRequestHandler(async ({ db, currentUser }) => {
   const notifications = await new NotificationsRepo(db).notificationDisplays({

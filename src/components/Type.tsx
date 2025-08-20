@@ -10,7 +10,7 @@ const styles = {
   logo: "font-sans text-[19px] font-[400]",
 } as const satisfies Record<string, string>;
 
-type TextStyle = keyof typeof styles;
+export type TextStyle = keyof typeof styles;
 
 export default function Type({
   style = "body",

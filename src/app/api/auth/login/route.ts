@@ -1,6 +1,7 @@
 import z, { ZodError } from "zod/v4";
 import { cookies } from "next/headers";
-import { IUserByAuth0Id, UsersRepo } from "@/lib/users/userQueries.queries";
+import { UsersRepo } from "@/lib/users/userQueries.repo";
+import type { IUserByAuth0Id } from "@/lib/users/userQueries.schemas";
 import { getDbOrThrow } from "@/lib/db";
 import {
   generateLoginToken,

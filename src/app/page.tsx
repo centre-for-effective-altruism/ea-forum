@@ -1,8 +1,8 @@
 import HomePageLayout from "@/components/HomePageLayout";
 import PostsList from "@/components/PostsList";
-import { PostsRepo } from "@/lib/posts/postQueries.queries";
 import { getDbOrThrow } from "@/lib/db";
-import { CommentsRepo } from "@/lib/comments/commentQueries.queries";
+import { PostsRepo } from "@/lib/posts/postQueries.repo";
+import { CommentsRepo } from "@/lib/comments/commentQueries.repo";
 import QuickTakesList from "@/components/QuickTakesList";
 
 export default async function HomePage() {
