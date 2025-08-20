@@ -17,6 +17,7 @@
     "@floating-ui/react": "^0.27.15",
     "@heroicons/react": "^2.2.0",
     "auth0": "^4.27.0",
+    "lru-cache": "^11.1.0",
     "next": "15.4.5",
     "pure-rand": "^7.0.1",
     "react": "19.1.0",
