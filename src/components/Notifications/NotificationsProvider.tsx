@@ -3,6 +3,7 @@
 import { createContext, ReactNode, useContext, useMemo } from "react";
 import type { INotificationDisplays } from "@/lib/notifications/notificationsQueries.schemas";
 import { getNotifications } from "@/lib/notifications/notificationsApi";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 type NotificationsContext = {
   notifications: INotificationDisplays[];
@@ -15,9 +16,11 @@ export default function NotificationsProvider({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const { currentUser } = useCurrentUser();
   const { data } = getNotifications.use({
     params: {},
     pollIntervalMs: 30000,
+    skip: !currentUser,
   });
 
   const value = useMemo(
