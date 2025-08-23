@@ -121,7 +121,7 @@ export default function UserProfileImage({
         imgProps={{ q: "100", dpr: "2" }}
         publicId={user.profileImageId}
         alt={user.displayName}
-        className={rootClassName}
+        className={`${rootClassName} text-[0px]`}
         wrapperClassName={wrapperClassName}
         data-component="UserProfileImage"
       />

@@ -26,6 +26,7 @@
   --color-login-input: #efefef;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
+  --color-posts-page-hr: #e4e4e4;
 
   --always-white: #fff;
   --always-black: #000;
@@ -37,14 +38,14 @@
 
   --font-stack-sans:
     GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-stack-serif: Merriweather, Baskerville, "Libre Baskerville", Georgia, serif;
+  --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
 
   --zindex-headroom: 1300;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* TODO */
+    /* TODO: Dark mode colors */
   }
 }
 

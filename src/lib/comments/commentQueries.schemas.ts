@@ -14,7 +14,7 @@ export const frontpageQuickTakesSchema = z.object({
   user: z.object({
     _id: z.string(),
     slug: z.string(),
-    displayName: z.string().nullable(),
+    displayName: z.string(),
     createdAt: z
       .union([z.string(), z.date()])
       .pipe(z.transform((val) => (val instanceof Date ? val : new Date(val))))

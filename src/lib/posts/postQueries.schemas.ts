@@ -136,6 +136,11 @@ export const postByIdSchema = z.object({
   socialPreview: z.json().nullable(),
   socialPreviewImageAutoUrl: z.string().nullable(),
   readTimeMinutesOverride: z.number().nullable(),
+  postedAt: z
+    .union([z.string(), z.date()])
+    .pipe(z.transform((val) => (val instanceof Date ? val : new Date(val)))),
+  baseScore: z.number(),
+  commentCount: z.number(),
   wordCount: z.number().nullable(),
   htmlHighlight: z.string().nullable(),
   user: z.object({
@@ -184,8 +189,23 @@ export type IPostById = z.infer<typeof postByIdSchema>;
 
 export const postByIdParamsSchema = z.object({
   postId: z.string(),
-  currentUserId: z.string(),
-  currentUserIsAdmin: z.boolean(),
+  currentUserId: z.string().nullable().optional(),
+  currentUserIsAdmin: z.boolean().nullable().optional(),
 });
 
 export type IPostByIdParams = z.infer<typeof postByIdParamsSchema>;
+
+export const postBodyByIdSchema = z.object({
+  _id: z.string(),
+  body: z.string().nullable(),
+});
+
+export type IPostBodyById = z.infer<typeof postBodyByIdSchema>;
+
+export const postBodyByIdParamsSchema = z.object({
+  postId: z.string(),
+  currentUserId: z.string().nullable().optional(),
+  currentUserIsAdmin: z.boolean().nullable().optional(),
+});
+
+export type IPostBodyByIdParams = z.infer<typeof postBodyByIdParamsSchema>;

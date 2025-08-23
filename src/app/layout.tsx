@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import { Inter, Merriweather } from "next/font/google";
+import { Charis_SIL, Inter } from "next/font/google";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import "./globals.css";
@@ -11,8 +11,9 @@ const inter = Inter({
   preload: true,
 });
 
-const merriweather = Merriweather({
-  variable: "--font-merriweather",
+const charis = Charis_SIL({
+  weight: ["400", "700"],
+  variable: "--font-charis",
   display: "swap",
   preload: true,
 });
@@ -41,7 +42,7 @@ export default async function RootLayout({
       <body
         className={`
           antialiased w-screen min-h-screen flex flex-col
-          ${inter.variable} ${merriweather.variable}
+          ${inter.variable} ${charis.variable}
         `}
       >
         <Providers>

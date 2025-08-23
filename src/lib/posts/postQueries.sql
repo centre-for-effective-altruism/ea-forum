@@ -137,6 +137,9 @@ SELECT
   p."socialPreview",
   p."socialPreviewImageAutoUrl",
   p."readTimeMinutesOverride",
+  p."postedAt",
+  p."baseScore",
+  p."commentCount",
   contents."wordCount",
   SUBSTRING(contents."html", 1, 200) "htmlHighlight",
   userJsonSelector(u) "user",
@@ -154,10 +157,37 @@ LEFT JOIN "Tags" tag ON
 WHERE
   p."_id" = :postId::TEXT
   AND (
-    (viewablePostFilter(p))
-    OR :currentUserId::TEXT = p."userId"
-    OR :currentUserId::TEXT = ANY(p."coauthorUserIds")
-    OR :currentUserIsAdmin::BOOLEAN
+    viewablePostFilter(p)
+    OR (
+      :currentUserId_::TEXT IS NOT NULL
+      AND (
+        :currentUserId_::TEXT = p."userId"
+        OR :currentUserId_::TEXT = ANY(p."coauthorUserIds")
+      )
+    )
+    OR COALESCE(:currentUserIsAdmin_::BOOLEAN, FALSE)
   )
 GROUP BY p."_id", contents."_id", u."_id"
+LIMIT 1
+
+-- @query postBodyById
+SELECT
+  p."_id",
+  contents."html" "body"
+FROM "Posts" p
+LEFT JOIN "Revisions" contents ON p."contents_latest" = contents."_id"
+WHERE
+  p."_id" = :postId::TEXT
+  AND (
+    viewablePostFilter(p)
+    OR (
+      :currentUserId_::TEXT IS NOT NULL
+      AND (
+        :currentUserId_::TEXT = p."userId"
+        OR :currentUserId_::TEXT = ANY(p."coauthorUserIds")
+      )
+    )
+    OR COALESCE(:currentUserIsAdmin_::BOOLEAN, FALSE)
+  )
+GROUP BY p."_id", contents."_id"
 LIMIT 1

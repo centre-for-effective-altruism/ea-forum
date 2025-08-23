@@ -29,7 +29,7 @@ export type ISaveUserLoginTokenParams = z.infer<
 
 export const currentUserSchema = z.object({
   _id: z.string(),
-  displayName: z.string().nullable(),
+  displayName: z.string(),
   profileImageId: z.string().nullable(),
   slug: z.string(),
   isAdmin: z.boolean(),

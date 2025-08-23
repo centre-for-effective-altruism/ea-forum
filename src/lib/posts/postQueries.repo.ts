@@ -10,6 +10,8 @@ import type {
   ISidebarEventsParams,
   IPostById,
   IPostByIdParams,
+  IPostBodyById,
+  IPostBodyByIdParams,
 } from "./postQueries.schemas.ts";
 
 export const frontpagePostsListSql = `-- Posts.frontpagePostsList
@@ -22,7 +24,10 @@ export const sidebarEventsSql = `-- Posts.sidebarEvents
 SELECT "_id", "slug", "title", "startTime", "onlineEvent", "googleLocation", "isEvent", "groupId" FROM "Posts" WHERE NOT "Posts"."draft" AND NOT "Posts"."deletedDraft" AND NOT "Posts"."isFuture" AND NOT "Posts"."unlisted" AND NOT "Posts"."shortform" AND NOT "Posts"."rejected" AND NOT "Posts"."authorIsUnreviewed" AND NOT "Posts"."hiddenRelatedQuestion" AND "Posts"."postedAt" IS NOT NULL AND "Posts"."status" = 2 AND "isEvent" AND "startTime" > NOW() ORDER BY "startTime" ASC, "baseScore" DESC, "_id" DESC LIMIT $1`;
 
 export const postByIdSql = `-- Posts.postById
-SELECT "p"."_id", "p"."title", "p"."slug", "p"."isEvent", "p"."groupId", "p"."eventImageId", "p"."socialPreview", "p"."socialPreviewImageAutoUrl", "p"."readTimeMinutesOverride", "contents"."wordCount", SUBSTRING("contents"."html", 1, 200) AS "htmlHighlight", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount") AS "user", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "coauthor"."_id", 'slug', "coauthor"."slug", 'displayName', "coauthor"."displayName", 'createdAt', "coauthor"."createdAt", 'profileImageId', "coauthor"."profileImageId", 'karma', "coauthor"."karma", 'jobTitle', "coauthor"."jobTitle", 'organization', "coauthor"."organization", 'postCount', "coauthor"."postCount", 'commentCount', "coauthor"."commentCount")) AS "coauthors", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "tag"."_id", 'name', "tag"."name", 'slug', "tag"."slug", 'core', "tag"."core")) AS "tags" FROM "Posts" AS "p" LEFT JOIN "Revisions" AS "contents" ON "p"."contents_latest" = "contents"."_id" LEFT JOIN "Users" AS "u" ON "p"."userId" = "u"."_id" AND NOT "u"."deleted" LEFT JOIN "Users" AS "coauthor" ON "coauthor"."_id" = ANY("p"."coauthorUserIds") AND NOT "coauthor"."deleted" LEFT JOIN "Tags" AS "tag" ON ("p"."tagRelevance" -> "tag"."_id")::INTEGER >= 1 AND NOT "tag"."deleted" WHERE "p"."_id" = $1::TEXT AND ((NOT "p"."draft" AND NOT "p"."deletedDraft" AND NOT "p"."isFuture" AND NOT "p"."unlisted" AND NOT "p"."shortform" AND NOT "p"."rejected" AND NOT "p"."authorIsUnreviewed" AND NOT "p"."hiddenRelatedQuestion" AND "p"."postedAt" IS NOT NULL AND "p"."status" = 2) OR $2::TEXT = "p"."userId" OR $2::TEXT = ANY("p"."coauthorUserIds") OR $3::BOOLEAN) GROUP BY "p"."_id", "contents"."_id", "u"."_id" LIMIT 1`;
+SELECT "p"."_id", "p"."title", "p"."slug", "p"."isEvent", "p"."groupId", "p"."eventImageId", "p"."socialPreview", "p"."socialPreviewImageAutoUrl", "p"."readTimeMinutesOverride", "p"."postedAt", "p"."baseScore", "p"."commentCount", "contents"."wordCount", SUBSTRING("contents"."html", 1, 200) AS "htmlHighlight", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount") AS "user", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "coauthor"."_id", 'slug', "coauthor"."slug", 'displayName', "coauthor"."displayName", 'createdAt', "coauthor"."createdAt", 'profileImageId', "coauthor"."profileImageId", 'karma', "coauthor"."karma", 'jobTitle', "coauthor"."jobTitle", 'organization', "coauthor"."organization", 'postCount', "coauthor"."postCount", 'commentCount', "coauthor"."commentCount")) AS "coauthors", ARRAY_AGG(JSON_BUILD_OBJECT('_id', "tag"."_id", 'name', "tag"."name", 'slug', "tag"."slug", 'core', "tag"."core")) AS "tags" FROM "Posts" AS "p" LEFT JOIN "Revisions" AS "contents" ON "p"."contents_latest" = "contents"."_id" LEFT JOIN "Users" AS "u" ON "p"."userId" = "u"."_id" AND NOT "u"."deleted" LEFT JOIN "Users" AS "coauthor" ON "coauthor"."_id" = ANY("p"."coauthorUserIds") AND NOT "coauthor"."deleted" LEFT JOIN "Tags" AS "tag" ON ("p"."tagRelevance" -> "tag"."_id")::INTEGER >= 1 AND NOT "tag"."deleted" WHERE "p"."_id" = $1::TEXT AND (NOT "p"."draft" AND NOT "p"."deletedDraft" AND NOT "p"."isFuture" AND NOT "p"."unlisted" AND NOT "p"."shortform" AND NOT "p"."rejected" AND NOT "p"."authorIsUnreviewed" AND NOT "p"."hiddenRelatedQuestion" AND "p"."postedAt" IS NOT NULL AND "p"."status" = 2 OR ($2::TEXT IS NOT NULL AND ($2::TEXT = "p"."userId" OR $2::TEXT = ANY("p"."coauthorUserIds"))) OR COALESCE($3::BOOLEAN, FALSE)) GROUP BY "p"."_id", "contents"."_id", "u"."_id" LIMIT 1`;
+
+export const postBodyByIdSql = `-- Posts.postBodyById
+SELECT "p"."_id", "contents"."html" AS "body" FROM "Posts" AS "p" LEFT JOIN "Revisions" AS "contents" ON "p"."contents_latest" = "contents"."_id" WHERE "p"."_id" = $1::TEXT AND (NOT "p"."draft" AND NOT "p"."deletedDraft" AND NOT "p"."isFuture" AND NOT "p"."unlisted" AND NOT "p"."shortform" AND NOT "p"."rejected" AND NOT "p"."authorIsUnreviewed" AND NOT "p"."hiddenRelatedQuestion" AND "p"."postedAt" IS NOT NULL AND "p"."status" = 2 OR ($2::TEXT IS NOT NULL AND ($2::TEXT = "p"."userId" OR $2::TEXT = ANY("p"."coauthorUserIds"))) OR COALESCE($3::BOOLEAN, FALSE)) GROUP BY "p"."_id", "contents"."_id" LIMIT 1`;
 
 export class PostsRepo {
   protected client: PostgresClient;
@@ -70,6 +75,15 @@ export class PostsRepo {
 
   async postById(params: IPostByIdParams): Promise<IPostById | null> {
     const res: IPostById[] = await this.client.fetchRows(postByIdSql, [
+      params.postId === undefined ? null : params.postId,
+      params.currentUserId === undefined ? null : params.currentUserId,
+      params.currentUserIsAdmin === undefined ? null : params.currentUserIsAdmin,
+    ]);
+    return res?.[0] ?? null;
+  }
+
+  async postBodyById(params: IPostBodyByIdParams): Promise<IPostBodyById | null> {
+    const res: IPostBodyById[] = await this.client.fetchRows(postBodyByIdSql, [
       params.postId === undefined ? null : params.postId,
       params.currentUserId === undefined ? null : params.currentUserId,
       params.currentUserIsAdmin === undefined ? null : params.currentUserIsAdmin,
