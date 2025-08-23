@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  rewrites: async () => {
+    return [
+      {
+        source: "/about",
+        destination: "/posts/ht2dScQTpeBXB6uMb/how-to-use-the-forum-intro",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
