@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { PostsRepo } from "@/lib/posts/postQueries.repo";
 import { getPostReadTime } from "@/lib/posts/postsHelpers";
 import { getCurrentUser } from "@/lib/requestHandler";
@@ -31,8 +32,7 @@ export default async function PostsPage({
   ]);
 
   if (!post || !postBody) {
-    // TODO
-    return null;
+    notFound();
   }
 
   return (
