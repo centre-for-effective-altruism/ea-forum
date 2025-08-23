@@ -6,9 +6,9 @@ import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getPostReadTime, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
-import PostsTooltip from "./PostsTooltip";
-import Type from "./Type";
-import Score from "./Score";
+import PostsTooltip from "../PostsTooltip";
+import Type from "../Type";
+import Score from "../Score";
 
 export default function PostsItem({
   post,

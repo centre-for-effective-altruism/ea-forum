@@ -1,4 +1,4 @@
-import type { Json } from "tradukisto";
+import type { Json, JsonRecord } from "tradukisto";
 import { getSiteUrl } from "../routeHelpers";
 import { IFrontpagePostsList } from "./postQueries.schemas";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
@@ -89,8 +89,7 @@ export const getPostSocialImageUrl = (post: PostWithSocialPreview) => {
   const manualId =
     post.isEvent && post.eventImageId
       ? post.eventImageId
-      : "SocialPreview/gegjp59jisldzazzk1cj";
-  //: post.socialPreview?.imageId;
+      : (post.socialPreview as JsonRecord)?.imageId;
   if (manualId) {
     return getSocialImagePreviewPrefix() + manualId;
   }
