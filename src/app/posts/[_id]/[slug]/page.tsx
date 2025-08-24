@@ -7,31 +7,27 @@ import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import UserProfileImage from "@/components/UserProfileImage";
-import PostBody from "@/components/ContentStyles/PostBody";
+import CommentsSection from "@/components/Comments/CommentsSection";
+import LazyPostBody from "@/components/ContentStyles/LazyPostBody";
 import Type from "@/components/Type";
+import { Suspense } from "react";
 
 export default async function PostsPage({
   params,
 }: {
   params: Promise<{ _id: string }>;
 }) {
-  const { _id } = await params;
-  const { db, currentUser } = await getCurrentUser();
-  const postsRepo = new PostsRepo(db);
-  const [post, postBody] = await Promise.all([
-    postsRepo.postById({
-      postId: _id,
-      currentUserId: currentUser?._id ?? null,
-      currentUserIsAdmin: !!currentUser?.isAdmin,
-    }),
-    postsRepo.postBodyById({
-      postId: _id,
-      currentUserId: currentUser?._id ?? null,
-      currentUserIsAdmin: !!currentUser?.isAdmin,
-    }),
+  const [{ _id }, { db, currentUser }] = await Promise.all([
+    params,
+    getCurrentUser(),
   ]);
+  const post = await new PostsRepo(db).postById({
+    postId: _id,
+    currentUserId: currentUser?._id ?? null,
+    currentUserIsAdmin: !!currentUser?.isAdmin,
+  });
 
-  if (!post || !postBody) {
+  if (!post) {
     notFound();
   }
 
@@ -68,7 +64,22 @@ export default async function PostsPage({
         <div className="flex gap-5">TODO: Buttons</div>
       </div>
       <div className="mt-6">TODO: Tags</div>
-      <PostBody html={postBody.body} className="mt-10" />
+      <Suspense
+        fallback={
+          <div className="mt-10 w-full flex flex-col gap-[1em]">
+            <div className="w-full h-50 bg-gray-100 rounded" />
+            <div className="w-full h-50 bg-gray-100 rounded" />
+            <div className="w-full h-50 bg-gray-100 rounded" />
+          </div>
+        }
+      >
+        <LazyPostBody
+          currentUser={currentUser}
+          postId={post._id}
+          className="mt-10"
+        />
+      </Suspense>
+      <CommentsSection postId={post._id} />
     </div>
   );
 }
