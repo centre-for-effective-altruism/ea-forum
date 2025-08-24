@@ -7,8 +7,10 @@ import { getPostReadTime, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostsTooltip from "../PostsTooltip";
-import Type from "../Type";
+import UsersTooltip from "../UsersTooltip";
 import Score from "../Score";
+import Type from "../Type";
+import Link from "../Link";
 
 export default function PostsItem({
   post,
@@ -44,13 +46,15 @@ export default function PostsItem({
         >
           <Score baseScore={baseScore} voteCount={voteCount} orient="vertical" />
           <div className="truncate">
-            <PostsTooltip post={post}>
-              <Type style="postTitle" className="text-black truncate">
-                {title}
-              </Type>
-            </PostsTooltip>
+            <Type style="postTitle" className="text-black truncate">
+              <PostsTooltip As="span" post={post}>
+                <Link href={postLink}>{title}</Link>
+              </PostsTooltip>
+            </Type>
             <Type style="bodySmall">
-              {user.displayName}
+              <UsersTooltip As="span" user={user}>
+                {user.displayName}
+              </UsersTooltip>
               {" · "}
               {readTime}m read
             </Type>

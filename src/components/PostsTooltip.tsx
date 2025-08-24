@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { ElementType, FC, ReactNode } from "react";
 import type { Placement } from "@floating-ui/react";
 import type { IFrontpagePostsList } from "@/lib/posts/postQueries.schemas";
 import { getPostById } from "@/lib/posts/postsApi";
@@ -66,16 +66,19 @@ export default function PostsTooltip({
   post,
   postId,
   placement = "bottom-start",
+  As = "div",
   children,
 }: Readonly<{
   post?: PostForTooltip | null;
   postId?: string | null;
   placement?: Placement;
+  As?: ElementType;
   children: ReactNode;
 }>) {
   return (
     <Tooltip
       placement={placement}
+      As={As}
       tooltipClassName="bg-white! text-black! p-0! shadow-md w-[330px]"
       title={<PostsTooltipWrapper post={post} postId={postId} />}
     >

@@ -1,10 +1,13 @@
 import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.schemas";
+import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import CommentBody from "../ContentStyles/CommentBody";
+import UsersTooltip from "../UsersTooltip";
 import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
+import Link from "../Link";
 
 export default function QuickTakeItem({
   quickTake,
@@ -20,7 +23,11 @@ export default function QuickTakeItem({
       <div className="flex flex-row w-full gap-2 items-center mb-2 text-gray-600">
         <Score baseScore={baseScore} voteCount={voteCount} orient="horizontal" />
         <Type style="body" className="text-black font-[700]">
-          {user.displayName}
+          <Link href={userGetProfileUrl(user)}>
+            <UsersTooltip As="span" user={user}>
+              {user.displayName}
+            </UsersTooltip>
+          </Link>
         </Type>
         <TimeAgo time={postedAt} className="grow" />
         <Type
