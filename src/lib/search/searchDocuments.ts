@@ -1,0 +1,134 @@
+import type { SocialMediaSiteName } from "@/components/SocialMediaIcon";
+
+export interface SearchBase {
+  objectID: string;
+  _id: string;
+  publicDateMs: number;
+}
+
+export interface SearchComment extends SearchBase {
+  _index: "comments";
+  userId: string;
+  baseScore: number;
+  isDeleted: boolean;
+  retracted: boolean;
+  deleted: boolean;
+  draft: boolean;
+  spam: boolean;
+  legacy: boolean;
+  userIP: string | null;
+  createdAt: string;
+  postedAt: string;
+  af: boolean;
+  authorDisplayName?: string | null;
+  authorUserName?: string | null;
+  authorSlug?: string | null;
+  postId?: string;
+  postTitle?: string | null;
+  postSlug?: string;
+  postIsEvent?: boolean;
+  postGroupId?: string | null;
+  /**
+   * An array of tag _ids that are associated with the comment, whether via
+   * tagId or via tagRels
+   */
+  tags: Array<string>;
+  body: string;
+  tagId?: string;
+  tagName?: string;
+  tagSlug?: string;
+  tagCommentType?: "SUBFORUM" | "DISCUSSION";
+}
+
+export interface SearchSequence extends SearchBase {
+  _index: "sequences";
+  title: string | null;
+  userId: string;
+  createdAt: string;
+  af: boolean;
+  authorDisplayName?: string | null;
+  authorUserName?: string | null;
+  authorSlug?: string | null;
+  plaintextDescription: string;
+  bannerImageId?: string | null;
+}
+
+export interface SearchUser extends SearchBase {
+  _index: "users";
+  username: string;
+  displayName: string;
+  createdAt: string;
+  isAdmin: boolean;
+  profileImageId?: string;
+  bio: string;
+  htmlBio: string;
+  karma: number;
+  commentCount: number;
+  slug: string;
+  jobTitle?: string;
+  organization?: string;
+  careerStage?: string[];
+  website: string;
+  groups: Array<string>;
+  af: boolean;
+  socialMediaUrls: Partial<Record<SocialMediaSiteName | "website", string>> | null;
+  _geoloc?: {
+    type: "Point";
+    coordinates: number[];
+  };
+  mapLocationAddress?: string;
+  tags: { _id: string; slug: string; name: string }[] | null;
+  posts: { _id: string; slug: string; title: string }[] | null;
+  profileCompletion: number;
+  profileUpdatedAt: Date;
+}
+
+export interface SearchPost extends SearchBase {
+  _index: "posts";
+  url: string | null;
+  title: string | null;
+  slug: string;
+  baseScore: number;
+  status: number;
+  curated: boolean;
+  legacy: boolean;
+  commentCount: number;
+  userIP: string | null;
+  createdAt: string;
+  postedAt: string;
+  isFuture: boolean;
+  isEvent: boolean;
+  viewCount: number;
+  lastCommentedAt: string | null;
+  draft: boolean;
+  af: boolean;
+  tags: { _id: string; slug: string; name: string }[] | null;
+  authorSlug?: string | null;
+  authorDisplayName?: string | null;
+  authorFullName?: string | null;
+  feedName?: string;
+  feedLink?: string | null;
+  body: string;
+}
+
+export interface SearchTag extends SearchBase {
+  _index: "tags";
+  name: string;
+  slug: string;
+  core: boolean;
+  defaultOrder: number;
+  suggestedAsFilter: boolean;
+  postCount: number;
+  wikiOnly: boolean;
+  isSubforum: boolean;
+  description: string;
+  bannerImageId?: string | null;
+  parentTagId?: string | null;
+}
+
+export type SearchDocument =
+  | SearchComment
+  | SearchSequence
+  | SearchUser
+  | SearchPost
+  | SearchTag;

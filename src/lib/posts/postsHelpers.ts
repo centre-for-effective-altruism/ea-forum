@@ -3,6 +3,14 @@ import { getSiteUrl } from "../routeHelpers";
 import { IFrontpagePostsList } from "./postQueries.schemas";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 
+export const postStatuses = {
+  STATUS_PENDING: 1, // Unused
+  STATUS_APPROVED: 2,
+  STATUS_REJECTED: 3,
+  STATUS_SPAM: 4,
+  STATUS_DELETED: 5,
+};
+
 export const postGetPageUrl = ({
   post,
   sequenceId,

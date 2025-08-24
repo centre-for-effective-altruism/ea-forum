@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ZodType } from "zod/v4";
 import { AdaptivePoller } from "./AdaptivePoller";
 import { LRUCache } from "lru-cache";
+import stringify from "json-stringify-deterministic";
 
 type ContainsSlash<S extends string> = S extends `${string}/${string}`
   ? true
@@ -89,7 +90,7 @@ export class ApiRoute<
     params: Record<Params, string>,
     stringifiedParams?: string,
   ): Promise<FetchedResult> {
-    stringifiedParams ??= JSON.stringify(params);
+    stringifiedParams ??= stringify(params);
     const cachedValue = this.cache.get(stringifiedParams);
     if (cachedValue) {
       return cachedValue;
@@ -111,7 +112,7 @@ export class ApiRoute<
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [error, setError] = useState<Error | null>(null);
 
-    const stringifiedParams = JSON.stringify(params);
+    const stringifiedParams = stringify(params);
     // eslint-disable-next-line react-hooks/rules-of-hooks, react-hooks/exhaustive-deps
     const memoisedParams = useMemo(() => params, [stringifiedParams]);
 
