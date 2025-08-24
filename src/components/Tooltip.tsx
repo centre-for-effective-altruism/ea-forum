@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ElementType, ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   autoUpdate,
@@ -21,12 +21,14 @@ export default function Tooltip({
   className = "",
   tooltipClassName = "",
   title,
+  As = "div",
   children,
 }: Readonly<{
   placement?: Placement;
   className?: string;
   tooltipClassName?: string;
   title: ReactNode;
+  As?: ElementType;
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,14 +51,14 @@ export default function Tooltip({
   ]);
   return (
     <>
-      <div
+      <As
         ref={refs.setReference}
         {...getReferenceProps()}
         className={className}
         data-component="Tooltip"
       >
         {children}
-      </div>
+      </As>
       {isOpen &&
         createPortal(
           <div

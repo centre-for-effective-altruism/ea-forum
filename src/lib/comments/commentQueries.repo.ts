@@ -4,10 +4,15 @@ import type { PostgresClient } from "tradukisto";
 import type {
   IFrontpageQuickTakes,
   IFrontpageQuickTakesParams,
+  IPostComments,
+  IPostCommentsParams,
 } from "./commentQueries.schemas.ts";
 
 export const frontpageQuickTakesSql = `-- Comments.frontpageQuickTakes
-SELECT "c"."_id", "c"."baseScore", "c"."voteCount", "c"."postedAt", "c"."descendentCount", "contents"."html", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount") AS "user" FROM "Comments" AS "c" INNER JOIN "Users" AS "u" ON "c"."userId" = "u"."_id" AND NOT "u"."deleted" INNER JOIN "Revisions" AS "contents" ON "c"."contents_latest" = "contents"."_id" WHERE NOT "c"."rejected" AND NOT COALESCE("c"."debateResponse", FALSE) AND NOT "c"."authorIsUnreviewed" AND "c"."shortform" AND "c"."shortformFrontpage" AND NOT "c"."deleted" AND "c"."parentCommentId" IS NULL AND "c"."createdAt" > NOW() - MAKE_INTERVAL(days => COALESCE($1::INTEGER, 5)) AND (("c"."baseScore" >= 1 AND "c"."createdAt" < NOW() - MAKE_INTERVAL(hours => 2)) OR ("c"."baseScore" >= -5 AND "c"."createdAt" >= NOW() - MAKE_INTERVAL(hours => 2))) ORDER BY "c"."score" DESC, "c"."lastSubthreadActivity" DESC, "c"."postedAt" DESC LIMIT $2`;
+SELECT "c"."_id", "c"."baseScore", "c"."voteCount", "c"."postedAt", "c"."descendentCount", "contents"."html", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount", 'biography', ("u"."biography" ->> 'html')::TEXT) AS "user" FROM "Comments" AS "c" INNER JOIN "Users" AS "u" ON "c"."userId" = "u"."_id" AND NOT "u"."deleted" INNER JOIN "Revisions" AS "contents" ON "c"."contents_latest" = "contents"."_id" WHERE NOT "c"."rejected" AND NOT COALESCE("c"."debateResponse", FALSE) AND NOT "c"."authorIsUnreviewed" AND "c"."shortform" AND "c"."shortformFrontpage" AND NOT "c"."deleted" AND "c"."parentCommentId" IS NULL AND "c"."createdAt" > NOW() - MAKE_INTERVAL(days => COALESCE($1::INTEGER, 5)) AND (("c"."baseScore" >= 1 AND "c"."createdAt" < NOW() - MAKE_INTERVAL(hours => 2)) OR ("c"."baseScore" >= -5 AND "c"."createdAt" >= NOW() - MAKE_INTERVAL(hours => 2))) ORDER BY "c"."score" DESC, "c"."lastSubthreadActivity" DESC, "c"."postedAt" DESC LIMIT $2`;
+
+export const postCommentsSql = `-- Comments.postComments
+SELECT "c"."_id", "c"."postedAt", "c"."baseScore", "c"."voteCount", "c"."parentCommentId", "c"."topLevelCommentId", "c"."descendentCount", "c"."deleted", "contents"."html", JSON_BUILD_OBJECT('_id', "u"."_id", 'slug', "u"."slug", 'displayName', "u"."displayName", 'createdAt', "u"."createdAt", 'profileImageId', "u"."profileImageId", 'karma', "u"."karma", 'jobTitle', "u"."jobTitle", 'organization', "u"."organization", 'postCount', "u"."postCount", 'commentCount', "u"."commentCount", 'biography', ("u"."biography" ->> 'html')::TEXT) AS "user" FROM "Comments" AS "c" LEFT JOIN "Users" AS "u" ON "c"."userId" = "u"."_id" AND NOT "u"."deleted" INNER JOIN "Revisions" AS "contents" ON "c"."contents_latest" = "contents"."_id" WHERE NOT "c"."rejected" AND NOT COALESCE("c"."debateResponse", FALSE) AND NOT "c"."authorIsUnreviewed" AND "c"."postId" = $1::TEXT`;
 
 export class CommentsRepo {
   protected client: PostgresClient;
@@ -26,6 +31,13 @@ export class CommentsRepo {
         params.limit === undefined ? null : params.limit,
       ],
     );
+    return res;
+  }
+
+  async postComments(params: IPostCommentsParams): Promise<IPostComments[]> {
+    const res: IPostComments[] = await this.client.fetchRows(postCommentsSql, [
+      params.postId === undefined ? null : params.postId,
+    ]);
     return res;
   }
 }

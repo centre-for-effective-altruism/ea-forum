@@ -1,6 +1,6 @@
 export default function CommentBody({
   html,
-  className,
+  className = "",
 }: Readonly<{
   html: string | null;
   className?: string;

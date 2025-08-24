@@ -23,7 +23,8 @@ JSON_BUILD_OBJECT(
   'jobTitle', users_table."jobTitle",
   'organization', users_table."organization",
   'postCount', users_table."postCount",
-  'commentCount', users_table."commentCount"
+  'commentCount', users_table."commentCount",
+  'biography', (users_table."biography"->>'html')::TEXT
 )
 
 -- @partial tagJsonSelector(tags_table)

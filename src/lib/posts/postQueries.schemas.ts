@@ -39,6 +39,7 @@ export const frontpagePostsListSchema = z.object({
     organization: z.string().nullable(),
     postCount: z.number().nullable(),
     commentCount: z.number().nullable(),
+    biography: z.string().nullable(),
   }),
   coauthors: z
     .object({
@@ -55,6 +56,7 @@ export const frontpagePostsListSchema = z.object({
       organization: z.string().nullable(),
       postCount: z.number().nullable(),
       commentCount: z.number().nullable(),
+      biography: z.string().nullable(),
     })
     .array(),
   tags: z
@@ -157,6 +159,7 @@ export const postByIdSchema = z.object({
     organization: z.string().nullable(),
     postCount: z.number().nullable(),
     commentCount: z.number().nullable(),
+    biography: z.string().nullable(),
   }),
   coauthors: z
     .object({
@@ -173,6 +176,7 @@ export const postByIdSchema = z.object({
       organization: z.string().nullable(),
       postCount: z.number().nullable(),
       commentCount: z.number().nullable(),
+      biography: z.string().nullable(),
     })
     .array(),
   tags: z

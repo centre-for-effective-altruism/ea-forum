@@ -1,16 +1,19 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { PostsRepo } from "@/lib/posts/postQueries.repo";
 import { getPostReadTime } from "@/lib/posts/postsHelpers";
 import { getCurrentUser } from "@/lib/requestHandler";
 import { formatShortDate } from "@/lib/timeUtils";
+import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import UserProfileImage from "@/components/UserProfileImage";
-import CommentsSection from "@/components/Comments/CommentsSection";
+import LazyCommentsSection from "@/components/Comments/LazyCommentsSection";
 import LazyPostBody from "@/components/ContentStyles/LazyPostBody";
+import UsersTooltip from "@/components/UsersTooltip";
 import Type from "@/components/Type";
-import { Suspense } from "react";
+import Link from "@/components/Link";
 
 export default async function PostsPage({
   params,
@@ -39,7 +42,13 @@ export default async function PostsPage({
       <div className="flex gap-3 mb-6">
         <UserProfileImage user={post.user} size={36} />
         <div>
-          <Type style="bodyMedium">{post.user.displayName}</Type>
+          <Type style="bodyMedium">
+            <UsersTooltip user={post.user} As="span">
+              <Link href={userGetProfileUrl(post.user)}>
+                {post.user.displayName}
+              </Link>
+            </UsersTooltip>
+          </Type>
           <Type style="bodyMedium" className="text-gray-600">
             {getPostReadTime(post)} min read
             {" · "}
@@ -79,7 +88,20 @@ export default async function PostsPage({
           className="mt-10"
         />
       </Suspense>
-      <CommentsSection postId={post._id} />
+      <Type style="commentsHeader" className="mt-18 mb-6">
+        Comments <span className="text-gray-600">{post.commentCount}</span>
+      </Type>
+      <Suspense
+        fallback={
+          <div className="mb-20 flex flex-col gap-4">
+            <div className="w-full h-30 bg-gray-100 rounded" />
+            <div className="w-full h-30 bg-gray-100 rounded" />
+            <div className="w-full h-30 bg-gray-100 rounded" />
+          </div>
+        }
+      >
+        <LazyCommentsSection postId={post._id} className="mb-20" />
+      </Suspense>
     </div>
   );
 }

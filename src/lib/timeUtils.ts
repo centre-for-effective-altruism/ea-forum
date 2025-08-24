@@ -12,7 +12,7 @@ const intervals = {
 };
 
 export const formatRelativeTime = (
-  date: Date,
+  time: Date | string,
   {
     style,
   }: {
@@ -21,6 +21,7 @@ export const formatRelativeTime = (
 ) => {
   const isLong = style === "long";
   const now = new Date();
+  const date = time instanceof Date ? time : new Date(time);
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
   for (const [unit, seconds] of Object.entries(intervals)) {
     const interval = Math.floor(diffInSeconds / seconds);
@@ -43,6 +44,14 @@ export const formatLongDate = (date: Date) =>
   date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
+  });
+
+export const formatLongDateWithTime = (date: Date) =>
+  date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
 export const nDaysAgo = (n: number) => {

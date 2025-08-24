@@ -25,6 +25,7 @@ export const frontpageQuickTakesSchema = z.object({
     organization: z.string().nullable(),
     postCount: z.number(),
     commentCount: z.number(),
+    biography: z.string().nullable(),
   }),
 });
 
@@ -38,3 +39,41 @@ export const frontpageQuickTakesParamsSchema = z.object({
 export type IFrontpageQuickTakesParams = z.infer<
   typeof frontpageQuickTakesParamsSchema
 >;
+
+export const postCommentsSchema = z.object({
+  _id: z.string(),
+  postedAt: z
+    .union([z.string(), z.date()])
+    .pipe(z.transform((val) => (val instanceof Date ? val : new Date(val)))),
+  baseScore: z.number(),
+  voteCount: z.number(),
+  parentCommentId: z.string().nullable(),
+  topLevelCommentId: z.string().nullable(),
+  descendentCount: z.number(),
+  deleted: z.boolean(),
+  html: z.string().nullable(),
+  user: z.object({
+    _id: z.string().nullable(),
+    slug: z.string().nullable(),
+    displayName: z.string().nullable(),
+    createdAt: z
+      .union([z.string(), z.date()])
+      .pipe(z.transform((val) => (val instanceof Date ? val : new Date(val))))
+      .nullable(),
+    profileImageId: z.string().nullable(),
+    karma: z.number().nullable(),
+    jobTitle: z.string().nullable(),
+    organization: z.string().nullable(),
+    postCount: z.number().nullable(),
+    commentCount: z.number().nullable(),
+    biography: z.string().nullable(),
+  }),
+});
+
+export type IPostComments = z.infer<typeof postCommentsSchema>;
+
+export const postCommentsParamsSchema = z.object({
+  postId: z.string(),
+});
+
+export type IPostCommentsParams = z.infer<typeof postCommentsParamsSchema>;

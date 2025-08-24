@@ -36,6 +36,9 @@
   --color-details-title: rgba(0, 0, 0, 0.3);
   --color-conditionally-visible: rgba(0, 0, 0, 0.2);
   --color-post-hr: rgba(0, 0, 0, 0.26);
+  --color-comment-border: rgba(72, 94, 144, 0.16);
+  --color-comment-odd: #f2f2f2;
+  --color-comment-even: #fff;
 
   --always-white: #fff;
   --always-black: #000;

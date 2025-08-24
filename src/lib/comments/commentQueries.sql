@@ -16,7 +16,8 @@ JSON_BUILD_OBJECT(
   'jobTitle', users_table."jobTitle",
   'organization', users_table."organization",
   'postCount', users_table."postCount",
-  'commentCount', users_table."commentCount"
+  'commentCount', users_table."commentCount",
+  'biography', (users_table."biography"->>'html')::TEXT
 )
 
 -- @query frontpageQuickTakes
@@ -52,3 +53,22 @@ WHERE
   )
 ORDER BY c."score" DESC, c."lastSubthreadActivity" DESC, c."postedAt" DESC
 LIMIT :limit
+
+-- @query postComments
+SELECT
+  c."_id",
+  c."postedAt",
+  c."baseScore",
+  c."voteCount",
+  c."parentCommentId",
+  c."topLevelCommentId",
+  c."descendentCount",
+  c."deleted",
+  contents."html",
+  userJsonSelector(u) "user"
+FROM "Comments" c
+LEFT JOIN "Users" u ON c."userId" = u."_id" AND NOT u."deleted"
+JOIN "Revisions" contents ON c."contents_latest" = contents."_id"
+WHERE
+  viewableCommentFilter(c)
+  AND c."postId" = :postId::TEXT
