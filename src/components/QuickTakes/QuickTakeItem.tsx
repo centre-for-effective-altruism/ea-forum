@@ -1,7 +1,7 @@
 import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.schemas";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
-import CommentBody from "../CommentBody";
+import CommentBody from "../ContentStyles/CommentBody";
 import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";

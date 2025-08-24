@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
@@ -49,7 +49,7 @@ export default async function RootLayout({
           <div id="modal-target" className="relative" />
           <div id="tooltip-target" />
           <Header />
-          <main className="grow py-8">{children}</main>
+          <main className="grow">{children}</main>
         </Providers>
       </body>
     </html>

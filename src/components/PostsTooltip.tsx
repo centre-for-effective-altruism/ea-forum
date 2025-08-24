@@ -7,7 +7,7 @@ import {
   PostWithSocialPreview,
 } from "@/lib/posts/postsHelpers";
 import Image from "next/image";
-import PostBody from "./PostBody";
+import PostBody from "./ContentStyles/PostBody";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
 

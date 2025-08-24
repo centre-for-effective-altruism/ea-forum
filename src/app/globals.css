@@ -27,6 +27,15 @@
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
   --color-posts-page-hr: #e4e4e4;
+  --color-visited-link: #7130a6;
+  --color-table-border: #b3b3b3;
+  --color-table-cell-border: #d9d9d9;
+  --color-table-header-bg: #fafafa;
+  --color-spoiler-hover: rgba(0, 0, 0, 0.12);
+  --color-metaculus-preview: #2c3947;
+  --color-details-title: rgba(0, 0, 0, 0.3);
+  --color-conditionally-visible: rgba(0, 0, 0, 0.2);
+  --color-post-hr: rgba(0, 0, 0, 0.26);
 
   --always-white: #fff;
   --always-black: #000;
@@ -39,6 +48,7 @@
   --font-stack-sans:
     GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
+  --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-headroom: 1300;
 }
@@ -56,12 +66,18 @@
   --font-serif: var(--font-stack-serif);
 }
 
+/**
+ * GLOBAL STYLES
+ */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-stack-sans);
 }
 
+/**
+ * MISC STYLES
+ */
 @keyframes profile-image-loader {
   0% {
     background-position: right;
@@ -93,6 +109,9 @@ body {
   animation: wrapped-notification-shimmer 2s infinite;
 }
 
+/**
+ * HEADROOM STYLES
+ */
 .headroom-root .headroom {
   top: unset;
   left: 0;

@@ -14,7 +14,7 @@ export default async function HomePageColumns({
   return (
     <AnalyticsContext pageContext={pageContext}>
       <Column
-        className="grid grid-cols-[min-content_780px_min-content] gap-10 px-8"
+        className="grid grid-cols-[min-content_780px_min-content] gap-10 p-8"
         data-component="HomePageColumns"
       >
         <Nav />

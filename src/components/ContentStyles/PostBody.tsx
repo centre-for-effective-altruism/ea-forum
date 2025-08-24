@@ -1,3 +1,5 @@
+import "./post-body.css";
+
 export default function PostBody({
   html,
   className,
@@ -11,7 +13,7 @@ export default function PostBody({
   return (
     <div
       dangerouslySetInnerHTML={{ __html: html }}
-      className={`font-serif font-[12px] ${className}`}
+      className={`post-body ${className}`}
       data-component="PostBody"
     />
   );
