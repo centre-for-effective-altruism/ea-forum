@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
 import ClickAwayListener from "react-click-away-listener";
 
@@ -13,16 +13,12 @@ export default function BlurredBackgroundModal({
   onClose: () => void;
   children: ReactNode;
 }>) {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const target = document.getElementById("modal-target");
-    if (target) {
-      setTarget(target);
-    } else {
-      console.error("Modal target not found");
+  const [target] = useState<HTMLElement | null>(() => {
+    if (typeof document === "undefined") {
+      return null;
     }
-  }, [open]);
+    return document.getElementById("modal-target");
+  });
 
   if (!target || !open) {
     return null;

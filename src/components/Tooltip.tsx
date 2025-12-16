@@ -32,7 +32,11 @@ export default function Tooltip({
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
-  const { refs, floatingStyles, context } = useFloating({
+  const {
+    refs: { setReference, setFloating },
+    floatingStyles,
+    context,
+  } = useFloating({
     placement,
     open: isOpen,
     onOpenChange: setIsOpen,
@@ -52,7 +56,7 @@ export default function Tooltip({
   return (
     <>
       <As
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
         className={className}
         data-component="Tooltip"
@@ -63,7 +67,7 @@ export default function Tooltip({
         title &&
         createPortal(
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
             className={`

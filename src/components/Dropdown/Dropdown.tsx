@@ -23,7 +23,11 @@ export default function Dropdown({
 }>) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { refs, floatingStyles, context } = useFloating({
+  const {
+    refs: { setReference, setFloating },
+    floatingStyles,
+    context,
+  } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     middleware: [flip(), shift()],
@@ -41,17 +45,13 @@ export default function Dropdown({
 
   return (
     <>
-      <div
-        ref={refs.setReference}
-        {...getReferenceProps()}
-        data-component="Dropdown"
-      >
+      <div ref={setReference} {...getReferenceProps()} data-component="Dropdown">
         {children}
       </div>
       {isOpen && (
         <FloatingFocusManager context={context} modal={false}>
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
             data-component="Dropdown"
