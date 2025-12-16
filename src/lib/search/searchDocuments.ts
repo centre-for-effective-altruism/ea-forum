@@ -1,4 +1,4 @@
-import type { SocialMediaSiteName } from "@/components/SocialMediaIcon";
+import type { SocialMediaSiteName } from "@/lib/users/userHelpers";
 
 export interface SearchBase {
   objectID: string;

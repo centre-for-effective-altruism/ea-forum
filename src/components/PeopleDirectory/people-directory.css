@@ -1,0 +1,19 @@
+.people-directory-result-row {
+  cursor: pointer;
+  display: contents;
+  --people-directory-row-bg: var(--color-gray-50);
+}
+.people-directory-result-row:hover {
+  --people-directory-row-bg: var(--color-people-directory-row-hover);
+}
+.people-directory-message {
+  display: none;
+  width: 20px;
+  color: var(--color-gray-600);
+}
+.people-directory-message:hover {
+  color: var(--color-gray-800);
+}
+.people-directory-result-row:hover .people-directory-message {
+  display: block;
+}

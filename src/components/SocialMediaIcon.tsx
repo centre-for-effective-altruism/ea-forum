@@ -1,12 +1,5 @@
 import type { ReactNode } from "react";
-
-export type SocialMediaSiteName =
-  | "linkedin"
-  | "facebook"
-  | "bluesky"
-  | "twitter"
-  | "github"
-  | "website";
+import type { SocialMediaSiteName } from "@/lib/users/userHelpers";
 
 const socialMediaIconPaths: Record<SocialMediaSiteName, ReactNode> = {
   linkedin: (
@@ -31,13 +24,20 @@ const socialMediaIconPaths: Record<SocialMediaSiteName, ReactNode> = {
 
 export default function SocialMediaIcon({
   name,
-  className,
+  className = "",
 }: Readonly<{
   name: SocialMediaSiteName;
   className?: string;
 }>) {
   return (
-    <svg aria-hidden focusable="false" viewBox="0 0 24 24" className={className}>
+    <svg
+      data-component="SocialMediaIcon"
+      data-name={name}
+      aria-hidden
+      focusable="false"
+      viewBox="0 0 24 24"
+      className={className}
+    >
       {socialMediaIconPaths[name]}
     </svg>
   );

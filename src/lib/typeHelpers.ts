@@ -24,3 +24,7 @@ export type TupleOf<T extends TupleSet<any>> =
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UnionOf<T extends TupleSet<any>> = TupleOf<T>[number];
+
+export const objectKeys = <K extends string | number | symbol, V>(
+  obj: Partial<Record<K, V>>,
+): K[] => Object.keys(obj) as K[];

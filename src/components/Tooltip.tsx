@@ -60,15 +60,16 @@ export default function Tooltip({
         {children}
       </As>
       {isOpen &&
+        title &&
         createPortal(
           <div
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
             className={`
-            absolute bg-(--color-tooltip-background) text-gray-50 rounded
-            z-1000 px-2 py-1 overflow-hidden ${tooltipClassName}
-          `}
+              absolute bg-(--color-tooltip-background) text-gray-50 rounded
+              z-1000 px-2 py-1 overflow-hidden ${tooltipClassName}
+            `}
             data-component="Tooltip"
           >
             {title}

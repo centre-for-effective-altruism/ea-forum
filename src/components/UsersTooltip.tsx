@@ -3,6 +3,7 @@ import type { Placement } from "@floating-ui/react";
 import type { IFrontpagePostsList } from "@/lib/posts/postQueries.schemas";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { htmlToTextDefault } from "@/lib/htmlToText";
+import { formatStat } from "@/lib/formatHelpers";
 import UserProfileImage from "./UserProfileImage";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
@@ -16,13 +17,6 @@ const formatRole = (
     : ((jobTitle || organization) ?? "");
 
 const formatBio = (bio: string | null): string => htmlToTextDefault(bio ?? "");
-
-const formatStat = (value?: number): string => {
-  value ??= 0;
-  return value >= 10000
-    ? `${Math.floor(value / 1000)} ${String(value % 1000).padStart(3, "0")}`
-    : String(value);
-};
 
 export default function UsersTooltip({
   user,

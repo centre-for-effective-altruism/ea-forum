@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { SearchUser } from "@/lib/search/searchDocuments";
 import { captureException } from "@/lib/errorHandling";
 import { getSearchClient } from "@/lib/search/searchClient";
@@ -81,7 +81,6 @@ const peopleDirectoryContext = createContext<PeopleDirectoryContext | null>(null
 export const PeopleDirectoryProvider = ({ children }: { children: ReactNode }) => {
   const captureSearch = useSearchAnalytics();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [view, setView] = useState<PeopleDirectoryView>("list");
   const [query, setQuery_] = useState(() => searchParams.get("query") ?? "");
   const [sorting, setSorting_] = useState<PeopleDirectorySorting>(defaultSorting);
@@ -151,7 +150,7 @@ export const PeopleDirectoryProvider = ({ children }: { children: ReactNode }) =
     // out.
     const hackyNullRemoval = filterNonNull(flattenedResults);
     if (flattenedResults.length !== hackyNullRemoval.length) {
-      console.error(
+      console.warn(
         "People directory results contained undefined values",
         flattenedResults,
       );
@@ -165,9 +164,9 @@ export const PeopleDirectoryProvider = ({ children }: { children: ReactNode }) =
       for (const param in update) {
         newParams.set(param, update[param]);
       }
-      router.push(`/people-directory?${newParams.toString()}`);
+      window.history.pushState(null, "", `?${newParams.toString()}`);
     },
-    [router, searchParams],
+    [searchParams],
   );
 
   const setQuery = useCallback(

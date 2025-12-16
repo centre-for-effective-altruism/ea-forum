@@ -11,6 +11,7 @@ const styles = {
     "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
   logo: "font-sans text-[19px] font-[400]",
   postsPageTitle: "font-serif text-[42px] font-[400] leading-[125%]",
+  directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof styles;

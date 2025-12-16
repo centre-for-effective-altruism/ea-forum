@@ -1,3 +1,3 @@
 export default function PeopleDirectoryFilters() {
-  return null;
+  return <div>TODO: Filters</div>;
 }

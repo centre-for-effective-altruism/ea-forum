@@ -36,7 +36,7 @@ export default function NavItem({
         </Type>
       }
       placement="right"
-      className="text-nowrap"
+      className="whitespace-nowrap"
     >
       <Type style="body" data-component="NavItem">
         <Link

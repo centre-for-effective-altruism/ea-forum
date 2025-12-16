@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { formatShortDate } from "@/lib/timeUtils";
 import PeopleDirectoryUserCell from "./PeopleDirectoryUserCell";
 import PeopleDirectoryTextCell from "./PeopleDirectoryTextCell";
 import PeopleDirectoryDateCell from "./PeopleDirectoryDateCell";
@@ -11,32 +12,25 @@ import PeopleDirectoryTopicsCell from "./PeopleDirectoryTopicsCell";
 import PeopleDirectoryCommentCountCell from "./PeopleDirectoryCommentCountCell";
 import PeopleDirectoryPostsCell from "./PeopleDirectoryPostsCell";
 
-type CellComponentName =
-  | "PeopleDirectoryUserCell"
-  | "PeopleDirectoryTextCell"
-  | "PeopleDirectoryDateCell"
-  | "PeopleDirectoryNumberCell"
-  | "PeopleDirectorySocialMediaCell"
-  | "PeopleDirectoryCareerStageCell"
-  | "PeopleDirectorySkeletonUserCell"
-  | "PeopleDirectorySkeletonTextCell"
-  | "PeopleDirectoryTopicsCell"
-  | "PeopleDirectoryCommentCountCell"
-  | "PeopleDirectoryPostsCell";
-
 export const cellComponentsByName = {
-  PeopleDirectoryUserCell: PeopleDirectoryUserCell,
-  PeopleDirectoryTextCell: PeopleDirectoryTextCell,
-  PeopleDirectoryDateCell: PeopleDirectoryDateCell,
-  PeopleDirectoryNumberCell: PeopleDirectoryNumberCell,
-  PeopleDirectorySocialMediaCell: PeopleDirectorySocialMediaCell,
-  PeopleDirectoryCareerStageCell: PeopleDirectoryCareerStageCell,
-  PeopleDirectorySkeletonUserCell: PeopleDirectorySkeletonUserCell,
-  PeopleDirectorySkeletonTextCell: PeopleDirectorySkeletonTextCell,
-  PeopleDirectoryTopicsCell: PeopleDirectoryTopicsCell,
-  PeopleDirectoryCommentCountCell: PeopleDirectoryCommentCountCell,
-  PeopleDirectoryPostsCell: PeopleDirectoryPostsCell,
-};
+  PeopleDirectoryUserCell,
+  PeopleDirectoryTextCell,
+  PeopleDirectoryDateCell,
+  PeopleDirectoryNumberCell,
+  PeopleDirectorySocialMediaCell,
+  PeopleDirectoryCareerStageCell,
+  PeopleDirectorySkeletonUserCell,
+  PeopleDirectorySkeletonTextCell,
+  PeopleDirectoryTopicsCell,
+  PeopleDirectoryCommentCountCell,
+  PeopleDirectoryPostsCell,
+} as const;
+
+type CellComponentName = keyof typeof cellComponentsByName;
+
+type CellComponentProps<T extends CellComponentName> = ComponentProps<
+  (typeof cellComponentsByName)[T]
+>;
 
 type PeopleDirectoryColumnState =
   | {
@@ -57,7 +51,7 @@ export type PeopleDirectoryColumn<
   defaultSort?: "asc" | "desc";
   columnWidth?: string;
   componentName: T;
-  props?: Omit<ComponentProps<(typeof cellComponentsByName)[T]>, "user" | "ref">;
+  props?: Omit<CellComponentProps<T>, "user" | "ref">;
   skeletonComponentName?: S;
   skeletonProps?: Omit<
     ComponentProps<(typeof cellComponentsByName)[S]>,
@@ -176,7 +170,7 @@ export const peopleDirectoryColumns: PeopleDirectoryColumn<CellComponentName>[] 
     componentName: "PeopleDirectoryDateCell",
     props: {
       fieldName: "profileUpdatedAt",
-      format: "MMM YYYY",
+      formater: formatShortDate,
     },
     hideable: true,
     hidden: true,

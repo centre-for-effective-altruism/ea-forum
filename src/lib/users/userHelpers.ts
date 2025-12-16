@@ -1,3 +1,4 @@
+import urlJoin from "url-join";
 import type { ICurrentUser } from "./userQueries.schemas";
 
 export const userGetProfileUrl = ({ slug }: { slug: string | null }) =>
@@ -37,7 +38,7 @@ type EAGCareerStage =
 export type CareerStage = {
   value: CareerStageValue;
   label: string;
-  icon: string; // TODO: This used to be ForumIconName which no longer exists
+  icon: "School" | "Work";
   eagLabel: EAGCareerStage;
 };
 
@@ -115,3 +116,34 @@ export const userCareerStages: CareerStage[] = [
     eagLabel: "Retired",
   },
 ];
+
+export type SocialMediaSiteName =
+  | "linkedin"
+  | "facebook"
+  | "bluesky"
+  | "twitter"
+  | "github"
+  | "website";
+
+const socalMediaProfileFields = {
+  linkedinProfileURL: "linkedin.com/in/",
+  facebookProfileURL: "facebook.com/",
+  blueskyProfileURL: "bsky.app/profile/",
+  twitterProfileURL: "twitter.com/",
+  githubProfileURL: "github.com/",
+};
+
+type SocialMediaProfileField = keyof typeof socalMediaProfileFields;
+
+const profileFieldToSocialMediaHref = (
+  field: SocialMediaProfileField,
+  userUrl: string,
+) => urlJoin("https://" + socalMediaProfileFields[field], userUrl);
+
+export const socialMediaSiteNameToHref = (
+  siteName: SocialMediaSiteName | "website",
+  userUrl: string,
+) =>
+  siteName === "website"
+    ? `https://${userUrl}`
+    : profileFieldToSocialMediaHref(`${siteName}ProfileURL`, userUrl);
