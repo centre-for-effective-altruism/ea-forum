@@ -88,6 +88,10 @@ const links = [
     href: "/about",
   },
   {
+    title: "Forum events calendar",
+    href: "https://calendar.google.com/calendar/u/0?cid=Y182M2YxZTI4NmJkNWQyMDYwNjQ1MjRjNTExMWVlYTRjOGM5M2JkZjFkYmNiMmZiOGViZmU5NWIzNzQ2YWViOTYwQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20",
+  },
+  {
     title: "EA Handbook",
     href: "/handbook",
   },
