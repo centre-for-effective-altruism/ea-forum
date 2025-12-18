@@ -1,7 +1,9 @@
-import { getDbOrThrow } from "@/lib/db";
-import { PostsRepo } from "@/lib/posts/postQueries.repo";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getIntroCourseDetails } from "@/lib/introCourseDetails";
+import {
+  fetchSidebarEvents,
+  fetchSidebarOpportunities,
+} from "@/lib/posts/postLists";
 import HomeSidebarDigestAd from "./HomeSidebarDigestAd";
 import HomeSidebarPost from "./HomeSidebarPost";
 import HomeSidebarEvent from "./HomeSidebarEvent";
@@ -10,10 +12,9 @@ import Type from "../Type";
 import Link from "../Link";
 
 export default async function HomeSidebar() {
-  const postsRepo = new PostsRepo(getDbOrThrow());
   const [opportunities, upcomingEvents] = await Promise.all([
-    postsRepo.sidebarOpportunities({ limit: 3 }),
-    postsRepo.sidebarEvents({ limit: 3 }),
+    fetchSidebarOpportunities(3),
+    fetchSidebarEvents(3),
   ]);
   const introCourse = getIntroCourseDetails();
   return (

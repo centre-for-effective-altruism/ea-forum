@@ -1,4 +1,4 @@
-import type { Json, JsonRecord } from "tradukisto";
+import type { JsonRecord } from "tradukisto";
 import type { PostListItem } from "./postLists";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
@@ -40,7 +40,7 @@ export const getEventLocation = ({
   googleLocation,
 }: {
   onlineEvent: boolean;
-  googleLocation?: Json | null;
+  googleLocation: unknown;
 }) => {
   if (onlineEvent) {
     return "Online";

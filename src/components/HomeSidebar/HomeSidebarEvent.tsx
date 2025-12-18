@@ -1,4 +1,4 @@
-import type { ISidebarEvents } from "@/lib/posts/postQueries.schemas";
+import type { SidebarEventItem } from "@/lib/posts/postLists";
 import { getEventLocation, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { formatShortDate } from "@/lib/timeUtils";
 import Type from "../Type";
@@ -7,7 +7,7 @@ import Link from "../Link";
 export default function HomeSidebarEvent({
   post,
 }: Readonly<{
-  post: ISidebarEvents;
+  post: SidebarEventItem;
 }>) {
   const { title, startTime } = post;
   const pageUrl = postGetPageUrl({ post });
