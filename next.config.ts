@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
       destination: "/cookie-policy",
       permanent: true,
     },
+    {
+      source: "/banNotice",
+      destination: "/ban-notice",
+      permanent: true,
+    },
   ],
   rewrites: async () => [
     {
