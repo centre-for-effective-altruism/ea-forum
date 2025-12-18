@@ -6,19 +6,21 @@ export default function DropdownItem({
   title,
   Icon,
   href,
+  onClick: onClick_,
 }: Readonly<{
   title: string;
   Icon?: ComponentType<{ className: string }>;
   href?: string;
+  onClick?: () => void | Promise<void>;
 }>) {
   const onClick = useCallback(
     (ev: MouseEvent<HTMLAnchorElement>) => {
       if (!href) {
         ev.preventDefault();
-        // TODO: Custom actions
       }
+      onClick_?.();
     },
-    [href],
+    [href, onClick_],
   );
   return (
     <Link

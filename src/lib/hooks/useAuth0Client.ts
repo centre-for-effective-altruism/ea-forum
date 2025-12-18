@@ -47,6 +47,10 @@ class Auth0Client {
     window.location.href = `/api/auth?returnTo=${returnTo}&connection=google-oauth2`;
   }
 
+  async logout(): Promise<void> {
+    await this.post("/api/auth/logout", {});
+  }
+
   private getClientSettings() {
     const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
     const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;

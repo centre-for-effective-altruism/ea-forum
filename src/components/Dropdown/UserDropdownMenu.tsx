@@ -1,6 +1,8 @@
 import { ReactNode, useCallback } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
+import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
+import toast from "react-hot-toast";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import BookmarkIcon from "@heroicons/react/24/outline/BookmarkIcon";
@@ -15,12 +17,26 @@ export default function UserDropdownMenu({
   children: ReactNode;
 }>) {
   const { currentUser } = useCurrentUser();
+  const auth0Client = useAuth0Client();
+
   const ProfileImageIcon = useCallback(() => {
     return <UserProfileImage user={currentUser} size={24} />;
   }, [currentUser]);
+
+  const onLogout = useCallback(async () => {
+    try {
+      toast.loading("Logging out...");
+      await auth0Client.logout();
+      window.location.reload();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Something went wrong");
+    }
+  }, [auth0Client]);
+
   if (!currentUser?.displayName) {
     return null;
   }
+
   return (
     <DropdownMenu
       placement="bottom-end"
@@ -58,7 +74,7 @@ export default function UserDropdownMenu({
         "divider",
         {
           title: "Logout",
-          href: "/logout",
+          onClick: onLogout,
         },
       ]}
     >

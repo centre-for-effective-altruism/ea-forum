@@ -30,6 +30,7 @@
     "react": "^19.2.3",
     "react-click-away-listener": "^2.4.0",
     "react-dom": "^19.2.3",
+    "react-hot-toast": "^2.6.0",
     "server-only": "^0.0.1",
     "tradukisto": "^0.0.11",
     "url-join": "^5.0.0",

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
-import { hashLoginToken } from "@/lib/authHelpers";
+import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "@/lib/authHelpers";
 import { UsersRepo } from "@/lib/users/userQueries.repo";
 import { getDbOrThrow } from "@/lib/db";
 import NotificationsProvider from "./Notifications/NotificationsProvider";
@@ -13,7 +13,7 @@ export default async function Providers({
   children: ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const loginToken = cookieStore.get("loginToken")?.value;
+  const loginToken = cookieStore.get(LOGIN_TOKEN_COOKIE_NAME)?.value;
   const currentUser = loginToken
     ? await new UsersRepo(getDbOrThrow()).currentUser({
         hashedToken: hashLoginToken(loginToken),

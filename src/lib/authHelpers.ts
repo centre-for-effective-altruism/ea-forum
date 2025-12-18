@@ -3,6 +3,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { AuthenticationClient } from "auth0";
 import z from "zod/v4";
 
+export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
+
 export const generateLoginToken = () => randomBytes(32).toString("hex");
 
 export const hashLoginToken = (loginToken: string) => {

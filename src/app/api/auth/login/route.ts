@@ -4,6 +4,7 @@ import {
   generateLoginToken,
   getAuth0Client,
   hashLoginToken,
+  LOGIN_TOKEN_COOKIE_NAME,
   parseJwt,
 } from "@/lib/authHelpers";
 import { db, users } from "@/lib/schema";
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
 
     const token = generateLoginToken();
     const cookieStore = await cookies();
-    cookieStore.set("loginToken", token, {
+    cookieStore.set(LOGIN_TOKEN_COOKIE_NAME, token, {
       httpOnly: true,
       maxAge: 315360000, // 10 years
       path: "/",
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
             ARRAY['resume', 'loginTokens']::TEXT[],
             jsonb_build_object(
               'when', NOW(),
-              'hashedToken', ${hashLoginToken(token)}
+              'hashedToken', ${hashLoginToken(token)}::TEXT
             )
           )
         `,

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Charis_SIL, Inter } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import "./globals.css";
@@ -50,6 +51,7 @@ export default function RootLayout({
           <div id="tooltip-target" />
           <Header />
           <main className="grow">{children}</main>
+          <Toaster position="bottom-center" />
         </Providers>
       </body>
     </html>
