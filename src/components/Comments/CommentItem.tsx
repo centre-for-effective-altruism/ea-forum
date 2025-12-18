@@ -43,7 +43,8 @@ export default function CommentItem({
             role="button"
             onClick={toggleExpanded}
           />
-          <UsersTooltip user={user}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <UsersTooltip user={user as any /* TODO types */}>
             <Type className="font-[600]">
               {user && user.slug && (
                 <Link href={userGetProfileUrl(user)}>{user.displayName}</Link>

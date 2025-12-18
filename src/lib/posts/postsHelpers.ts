@@ -68,17 +68,15 @@ export const getEventLocation = ({
   return "Online";
 };
 
-type PostWithWordCount = Pick<
-  IFrontpagePostsList,
-  "readTimeMinutesOverride" | "wordCount"
->;
-
-export const getPostReadTime = (post: PostWithWordCount) => {
-  if (typeof post.readTimeMinutesOverride === "number") {
-    return Math.max(1, Math.round(post.readTimeMinutesOverride));
+export const getPostReadTime = (
+  readTimeMinutesOverride: number | null,
+  wordCount: number | null,
+) => {
+  if (typeof readTimeMinutesOverride === "number") {
+    return Math.max(1, Math.round(readTimeMinutesOverride));
   }
-  if (post.wordCount) {
-    return Math.max(1, Math.round(post.wordCount / 250));
+  if (wordCount) {
+    return Math.max(1, Math.round(wordCount / 250));
   }
   return 1;
 };

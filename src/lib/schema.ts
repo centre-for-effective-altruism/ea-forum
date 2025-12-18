@@ -1,5 +1,6 @@
 import "server-only";
-import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { defineRelations, sql } from "drizzle-orm";
 import {
   pgTable,
   index,
@@ -14,22 +15,277 @@ import {
   boolean,
 } from "drizzle-orm/pg-core";
 
-// TODO: Add users table - the drizzle parser chokes on the JSON default values
-
 const timestamp = () => rawTimestamp({ withTimezone: true, mode: "string" });
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
 const universalFields = {
+  _id: varchar({ length: 27 }).primaryKey().notNull(),
   schemaVersion: doublePrecision().default(1),
   createdAt: timestampDefaultNow().notNull(),
   legacyData: jsonb(),
 };
 
+// TODO: Add full users table - the drizzle parser chokes on the JSON default values
+export const users = pgTable(
+  "Users",
+  {
+    ...universalFields,
+    username: text(),
+    displayName: text().notNull(),
+    slug: text().notNull(),
+    oldSlugs: text().array().default([""]).notNull(),
+    profileImageId: text(),
+    jobTitle: text(),
+    organization: text(),
+    careerStage: text().array(),
+    website: text(),
+    biography: jsonb(),
+    biography_latest: text(),
+    moderationGuidelines: jsonb(),
+    moderationGuidelines_latest: text(),
+    howOthersCanHelpMe: jsonb(),
+    howOthersCanHelpMe_latest: text(),
+    howICanHelpOthers: jsonb(),
+    howICanHelpOthers_latest: text(),
+    karma: doublePrecision().notNull().default(0),
+    postCount: doublePrecision().notNull().default(0),
+    maxPostCount: doublePrecision().notNull().default(0),
+    commentCount: doublePrecision().notNull().default(0),
+    maxCommentCount: doublePrecision().notNull().default(0),
+
+    /*
+  "emails" JSONB[],
+  "isAdmin" BOOL NOT NULL DEFAULT FALSE,
+  "profile" JSONB,
+  "services" JSONB,
+  "previousDisplayName" TEXT,
+  "email" TEXT,
+  "noindex" BOOL NOT NULL DEFAULT FALSE,
+  "groups" TEXT[],
+  "lwWikiImport" BOOL,
+  "theme" JSONB NOT NULL DEFAULT '{"name":"default"}'::JSONB,
+  "lastUsedTimezone" TEXT,
+  "whenConfirmationEmailSent" TIMESTAMPTZ,
+  "legacy" BOOL NOT NULL DEFAULT FALSE,
+  "commentSorting" TEXT,
+  "sortDraftsBy" TEXT,
+  "reactPaletteStyle" TEXT NOT NULL DEFAULT 'listView',
+  "noKibitz" BOOL,
+  "showHideKarmaOption" BOOL,
+  "showPostAuthorCard" BOOL,
+  "hideIntercom" BOOL NOT NULL DEFAULT FALSE,
+  "markDownPostEditor" BOOL NOT NULL DEFAULT FALSE,
+  "hideElicitPredictions" BOOL NOT NULL DEFAULT FALSE,
+  "hideAFNonMemberInitialWarning" BOOL NOT NULL DEFAULT FALSE,
+  "noSingleLineComments" BOOL NOT NULL DEFAULT FALSE,
+  "noCollapseCommentsPosts" BOOL NOT NULL DEFAULT FALSE,
+  "noCollapseCommentsFrontpage" BOOL NOT NULL DEFAULT FALSE,
+  "hideCommunitySection" BOOL NOT NULL DEFAULT FALSE,
+  "expandedFrontpageSections" JSONB,
+  "showCommunityInRecentDiscussion" BOOL NOT NULL DEFAULT FALSE,
+  "hidePostsRecommendations" BOOL NOT NULL DEFAULT FALSE,
+  "keywordAlerts" TEXT[] NOT NULL DEFAULT '{}',
+  "petrovOptOut" BOOL NOT NULL DEFAULT FALSE,
+  "optedOutOfSurveys" BOOL,
+  "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
+  "generateJargonForDrafts" BOOL NOT NULL DEFAULT FALSE,
+  "generateJargonForPublishedPosts" BOOL NOT NULL DEFAULT TRUE,
+  "acceptedTos" BOOL NOT NULL DEFAULT FALSE,
+  "hideNavigationSidebar" BOOL,
+  "currentFrontpageFilter" TEXT,
+  "frontpageSelectedTab" TEXT,
+  "frontpageFilterSettings" JSONB,
+  "hideFrontpageFilterSettingsDesktop" BOOL,
+  "allPostsTimeframe" TEXT,
+  "allPostsFilter" TEXT,
+  "allPostsSorting" TEXT,
+  "allPostsShowLowKarma" BOOL,
+  "allPostsIncludeEvents" BOOL,
+  "allPostsHideCommunity" BOOL,
+  "allPostsOpenSettings" BOOL,
+  "draftsListSorting" TEXT,
+  "draftsListShowArchived" BOOL,
+  "draftsListShowShared" BOOL,
+  "lastNotificationsCheck" TIMESTAMPTZ,
+  "goodHeartTokens" DOUBLE PRECISION,
+  "moderationStyle" TEXT,
+  "moderatorAssistance" BOOL,
+  "collapseModerationGuidelines" BOOL,
+  "bannedUserIds" VARCHAR(27) [],
+  "bannedPersonalUserIds" VARCHAR(27) [],
+  "blockedUserIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
+  "hiddenPostsMetadata" JSONB[] NOT NULL DEFAULT '{}',
+  "legacyId" TEXT,
+  "deleted" BOOL NOT NULL DEFAULT FALSE,
+  "permanentDeletionRequestedAt" TIMESTAMPTZ,
+  "voteBanned" BOOL,
+  "nullifyVotes" BOOL,
+  "deleteContent" BOOL,
+  "banned" TIMESTAMPTZ,
+  "auto_subscribe_to_my_posts" BOOL NOT NULL DEFAULT TRUE,
+  "auto_subscribe_to_my_comments" BOOL NOT NULL DEFAULT TRUE,
+  "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
+  "notificationCommentsOnSubscribedPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationShortformContent" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationRepliesToMyComments" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationRepliesToSubscribedComments" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationSubscribedUserPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationSubscribedUserComment" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationPostsInGroups" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationSubscribedTagPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationSubscribedSequencePost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationPrivateMessage" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationSharedWithMe" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationAlignmentSubmissionApproved" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationEventInRadius" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationKarmaPowersGained" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationRSVPs" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationGroupAdministration" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationCommentsOnDraft" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationPostsNominatedReview" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationSubforumUnread" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"daily","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationNewMention" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationNewPingback" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationDialogueMessages" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationPublishedDialogueMessages" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationAddedAsCoauthor" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationKeywordAlert" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationDebateCommentsOnSubscribedPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"daily","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationDebateReplies" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationDialogueMatch" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationNewDialogueChecks" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "notificationYourTurnMatchForm" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
+  "hideDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
+  "revealChecksToAdmins" BOOL NOT NULL DEFAULT FALSE,
+  "optedInToDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
+  "showDialoguesList" BOOL NOT NULL DEFAULT TRUE,
+  "showMyDialogues" BOOL NOT NULL DEFAULT TRUE,
+  "showMatches" BOOL NOT NULL DEFAULT TRUE,
+  "showRecommendedPartners" BOOL NOT NULL DEFAULT TRUE,
+  "hideActiveDialogueUsers" BOOL NOT NULL DEFAULT FALSE,
+  "karmaChangeNotifierSettings" JSONB NOT NULL DEFAULT '{"updateFrequency":"daily","timeOfDayGMT":11,"dayOfWeekGMT":"Saturday","showNegativeKarma":false}'::JSONB,
+  "karmaChangeLastOpened" TIMESTAMPTZ,
+  "karmaChangeBatchStart" TIMESTAMPTZ,
+  "emailSubscribedToCurated" BOOL,
+  "subscribedToDigest" BOOL NOT NULL DEFAULT FALSE,
+  "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
+  "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
+  "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
+  "unsubscribeFromAll" BOOL,
+  "hideSubscribePoke" BOOL NOT NULL DEFAULT FALSE,
+  "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
+  "hideHomeRHS" BOOL NOT NULL DEFAULT FALSE,
+  "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "mongoLocation" JSONB,
+  "googleLocation" JSONB,
+  "location" TEXT,
+  "mapLocation" JSONB,
+  "mapLocationSet" BOOL,
+  "mapMarkerText" TEXT,
+  "htmlMapMarkerText" TEXT,
+  "nearbyEventsNotifications" BOOL NOT NULL DEFAULT FALSE,
+  "nearbyEventsNotificationsLocation" JSONB,
+  "nearbyEventsNotificationsMongoLocation" JSONB,
+  "nearbyEventsNotificationsRadius" DOUBLE PRECISION,
+  "nearbyPeopleNotificationThreshold" DOUBLE PRECISION,
+  "hideFrontpageMap" BOOL,
+  "hideTaggingProgressBar" BOOL,
+  "hideFrontpageBookAd" BOOL,
+  "hideFrontpageBook2019Ad" BOOL,
+  "hideFrontpageBook2020Ad" BOOL,
+  "sunshineNotes" TEXT NOT NULL DEFAULT '',
+  "sunshineFlagged" BOOL NOT NULL DEFAULT FALSE,
+  "needsReview" BOOL NOT NULL DEFAULT FALSE,
+  "sunshineSnoozed" BOOL NOT NULL DEFAULT FALSE,
+  "snoozedUntilContentCount" DOUBLE PRECISION,
+  "reviewedByUserId" VARCHAR(27),
+  "reviewedAt" TIMESTAMPTZ,
+  "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "voteCount" DOUBLE PRECISION,
+  "smallUpvoteCount" DOUBLE PRECISION,
+  "smallDownvoteCount" DOUBLE PRECISION,
+  "bigUpvoteCount" DOUBLE PRECISION,
+  "bigDownvoteCount" DOUBLE PRECISION,
+  "voteReceivedCount" DOUBLE PRECISION,
+  "smallUpvoteReceivedCount" DOUBLE PRECISION,
+  "smallDownvoteReceivedCount" DOUBLE PRECISION,
+  "bigUpvoteReceivedCount" DOUBLE PRECISION,
+  "bigDownvoteReceivedCount" DOUBLE PRECISION,
+  "usersContactedBeforeReview" TEXT[],
+  "fullName" TEXT,
+  "shortformFeedId" VARCHAR(27),
+  "viewUnreviewedComments" BOOL,
+  "partiallyReadSequences" JSONB[],
+  "beta" BOOL,
+  "reviewVotesQuadratic" BOOL,
+  "reviewVotesQuadratic2019" BOOL,
+  "reviewVotesQuadratic2020" BOOL,
+  "petrovPressedButtonDate" TIMESTAMPTZ,
+  "petrovLaunchCodeDate" TIMESTAMPTZ,
+  "defaultToCKEditor" BOOL,
+  "signUpReCaptchaRating" DOUBLE PRECISION,
+  "noExpandUnreadCommentsReview" BOOL NOT NULL DEFAULT FALSE,
+  "tagRevisionCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "abTestKey" TEXT NOT NULL,
+  "abTestOverrides" JSONB,
+  "walledGardenInvite" BOOL,
+  "hideWalledGardenUI" BOOL,
+  "walledGardenPortalOnboarded" BOOL,
+  "taggingDashboardCollapsed" BOOL,
+  "usernameUnset" BOOL NOT NULL DEFAULT FALSE,
+  "paymentEmail" TEXT,
+  "paymentInfo" TEXT,
+  "profileUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',
+  "fmCrosspostUserId" TEXT,
+  "linkedinProfileURL" TEXT,
+  "facebookProfileURL" TEXT,
+  "blueskyProfileURL" TEXT,
+  "twitterProfileURL" TEXT,
+  "twitterProfileURLAdmin" TEXT,
+  "githubProfileURL" TEXT,
+  "profileTagIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
+  "organizerOfGroupIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
+  "programParticipation" TEXT[],
+  "postingDisabled" BOOL,
+  "allCommentingDisabled" BOOL,
+  "commentingOnOtherUsersDisabled" BOOL,
+  "conversationsDisabled" BOOL,
+  "mentionsDisabled" BOOL NOT NULL DEFAULT FALSE,
+  "acknowledgedNewUserGuidelines" BOOL,
+  "subforumPreferredLayout" TEXT,
+  "hideJobAdUntil" TIMESTAMPTZ,
+  "criticismTipsDismissed" BOOL NOT NULL DEFAULT FALSE,
+  "hideFromPeopleDirectory" BOOL NOT NULL DEFAULT FALSE,
+  "allowDatadogSessionReplay" BOOL NOT NULL DEFAULT FALSE,
+  "afPostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "afCommentCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "afSequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "afSequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "reviewForAlignmentForumUserId" TEXT,
+  "afApplicationText" TEXT,
+  "afSubmittedApplication" BOOL,
+  "hideSunshineSidebar" BOOL NOT NULL DEFAULT FALSE,
+  "inactiveSurveyEmailSentAt" TIMESTAMPTZ,
+  "userSurveyEmailSentAt" TIMESTAMPTZ,
+  "inactiveSummaryEmailSentAt" TIMESTAMPTZ,
+  "recommendationSettings" JSONB,
+  "givingSeason2025DonatedFlair" BOOL NOT NULL DEFAULT FALSE,
+  "givingSeason2025VotedFlair" BOOL NOT NULL DEFAULT FALSE
+     */
+  },
+  () => [
+    // TODO: User indices
+  ],
+);
+
+export type User = typeof users.$inferSelect;
+
 export const bans = pgTable(
   "Bans",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     expirationDate: timestamp(),
     userId: varchar({ length: 27 }).notNull(),
     ip: text(),
@@ -50,7 +306,6 @@ export const bookmarks = pgTable(
   "Bookmarks",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     documentId: text().notNull(),
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
@@ -77,7 +332,6 @@ export const chapters = pgTable(
   "Chapters",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     title: text(),
     subtitle: text(),
     number: doublePrecision(),
@@ -103,19 +357,15 @@ export const books = pgTable(
   "Books",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     postedAt: timestamp(),
     title: text(),
     subtitle: text(),
     collectionId: varchar({ length: 27 }).notNull(),
     number: doublePrecision(),
-    postIds: varchar({ length: 27 })
-      .array()
-      .default(["}'::character varying(2"])
-      .notNull(),
+    postIds: varchar({ length: 27 }).array().default(["'{}'::VARCHAR[]"]).notNull(),
     sequenceIds: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
     displaySequencesAsGrid: boolean(),
     hideProgressBar: boolean(),
@@ -140,7 +390,6 @@ export const ckEditorUserSessions = pgTable(
   "CkEditorUserSessions",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     documentId: text().notNull(),
     userId: text().notNull(),
     endedAt: timestamp(),
@@ -163,7 +412,6 @@ export const collections = pgTable(
   "Collections",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     title: text().notNull(),
     slug: text().notNull(),
@@ -190,7 +438,6 @@ export const comments = pgTable(
   "Comments",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     parentCommentId: varchar({ length: 27 }),
     topLevelCommentId: varchar({ length: 27 }),
     postedAt: timestamp().notNull(),
@@ -200,7 +447,7 @@ export const comments = pgTable(
     tagCommentType: text().default("DISCUSSION").notNull(),
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
-    userIp: text(),
+    userIP: text(),
     userAgent: text(),
     referrer: text(),
     authorIsUnreviewed: boolean().default(false).notNull(),
@@ -715,7 +962,6 @@ export const clientIds = pgTable(
   "ClientIds",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     clientId: text().notNull(),
     firstSeenReferrer: text(),
     firstSeenLandingPage: text(),
@@ -752,7 +998,6 @@ export const commentModeratorActions = pgTable(
   "CommentModeratorActions",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     commentId: varchar({ length: 27 }).notNull(),
     type: text().notNull(),
     endedAt: timestamp(),
@@ -774,7 +1019,6 @@ export const databaseMetadata = pgTable(
   "DatabaseMetadata",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     name: text().notNull(),
     value: jsonb().notNull(),
   },
@@ -794,7 +1038,6 @@ export const digestPosts = pgTable(
   "DigestPosts",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     digestId: varchar({ length: 27 }).notNull(),
     postId: varchar({ length: 27 }).notNull(),
     emailDigestStatus: text(),
@@ -816,7 +1059,6 @@ export const curationNotices = pgTable(
   "CurationNotices",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     commentId: varchar({ length: 27 }),
     postId: varchar({ length: 27 }),
@@ -836,7 +1078,6 @@ export const electionCandidates = pgTable(
   "ElectionCandidates",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     electionName: text().notNull(),
     name: text().notNull(),
     logoSrc: text().notNull(),
@@ -876,7 +1117,6 @@ export const digests = pgTable(
   "Digests",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     num: doublePrecision().notNull(),
     startDate: timestamp().notNull(),
     endDate: timestamp(),
@@ -901,7 +1141,6 @@ export const conversations = pgTable(
   "Conversations",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     title: text(),
     participantIds: varchar({ length: 27 })
       .array()
@@ -913,7 +1152,7 @@ export const conversations = pgTable(
     moderator: boolean(),
     archivedByIds: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
   },
   (table) => [
@@ -946,7 +1185,6 @@ export const debouncerEvents = pgTable(
   "DebouncerEvents",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     name: text().notNull(),
     af: boolean(),
     dispatched: boolean().notNull(),
@@ -989,7 +1227,6 @@ export const electionVotes = pgTable(
   "ElectionVotes",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     electionName: text().notNull(),
     userId: varchar({ length: 27 }),
     compareState: jsonb(),
@@ -1020,7 +1257,6 @@ export const curationEmails = pgTable(
   "CurationEmails",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: text().notNull(),
     postId: text().notNull(),
   },
@@ -1040,7 +1276,6 @@ export const fieldChanges = pgTable(
   "FieldChanges",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }),
     changeGroup: text(),
     documentId: text(),
@@ -1070,7 +1305,6 @@ export const localgroups = pgTable(
   "Localgroups",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     name: text().notNull(),
     organizerIds: varchar({ length: 27 })
       .array()
@@ -1148,7 +1382,6 @@ export const messages = pgTable(
   "Messages",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     conversationId: varchar({ length: 27 }).notNull(),
     noEmail: boolean().default(false).notNull(),
@@ -1172,7 +1405,6 @@ export const migrations = pgTable(
   "Migrations",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     name: text().notNull(),
     started: timestamp().notNull(),
     finished: boolean().default(false).notNull(),
@@ -1190,7 +1422,6 @@ export const moderatorActions = pgTable(
   "ModeratorActions",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     type: text().notNull(),
     endedAt: timestamp(),
@@ -1218,7 +1449,6 @@ export const emailTokens = pgTable(
   "EmailTokens",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     token: text().notNull(),
     tokenType: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
@@ -1241,7 +1471,6 @@ export const lwEvents = pgTable(
   "LWEvents",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }),
     name: text(),
     documentId: text(),
@@ -1290,7 +1519,6 @@ export const notifications = pgTable(
   "Notifications",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     documentId: text(),
     documentType: text(),
@@ -1338,7 +1566,6 @@ export const podcastEpisodes = pgTable(
   "PodcastEpisodes",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     podcastId: varchar({ length: 27 }).notNull(),
     title: text().notNull(),
     episodeLink: text().notNull(),
@@ -1360,7 +1587,6 @@ export const images = pgTable(
   "Images",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     cdnHostedUrl: text().notNull(),
     originalUrl: text(),
     identifier: text().notNull(),
@@ -1386,7 +1612,6 @@ export const forumEvents = pgTable(
   "ForumEvents",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     title: text().notNull(),
     startDate: timestamp().notNull(),
     endDate: timestamp(),
@@ -1434,7 +1659,6 @@ export const postViews = pgTable(
   "PostViews",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     updatedAt: timestamp().notNull(),
     windowStart: timestamp().notNull(),
     windowEnd: timestamp().notNull(),
@@ -1472,7 +1696,6 @@ export const postViewTimes = pgTable(
   "PostViewTimes",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     updatedAt: timestamp().notNull(),
     windowStart: timestamp().notNull(),
     windowEnd: timestamp().notNull(),
@@ -1511,7 +1734,6 @@ export const podcasts = pgTable(
   "Podcasts",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     title: text().notNull(),
     applePodcastLink: text(),
     spotifyPodcastLink: text(),
@@ -1528,7 +1750,6 @@ export const postRecommendations = pgTable(
   "PostRecommendations",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }),
     clientId: text(),
     postId: varchar({ length: 27 }).notNull(),
@@ -1556,7 +1777,6 @@ export const postRelations = pgTable(
   "PostRelations",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     type: text().notNull(),
     sourcePostId: varchar({ length: 27 }).notNull(),
     targetPostId: varchar({ length: 27 }).notNull(),
@@ -1580,7 +1800,6 @@ export const posts = pgTable(
   "Posts",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     postedAt: timestamp().notNull(),
     modifiedAt: timestamp(),
     url: varchar({ length: 500 }),
@@ -1594,7 +1813,7 @@ export const posts = pgTable(
     isFuture: boolean().notNull(),
     sticky: boolean().default(false).notNull(),
     stickyPriority: integer().default(2).notNull(),
-    userIp: text(),
+    userIP: text(),
     userAgent: text(),
     referrer: text(),
     author: text(),
@@ -1614,8 +1833,8 @@ export const posts = pgTable(
     reviewCount: doublePrecision().default(0).notNull(),
     reviewVoteCount: doublePrecision().default(0).notNull(),
     positiveReviewVoteCount: doublePrecision().default(0).notNull(),
-    reviewVoteScoreAf: doublePrecision().default(0).notNull(),
-    reviewVotesAf: doublePrecision().array().default([]).notNull(),
+    reviewVoteScoreAF: doublePrecision().default(0).notNull(),
+    reviewVotesAF: doublePrecision().array().default([]).notNull(),
     reviewVoteScoreHighKarma: doublePrecision().default(0).notNull(),
     reviewVotesHighKarma: doublePrecision().array().default([]).notNull(),
     reviewVoteScoreAllKarma: doublePrecision().default(0).notNull(),
@@ -1624,13 +1843,13 @@ export const posts = pgTable(
     finalReviewVotesHighKarma: doublePrecision().array().default([]).notNull(),
     finalReviewVoteScoreAllKarma: doublePrecision().default(0).notNull(),
     finalReviewVotesAllKarma: doublePrecision().array().default([]).notNull(),
-    finalReviewVoteScoreAf: doublePrecision().default(0).notNull(),
-    finalReviewVotesAf: doublePrecision().array().default([]).notNull(),
+    finalReviewVoteScoreAF: doublePrecision().default(0).notNull(),
+    finalReviewVotesAF: doublePrecision().array().default([]).notNull(),
     lastCommentPromotedAt: timestamp(),
     tagRelevance: jsonb(),
     noIndex: boolean().default(false).notNull(),
     rsvps: jsonb().array(),
-    activateRsvPs: boolean(),
+    activateRSVPs: boolean(),
     nextDayReminderSent: boolean().default(false).notNull(),
     onlyVisibleToLoggedIn: boolean().default(false).notNull(),
     onlyVisibleToEstablishedAccounts: boolean().default(false).notNull(),
@@ -1675,7 +1894,7 @@ export const posts = pgTable(
     commentsLockedToAccountsCreatedAfter: timestamp(),
     organizerIds: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
     groupId: varchar({ length: 27 }),
     eventType: text(),
@@ -1703,7 +1922,7 @@ export const posts = pgTable(
     sharingSettings: jsonb(),
     shareWithUsers: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
     linkSharingKey: text(),
     linkSharingKeyUsedBy: varchar({ length: 27 }).array(),
@@ -1816,7 +2035,7 @@ export const posts = pgTable(
       table.authorIsUnreviewed.asc().nullsLast().op("timestamptz_ops"),
       table.hideFrontpageComments.asc().nullsLast().op("timestamptz_ops"),
       table.lastCommentedAt.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.baseScore.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("timestamptz_ops"),
@@ -1835,7 +2054,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("float8_ops"),
       table.rejected.asc().nullsLast().op("timestamptz_ops"),
       table.postedAt.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
@@ -1880,7 +2099,7 @@ export const posts = pgTable(
       table.eventType.asc().nullsLast().op("text_ops"),
       table.startTime.asc().nullsLast().op("timestamptz_ops"),
       table.endTime.asc().nullsLast().op("text_ops"),
-      table.id.asc().nullsLast().op("bool_ops"),
+      table._id.asc().nullsLast().op("bool_ops"),
       table.meta.asc().nullsLast().op("text_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.af.asc().nullsLast().op("text_ops"),
@@ -1908,7 +2127,7 @@ export const posts = pgTable(
         table.af.asc().nullsLast().op("bool_ops"),
         table.suggestForAlignmentUserIds.asc().nullsLast().op("bool_ops"),
         table.createdAt.asc().nullsLast().op("bool_ops"),
-        table.id.asc().nullsLast().op("timestamptz_ops"),
+        table._id.asc().nullsLast().op("timestamptz_ops"),
         table.meta.asc().nullsLast().op("timestamptz_ops"),
         table.isEvent.asc().nullsLast().op("bool_ops"),
         table.frontpageDate.asc().nullsLast().op("bool_ops"),
@@ -1930,7 +2149,7 @@ export const posts = pgTable(
       table.coauthorStatuses.asc().nullsLast().op("float8_ops"),
       table.userId.asc().nullsLast().op("float8_ops"),
       table.postedAt.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.meta.asc().nullsLast().op("varchar_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
@@ -1951,7 +2170,7 @@ export const posts = pgTable(
       table.coauthorUserIds.asc().nullsLast().op("array_ops"),
       table.userId.asc().nullsLast().op("float8_ops"),
       table.postedAt.asc().nullsLast().op("array_ops"),
-      table.id.asc().nullsLast().op("array_ops"),
+      table._id.asc().nullsLast().op("array_ops"),
       table.meta.asc().nullsLast().op("array_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("array_ops"),
@@ -1971,7 +2190,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("float8_ops"),
       table.sticky.asc().nullsLast().op("text_ops"),
       table.score.asc().nullsLast().op("text_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("text_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
@@ -1994,7 +2213,7 @@ export const posts = pgTable(
         table.sticky.asc().nullsLast().op("timestamptz_ops"),
         table.curatedDate.asc().nullsLast().op("text_ops"),
         table.postedAt.asc().nullsLast().op("bool_ops"),
-        table.id.asc().nullsLast().op("timestamptz_ops"),
+        table._id.asc().nullsLast().op("timestamptz_ops"),
         table.meta.asc().nullsLast().op("timestamptz_ops"),
         table.isEvent.asc().nullsLast().op("timestamptz_ops"),
         table.af.asc().nullsLast().op("text_ops"),
@@ -2024,7 +2243,7 @@ export const posts = pgTable(
       table.endTime.asc().nullsLast().op("timestamptz_ops"),
       table.createdAt.asc().nullsLast().op("bool_ops"),
       table.baseScore.asc().nullsLast().op("bool_ops"),
-      table.id.asc().nullsLast().op("text_ops"),
+      table._id.asc().nullsLast().op("text_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("bool_ops"),
@@ -2052,7 +2271,7 @@ export const posts = pgTable(
         table.stickyPriority.asc().nullsLast().op("float8_ops"),
         table.score.asc().nullsLast().op("timestamptz_ops"),
         table.frontpageDate.asc().nullsLast().op("timestamptz_ops"),
-        table.id.asc().nullsLast().op("bool_ops"),
+        table._id.asc().nullsLast().op("bool_ops"),
         table.meta.asc().nullsLast().op("bool_ops"),
         table.isEvent.asc().nullsLast().op("bool_ops"),
         table.af.asc().nullsLast().op("text_ops"),
@@ -2077,7 +2296,7 @@ export const posts = pgTable(
       table.eventType.asc().nullsLast().op("float8_ops"),
       table.startTime.asc().nullsLast().op("float8_ops"),
       table.endTime.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
@@ -2110,7 +2329,7 @@ export const posts = pgTable(
       table.hiddenRelatedQuestion.asc().nullsLast().op("float8_ops"),
       table.authorIsUnreviewed.asc().nullsLast().op("float8_ops"),
       table.groupId.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.userId.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.baseScore.asc().nullsLast().op("timestamptz_ops"),
@@ -2132,7 +2351,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("varchar_ops"),
       table.pingbacks.asc().nullsLast().op("timestamptz_ops"),
       table.baseScore.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("bool_ops"),
       table.isEvent.asc().nullsLast().op("varchar_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
@@ -2156,7 +2375,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("timestamptz_ops"),
       table.positiveReviewVoteCount.asc().nullsLast().op("timestamptz_ops"),
       table.createdAt.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("timestamptz_ops"),
       table.af.asc().nullsLast().op("bool_ops"),
@@ -2178,7 +2397,7 @@ export const posts = pgTable(
       table.positiveReviewVoteCount.asc().nullsLast().op("text_ops"),
       table.reviewCount.asc().nullsLast().op("timestamptz_ops"),
       table.createdAt.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.meta.asc().nullsLast().op("float8_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
@@ -2199,7 +2418,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("float8_ops"),
       table.postedAt.asc().nullsLast().op("float8_ops"),
       table.baseScore.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.meta.asc().nullsLast().op("float8_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
@@ -2218,7 +2437,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("array_ops"),
       table.bannedUserIds.asc().nullsLast().op("timestamptz_ops"),
       table.createdAt.asc().nullsLast().op("varchar_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("bool_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("array_ops"),
@@ -2240,7 +2459,7 @@ export const posts = pgTable(
       table.lastCommentedAt.asc().nullsLast().op("float8_ops"),
       table.baseScore.asc().nullsLast().op("float8_ops"),
       table.hideFrontpageComments.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("text_ops"),
+      table._id.asc().nullsLast().op("text_ops"),
       table.meta.asc().nullsLast().op("text_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.af.asc().nullsLast().op("text_ops"),
@@ -2263,7 +2482,7 @@ export const posts = pgTable(
       table.baseScore.asc().nullsLast().op("float8_ops"),
       table.curatedDate.asc().nullsLast().op("float8_ops"),
       table.frontpageDate.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.isEvent.asc().nullsLast().op("text_ops"),
       table.af.asc().nullsLast().op("bool_ops"),
       table.postedAt.asc().nullsLast().op("timestamptz_ops"),
@@ -2284,7 +2503,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("text_ops"),
       table.score.asc().nullsLast().op("bool_ops"),
       table.isEvent.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
       table.frontpageDate.asc().nullsLast().op("text_ops"),
@@ -2310,7 +2529,7 @@ export const posts = pgTable(
         table.postedAt.asc().nullsLast().op("timestamptz_ops"),
         table.baseScore.asc().nullsLast().op("timestamptz_ops"),
         table.maxBaseScore.asc().nullsLast().op("timestamptz_ops"),
-        table.id.asc().nullsLast().op("bool_ops"),
+        table._id.asc().nullsLast().op("bool_ops"),
         table.meta.asc().nullsLast().op("bool_ops"),
         table.isEvent.asc().nullsLast().op("float8_ops"),
         table.af.asc().nullsLast().op("float8_ops"),
@@ -2329,7 +2548,7 @@ export const posts = pgTable(
       table.authorIsUnreviewed.asc().nullsLast().op("float8_ops"),
       table.hideFrontpageComments.asc().nullsLast().op("bool_ops"),
       table.lastCommentedAt.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.baseScore.asc().nullsLast().op("bool_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
@@ -2348,7 +2567,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("float8_ops"),
       table.rejected.asc().nullsLast().op("bool_ops"),
       table.postedAt.asc().nullsLast().op("text_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("timestamptz_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
@@ -2370,7 +2589,7 @@ export const posts = pgTable(
         table.createdAt.asc().nullsLast().op("timestamptz_ops"),
         table.reviewForCuratedUserId.asc().nullsLast().op("bool_ops"),
         table.suggestForCuratedUserIds.asc().nullsLast().op("varchar_ops"),
-        table.id.asc().nullsLast().op("timestamptz_ops"),
+        table._id.asc().nullsLast().op("timestamptz_ops"),
         table.meta.asc().nullsLast().op("timestamptz_ops"),
         table.isEvent.asc().nullsLast().op("timestamptz_ops"),
         table.af.asc().nullsLast().op("bool_ops"),
@@ -2393,7 +2612,7 @@ export const posts = pgTable(
       table.reviewedByUserId.asc().nullsLast().op("float8_ops"),
       table.frontpageDate.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("text_ops"),
+      table._id.asc().nullsLast().op("text_ops"),
       table.isEvent.asc().nullsLast().op("float8_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
       table.curatedDate.asc().nullsLast().op("float8_ops"),
@@ -2415,7 +2634,7 @@ export const posts = pgTable(
       table.reviewedByUserId.asc().nullsLast().op("float8_ops"),
       table.frontpageDate.asc().nullsLast().op("float8_ops"),
       table.createdAt.asc().nullsLast().op("float8_ops"),
-      table.id.asc().nullsLast().op("float8_ops"),
+      table._id.asc().nullsLast().op("float8_ops"),
       table.meta.asc().nullsLast().op("text_ops"),
       table.isEvent.asc().nullsLast().op("timestamptz_ops"),
       table.af.asc().nullsLast().op("bool_ops"),
@@ -2439,7 +2658,7 @@ export const posts = pgTable(
       table.groupId.asc().nullsLast().op("float8_ops"),
       table.question.asc().nullsLast().op("text_ops"),
       table.lastCommentedAt.asc().nullsLast().op("bool_ops"),
-      table.id.asc().nullsLast().op("text_ops"),
+      table._id.asc().nullsLast().op("text_ops"),
       table.meta.asc().nullsLast().op("float8_ops"),
       table.isEvent.asc().nullsLast().op("bool_ops"),
       table.af.asc().nullsLast().op("float8_ops"),
@@ -2468,7 +2687,7 @@ export const posts = pgTable(
       table.deletedDraft.asc().nullsLast().op("float8_ops"),
       table.modifiedAt.asc().nullsLast().op("timestamptz_ops"),
       table.createdAt.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("timestamptz_ops"),
+      table._id.asc().nullsLast().op("timestamptz_ops"),
       table.meta.asc().nullsLast().op("timestamptz_ops"),
       table.isEvent.asc().nullsLast().op("timestamptz_ops"),
       table.af.asc().nullsLast().op("timestamptz_ops"),
@@ -2496,7 +2715,7 @@ export const posts = pgTable(
       table.deletedDraft.asc().nullsLast().op("timestamptz_ops"),
       table.modifiedAt.asc().nullsLast().op("timestamptz_ops"),
       table.createdAt.asc().nullsLast().op("timestamptz_ops"),
-      table.id.asc().nullsLast().op("varchar_ops"),
+      table._id.asc().nullsLast().op("varchar_ops"),
       table.meta.asc().nullsLast().op("array_ops"),
       table.isEvent.asc().nullsLast().op("varchar_ops"),
       table.af.asc().nullsLast().op("varchar_ops"),
@@ -2512,7 +2731,6 @@ export const reports = pgTable(
   "Reports",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     reportedUserId: varchar({ length: 27 }),
     commentId: varchar({ length: 27 }),
@@ -2550,7 +2768,6 @@ export const rssFeeds = pgTable(
   "RSSFeeds",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     ownedByUser: boolean().default(false).notNull(),
     displayFullContent: boolean().default(false).notNull(),
@@ -2578,7 +2795,6 @@ export const tagRels = pgTable(
   "TagRels",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     tagId: varchar({ length: 27 }).notNull(),
     postId: varchar({ length: 27 }).notNull(),
     deleted: boolean().default(false).notNull(),
@@ -2613,7 +2829,6 @@ export const subscriptions = pgTable(
   "Subscriptions",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     state: text().notNull(),
     documentId: text(),
@@ -2641,7 +2856,6 @@ export const readStatuses = pgTable(
   "ReadStatuses",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     postId: varchar({ length: 27 }),
     tagId: varchar({ length: 27 }),
     userId: varchar({ length: 27 }).notNull(),
@@ -2679,7 +2893,7 @@ export const readStatuses = pgTable(
 export const sessions = pgTable(
   "Sessions",
   {
-    id: text("_id").primaryKey().notNull(),
+    _id: varchar({ length: 27 }).primaryKey().notNull(),
     session: jsonb(),
     expires: timestamp(),
     lastModified: timestamp(),
@@ -2687,7 +2901,7 @@ export const sessions = pgTable(
   (table) => [
     index("idx_Sessions__id_expires").using(
       "btree",
-      table.id.asc().nullsLast().op("text_ops"),
+      table._id.asc().nullsLast().op("text_ops"),
       table.expires.asc().nullsLast().op("text_ops"),
     ),
     index("idx_Sessions_expires").using(
@@ -2701,7 +2915,6 @@ export const tagFlags = pgTable(
   "TagFlags",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     name: text().notNull(),
     deleted: boolean().default(false).notNull(),
     slug: text().notNull(),
@@ -2727,7 +2940,6 @@ export const revisions = pgTable(
   "Revisions",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     documentId: text(),
     collectionName: text(),
     fieldName: text(),
@@ -2758,7 +2970,7 @@ export const revisions = pgTable(
       table.collectionName.asc().nullsLast().op("text_ops"),
       table.fieldName.asc().nullsLast().op("text_ops"),
       table.editedAt.asc().nullsLast().op("text_ops"),
-      table.id.asc().nullsLast().op("text_ops"),
+      table._id.asc().nullsLast().op("text_ops"),
       table.changeMetrics.asc().nullsLast().op("text_ops"),
     ),
     index("idx_Revisions_documentId_version_fieldName_editedAt").using(
@@ -2785,7 +2997,6 @@ export const sequences = pgTable(
   "Sequences",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     title: text().notNull(),
     gridImageId: text(),
@@ -2840,7 +3051,6 @@ export const spotlights = pgTable(
   "Spotlights",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     documentId: text().notNull(),
     documentType: text().default("Sequence").notNull(),
     position: doublePrecision().notNull(),
@@ -2883,7 +3093,6 @@ export const userEagDetails = pgTable(
   "UserEAGDetails",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     careerStage: text().array(),
     countryOrRegion: text(),
@@ -2909,7 +3118,6 @@ export const tweets = pgTable(
   "Tweets",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     postId: text().notNull(),
     tweetId: text().notNull(),
     content: text().notNull(),
@@ -2934,7 +3142,6 @@ export const userJobAds = pgTable(
   "UserJobAds",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     jobName: text().notNull(),
     adState: text().notNull(),
@@ -2967,7 +3174,6 @@ export const userActivities = pgTable(
   "UserActivities",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     visitorId: varchar({ length: 27 }).notNull(),
     type: text().notNull(),
     startDate: timestamp().notNull(),
@@ -2992,7 +3198,6 @@ export const userRateLimits = pgTable(
   "UserRateLimits",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     type: text().notNull(),
     intervalUnit: text().notNull(),
@@ -3018,7 +3223,6 @@ export const userTagRels = pgTable(
   "UserTagRels",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     tagId: varchar({ length: 27 }).notNull(),
     userId: varchar({ length: 27 }).notNull(),
     subforumLastVisitedAt: timestamp(),
@@ -3043,7 +3247,6 @@ export const userMostValuablePosts = pgTable(
   "UserMostValuablePosts",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     postId: varchar({ length: 27 }).notNull(),
     deleted: boolean().default(false).notNull(),
@@ -3080,7 +3283,6 @@ export const tags = pgTable(
   "Tags",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     name: text().notNull(),
     slug: text().notNull(),
     oldSlugs: text().array().default([""]).notNull(),
@@ -3104,7 +3306,7 @@ export const tags = pgTable(
     bannerImageId: text(),
     tagFlagsIds: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
     lesswrongWikiImportRevision: text(),
     lesswrongWikiImportSlug: text(),
@@ -3117,7 +3319,7 @@ export const tags = pgTable(
     isSubforum: boolean().default(false).notNull(),
     subforumModeratorIds: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
     parentTagId: varchar({ length: 27 }),
     autoTagModel: text(),
@@ -3130,7 +3332,7 @@ export const tags = pgTable(
     subforumWelcomeText: jsonb(),
     subTagIds: varchar({ length: 27 })
       .array()
-      .default(["}'::character varying(2"])
+      .default(["'{}'::VARCHAR[]"])
       .notNull(),
     subforumIntroPostId: varchar({ length: 27 }),
     shortName: text(),
@@ -3253,7 +3455,6 @@ export const votes = pgTable(
   "Votes",
   {
     ...universalFields,
-    id: varchar("_id", { length: 27 }).primaryKey().notNull(),
     documentId: text().notNull(),
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
@@ -3383,3 +3584,22 @@ export const votes = pgTable(
     ),
   ],
 );
+
+const relations = defineRelations({ users, posts, revisions }, (r) => ({
+  posts: {
+    user: r.one.users({
+      from: r.posts.userId,
+      to: r.users._id,
+    }),
+    contents: r.one.revisions({
+      from: r.posts.contentsLatest,
+      to: r.revisions._id,
+    }),
+  },
+}));
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("Postgres URL is not configured");
+}
+
+export const db = drizzle(process.env.DATABASE_URL, { relations });

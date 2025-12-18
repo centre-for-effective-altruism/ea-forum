@@ -34,25 +34,31 @@ export const formatRelativeTime = (
   return isLong ? "just now" : "now";
 };
 
-export const formatShortDate = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+export const formatShortDate = (when: Date | string) => {
+  const date = when instanceof Date ? when : new Date(when);
+  return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
   });
+};
 
-export const formatLongDate = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+export const formatLongDate = (when: Date | string) => {
+  const date = when instanceof Date ? when : new Date(when);
+  return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
   });
+};
 
-export const formatLongDateWithTime = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+export const formatLongDateWithTime = (when: Date | string) => {
+  const date = when instanceof Date ? when : new Date(when);
+  return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+};
 
 export const nDaysAgo = (n: number) => {
   const date = new Date();

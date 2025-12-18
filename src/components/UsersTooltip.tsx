@@ -1,6 +1,6 @@
 import type { ElementType, ReactNode } from "react";
 import type { Placement } from "@floating-ui/react";
-import type { IFrontpagePostsList } from "@/lib/posts/postQueries.schemas";
+import type { User } from "@/lib/schema";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { htmlToTextDefault } from "@/lib/htmlToText";
 import { formatStat } from "@/lib/formatHelpers";
@@ -24,7 +24,7 @@ export default function UsersTooltip({
   As = "div",
   children,
 }: Readonly<{
-  user: IFrontpagePostsList["user"];
+  user: User;
   placement?: Placement;
   As?: ElementType;
   children: ReactNode;
@@ -40,7 +40,8 @@ export default function UsersTooltip({
     commentCount,
   } = user;
   const role = formatRole(jobTitle, organization);
-  const bio = formatBio(biography);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bio = formatBio((biography as any)?.html); // TODO types
   return (
     <Tooltip
       placement={placement}

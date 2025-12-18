@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { PostsRepo } from "@/lib/posts/postQueries.repo";
 import { getPostReadTime } from "@/lib/posts/postsHelpers";
 import { getCurrentUser } from "@/lib/requestHandler";
 import { formatShortDate } from "@/lib/timeUtils";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
+import { db } from "@/lib/schema";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
@@ -20,19 +20,25 @@ export default async function PostsPage({
 }: {
   params: Promise<{ _id: string }>;
 }) {
-  const [{ _id }, { db, currentUser }] = await Promise.all([
-    params,
-    getCurrentUser(),
-  ]);
-  const post = await new PostsRepo(db).postById({
-    postId: _id,
-    currentUserId: currentUser?._id ?? null,
-    currentUserIsAdmin: !!currentUser?.isAdmin,
-  });
+  const [{ _id }, { currentUser }] = await Promise.all([params, getCurrentUser()]);
 
+  const post = await db.query.posts.findFirst({
+    where: {
+      _id,
+    },
+    with: {
+      user: true,
+      contents: true,
+    },
+  });
   if (!post) {
     notFound();
   }
+
+  const readTime = getPostReadTime(
+    post.readTimeMinutesOverride,
+    post.contents?.wordCount ?? null,
+  );
 
   return (
     <div data-component="PostsPage">
@@ -44,14 +50,18 @@ export default async function PostsPage({
           <UserProfileImage user={post.user} size={36} />
           <div>
             <Type style="bodyMedium">
-              <UsersTooltip user={post.user} As="span">
-                <Link href={userGetProfileUrl(post.user)}>
-                  {post.user.displayName}
-                </Link>
-              </UsersTooltip>
+              {post.user ? (
+                <UsersTooltip user={post.user} As="span">
+                  <Link href={userGetProfileUrl(post.user)}>
+                    {post.user.displayName}
+                  </Link>
+                </UsersTooltip>
+              ) : (
+                "[Anonymous]"
+              )}
             </Type>
             <Type style="bodyMedium" className="text-gray-600">
-              {getPostReadTime(post)} min read
+              {readTime} min read
               {" · "}
               {formatShortDate(post.postedAt)}
             </Type>
@@ -106,13 +116,16 @@ export default async function PostsPage({
       </div>
       <div className="w-full bg-(--background) pt-15 pb-20">
         <div className="w-[698px] max-w-full mx-auto">
-          <Type style="sectionTitleLarge" className="mb-2">
-            More from {post.user.displayName}
-          </Type>
+          {post.user && (
+            <Type style="sectionTitleLarge" className="mb-2">
+              More from {post.user.displayName}
+            </Type>
+          )}
           <Type style="sectionTitleLarge" className="mb-2">
             Curated and popular this week
           </Type>
           <Type style="sectionTitleLarge" className="mb-2">
+            {/* TODO */}
             Recent opportunities in Cause prioritization
           </Type>
         </div>

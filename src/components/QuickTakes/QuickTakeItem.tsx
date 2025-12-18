@@ -24,7 +24,8 @@ export default function QuickTakeItem({
         <Score baseScore={baseScore} voteCount={voteCount} orient="horizontal" />
         <Type style="body" className="text-black font-[700]">
           <Link href={userGetProfileUrl(user)}>
-            <UsersTooltip As="span" user={user}>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <UsersTooltip As="span" user={user as any /* TODO types */}>
               {user.displayName}
             </UsersTooltip>
           </Link>
