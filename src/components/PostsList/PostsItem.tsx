@@ -1,9 +1,9 @@
 "use client";
 
-import type { IFrontpagePostsList } from "@/lib/posts/postQueries.schemas";
+import type { PostListItem } from "@/lib/posts/postLists";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { postGetPageUrl } from "@/lib/posts/postsHelpers";
+import { getPostReadTime, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostsTooltip from "../PostsTooltip";
@@ -16,12 +16,15 @@ export default function PostsItem({
   post,
   openInNewTab,
 }: Readonly<{
-  post: IFrontpagePostsList;
+  post: PostListItem;
   openInNewTab?: boolean;
 }>) {
   const { _id, title, baseScore, commentCount, voteCount, sticky, user } = post;
   const postLink = postGetPageUrl({ post });
-  const readTime = 0; //getPostReadTime(post); // TODO
+  const readTime = getPostReadTime(
+    post.readTimeMinutesOverride,
+    post.contents?.wordCount ?? null,
+  );
   const { onClick } = useClickableCell({ href: postLink, openInNewTab });
   return (
     <AnalyticsContext
@@ -52,9 +55,8 @@ export default function PostsItem({
               </PostsTooltip>
             </Type>
             <Type style="bodySmall">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <UsersTooltip As="span" user={user as any /* TODO types */}>
-                {user.displayName}
+              <UsersTooltip As="span" user={user}>
+                {user?.displayName ?? "[Anonymous]"}
               </UsersTooltip>
               {" · "}
               {readTime}m read

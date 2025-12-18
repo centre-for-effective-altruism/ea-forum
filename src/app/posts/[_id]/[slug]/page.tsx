@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getPostReadTime } from "@/lib/posts/postsHelpers";
-import { getCurrentUser } from "@/lib/requestHandler";
 import { formatShortDate } from "@/lib/timeUtils";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { db } from "@/lib/schema";
@@ -10,8 +9,8 @@ import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import UserProfileImage from "@/components/UserProfileImage";
 import LazyCommentsSection from "@/components/Comments/LazyCommentsSection";
-import LazyPostBody from "@/components/ContentStyles/LazyPostBody";
 import UsersTooltip from "@/components/UsersTooltip";
+import PostBody from "@/components/ContentStyles/PostBody";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
 
@@ -20,7 +19,7 @@ export default async function PostsPage({
 }: {
   params: Promise<{ _id: string }>;
 }) {
-  const [{ _id }, { currentUser }] = await Promise.all([params, getCurrentUser()]);
+  const { _id } = await params;
 
   const post = await db.query.posts.findFirst({
     where: {
@@ -93,11 +92,7 @@ export default async function PostsPage({
             </div>
           }
         >
-          <LazyPostBody
-            currentUser={currentUser}
-            postId={post._id}
-            className="mt-10"
-          />
+          <PostBody html={post.contents?.html ?? null} className="mt-10" />
         </Suspense>
         <Type style="commentsHeader" className="mt-18 mb-6">
           Comments <span className="text-gray-600">{post.commentCount}</span>

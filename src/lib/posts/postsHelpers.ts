@@ -1,15 +1,7 @@
 import type { Json, JsonRecord } from "tradukisto";
+import type { PostListItem } from "./postLists";
 import { getSiteUrl } from "../routeHelpers";
-import { IFrontpagePostsList } from "./postQueries.schemas";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
-
-export const postStatuses = {
-  STATUS_PENDING: 1, // Unused
-  STATUS_APPROVED: 2,
-  STATUS_REJECTED: 3,
-  STATUS_SPAM: 4,
-  STATUS_DELETED: 5,
-};
 
 export const postGetPageUrl = ({
   post,
@@ -87,7 +79,7 @@ const getSocialImagePreviewPrefix = () => {
 };
 
 export type PostWithSocialPreview = Pick<
-  IFrontpagePostsList,
+  PostListItem,
   "isEvent" | "eventImageId" | "socialPreview" | "socialPreviewImageAutoUrl"
 >;
 

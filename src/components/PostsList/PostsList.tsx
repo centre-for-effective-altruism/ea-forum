@@ -1,10 +1,10 @@
-import type { ComponentProps } from "react";
+import type { PostListItem } from "@/lib/posts/postLists";
 import PostsItem from "./PostsItem";
 
 export default function PostsList({
   posts,
 }: Readonly<{
-  posts: ComponentProps<typeof PostsItem>["post"][];
+  posts: PostListItem[];
 }>) {
   return (
     <section className="max-w-full" data-component="PostsList">

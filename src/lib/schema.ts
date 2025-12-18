@@ -3585,7 +3585,7 @@ export const votes = pgTable(
   ],
 );
 
-const relations = defineRelations({ users, posts, revisions }, (r) => ({
+const relations = defineRelations({ users, posts, revisions, tags }, (r) => ({
   posts: {
     user: r.one.users({
       from: r.posts.userId,
@@ -3602,4 +3602,7 @@ if (!process.env.DATABASE_URL) {
   throw new Error("Postgres URL is not configured");
 }
 
-export const db = drizzle(process.env.DATABASE_URL, { relations });
+export const db = drizzle(process.env.DATABASE_URL, {
+  relations,
+  logger: process.env.LOG_DRIZZLE_QUERIES === "true",
+});

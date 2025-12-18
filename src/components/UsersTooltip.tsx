@@ -1,6 +1,6 @@
 import type { ElementType, ReactNode } from "react";
 import type { Placement } from "@floating-ui/react";
-import type { User } from "@/lib/schema";
+import type { PostListItem } from "@/lib/posts/postLists";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { htmlToTextDefault } from "@/lib/htmlToText";
 import { formatStat } from "@/lib/formatHelpers";
@@ -24,11 +24,14 @@ export default function UsersTooltip({
   As = "div",
   children,
 }: Readonly<{
-  user: User;
+  user: PostListItem["user"];
   placement?: Placement;
   As?: ElementType;
   children: ReactNode;
 }>) {
+  if (!user) {
+    return <>{children}</>;
+  }
   const {
     displayName,
     createdAt,
