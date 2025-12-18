@@ -101,11 +101,11 @@ const links = [
   },
   {
     title: "Cookie policy",
-    href: "/cookiePolicy",
+    href: "/cookie-policy",
   },
   {
     title: "Copyright",
-    href: "/posts/KK6AE8HzPkR2KnqSg/new-forum-license-creative-commons",
+    href: "/copyright",
   },
 ] satisfies Pick<ComponentProps<typeof NavLink>, "title" | "href">[];
 
