@@ -52,12 +52,13 @@ export const users = pgTable(
     maxPostCount: doublePrecision().notNull().default(0),
     commentCount: doublePrecision().notNull().default(0),
     maxCommentCount: doublePrecision().notNull().default(0),
+    banned: timestamp(),
+    services: jsonb(),
 
     /*
   "emails" JSONB[],
   "isAdmin" BOOL NOT NULL DEFAULT FALSE,
   "profile" JSONB,
-  "services" JSONB,
   "previousDisplayName" TEXT,
   "email" TEXT,
   "noindex" BOOL NOT NULL DEFAULT FALSE,

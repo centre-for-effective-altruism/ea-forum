@@ -1,14 +1,13 @@
 import z, { ZodError } from "zod/v4";
 import { cookies } from "next/headers";
-import { UsersRepo } from "@/lib/users/userQueries.repo";
-import type { IUserByAuth0Id } from "@/lib/users/userQueries.schemas";
-import { getDbOrThrow } from "@/lib/db";
 import {
   generateLoginToken,
   getAuth0Client,
   hashLoginToken,
   parseJwt,
 } from "@/lib/authHelpers";
+import { db, users } from "@/lib/schema";
+import { sql } from "drizzle-orm";
 
 class UserIsBannedError extends Error {
   constructor() {
@@ -42,12 +41,16 @@ const auth0IdTokenToProfile = (idToken: string) => {
 
 type Auth0UserProfile = ReturnType<typeof auth0IdTokenToProfile>;
 
-const getOrCreateUser = async (
-  usersRepo: UsersRepo,
-  profile: Auth0UserProfile,
-): Promise<IUserByAuth0Id | null> => {
-  const user = await usersRepo.userByAuth0Id({
-    auth0Id: profile.id,
+const getOrCreateUser = async (profile: Auth0UserProfile) => {
+  const user = await db.query.users.findFirst({
+    columns: {
+      _id: true,
+      banned: true,
+    },
+    where: {
+      RAW: (users, { sql }) =>
+        sql`${users.services}->'auth0'->>'id' = ${profile.id}`,
+    },
   });
   if (!user) {
     // TODO: Create user - see getOrCreateForumUser in ForumMagnum
@@ -67,11 +70,10 @@ const loginRequestBodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const { client, realm, scope } = getAuth0Client();
-
     const rawInput = await request.json();
     const { email, password } = loginRequestBodySchema.parse(rawInput);
 
+    const { client, realm, scope } = getAuth0Client();
     const grant = await client.oauth.passwordGrant({
       username: email,
       password,
@@ -90,8 +92,7 @@ export async function POST(request: Request) {
 
     const profile = auth0IdTokenToProfile(auth0IdToken);
 
-    const usersRepo = new UsersRepo(getDbOrThrow());
-    const user = await getOrCreateUser(usersRepo, profile);
+    const user = await getOrCreateUser(profile);
     if (!user) {
       throw new Error("User not found");
     }
@@ -102,13 +103,25 @@ export async function POST(request: Request) {
       httpOnly: true,
       maxAge: 315360000, // 10 years
       path: "/",
-      // TODO: Enable secure, but only in production
+      secure: process.env.ENVIRONMENT === "prod",
     });
 
-    await usersRepo.saveUserLoginToken({
-      userId: user._id,
-      hashedToken: hashLoginToken(token),
-    });
+    // Save the new login token
+    await db
+      .update(users)
+      .set({
+        services: sql`
+          fm_add_to_set(
+            ${users.services},
+            ARRAY['resume', 'loginTokens']::TEXT[],
+            jsonb_build_object(
+              'when', NOW(),
+              'hashedToken', ${hashLoginToken(token)}
+            )
+          )
+        `,
+      })
+      .where(sql`${users._id} = ${user._id}`);
 
     return Response.json({ message: "Logged in" }, { status: 200 });
   } catch (e) {
@@ -122,7 +135,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     } else if (e instanceof UserIsBannedError) {
-      return Response.redirect("/banNotice", 301);
+      return Response.redirect("/ban-notice", 301);
     } else if (e instanceof Error) {
       return Response.json({ error: e.message }, { status: 400 });
     }
