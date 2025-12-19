@@ -14,6 +14,7 @@ const eslintConfig = [
   globalIgnores(["**/*.queries.ts"]),
   {
     rules: {
+      "react-hooks/set-state-in-effect": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",

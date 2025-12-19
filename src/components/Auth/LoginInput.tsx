@@ -7,6 +7,7 @@ export default function LoginInput({
   onChange,
   testId,
   placeholder,
+  name,
   autoFocus,
   secure,
   onToggleRevealed,
@@ -15,6 +16,7 @@ export default function LoginInput({
   onChange: (ev: ChangeEvent<HTMLInputElement>) => void;
   testId: string;
   placeholder: string;
+  name?: string;
   autoFocus?: boolean;
   secure?: "revealed" | "hidden";
   onToggleRevealed?: () => void;
@@ -29,6 +31,7 @@ export default function LoginInput({
       <input
         type={secure === "hidden" ? "password" : "text"}
         placeholder={placeholder}
+        name={name}
         value={value}
         onChange={onChange}
         data-testid={testId}

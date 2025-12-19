@@ -1,8 +1,9 @@
-import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState, useTransition } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { loginAction } from "@/lib/actions/authActions";
 import Image from "next/image";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import BlurredBackgroundModal from "../BlurredBackgroundModal";
@@ -27,12 +28,12 @@ export default function LoginPopover() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [policy, setPolicy] = useState<string | null>(null);
-  const { refetchCurrentUser } = useCurrentUser();
+  const [pending, startTransition] = useTransition();
+  const { setCurrentUser } = useCurrentUser();
 
   const onChangeEmail = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
     setEmail(ev.target.value);
@@ -47,55 +48,64 @@ export default function LoginPopover() {
   }, []);
 
   const onSendPasswordReset = useCallback(async () => {
-    setError(null);
-    setPolicy(null);
-    setMessage(null);
-    try {
-      setLoading(true);
-      await client.resetPassword(email);
-      setMessage("Password reset email sent");
-    } catch (err) {
-      const e = err as Error & { description?: string };
-      console.error(e);
-      captureException(e, {
-        tags: {
-          component: "EALoginPopover",
-          action: action || "unknown",
-        },
-        extra: {
-          email,
-          isSignup,
-          isResettingPassword,
-        },
-      });
-      setError(e.description || e.message || String(e) || "An error occurred");
-    }
-    setLoading(false);
+    startTransition(async () => {
+      try {
+        setError(null);
+        setPolicy(null);
+        setMessage(null);
+        await client.resetPassword(email);
+        setMessage("Password reset email sent");
+      } catch (err) {
+        const e = err as Error & { description?: string };
+        console.error(e);
+        captureException(e, {
+          tags: {
+            component: "EALoginPopover",
+            action: action || "unknown",
+          },
+          extra: {
+            email,
+            isSignup,
+            isResettingPassword,
+          },
+        });
+        setError(e.description || e.message || String(e) || "An error occurred");
+      }
+    });
   }, [client, email, action, isSignup, isResettingPassword]);
 
-  const onSubmit = useCallback(
-    async (ev: FormEvent<HTMLFormElement>) => {
-      ev.preventDefault();
+  const onSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      setMessage(null);
+      setError(null);
+      setPolicy(null);
 
       if (isResettingPassword) {
         return onSendPasswordReset();
       }
 
+      const email = formData.get("email");
+      const password = formData.get("password");
       if (!email || !password) {
         setError("Email and password are required");
         return;
       }
-
-      setMessage(null);
-      setError(null);
-      setPolicy(null);
+      if (typeof email !== "string" || typeof password !== "string") {
+        setError("Invalid field values");
+        return;
+      }
 
       try {
-        setLoading(true);
-        await (isSignup
-          ? client.signup(email, password)
-          : client.login(email, password));
-        await refetchCurrentUser();
+        // TODO Handle signup with `isSignup`
+        const result = await loginAction(email, password);
+        if (result?.redirect) {
+          window.location.href = result.redirect;
+        } else if (!result?.ok || !result?.currentUser) {
+          console.error("Login error:", result);
+          setError(result.error ?? "An error occurred");
+        } else {
+          setCurrentUser(result.currentUser);
+        }
       } catch (err) {
         const e = err as Error & { description?: string; policy?: string };
         console.error(e);
@@ -112,21 +122,9 @@ export default function LoginPopover() {
         });
         setError(e.description || e.message || String(e) || "An error occurred");
         setPolicy(e.policy ?? null);
-      } finally {
-        setLoading(false);
       }
-    },
-    [
-      isResettingPassword,
-      email,
-      password,
-      onSendPasswordReset,
-      isSignup,
-      client,
-      refetchCurrentUser,
-      action,
-    ],
-  );
+    });
+  };
 
   const onClickGoogle = useCallback(async () => {
     setMessage(null);
@@ -156,7 +154,6 @@ export default function LoginPopover() {
       setEmail("");
       setPassword("");
       setShowPassword(false);
-      setLoading(false);
       setMessage(null);
       setError(null);
       setPolicy(null);
@@ -166,7 +163,7 @@ export default function LoginPopover() {
 
   const title = isSignup ? "Sign up to get more from the EA Forum" : "Welcome back";
 
-  const canSubmit = !!email && (!!password || isResettingPassword) && !loading;
+  const canSubmit = !!email && (!!password || isResettingPassword) && !pending;
   return (
     <BlurredBackgroundModal open={open} onClose={onClose}>
       <AnalyticsContext pageElementContext="loginPopover">
@@ -180,11 +177,12 @@ export default function LoginPopover() {
           />
           <LightbulbIcon className="w-[52px] text-(--color-primary-dark)" />
           <Type className="text-[24px] font-[600]">{title}</Type>
-          <form onSubmit={onSubmit} className="flex flex-col gap-2 w-full">
+          <form action={onSubmit} className="flex flex-col gap-2 w-full">
             <LoginInput
               value={email}
               onChange={onChangeEmail}
               placeholder="Email"
+              name="email"
               testId="login-email-input"
               autoFocus
             />
@@ -192,6 +190,7 @@ export default function LoginPopover() {
               value={password}
               onChange={onChangePassword}
               placeholder="Password"
+              name="password"
               testId="login-password-input"
               secure={showPassword ? "revealed" : "hidden"}
               onToggleRevealed={toggleShowPassword}
@@ -216,7 +215,7 @@ export default function LoginPopover() {
               testId="login-submit"
               className="w-full h-[50px] px-[17px] py-[15px] font-[600]"
             >
-              {loading ? (
+              {pending ? (
                 <Loading />
               ) : isResettingPassword ? (
                 "Request password reset"

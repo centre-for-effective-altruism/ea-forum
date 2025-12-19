@@ -1,0 +1,37 @@
+import { db } from "@/lib/schema";
+
+// TODO: We can get a small performance boost here by using
+// fm_get_user_by_login_token but it's hard to use that in drizzle while
+// keeping typesafety.
+export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
+  const user = await db.query.users.findFirst({
+    columns: {
+      _id: true,
+      displayName: true,
+      email: true,
+      profileImageId: true,
+      slug: true,
+      isAdmin: true,
+      theme: true,
+      hideIntercom: true,
+      acceptedTos: true,
+      hideNavigationSidebar: true,
+      hideHomeRHS: true,
+      currentFrontpageFilter: true,
+      frontpageFilterSettings: true,
+      lastNotificationsCheck: true,
+      expandedFrontpageSections: true,
+    },
+    where: {
+      RAW: (users, { sql }) => sql`
+        ${users.services}->'resume'->'loginTokens' @>
+          ${JSON.stringify([{ hashedToken }])}::JSONB
+      `,
+    },
+  });
+  return user ?? null;
+};
+
+export type CurrentUser = NonNullable<
+  Awaited<ReturnType<typeof fetchCurrentUserByHashedToken>>
+>;

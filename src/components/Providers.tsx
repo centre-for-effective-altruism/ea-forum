@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "@/lib/authHelpers";
-import { UsersRepo } from "@/lib/users/userQueries.repo";
-import { getDbOrThrow } from "@/lib/db";
+import { fetchCurrentUserByHashedToken } from "@/lib/users/currentUser";
 import NotificationsProvider from "./Notifications/NotificationsProvider";
 
 export default async function Providers({
@@ -15,12 +14,10 @@ export default async function Providers({
   const cookieStore = await cookies();
   const loginToken = cookieStore.get(LOGIN_TOKEN_COOKIE_NAME)?.value;
   const currentUser = loginToken
-    ? await new UsersRepo(getDbOrThrow()).currentUser({
-        hashedToken: hashLoginToken(loginToken),
-      })
+    ? await fetchCurrentUserByHashedToken(hashLoginToken(loginToken))
     : null;
   return (
-    <CurrentUserProvider currentUser={currentUser}>
+    <CurrentUserProvider user={currentUser}>
       <NotificationsProvider>
         <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
       </NotificationsProvider>

@@ -1,7 +1,8 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
-import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
+import { logoutAction } from "@/lib/actions/authActions";
 import toast from "react-hot-toast";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
@@ -17,21 +18,21 @@ export default function UserDropdownMenu({
   children: ReactNode;
 }>) {
   const { currentUser } = useCurrentUser();
-  const auth0Client = useAuth0Client();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const logoutForm = useRef<HTMLFormElement>(null);
 
   const ProfileImageIcon = useCallback(() => {
     return <UserProfileImage user={currentUser} size={24} />;
   }, [currentUser]);
 
   const onLogout = useCallback(async () => {
-    try {
+    const form = logoutForm.current;
+    if (form) {
       toast.loading("Logging out...");
-      await auth0Client.logout();
-      window.location.reload();
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "Something went wrong");
+      form.submit();
     }
-  }, [auth0Client]);
+  }, []);
 
   if (!currentUser?.displayName) {
     return null;
@@ -79,6 +80,13 @@ export default function UserDropdownMenu({
       ]}
     >
       <div data-component="UserDropdownMenu">{children}</div>
+      <form ref={logoutForm} action={logoutAction} className="hidden" aria-hidden>
+        <input
+          type="hidden"
+          name="returnTo"
+          value={pathname + (searchParams.toString() ? `?${searchParams}` : "")}
+        />
+      </form>
     </DropdownMenu>
   );
 }

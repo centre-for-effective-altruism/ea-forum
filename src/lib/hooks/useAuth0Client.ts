@@ -34,10 +34,6 @@ class Auth0Client {
     }
   }
 
-  async login(email: string, password: string): Promise<void> {
-    await this.post("/api/auth/login", { email, password });
-  }
-
   async signup(email: string, password: string): Promise<void> {
     await this.post("/api/auth/signup", { email, password });
   }
@@ -45,10 +41,6 @@ class Auth0Client {
   googleLogin(): void {
     const returnTo = encodeURIComponent(window.location.href);
     window.location.href = `/api/auth?returnTo=${returnTo}&connection=google-oauth2`;
-  }
-
-  async logout(): Promise<void> {
-    await this.post("/api/auth/logout", {});
   }
 
   private getClientSettings() {

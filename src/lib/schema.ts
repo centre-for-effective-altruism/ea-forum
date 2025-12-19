@@ -13,6 +13,7 @@ import {
   integer,
   doublePrecision,
   boolean,
+  pgMaterializedView,
 } from "drizzle-orm/pg-core";
 
 const timestamp = () => rawTimestamp({ withTimezone: true, mode: "string" });
@@ -54,17 +55,25 @@ export const users = pgTable(
     maxCommentCount: doublePrecision().notNull().default(0),
     banned: timestamp(),
     services: jsonb(),
+    isAdmin: boolean().notNull().default(false),
+    theme: jsonb().notNull().default(`'{"name":"default"}'::JSONB`),
+    hideIntercom: boolean().notNull().default(false),
+    acceptedTos: boolean().notNull().default(false),
+    hideNavigationSidebar: boolean(),
+    hideHomeRHS: boolean().notNull().default(false),
+    currentFrontpageFilter: text(),
+    frontpageFilterSettings: jsonb(),
+    lastNotificationsCheck: timestamp(),
+    expandedFrontpageSections: jsonb(),
+    email: text(),
+    emails: jsonb().array(),
+    noindex: boolean().notNull().default(false),
 
     /*
-  "emails" JSONB[],
-  "isAdmin" BOOL NOT NULL DEFAULT FALSE,
   "profile" JSONB,
   "previousDisplayName" TEXT,
-  "email" TEXT,
-  "noindex" BOOL NOT NULL DEFAULT FALSE,
   "groups" TEXT[],
   "lwWikiImport" BOOL,
-  "theme" JSONB NOT NULL DEFAULT '{"name":"default"}'::JSONB,
   "lastUsedTimezone" TEXT,
   "whenConfirmationEmailSent" TIMESTAMPTZ,
   "legacy" BOOL NOT NULL DEFAULT FALSE,
@@ -74,7 +83,6 @@ export const users = pgTable(
   "noKibitz" BOOL,
   "showHideKarmaOption" BOOL,
   "showPostAuthorCard" BOOL,
-  "hideIntercom" BOOL NOT NULL DEFAULT FALSE,
   "markDownPostEditor" BOOL NOT NULL DEFAULT FALSE,
   "hideElicitPredictions" BOOL NOT NULL DEFAULT FALSE,
   "hideAFNonMemberInitialWarning" BOOL NOT NULL DEFAULT FALSE,
@@ -82,7 +90,6 @@ export const users = pgTable(
   "noCollapseCommentsPosts" BOOL NOT NULL DEFAULT FALSE,
   "noCollapseCommentsFrontpage" BOOL NOT NULL DEFAULT FALSE,
   "hideCommunitySection" BOOL NOT NULL DEFAULT FALSE,
-  "expandedFrontpageSections" JSONB,
   "showCommunityInRecentDiscussion" BOOL NOT NULL DEFAULT FALSE,
   "hidePostsRecommendations" BOOL NOT NULL DEFAULT FALSE,
   "keywordAlerts" TEXT[] NOT NULL DEFAULT '{}',
@@ -91,11 +98,7 @@ export const users = pgTable(
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
   "generateJargonForDrafts" BOOL NOT NULL DEFAULT FALSE,
   "generateJargonForPublishedPosts" BOOL NOT NULL DEFAULT TRUE,
-  "acceptedTos" BOOL NOT NULL DEFAULT FALSE,
-  "hideNavigationSidebar" BOOL,
-  "currentFrontpageFilter" TEXT,
   "frontpageSelectedTab" TEXT,
-  "frontpageFilterSettings" JSONB,
   "hideFrontpageFilterSettingsDesktop" BOOL,
   "allPostsTimeframe" TEXT,
   "allPostsFilter" TEXT,
@@ -107,7 +110,6 @@ export const users = pgTable(
   "draftsListSorting" TEXT,
   "draftsListShowArchived" BOOL,
   "draftsListShowShared" BOOL,
-  "lastNotificationsCheck" TIMESTAMPTZ,
   "goodHeartTokens" DOUBLE PRECISION,
   "moderationStyle" TEXT,
   "moderatorAssistance" BOOL,
@@ -175,7 +177,6 @@ export const users = pgTable(
   "unsubscribeFromAll" BOOL,
   "hideSubscribePoke" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
-  "hideHomeRHS" BOOL NOT NULL DEFAULT FALSE,
   "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -3586,18 +3587,41 @@ export const votes = pgTable(
   ],
 );
 
-const relations = defineRelations({ users, posts, revisions, tags }, (r) => ({
-  posts: {
-    user: r.one.users({
-      from: r.posts.userId,
-      to: r.users._id,
-    }),
-    contents: r.one.revisions({
-      from: r.posts.contentsLatest,
-      to: r.revisions._id,
-    }),
-  },
-}));
+export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
+  qb
+    .select({
+      hashedToken: sql`
+          JSONB_ARRAY_ELEMENTS(
+            ${users.services}->'resume'->'loginTokens'
+          )->>'hashedToken'
+        `.as("hashedToken"),
+      userId: users._id.as("userId"),
+    })
+    .from(users)
+    .where(sql`JSONB_TYPEOF(${users.services}->'resume'->'loginTokens') = 'array'`),
+);
+
+const relations = defineRelations(
+  { users, posts, revisions, tags, userLoginTokens },
+  (r) => ({
+    posts: {
+      user: r.one.users({
+        from: r.posts.userId,
+        to: r.users._id,
+      }),
+      contents: r.one.revisions({
+        from: r.posts.contentsLatest,
+        to: r.revisions._id,
+      }),
+    },
+    userLoginTokens: {
+      user: r.one.users({
+        from: r.userLoginTokens.userId,
+        to: r.users._id,
+      }),
+    },
+  }),
+);
 
 if (!process.env.DATABASE_URL) {
   throw new Error("Postgres URL is not configured");

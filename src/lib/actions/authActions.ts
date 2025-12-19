@@ -1,5 +1,10 @@
-import z, { ZodError } from "zod/v4";
+"use server";
+
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { sql } from "drizzle-orm";
+import { db, users } from "@/lib/schema";
+import { fetchCurrentUserByHashedToken } from "../users/currentUser";
 import {
   generateLoginToken,
   getAuth0Client,
@@ -7,8 +12,6 @@ import {
   LOGIN_TOKEN_COOKIE_NAME,
   parseJwt,
 } from "@/lib/authHelpers";
-import { db, users } from "@/lib/schema";
-import { sql } from "drizzle-orm";
 
 class UserIsBannedError extends Error {
   constructor() {
@@ -64,16 +67,8 @@ const getOrCreateUser = async (profile: Auth0UserProfile) => {
   return user;
 };
 
-const loginRequestBodySchema = z.object({
-  email: z.email(),
-  password: z.string().nonempty(),
-});
-
-export async function POST(request: Request) {
+export const loginAction = async (email: string, password: string) => {
   try {
-    const rawInput = await request.json();
-    const { email, password } = loginRequestBodySchema.parse(rawInput);
-
     const { client, realm, scope } = getAuth0Client();
     const grant = await client.oauth.passwordGrant({
       username: email,
@@ -85,20 +80,17 @@ export async function POST(request: Request) {
     const auth0AccessToken = grant.data?.access_token ?? null;
     const auth0IdToken = grant.data?.id_token ?? null;
     if (!auth0AccessToken || !auth0IdToken) {
-      return Response.json(
-        { error: "Incorrect email or password" },
-        { status: 403 },
-      );
+      throw new Error("Incorrect email or password");
     }
 
     const profile = auth0IdTokenToProfile(auth0IdToken);
-
     const user = await getOrCreateUser(profile);
     if (!user) {
       throw new Error("User not found");
     }
 
     const token = generateLoginToken();
+
     const cookieStore = await cookies();
     cookieStore.set(LOGIN_TOKEN_COOKIE_NAME, token, {
       httpOnly: true,
@@ -108,6 +100,7 @@ export async function POST(request: Request) {
     });
 
     // Save the new login token
+    const hashedToken = hashLoginToken(token);
     await db
       .update(users)
       .set({
@@ -117,29 +110,35 @@ export async function POST(request: Request) {
             ARRAY['resume', 'loginTokens']::TEXT[],
             jsonb_build_object(
               'when', NOW(),
-              'hashedToken', ${hashLoginToken(token)}::TEXT
+              'hashedToken', ${hashedToken}::TEXT
             )
           )
         `,
       })
       .where(sql`${users._id} = ${user._id}`);
 
-    return Response.json({ message: "Logged in" }, { status: 200 });
+    const currentUser = await fetchCurrentUserByHashedToken(hashedToken);
+
+    return { ok: true, currentUser };
   } catch (e) {
-    // TODO sentry
     console.error("Login error:", e);
-    if (e instanceof ZodError) {
-      return Response.json(
-        {
-          error: e.issues?.[0]?.message ?? e.message,
-        },
-        { status: 400 },
-      );
-    } else if (e instanceof UserIsBannedError) {
-      return Response.redirect("/ban-notice", 301);
-    } else if (e instanceof Error) {
-      return Response.json({ error: e.message }, { status: 400 });
+    if (e instanceof UserIsBannedError) {
+      return { redirect: "/ban-notice" };
     }
-    return Response.json({ error: String(e) }, { status: 500 });
+    if (e instanceof Error) {
+      return { ok: false, error: e.message };
+    }
+    return { ok: false, error: "Unknown error" };
   }
-}
+};
+
+export const logoutAction = async (formData: FormData) => {
+  const cookieStore = await cookies();
+  cookieStore.delete(LOGIN_TOKEN_COOKIE_NAME);
+  const returnToParam = formData.get("returnTo");
+  const returnTo =
+    typeof returnToParam === "string" && returnToParam[0] === "/"
+      ? returnToParam
+      : "/";
+  redirect(returnTo);
+};

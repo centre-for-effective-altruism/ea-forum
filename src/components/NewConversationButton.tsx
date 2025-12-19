@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import type { ICurrentUser } from "@/lib/users/userQueries.schemas";
+import type { CurrentUser } from "@/lib/users/currentUser";
 
 export default function NewConversationButton({
   children,
 }: Readonly<{
-  currentUser: ICurrentUser | null;
+  currentUser: CurrentUser | null;
   userId: string;
   from?: string;
   openInNewTab?: boolean;
