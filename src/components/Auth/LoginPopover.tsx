@@ -127,11 +127,28 @@ export default function LoginPopover() {
   };
 
   const onClickGoogle = useCallback(async () => {
+    const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
+    if (!domain) {
+      setError("Auth0 domain not configured");
+      return;
+    }
     setMessage(null);
     setError(null);
     setPolicy(null);
-    client.googleLogin();
-  }, [client]);
+    const params = new URLSearchParams({
+      client_id: process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID,
+      response_type: "code",
+      scope: "openid profile email",
+      redirect_uri: `${window.location.origin}/auth/auth0/callback`,
+      connection: "google-oauth2",
+      state: btoa(
+        JSON.stringify({
+          returnTo: window.location.pathname + window.location.search,
+        }),
+      ),
+    });
+    window.location.href = `https://${domain}/authorize?${params}`;
+  }, []);
 
   const onForgotPassword = useCallback(() => {
     setIsResettingPassword(true);

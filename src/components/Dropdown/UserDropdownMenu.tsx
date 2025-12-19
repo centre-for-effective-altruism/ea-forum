@@ -3,7 +3,6 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
 import { logoutAction } from "@/lib/actions/authActions";
-import toast from "react-hot-toast";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import BookmarkIcon from "@heroicons/react/24/outline/BookmarkIcon";
@@ -27,11 +26,7 @@ export default function UserDropdownMenu({
   }, [currentUser]);
 
   const onLogout = useCallback(async () => {
-    const form = logoutForm.current;
-    if (form) {
-      toast.loading("Logging out...");
-      form.submit();
-    }
+    logoutForm.current?.requestSubmit();
   }, []);
 
   if (!currentUser?.displayName) {
