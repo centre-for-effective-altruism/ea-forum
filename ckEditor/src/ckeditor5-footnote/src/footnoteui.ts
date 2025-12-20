@@ -50,7 +50,7 @@ export default class FootnoteUI extends Plugin {
       this.listenTo(dropdownView, "execute", (evt) => {
         // @ts-ignore
         editor.execute(COMMANDS.insertFootnote, {
-          footnoteIndex: evt.source.commandParam,
+          footnoteIndex: (evt.source as any).commandParam,
         });
         editor.editing.view.focus();
       });
