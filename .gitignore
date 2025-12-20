@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/ckEditor/node_modules
 /.pnp
 .pnp.*
 .yarn/*

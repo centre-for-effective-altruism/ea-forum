@@ -1,0 +1,1 @@
+{"version":3,"file":"ckeditor-client.js","sourceRoot":"","sources":["../../../src/ckeditor-client.ts"],"names":[],"mappings":"AAAA,OAAO,cAAc,MAAM,iDAAiD,CAAC;AAC7E,OAAO,EAAE,gBAAgB,EAAE,aAAa,EAAE,0BAA0B,EAAE,MAAM,YAAY,CAAC;AAEzF,MAAM,CAAC,MAAM,OAAO,GAAG,EAAE,gBAAgB,EAAE,aAAa,EAAE,0BAA0B,EAAE,cAAc,EAAE,CAAC;AACvG,eAAe,OAAO,CAAC"}
