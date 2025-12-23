@@ -40,6 +40,7 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
       "ckEditor/**",
+      "src/vendor/**",
     ],
   },
 ];

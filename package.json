@@ -15,6 +15,8 @@
     "typecheck": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-core": "^43.1.0",
+    "@ckeditor/ckeditor5-engine": "^43.1.0",
     "@elastic/elasticsearch": "^9.2.0",
     "@floating-ui/react": "^0.27.15",
     "@heroicons/react": "^2.2.0",
@@ -26,6 +28,7 @@
     "lru-cache": "^11.1.0",
     "next": "^16.0.10",
     "pg": "^8.16.3",
+    "prop-types": "^15.8.1",
     "pure-rand": "^7.0.1",
     "react": "^19.2.3",
     "react-click-away-listener": "^2.4.0",
@@ -42,6 +45,7 @@
     "@types/lodash": "^4.17.20",
     "@types/node": "^22",
     "@types/pg": "^8.15.5",
+    "@types/prop-types": "^15.7.15",
     "@types/react": "^19.2.3",
     "@types/react-dom": "^19.2.3",
     "dotenv": "^17.2.3",
