@@ -1,18 +1,42 @@
+import type { ReactNode } from "react";
+
+type CommentBodyHTML = {
+  html: string | null;
+  children?: never;
+};
+
+type CommentBodyChildren = {
+  html?: never;
+  children: ReactNode;
+};
+
+type CommentBodyContent = CommentBodyHTML | CommentBodyChildren;
+
 export default function CommentBody({
   html,
+  children,
   className = "",
-}: Readonly<{
-  html: string | null;
-  className?: string;
-}>) {
-  if (!html) {
-    return null;
+}: Readonly<
+  CommentBodyContent & {
+    className?: string;
   }
-  return (
-    <div
-      dangerouslySetInnerHTML={{ __html: html }}
-      className={`font-sans text-[14px] font-[450] ${className}`}
-      data-component="CommentBody"
-    />
-  );
+>) {
+  const classes = `font-sans text-[14px] font-[450] ${className}`;
+  if (html) {
+    return (
+      <div
+        data-component="CommentBody"
+        dangerouslySetInnerHTML={{ __html: html }}
+        className={classes}
+      />
+    );
+  }
+  if (children) {
+    return (
+      <div data-component="CommentBody" className={classes}>
+        {children}
+      </div>
+    );
+  }
+  return null;
 }

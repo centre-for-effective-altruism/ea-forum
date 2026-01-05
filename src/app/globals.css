@@ -20,6 +20,9 @@
   --color-primary-light: #00b2be;
   --color-primary-dark: #085d6c;
 
+  --color-error: #e04e4b;
+  --color-warning: #832013;
+  --color-warning-translucent: "rgba(255,152,0,0.1)";
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
   --color-login-backdrop: rgba(217, 217, 217, 0.5);
@@ -40,6 +43,24 @@
   --color-comment-odd: #f2f2f2;
   --color-comment-even: #fff;
   --color-people-directory-row-hover: #fbfbfb;
+
+  --color-editor-bg: #fff;
+  --color-editor-comment-bg: #f3f7fb;
+  --color-editor-focus-bg: #fff;
+  --color-editor-comment-marker: rgba(255, 241, 82, 0.5);
+  --color-editor-comment-marker-active: #fdf05d;
+  --color-editor-focus-background: #191919;
+  --color-editor-comment-count: #009da8;
+  --color-editor-sidebar-comment-count: #b3b3b3;
+  --color-editor-blockquote-border: #e0e0e0;
+  --color-editor-table-border: #b3b3b3;
+  --color-editor-table-cell-border: #d9d9d9;
+  --color-editor-table-header-bg: #202020;
+  --color-editor-figcaption: rgba(0, 0, 0, 0.54);
+  --color-editor-hr: rgba(0, 0, 0, 0.26);
+  --color-editor-secondary-text: rgba(255, 255, 255, 0.87);
+  --color-editor-comment-border: rgba(255, 255, 255, 0.15);
+  --color-editor-annotation: #b3b3b3;
 
   --always-white: #fff;
   --always-black: #000;

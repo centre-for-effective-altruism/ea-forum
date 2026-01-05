@@ -19,16 +19,18 @@ export type TextStyle = keyof typeof styles;
 export default function Type({
   style = "body",
   As = "div",
+  id,
   className = "",
   children,
 }: Readonly<{
   style?: TextStyle;
   As?: ElementType;
+  id?: string;
   className?: string;
   children: ReactNode;
 }>) {
   return (
-    <As className={`${styles[style]} ${className}`} data-component="Type">
+    <As id={id} className={`${styles[style]} ${className}`} data-component="Type">
       {children}
     </As>
   );

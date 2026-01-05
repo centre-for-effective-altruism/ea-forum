@@ -5,10 +5,18 @@ import FrontpagePostsList from "@/components/PostsList/FrontpagePostsList";
 import QuickTakesListSkeleton from "@/components/QuickTakes/QuickTakesListSkeleton";
 import FrontpageQuickTakesList from "@/components/QuickTakes/FrontpageQuickTakesList";
 import Type from "@/components/Type";
+import Editor from "@/components/Editor/Editor";
 
 export default function HomePage() {
   return (
     <HomePageColumns pageContext="homePage">
+      <Editor
+        formType="new"
+        collectionName="Comments"
+        fieldName="contents"
+        value={{ type: "ckEditorMarkup", value: "" }}
+        hideControls
+      />
       <Type className="mb-2" style="sectionTitleLarge">
         New &amp; upvoted
       </Type>

@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { isServer } from "./environment";
 
 // Excludes 0O1lIUV
 const unmistakableChars = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTWXYZ23456789";
@@ -25,7 +26,7 @@ export const randomId = (
   allowedChars?: string,
 ) => {
   const chars = allowedChars ?? unmistakableChars;
-  if (typeof window === "undefined" && !randIntCallback) {
+  if (isServer && !randIntCallback) {
     const bytes = randomBytes(length);
     const result: string[] = [];
     for (const byte of bytes) {

@@ -15,3 +15,21 @@ export const searchIndexedCollectionNamesSet = new TupleSet(
 export type SearchIndexCollectionName = UnionOf<
   typeof searchIndexedCollectionNamesSet
 >;
+
+export const getSearchIndexName = (
+  collectionName: SearchIndexCollectionName,
+): string => {
+  const prefix = process.env.NEXT_PUBLIC_SEARCH_INDEX_PREFIX || "";
+  switch (collectionName) {
+    case "Comments":
+      return prefix + "comments";
+    case "Posts":
+      return prefix + "posts";
+    case "Users":
+      return prefix + "users";
+    case "Sequences":
+      return prefix + "sequences";
+    case "Tags":
+      return prefix + "tags";
+  }
+};

@@ -68,11 +68,14 @@ export const users = pgTable(
     email: text(),
     emails: jsonb().array(),
     noindex: boolean().notNull().default(false),
+    markDownPostEditor: boolean().notNull().default(false),
+    groups: text().array(),
+    conversationsDisabled: boolean(),
+    mentionsDisabled: boolean().notNull().default(false),
 
     /*
   "profile" JSONB,
   "previousDisplayName" TEXT,
-  "groups" TEXT[],
   "lwWikiImport" BOOL,
   "lastUsedTimezone" TEXT,
   "whenConfirmationEmailSent" TIMESTAMPTZ,
@@ -83,7 +86,6 @@ export const users = pgTable(
   "noKibitz" BOOL,
   "showHideKarmaOption" BOOL,
   "showPostAuthorCard" BOOL,
-  "markDownPostEditor" BOOL NOT NULL DEFAULT FALSE,
   "hideElicitPredictions" BOOL NOT NULL DEFAULT FALSE,
   "hideAFNonMemberInitialWarning" BOOL NOT NULL DEFAULT FALSE,
   "noSingleLineComments" BOOL NOT NULL DEFAULT FALSE,
@@ -253,8 +255,6 @@ export const users = pgTable(
   "postingDisabled" BOOL,
   "allCommentingDisabled" BOOL,
   "commentingOnOtherUsersDisabled" BOOL,
-  "conversationsDisabled" BOOL,
-  "mentionsDisabled" BOOL NOT NULL DEFAULT FALSE,
   "acknowledgedNewUserGuidelines" BOOL,
   "subforumPreferredLayout" TEXT,
   "hideJobAdUntil" TIMESTAMPTZ,
@@ -1379,6 +1379,8 @@ export const localgroups = pgTable(
     ),
   ],
 );
+
+export type Localgroup = typeof localgroups.$inferSelect;
 
 export const messages = pgTable(
   "Messages",
@@ -2729,6 +2731,8 @@ export const posts = pgTable(
   ],
 );
 
+export type Post = typeof posts.$inferSelect;
+
 export const reports = pgTable(
   "Reports",
   {
@@ -3602,7 +3606,7 @@ export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
 );
 
 const relations = defineRelations(
-  { users, posts, revisions, tags, userLoginTokens },
+  { users, posts, revisions, localgroups, tags, userLoginTokens },
   (r) => ({
     posts: {
       user: r.one.users({
@@ -3612,6 +3616,10 @@ const relations = defineRelations(
       contents: r.one.revisions({
         from: r.posts.contentsLatest,
         to: r.revisions._id,
+      }),
+      group: r.one.localgroups({
+        from: r.posts.groupId,
+        to: r.localgroups._id,
       }),
     },
     userLoginTokens: {

@@ -23,6 +23,14 @@ declare namespace NodeJS {
     // Databases
     DATABASE_URL: string;
 
+    // CkEditor
+    CK_ENVIRONMENT_ID: string;
+    CK_API_PREFIX: string;
+    CK_SECRET_KEY: string;
+    CK_API_SECRET_KEY: string;
+    NEXT_PUBLIC_CK_WEBSOCKET_URL: string;
+    NEXT_PUBLIC_CK_UPLOAD_URL: string;
+
     // Site config
     LOG_DRIZZLE_QUERIES?: "true";
     COMMUNITY_TAG_ID: string;

@@ -1,10 +1,15 @@
 import urlJoin from "url-join";
-import type { ICurrentUser } from "./userQueries.schemas";
+import type { CurrentUser } from "./currentUser";
+import type { Localgroup, Post, User } from "../schema";
+import { allUserGroupsByName } from "./userGroups";
+import uniq from "lodash/uniq";
+import flatten from "lodash/flatten";
+import intersection from "lodash/intersection";
 
 export const userGetProfileUrl = ({ slug }: { slug: string | null }) =>
   slug ? `/users/${slug}` : "#";
 
-export const userGetStatsUrl = ({ slug }: Pick<ICurrentUser, "slug">) =>
+export const userGetStatsUrl = ({ slug }: Pick<CurrentUser, "slug">) =>
   `/users/${slug}/stats`;
 
 type CareerStageValue =
@@ -147,3 +152,134 @@ export const socialMediaSiteNameToHref = (
   siteName === "website"
     ? `https://${userUrl}`
     : profileFieldToSocialMediaHref(`${siteName}ProfileURL`, userUrl);
+
+type UserDisplayNameInfo = {
+  username: string | null;
+  fullName?: string | null;
+  displayName: string | null;
+};
+
+/**
+ * Get a user's username (unique, no special characters or spaces)
+ */
+export const getUserName = (
+  user: { username: string | null } | null,
+): string | null => user?.username || null;
+
+/**
+ * Get a user's display name (not unique, can take special characters and spaces)
+ */
+export const userGetDisplayName = (user: UserDisplayNameInfo | null): string =>
+  user ? ((user.displayName || getUserName(user)) ?? "") : "";
+
+/**
+ * Check if a user is an admin
+ */
+export const userIsAdmin = (
+  user: CurrentUser | null,
+): user is User & { isAdmin: true } => user?.isAdmin ?? false;
+
+/**
+ * Get a list of a user's groups
+ */
+export const userGetGroups = (user: CurrentUser | null): string[] => {
+  if (!user) {
+    return ["guests"];
+  }
+  if (user.banned && new Date(user.banned) > new Date()) {
+    return ["guests"];
+  }
+
+  let userGroups = ["members"];
+  if (user.groups) {
+    userGroups = userGroups.concat(user.groups);
+  }
+  if (userIsAdmin(user)) {
+    userGroups.push("admins");
+  }
+  return userGroups;
+};
+
+/**
+ * Get a list of all the actions a user can perform
+ */
+export const userGetActions = (user: CurrentUser | null): string[] => {
+  const groups = userGetGroups(user);
+  if (!groups.includes("guests")) {
+    // Always give everybody permission for guests actions, too
+    groups.push("guests");
+  }
+  const groupActions = groups.map((groupName) => {
+    // note: make sure groupName corresponds to an actual group
+    const group = allUserGroupsByName[groupName];
+    return group && group.actions;
+  });
+  return uniq(flatten(groupActions));
+};
+
+/**
+ * Check if a user can perform at least one of the specified actions
+ */
+export const userCanDo = (
+  user: CurrentUser | null,
+  actionOrActions: string | string[],
+): boolean => {
+  const authorizedActions = userGetActions(user);
+  const actions = Array.isArray(actionOrActions)
+    ? actionOrActions
+    : [actionOrActions];
+  return userIsAdmin(user) || intersection(authorizedActions, actions).length > 0;
+};
+
+type HasUserIdType = { userId: string | null };
+
+type OwnableDocument = HasUserIdType | User;
+
+/**
+ * Check if a user owns a document
+ */
+export const userOwns = (
+  user: CurrentUser | null,
+  document: OwnableDocument,
+): boolean => {
+  if (!user) {
+    return false;
+  }
+  if (!document) {
+    return false;
+  }
+
+  // Document has a userId - it's a post, comment, tag, etc.
+  if ((document as HasUserIdType).userId) {
+    return user._id === (document as HasUserIdType).userId;
+  }
+
+  // Document is a user - check for _id or slug equality
+  const documentUser = document as User;
+  const idsExistAndMatch =
+    !!user._id && !!documentUser._id && user._id === documentUser._id;
+  const slugsExistAndMatch =
+    !!user.slug && !!documentUser.slug && user.slug === documentUser.slug;
+  return idsExistAndMatch || slugsExistAndMatch;
+};
+
+/**
+ * Whether or not the given user is an organizer for the post's group
+ * Returned promise resolves to true if the post has a group and the user is
+ * an organizer for that group
+ */
+export const userIsPostGroupOrganizer = async (
+  user: CurrentUser | null,
+  post: (Post & { group: Localgroup | null }) | null,
+): Promise<boolean> => {
+  const group = post?.group;
+  return !!user && !!group && group.organizerIds.some((id) => id === user._id);
+};
+
+/**
+ * True if the user is a coauthor of this post (returns false for the main author).
+ */
+export const userIsPostCoauthor = (
+  user: CurrentUser | null,
+  post: Post | null,
+): boolean => !!user && !!post && post.coauthorUserIds.indexOf(user._id) >= 0;

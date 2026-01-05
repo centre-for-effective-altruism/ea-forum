@@ -1,0 +1,219 @@
+.forum-editor .ck {
+  --ck-spacing-standard: 8px;
+  --ck-color-base-background: var(--color-editor-bg);
+  --ck-color-annotation-wrapper-background: var(--color-editor-bg);
+  --ck-color-comment-background: var(--color-editor-comment-bg);
+  --ck-color-widget-editable-focus-background: var(--color-editor-focus-background);
+  --ck-color-comment-marker: var(--color-editor-comment-marker);
+  --ck-color-comment-marker-active: var(--color-editor-comment-marker-active);
+  --ck-color-comment-count: var(--color-editor-comment-count);
+}
+.forum-editor .ck code .public-DraftStyleDefault-block,
+.forum-editor .ck blockquote .public-DraftStyleDefault-block {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.forum-editor .ck blockquote {
+  font-style: unset;
+  font-weight: 400;
+  padding: 16px;
+  margin: 0;
+  border-left: solid 3px var(--color-editor-blockquote-border);
+}
+.forum-editor .ck blockquote p:not(:first-child) {
+  margin-top: 1em;
+}
+.forum-editor .ck blockquote p:not(:last-child) {
+  margin-bottom: 1em;
+}
+/* I'm not 100% of the origin of this - I think something to do with latex */
+.style ~ .forum-editor .ck blockquote p {
+  margin-top: 0;
+}
+.forum-editor .ck .ck-placeholder:before {
+  white-space: break-spaces;
+}
+.forum-editor .ck.ck-content {
+  margin-left: -8px;
+  --ck-focus-ring: 1px solid transparent;
+  --ck-focus-outer-shadow-geometry: none;
+  --ck-focus-outer-shadow: none;
+  --ck-inner-shadow: none;
+}
+.forum-editor .ck.ck-content p {
+  margin: 1em 0;
+}
+.forum-editor .ck.ck-content p:first-of-type {
+  margin-top: 0;
+}
+.forum-editor .ck.ck-content .table table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  border: 1px double var(--color-editor-table-border);
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+}
+.forum-editor .ck.ck-content .table table * {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4em;
+}
+.forum-editor .ck.ck-content .table table sup * {
+  font-size: 10px;
+}
+.forum-editor .ck.ck-content .table table ul,
+.forum-editor .ck.ck-content .table table ol {
+  padding-left: 1.5em;
+}
+.forum-editor .ck.ck-content .table table td,
+.forum-editor .ck.ck-content .table table th {
+  min-width: 2em;
+  padding: 0.4em;
+  border: 1px double var(--color-editor-table-cell-border);
+  word-break: normal;
+}
+.forum-editor .ck.ck-content .table table td p,
+.forum-editor .ck.ck-content .table table th p {
+  margin: 0.5em 2px;
+  line-height: 1.4em;
+}
+.forum-editor .ck.ck-content .table table td p:first-of-type,
+.forum-editor .ck.ck-content .table table th p:first-of-type {
+  margin-top: 0;
+}
+.forum-editor .ck.ck-content .table table th {
+  background: var(--color-editor-table-header-bg);
+  font-weight: 700;
+}
+.forum-editor
+  .ck.ck-content
+  .ck-editor__editable.ck-blurred
+  .ck-widget.ck-widget_selected {
+  outline: none;
+}
+.forum-editor .ck.ck-content .image > figcaption {
+  font-size: 11.7px;
+  font-weight: 400;
+  font-family: var(--font-sans);
+  line-height: 1.375em;
+  color: var(--color-editor-figcaption);
+  background-color: unset;
+}
+.forum-editor .ck.ck-content hr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  margin: 32px 0;
+  border: none;
+  background: transparent;
+  text-align: center;
+}
+.forum-editor .ck.ck-content hr:after {
+  margin-left: 12px;
+  color: var(--color-editor-hr);
+  font-size: 13;
+  letter-spacing: 12px;
+  content: "•••";
+}
+.forum-editor .ck.ck-content ol,
+.forum-editor .ck.ck-content ul {
+  list-style-type: revert !important;
+}
+.forum-editor .ck.ck-content ol > li > ol {
+  list-style: lower-alpha !important;
+}
+.forum-editor .ck.ck-content ol > li > ol > li > ol {
+  list-style: lower-roman !important;
+}
+.forum-editor .ck.ck-sidebar li,
+.forum-editor .ck.ck-presence-list li {
+  margin-bottom: unset;
+  font-family: unset;
+  font-size: unset;
+  font-weight: unset;
+  line-height: unset;
+}
+.forum-editor .ck.ck-sidebar .ck-comment:after,
+.forum-editor .ck.ck-presence-list .ck-comment:after {
+  display: none;
+}
+.forum-editor .ck.ck-sidebar .ck-annotation__info-name,
+.forum-editor .ck.ck-sidebar .ck-annotation__info-time,
+.forum-editor .ck.ck-sidebar .ck-comment__input,
+.forum-editor .ck.ck-sidebar .ck-thread__comment-count,
+.forum-editor .ck.ck-sidebar .ck-annotation__main p,
+.forum-editor .ck.ck-sidebar .ck-annotation__info-name,
+.forum-editor .ck.ck-sidebar .ck-annotation__info-time,
+.forum-editor .ck.ck-sidebar .ck-presence-list__counter,
+.forum-editor .ck.ck-sidebar .ck-presence-list,
+.forum-editor .ck.ck-presence-list .ck-annotation__info-name,
+.forum-editor .ck.ck-presence-list .ck-annotation__info-time,
+.forum-editor .ck.ck-presence-list .ck-comment__input,
+.forum-editor .ck.ck-presence-list .ck-thread__comment-count,
+.forum-editor .ck.ck-presence-list .ck-annotation__main p,
+.forum-editor .ck.ck-presence-list .ck-annotation__info-name,
+.forum-editor .ck.ck-presence-list .ck-annotation__info-time,
+.forum-editor .ck.ck-presence-list .ck-presence-list__counter,
+.forum-editor .ck.ck-presence-list .ck-presence-list {
+  font-weight: 450;
+  font-size: 14.3px;
+  line-height: 1.5em;
+  font-family: var(--font-sans);
+  color: var(--color-editor-secondary-text);
+  margin-top: 0;
+  margin-bottom: 12px;
+  align-items: flex-start;
+}
+.forum-editor .ck.ck-sidebar .ck-presence-list,
+.forum-editor .ck.ck-presence-list .ck-presence-list {
+  --ck-user-avatar-size: 20px;
+  margin-bottom: 32px;
+}
+.forum-editor .ck.ck-sidebar .ck-presence-list .ck-user,
+.forum-editor .ck.ck-presence-list .ck-presence-list .ck-user {
+  margin-top: 0;
+}
+.forum-editor .ck.ck-sidebar .ck-thread__comment-count,
+.forum-editor .ck.ck-presence-list .ck-thread__comment-count {
+  padding-left: 16px;
+  padding-bottom: 0.5em;
+  margin: 0;
+  color: var(--color-editor-sidebar-comment-count);
+}
+.forum-editor .ck.ck-sidebar .ck-thread__comment-count:before,
+.forum-editor .ck.ck-presence-list .ck-thread__comment-count:before {
+  content: "\25B6";
+}
+.forum-editor .ck.ck-sidebar .ck-comment__input,
+.forum-editor .ck.ck-presence-list .ck-comment__input {
+  padding-left: 16px;
+}
+.forum-editor .ck.ck-sidebar .ck-annotation__main,
+.forum-editor .ck.ck-presence-list .ck-annotation__main,
+.forum-editor .ck.ck-sidebar .ck-comment__input,
+.forum-editor .ck.ck-presence-list .ck-comment__input,
+.forum-editor .ck.ck-sidebar .ck-thread__input,
+.forum-editor .ck.ck-presence-list .ck-thread__input {
+  width: 100%;
+}
+.forum-editor .ck.ck-sidebar .ck-comment__wrapper,
+.forum-editor .ck.ck-presence-list .ck-comment__wrapper {
+  border-top: 1px solid var(--color-editor-comment-border);
+}
+.forum-editor .ck.ck-sidebar .ck-annotation__info-name,
+.forum-editor .ck.ck-presence-list .ck-annotation__info-name,
+.forum-editor .ck.ck-sidebar .ck-annotation__info-time,
+.forum-editor .ck.ck-presence-list .ck-annotation__info-time {
+  color: var(--color-editor-annotation);
+  font-size: 13px;
+}
+.forum-editor .ck.ck-sidebar .ck-annotation__user,
+.forum-editor .ck.ck-presence-list .ck-annotation__user,
+.forum-editor .ck.ck-sidebar .ck-thread__user,
+.forum-editor .ck.ck-presence-list .ck-thread__user {
+  display: none;
+}

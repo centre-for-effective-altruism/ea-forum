@@ -8,9 +8,11 @@ export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
     columns: {
       _id: true,
       displayName: true,
+      username: true,
       email: true,
       profileImageId: true,
       slug: true,
+      karma: true,
       isAdmin: true,
       theme: true,
       hideIntercom: true,
@@ -21,6 +23,11 @@ export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
       frontpageFilterSettings: true,
       lastNotificationsCheck: true,
       expandedFrontpageSections: true,
+      markDownPostEditor: true,
+      banned: true,
+      groups: true,
+      conversationsDisabled: true,
+      mentionsDisabled: true,
     },
     where: {
       RAW: (users, { sql }) => sql`

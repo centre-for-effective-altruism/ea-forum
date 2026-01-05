@@ -3,8 +3,7 @@ import type { PgPostgresClient } from "tradukisto";
 import { cookies } from "next/headers";
 import { getDbOrThrow } from "./db";
 import { hashLoginToken } from "./authHelpers";
-import { UsersRepo } from "./users/userQueries.repo";
-import type { ICurrentUser } from "./users/userQueries.schemas";
+import { CurrentUser, fetchCurrentUserByHashedToken } from "./users/currentUser";
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
@@ -14,7 +13,7 @@ type RequestHandlerArgs = {
   request: Request;
   cookieStore: CookieStore;
   db: PgPostgresClient;
-  currentUser: ICurrentUser | null;
+  currentUser: CurrentUser | null;
   params: Promise<Record<string, string>>;
 };
 
@@ -25,9 +24,7 @@ export const getCurrentUser = async () => {
   const cookieStore = await cookies();
   const loginToken = cookieStore.get("loginToken")?.value;
   const currentUser = loginToken
-    ? await new UsersRepo(db).currentUser({
-        hashedToken: hashLoginToken(loginToken),
-      })
+    ? await fetchCurrentUserByHashedToken(hashLoginToken(loginToken))
     : null;
   return { db, cookieStore, currentUser };
 };
@@ -51,7 +48,7 @@ export const requestHandler = (handler: RequestHandler) => {
 };
 
 type LoggedInOnlyRequestHandlerArgs = Omit<RequestHandlerArgs, "currentUser"> & {
-  currentUser: ICurrentUser;
+  currentUser: CurrentUser;
 };
 
 type LoggedInOnlyRequestHandler = (
@@ -66,7 +63,7 @@ export const loggedInOnlyRequestHandler = (handler: LoggedInOnlyRequestHandler) 
     return handler({ ...args, currentUser });
   });
 
-type AdminUser = Omit<ICurrentUser, "isAdmin"> & { isAdmin: true };
+type AdminUser = Omit<CurrentUser, "isAdmin"> & { isAdmin: true };
 
 type AdminOnlyRequestHandlerArgs = Omit<RequestHandlerArgs, "currentUser"> & {
   currentUser: AdminUser;
