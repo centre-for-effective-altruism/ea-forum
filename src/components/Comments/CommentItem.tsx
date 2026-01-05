@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { IPostComments } from "@/lib/comments/commentQueries.schemas";
+import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/CommentTree";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
@@ -17,7 +17,7 @@ import Tooltip from "../Tooltip";
 export default function CommentItem({
   node: { comment, depth, children },
 }: Readonly<{
-  node: CommentTreeNode<IPostComments>;
+  node: CommentTreeNode<CommentsList>;
 }>) {
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = useCallback(() => {

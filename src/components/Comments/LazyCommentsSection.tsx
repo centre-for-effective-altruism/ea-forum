@@ -1,11 +1,10 @@
-import { CommentsRepo } from "@/lib/comments/commentQueries.repo";
-import { getDbOrThrow } from "@/lib/db";
+import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
 import CommentsSection from "./CommentsSection";
 
 export default async function LazyCommentsSection({
   postId,
   className = "",
 }: Readonly<{ postId: string; className?: string }>) {
-  const comments = await new CommentsRepo(getDbOrThrow()).postComments({ postId });
+  const comments = await fetchCommmentsForPost(postId);
   return <CommentsSection comments={comments} className={className} />;
 }

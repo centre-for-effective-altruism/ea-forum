@@ -11,7 +11,7 @@ type NotificationsContext = {
 
 const notificationsContext = createContext<NotificationsContext | null>(null);
 
-export default function NotificationsProvider({
+export function NotificationsProvider({
   children,
 }: Readonly<{
   children: ReactNode;

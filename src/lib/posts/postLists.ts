@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db, posts } from "@/lib/schema";
+import { db, isNotTrue, posts } from "@/lib/schema";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -15,14 +15,14 @@ export const postStatuses = {
 };
 
 const viewablePostFilter = {
-  draft: { ne: true },
-  deletedDraft: { ne: true },
-  isFuture: { ne: true },
-  unlisted: { ne: true },
-  shortform: { ne: true },
-  rejected: { ne: true },
-  authorIsUnreviewed: { ne: true },
-  hiddenRelatedQuestion: { ne: true },
+  draft: isNotTrue,
+  deletedDraft: isNotTrue,
+  isFuture: isNotTrue,
+  unlisted: isNotTrue,
+  shortform: isNotTrue,
+  rejected: isNotTrue,
+  authorIsUnreviewed: isNotTrue,
+  hiddenRelatedQuestion: isNotTrue,
   postedAt: { isNotNull: true },
   status: postStatuses.STATUS_APPROVED,
 } as const;
@@ -124,8 +124,8 @@ export const fetchFrontpagePostsList = ({
     where: {
       ...viewablePostFilter,
       ...createCommunityFilter(community),
-      isEvent: { ne: true },
-      sticky: { ne: true },
+      isEvent: isNotTrue,
+      sticky: isNotTrue,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },
@@ -156,8 +156,8 @@ export const fetchSidebarOpportunities = (limit: number) => {
     },
     where: {
       ...viewablePostFilter,
-      isEvent: { ne: true },
-      sticky: { ne: true },
+      isEvent: isNotTrue,
+      sticky: isNotTrue,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },

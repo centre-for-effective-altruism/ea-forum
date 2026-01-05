@@ -1,5 +1,5 @@
-import { getDbOrThrow } from "@/lib/db";
-import { CommentsRepo } from "@/lib/comments/commentQueries.repo";
+import { fetchFrontpageQuickTakes } from "@/lib/comments/commentLists";
+import { getCurrentUser } from "@/lib/users/currentUser";
 import QuickTakesList from "./QuickTakesList";
 
 export default async function FrontpageQuickTakesList({
@@ -7,7 +7,9 @@ export default async function FrontpageQuickTakesList({
 }: Readonly<{
   initialLimit: number;
 }>) {
-  const quickTakes = await new CommentsRepo(getDbOrThrow()).frontpageQuickTakes({
+  const currentUser = await getCurrentUser();
+  const quickTakes = await fetchFrontpageQuickTakes({
+    currentUserId: currentUser?._id ?? null,
     limit: initialLimit,
   });
   return <QuickTakesList quickTakes={quickTakes} />;

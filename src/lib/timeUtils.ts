@@ -65,3 +65,9 @@ export const nDaysAgo = (n: number) => {
   date.setDate(date.getDate() - n);
   return date;
 };
+
+export const nHoursAgo = (n: number) => {
+  const date = new Date();
+  date.setHours(date.getHours() - n);
+  return date;
+};

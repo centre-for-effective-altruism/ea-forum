@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import type { IPostComments } from "@/lib/comments/commentQueries.schemas";
+import type { CommentsList } from "@/lib/comments/commentLists";
 import { commentsToCommentTree } from "@/lib/CommentTree";
 import CommentItem from "./CommentItem";
 
 export default function CommentsSection({
   comments,
   className = "",
-}: Readonly<{ comments: IPostComments[]; className?: string }>) {
+}: Readonly<{ comments: CommentsList[]; className?: string }>) {
   const tree = useMemo(() => commentsToCommentTree(comments), [comments]);
   return (
     <section

@@ -16,6 +16,15 @@ import {
   pgMaterializedView,
 } from "drizzle-orm/pg-core";
 
+/**
+ * It's common to check nullable boolean fields as "not equal to true" instead
+ * of "equal to false", in order to treat a null field as falsy. This is done
+ * in Postgres with `"field" IS NOT TRUE` instead of `"field" <> TRUE`, but
+ * unfortunately drizzle always compiles to the latter. This helper can be used
+ * to force the correct check.
+ */
+export const isNotTrue = { OR: [{ isNull: true as const }, { eq: false }] };
+
 const timestamp = () => rawTimestamp({ withTimezone: true, mode: "string" });
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
@@ -72,6 +81,7 @@ export const users = pgTable(
     groups: text().array(),
     conversationsDisabled: boolean(),
     mentionsDisabled: boolean().notNull().default(false),
+    deleted: boolean().notNull().default(false),
 
     /*
   "profile" JSONB,
@@ -121,12 +131,10 @@ export const users = pgTable(
   "blockedUserIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
   "hiddenPostsMetadata" JSONB[] NOT NULL DEFAULT '{}',
   "legacyId" TEXT,
-  "deleted" BOOL NOT NULL DEFAULT FALSE,
   "permanentDeletionRequestedAt" TIMESTAMPTZ,
   "voteBanned" BOOL,
   "nullifyVotes" BOOL,
   "deleteContent" BOOL,
-  "banned" TIMESTAMPTZ,
   "auto_subscribe_to_my_posts" BOOL NOT NULL DEFAULT TRUE,
   "auto_subscribe_to_my_comments" BOOL NOT NULL DEFAULT TRUE,
   "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
@@ -3606,7 +3614,7 @@ export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
 );
 
 const relations = defineRelations(
-  { users, posts, revisions, localgroups, tags, userLoginTokens },
+  { users, posts, comments, revisions, localgroups, tags, userLoginTokens },
   (r) => ({
     posts: {
       user: r.one.users({
@@ -3620,6 +3628,12 @@ const relations = defineRelations(
       group: r.one.localgroups({
         from: r.posts.groupId,
         to: r.localgroups._id,
+      }),
+    },
+    comments: {
+      user: r.one.users({
+        from: r.comments.userId,
+        to: r.users._id,
       }),
     },
     userLoginTokens: {

@@ -1,4 +1,4 @@
-import type { IFrontpageQuickTakes } from "@/lib/comments/commentQueries.schemas";
+import type { CommentsList } from "@/lib/comments/commentLists";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
@@ -12,7 +12,7 @@ import Link from "../Link";
 export default function QuickTakeItem({
   quickTake,
 }: Readonly<{
-  quickTake: IFrontpageQuickTakes;
+  quickTake: CommentsList;
 }>) {
   const { baseScore, voteCount, user, postedAt, descendentCount, html } = quickTake;
   return (
@@ -23,12 +23,16 @@ export default function QuickTakeItem({
       <div className="flex flex-row w-full gap-2 items-center mb-2 text-gray-600">
         <Score baseScore={baseScore} voteCount={voteCount} orient="horizontal" />
         <Type style="body" className="text-black font-[700]">
-          <Link href={userGetProfileUrl(user)}>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <UsersTooltip As="span" user={user as any /* TODO types */}>
-              {user.displayName}
-            </UsersTooltip>
-          </Link>
+          {user ? (
+            <Link href={userGetProfileUrl(user)}>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <UsersTooltip As="span" user={user as any /* TODO types */}>
+                {user.displayName}
+              </UsersTooltip>
+            </Link>
+          ) : (
+            "[Anonymous]"
+          )}
         </Type>
         <TimeAgo time={postedAt} className="grow" />
         <Type

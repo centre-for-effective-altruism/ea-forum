@@ -42,7 +42,7 @@ export default function RootLayout({
       </head>
       <body
         className={`
-          antialiased w-screen min-h-screen flex flex-col
+          antialiased w-full min-h-screen flex flex-col
           ${inter.variable} ${charis.variable}
         `}
       >

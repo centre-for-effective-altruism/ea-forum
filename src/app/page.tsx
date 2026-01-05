@@ -4,8 +4,8 @@ import PostsListSkeleton from "@/components/PostsList/PostsListSkeleton";
 import FrontpagePostsList from "@/components/PostsList/FrontpagePostsList";
 import QuickTakesListSkeleton from "@/components/QuickTakes/QuickTakesListSkeleton";
 import FrontpageQuickTakesList from "@/components/QuickTakes/FrontpageQuickTakesList";
-import Type from "@/components/Type";
 import Editor from "@/components/Editor/Editor";
+import Type from "@/components/Type";
 
 export default function HomePage() {
   return (

@@ -1,3 +1,6 @@
+import { cache } from "react";
+import { cookies } from "next/headers";
+import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
 import { db } from "@/lib/schema";
 
 // TODO: We can get a small performance boost here by using
@@ -42,3 +45,13 @@ export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
 export type CurrentUser = NonNullable<
   Awaited<ReturnType<typeof fetchCurrentUserByHashedToken>>
 >;
+
+const getCurrentUserUncached = async (): Promise<CurrentUser | null> => {
+  const cookieStore = await cookies();
+  const loginToken = cookieStore.get(LOGIN_TOKEN_COOKIE_NAME)?.value;
+  return loginToken
+    ? await fetchCurrentUserByHashedToken(hashLoginToken(loginToken))
+    : null;
+};
+
+export const getCurrentUser = cache(getCurrentUserUncached);
