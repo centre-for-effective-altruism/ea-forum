@@ -21,6 +21,7 @@
     "@floating-ui/react": "^0.27.15",
     "@heroicons/react": "^2.2.0",
     "auth0": "^5.2.0",
+    "bowser": "^2.13.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^1.0.0-beta.3-36e9b9e",
     "hepburn": "^1.2.2",
