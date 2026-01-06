@@ -3614,7 +3614,7 @@ export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
 );
 
 const relations = defineRelations(
-  { users, posts, comments, revisions, localgroups, tags, userLoginTokens },
+  { users, posts, comments, revisions, votes, localgroups, tags, userLoginTokens },
   (r) => ({
     posts: {
       user: r.one.users({
@@ -3634,6 +3634,15 @@ const relations = defineRelations(
       user: r.one.users({
         from: r.comments.userId,
         to: r.users._id,
+      }),
+      votes: r.many.votes({
+        from: r.comments._id,
+        to: r.votes.documentId,
+        where: {
+          collectionName: { eq: "Comments" },
+          cancelled: { eq: false },
+          isUnvote: { eq: false },
+        },
       }),
     },
     userLoginTokens: {

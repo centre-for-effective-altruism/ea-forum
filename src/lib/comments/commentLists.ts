@@ -13,10 +13,12 @@ type CommentsOrderBy = NonNullable<
 >["orderBy"];
 
 const fetchCommentsList = ({
+  currentUserId,
   where,
   orderBy,
   limit,
 }: {
+  currentUserId: string | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
   limit?: number;
@@ -54,6 +56,21 @@ const fetchCommentsList = ({
           deleted: isNotTrue,
         },
       },
+      ...(currentUserId
+        ? {
+            votes: {
+              columns: {
+                voteType: true,
+                extendedVoteType: true,
+                power: true,
+              },
+              where: {
+                userId: { eq: currentUserId },
+              },
+              limit: 1,
+            },
+          }
+        : {}),
     },
     where: {
       rejected: isNotTrue,
@@ -66,8 +83,15 @@ const fetchCommentsList = ({
   });
 };
 
-export const fetchCommmentsForPost = (postId: string) =>
+export const fetchCommmentsForPost = ({
+  postId,
+  currentUserId,
+}: {
+  postId: string;
+  currentUserId: string | null;
+}) =>
   fetchCommentsList({
+    currentUserId,
     where: { postId },
   });
 
@@ -92,6 +116,7 @@ export const fetchFrontpageQuickTakes = ({
     ? arrayContains(comments.relevantTagIds, [relevantTagId])
     : undefined;
   return fetchCommentsList({
+    currentUserId,
     where: {
       shortform: true,
       shortformFrontpage: true,
@@ -107,8 +132,8 @@ export const fetchFrontpageQuickTakes = ({
             { userId: currentUserId ? { eq: currentUserId } : undefined },
           ],
         },
-        // Quick takes older than 2 hours must have at least 1 karma, quick takes
-        // younger than 2 hours must have at least -5 karma
+        // Quick takes older than 2 hours must have at least 1 karma, quick
+        // takes younger than 2 hours must have at least -5 karma
         {
           OR: [
             {
