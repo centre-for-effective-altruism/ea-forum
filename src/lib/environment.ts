@@ -32,3 +32,5 @@ const userAgent = new (class {
  * instead.
  */
 export const isMobile = () => isClient && userAgent.isMobile();
+
+export const isAnyTest = () => false;

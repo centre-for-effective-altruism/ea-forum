@@ -1,6 +1,6 @@
 import { TupleSet, UnionOf } from "@/lib/typeHelpers";
 
-const searchIndexedCollectionNames = [
+export const searchIndexedCollectionNames = [
   "Comments",
   "Posts",
   "Users",
@@ -33,3 +33,6 @@ export const getSearchIndexName = (
       return prefix + "tags";
   }
 };
+
+export const collectionIsSearchIndexed = (collectionName: string) =>
+  searchIndexedCollectionNames.includes(collectionName as SearchIndexCollectionName);

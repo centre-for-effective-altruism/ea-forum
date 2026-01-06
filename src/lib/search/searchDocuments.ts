@@ -4,6 +4,7 @@ export interface SearchBase {
   objectID: string;
   _id: string;
   publicDateMs: number;
+  [key: string]: unknown;
 }
 
 export interface SearchComment extends SearchBase {
