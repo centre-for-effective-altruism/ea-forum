@@ -23,7 +23,17 @@ import {
 import { PGlite } from "@electric-sql/pglite";
 
 const relations = defineRelations(
-  { users, posts, comments, revisions, votes, localgroups, tags, moderatorActions, userLoginTokens },
+  {
+    users,
+    posts,
+    comments,
+    revisions,
+    votes,
+    localgroups,
+    tags,
+    moderatorActions,
+    userLoginTokens,
+  },
   (r) => ({
     posts: {
       user: r.one.users({

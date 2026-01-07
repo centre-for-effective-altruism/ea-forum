@@ -1,3 +1,5 @@
+import { sql, SQL } from "drizzle-orm";
+
 /**
  * It's common to check nullable boolean fields as "not equal to true" instead
  * of "equal to false", in order to treat a null field as falsy. This is done
@@ -6,3 +8,20 @@
  * to force the correct check.
  */
 export const isNotTrue = { OR: [{ isNull: true as const }, { eq: false }] };
+
+export const createRawSqlArray = <T>(array: T[], cast?: string) => {
+  const sanitizedItems: SQL<unknown>[] = [sql`'{`];
+  const rawItems: SQL<unknown>[] = [];
+  for (const item of array) {
+    rawItems.push(sql.raw(sql`${item}`.queryChunks[1]!.toString()));
+  }
+  sanitizedItems.push(sql.join(rawItems, sql`, `));
+  sanitizedItems.push(sql`}'`);
+  if (cast) {
+    sanitizedItems.push(sql.raw(`::${cast}[]`));
+  }
+  return sql.join(sanitizedItems);
+};
+
+export const isAnyInArray = <C, T>(column: C, array: T[], cast?: string) =>
+  sql<boolean>`${column} = ANY(${createRawSqlArray(array, cast)})`;

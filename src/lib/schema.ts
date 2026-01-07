@@ -37,6 +37,7 @@ export const users = pgTable(
     ...universalFields,
     username: text(),
     displayName: text().notNull(),
+    previousDisplayName: text(),
     slug: text().notNull(),
     oldSlugs: text().array().default([""]).notNull(),
     profileImageId: text(),
@@ -87,10 +88,10 @@ export const users = pgTable(
     smallDownvoteReceivedCount: doublePrecision(),
     bigUpvoteReceivedCount: doublePrecision(),
     bigDownvoteReceivedCount: doublePrecision(),
+    reviewedByUserId: varchar({ length: 27 }),
 
     /*
   "profile" JSONB,
-  "previousDisplayName" TEXT,
   "lwWikiImport" BOOL,
   "lastUsedTimezone" TEXT,
   "whenConfirmationEmailSent" TIMESTAMPTZ,
@@ -286,6 +287,7 @@ export const users = pgTable(
 );
 
 export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
 
 export const bans = pgTable(
   "Bans",
@@ -943,6 +945,7 @@ export const comments = pgTable(
 );
 
 export type Comment = typeof comments.$inferSelect;
+export type InsertComment = typeof comments.$inferInsert;
 
 export const clientIds = pgTable(
   "ClientIds",
@@ -2664,6 +2667,7 @@ export const posts = pgTable(
 );
 
 export type Post = typeof posts.$inferSelect;
+export type InsertPost = typeof posts.$inferInsert;
 
 export const reports = pgTable(
   "Reports",
@@ -2920,6 +2924,7 @@ export const revisions = pgTable(
 );
 
 export type Revision = typeof revisions.$inferSelect;
+export type InsertRevision = typeof revisions.$inferInsert;
 
 export const sequences = pgTable(
   "Sequences",

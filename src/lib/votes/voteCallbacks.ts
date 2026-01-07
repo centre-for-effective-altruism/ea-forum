@@ -1,5 +1,6 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Post, posts, users } from "../schema";
+import { isAnyInArray } from "../utils/queryHelpers";
 import { userIsInGroup } from "../users/userHelpers";
 import { userSmallVotePower, VoteType } from "./voteHelpers";
 import type { DbOrTransaction } from "../db";
@@ -55,7 +56,7 @@ export const updateUserKarma = async (
       .set({
         karma: sql`${users.karma} + ${votePower}`,
       })
-      .where(inArray(users._id, authorIds));
+      .where(isAnyInArray(users._id, authorIds, "text"));
 
     await Promise.all(
       authors.map(async (author) => {
@@ -114,10 +115,10 @@ export const updateUserVoteCounts = async (
       db
         .update(users)
         .set({
-          voteCount: sql`COALESCE(${users.voteReceivedCount}, 0) + ${amount}`,
-          [casterField]: sql`COALESCE(${users[receiverField]}, 0) + ${amount}`,
+          voteReceivedCount: sql`COALESCE(${users.voteReceivedCount}, 0) + ${amount}`,
+          [receiverField]: sql`COALESCE(${users[receiverField]}, 0) + ${amount}`,
         })
-        .where(inArray(users._id, authorIds)),
+        .where(isAnyInArray(users._id, authorIds, "text")),
     ]);
   }
 };

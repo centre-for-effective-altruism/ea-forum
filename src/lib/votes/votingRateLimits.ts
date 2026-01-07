@@ -1,4 +1,4 @@
-import { sql, and, eq, ne } from "drizzle-orm";
+import { sql, and, eq, ne, gt } from "drizzle-orm";
 import { db } from "../db";
 import { comments, Vote, votes } from "../schema";
 import { userIsAdmin } from "../users/userHelpers";
@@ -153,19 +153,21 @@ export const checkVotingRateLimits = async (
   const [votesInLastDay, votesOnCommentsOnThisPost, postWithCommentCount] =
     await Promise.all([
       // Votes on any document by this user in the last day
-      db.query.votes.findMany({
-        columns: {
-          voteType: true,
-          votedAt: true,
-          authorIds: true,
-        },
-        where: {
-          userId: user._id,
-          votedAt: { gt: oneDayAgo },
-          cancelled: false,
-          RAW: sql`${user._id} <> ANY(${votes.authorIds})`, // Self-votes don't count
-        },
-      }),
+      db
+        .select({
+          voteType: votes.voteType,
+          votedAt: votes.votedAt,
+          authorIds: votes.authorIds,
+        })
+        .from(votes)
+        .where(
+          and(
+            eq(votes.userId, user._id),
+            eq(votes.cancelled, false),
+            gt(votes.votedAt, oneDayAgo),
+            sql`${user._id} <> ANY(${votes.authorIds})`, // Self-votes don't count
+          ),
+        ),
       // Votes on comments on this post by this user at any time in the past
       postId
         ? db
