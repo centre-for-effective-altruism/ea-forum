@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, ReactNode, useContext, useMemo } from "react";
-import type { INotificationDisplays } from "@/lib/notifications/notificationsQueries.schemas";
 import { getNotifications } from "@/lib/notifications/notificationsApi";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import type { NotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 
 type NotificationsContext = {
-  notifications: INotificationDisplays[];
+  notifications: NotificationDisplay[];
 };
 
 const notificationsContext = createContext<NotificationsContext | null>(null);

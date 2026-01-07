@@ -7,8 +7,8 @@ import {
   getCollaborativeEditorAccess,
   isCollaborativeEditingFormType,
 } from "@/lib/ckeditor/collabEditingPermissions";
-import { getCurrentUser } from "@/lib/requestHandler";
 import { getCKEditorDocumentId } from "@/lib/ckeditor/editorHelpers";
+import { getCurrentUser } from "@/lib/users/currentUser";
 import { userGetDisplayName } from "@/lib/users/userHelpers";
 import { db } from "@/lib/schema";
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const formType = req.headers.get("form-type");
   const linkSharingKey = req.headers.get("link-sharing-key");
 
-  const { currentUser } = await getCurrentUser();
+  const currentUser = await getCurrentUser();
 
   if (collectionName === "Posts") {
     if (!formType || !isCollaborativeEditingFormType(formType)) {

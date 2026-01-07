@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, useCallback, useEffect, useMemo } from "react";
 import { useIsInView } from "./hooks/useIsInView";
-import type { Json } from "tradukisto";
+import type { Json } from "./typeHelpers";
 
 type PostsViewTerms = Record<string, unknown>;
 

@@ -1,4 +1,4 @@
-import type { INotificationDisplays } from "@/lib/notifications/notificationsQueries.schemas";
+import type { NotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { formatNotificationType } from "@/lib/notifications/notificationHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/16/solid/ChatBubbleLeftIcon";
@@ -27,7 +27,7 @@ const icons = {
 export default function NotificationDisplay({
   notification,
 }: Readonly<{
-  notification: INotificationDisplays;
+  notification: NotificationDisplay;
 }>) {
   const { message, link, type, post, comment, viewed, createdAt } = notification;
   const icon = icons[type === "wrapped" ? "wrapped" : comment ? "comment" : "post"];

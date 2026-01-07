@@ -1,4 +1,4 @@
-import type { JsonRecord } from "tradukisto";
+import type { JsonRecord } from "../typeHelpers";
 import { combineUrls } from "../routeHelpers";
 
 class Auth0ClientError extends Error {

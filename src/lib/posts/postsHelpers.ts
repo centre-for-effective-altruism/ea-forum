@@ -1,5 +1,5 @@
-import type { JsonRecord } from "tradukisto";
 import type { PostListItem } from "./postLists";
+import type { JsonRecord } from "../typeHelpers";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 

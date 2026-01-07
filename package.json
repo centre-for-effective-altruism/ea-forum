@@ -7,7 +7,6 @@
     "check-format": "prettier --check .",
     "dev": "next dev --turbopack",
     "format": "prettier . --write --log-level warn",
-    "generate": "npx --node-options='--no-warnings=ExperimentalWarning' env-cmd -x tradukisto tradukisto.config.json",
     "lint": "eslint",
     "prepare": "husky",
     "pull-schema": "drizzle-kit pull",
@@ -42,7 +41,6 @@
     "react-transition-group": "^4.4.5",
     "server-only": "^0.0.1",
     "speakingurl": "^14.0.1",
-    "tradukisto": "^0.0.11",
     "url-join": "^5.0.0",
     "zod": "^4.2.1"
   },

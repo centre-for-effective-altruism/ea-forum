@@ -968,6 +968,8 @@ export const comments = pgTable(
   ],
 );
 
+export type Comment = typeof comments.$inferSelect;
+
 export const clientIds = pgTable(
   "ClientIds",
   {
@@ -1573,6 +1575,8 @@ export const notifications = pgTable(
     ),
   ],
 );
+
+export type Notification = typeof notifications.$inferSelect;
 
 export const podcastEpisodes = pgTable(
   "PodcastEpisodes",
@@ -3061,6 +3065,8 @@ export const sequences = pgTable(
   ],
 );
 
+export type Sequence = typeof sequences.$inferSelect;
+
 export const spotlights = pgTable(
   "Spotlights",
   {
@@ -3464,6 +3470,8 @@ export const tags = pgTable(
     ),
   ],
 );
+
+export type Tag = typeof tags.$inferSelect;
 
 export const votes = pgTable(
   "Votes",
