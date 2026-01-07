@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getPostReadTime } from "@/lib/posts/postsHelpers";
 import { formatShortDate } from "@/lib/timeUtils";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
-import { db } from "@/lib/schema";
+import { db } from "@/lib/db";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";

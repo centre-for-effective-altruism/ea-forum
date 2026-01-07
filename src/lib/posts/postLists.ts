@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
-import { db, isNotTrue, posts } from "@/lib/schema";
+import { db } from "@/lib/db";
+import { posts } from "@/lib/schema";
+import { isNotTrue } from "@/lib/utils/queryHelpers";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;

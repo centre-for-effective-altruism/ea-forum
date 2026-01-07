@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db } from "../schema";
+import { db } from "@/lib/db";
 import { getSocialImagePreviewPrefix } from "../cloudinaryHelpers";
 import type { NotificationDisplay } from "./notificationDisplayTypes";
 

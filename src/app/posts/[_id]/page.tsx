@@ -1,6 +1,6 @@
 import { notFound, redirect, RedirectType } from "next/navigation";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
-import { db } from "@/lib/schema";
+import { db } from "@/lib/db";
 
 export default async function PostsPageNoSlug({
   params,

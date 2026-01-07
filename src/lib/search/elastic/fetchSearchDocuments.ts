@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import { comments, db, posts, sequences, tags, users } from "@/lib/schema";
+import { db } from "@/lib/db";
+import { comments, posts, sequences, tags, users } from "@/lib/schema";
 import type { SearchIndexCollectionName } from "./elasticIndexes";
 import type {
   SearchComment,

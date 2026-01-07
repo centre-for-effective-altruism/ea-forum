@@ -1,7 +1,8 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { AuthenticationClient } from "auth0";
-import { db, users } from "./schema";
+import { db } from "@/lib/db";
+import { users } from "@/lib/schema";
 import { sql } from "drizzle-orm";
 import z from "zod/v4";
 

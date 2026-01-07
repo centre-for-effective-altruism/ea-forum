@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
-import { db } from "@/lib/schema";
+import { db } from "@/lib/db";
 
 // TODO: We can get a small performance boost here by using
 // fm_get_user_by_login_token but it's hard to use that in drizzle while

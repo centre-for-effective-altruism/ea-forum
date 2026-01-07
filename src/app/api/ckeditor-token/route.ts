@@ -10,7 +10,7 @@ import {
 import { getCKEditorDocumentId } from "@/lib/ckeditor/editorHelpers";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { userGetDisplayName } from "@/lib/users/userHelpers";
-import { db } from "@/lib/schema";
+import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   const environmentId = process.env.CK_ENVIRONMENT_ID;

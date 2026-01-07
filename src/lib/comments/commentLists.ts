@@ -1,6 +1,8 @@
 import { arrayContains, sql } from "drizzle-orm";
-import { comments, db, isNotTrue } from "@/lib/schema";
+import { db } from "@/lib/db";
+import { comments } from "@/lib/schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
+import { isNotTrue } from "@/lib/utils/queryHelpers";
 
 export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
