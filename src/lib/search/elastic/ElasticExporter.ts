@@ -229,7 +229,7 @@ export class ElasticExporter {
     for (const field of HTML_FIELDS) {
       if (field in document) {
         // @ts-expect-error FIXME This is tricky to type correctly
-        document[f] = htmlToTextDefault(document[f] ?? "");
+        document[field] = htmlToTextDefault(document[field] ?? "");
       }
     }
     return { id, document };

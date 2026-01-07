@@ -77,6 +77,16 @@ export const users = pgTable(
     conversationsDisabled: boolean(),
     mentionsDisabled: boolean().notNull().default(false),
     deleted: boolean().notNull().default(false),
+    voteCount: doublePrecision(),
+    smallUpvoteCount: doublePrecision(),
+    smallDownvoteCount: doublePrecision(),
+    bigUpvoteCount: doublePrecision(),
+    bigDownvoteCount: doublePrecision(),
+    voteReceivedCount: doublePrecision(),
+    smallUpvoteReceivedCount: doublePrecision(),
+    smallDownvoteReceivedCount: doublePrecision(),
+    bigUpvoteReceivedCount: doublePrecision(),
+    bigDownvoteReceivedCount: doublePrecision(),
 
     /*
   "profile" JSONB,
@@ -210,16 +220,6 @@ export const users = pgTable(
   "reviewedByUserId" VARCHAR(27),
   "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "voteCount" DOUBLE PRECISION,
-  "smallUpvoteCount" DOUBLE PRECISION,
-  "smallDownvoteCount" DOUBLE PRECISION,
-  "bigUpvoteCount" DOUBLE PRECISION,
-  "bigDownvoteCount" DOUBLE PRECISION,
-  "voteReceivedCount" DOUBLE PRECISION,
-  "smallUpvoteReceivedCount" DOUBLE PRECISION,
-  "smallDownvoteReceivedCount" DOUBLE PRECISION,
-  "bigUpvoteReceivedCount" DOUBLE PRECISION,
-  "bigDownvoteReceivedCount" DOUBLE PRECISION,
   "usersContactedBeforeReview" TEXT[],
   "fullName" TEXT,
   "shortformFeedId" VARCHAR(27),
@@ -2919,6 +2919,8 @@ export const revisions = pgTable(
   ],
 );
 
+export type Revision = typeof revisions.$inferSelect;
+
 export const sequences = pgTable(
   "Sequences",
   {
@@ -3481,6 +3483,8 @@ export const votes = pgTable(
     ),
   ],
 );
+
+export type Vote = typeof votes.$inferSelect;
 
 export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
   qb

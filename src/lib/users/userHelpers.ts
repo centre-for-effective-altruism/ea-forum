@@ -175,14 +175,16 @@ export const userGetDisplayName = (user: UserDisplayNameInfo | null): string =>
 /**
  * Check if a user is an admin
  */
-export const userIsAdmin = (
-  user: CurrentUser | null,
-): user is User & { isAdmin: true } => user?.isAdmin ?? false;
+export const userIsAdmin = <T extends Partial<User>>(
+  user: T | null,
+): user is T & { isAdmin: true } => user?.isAdmin ?? false;
+
+type UserPermissions = Pick<User, "groups" | "banned" | "isAdmin">;
 
 /**
  * Get a list of a user's groups
  */
-export const userGetGroups = (user: CurrentUser | null): string[] => {
+export const userGetGroups = (user: UserPermissions | null): string[] => {
   if (!user) {
     return ["guests"];
   }
@@ -194,16 +196,22 @@ export const userGetGroups = (user: CurrentUser | null): string[] => {
   if (user.groups) {
     userGroups = userGroups.concat(user.groups);
   }
-  if (userIsAdmin(user)) {
+  if (user.isAdmin) {
     userGroups.push("admins");
   }
   return userGroups;
 };
 
 /**
+ * Check if a user is in the given group
+ */
+export const userIsInGroup = (user: UserPermissions | null, group: string) =>
+  userGetGroups(user).indexOf(group) >= 0;
+
+/**
  * Get a list of all the actions a user can perform
  */
-export const userGetActions = (user: CurrentUser | null): string[] => {
+export const userGetActions = (user: UserPermissions | null): string[] => {
   const groups = userGetGroups(user);
   if (!groups.includes("guests")) {
     // Always give everybody permission for guests actions, too
@@ -221,7 +229,7 @@ export const userGetActions = (user: CurrentUser | null): string[] => {
  * Check if a user can perform at least one of the specified actions
  */
 export const userCanDo = (
-  user: CurrentUser | null,
+  user: UserPermissions | null,
   actionOrActions: string | string[],
 ): boolean => {
   const authorizedActions = userGetActions(user);

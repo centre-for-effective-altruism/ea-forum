@@ -1,6 +1,11 @@
 import { RefObject, useCallback, useRef, useState } from "react";
 import { isMobile } from "@/lib/environment";
-import type { VoteType } from "@/lib/actions/voteActions";
+import {
+  createVoteType,
+  type VoteDirection,
+  type VoteStrength,
+  type VoteType,
+} from "@/lib/votes/voteHelpers";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import Transition from "react-transition-group/Transition";
 import clsx from "clsx";
@@ -19,13 +24,13 @@ type Orientation = keyof typeof orientations;
 const strongVoteDelayMs = 1000;
 
 export default function VoteButton({
-  currentVoteType,
+  currentVoteStrength,
   direction,
   orientation,
   onVote,
 }: Readonly<{
-  currentVoteType: VoteType;
-  direction: "Upvote" | "Downvote";
+  currentVoteStrength: VoteStrength;
+  direction: VoteDirection;
   orientation: Orientation;
   onVote: (voteType: VoteType) => void;
 }>) {
@@ -36,14 +41,18 @@ export default function VoteButton({
   const [bigVoteCompleted, setBigVoteCompleted] = useState(false);
   const ref = useRef<SVGSVGElement>(null);
 
-  const voted = currentVoteType !== "neutral";
-  const bigVoted = currentVoteType === "big";
+  const voted = currentVoteStrength !== "neutral";
+  const bigVoted = currentVoteStrength === "big";
 
   const wrappedVote = useCallback(
-    (voteType: VoteType) => {
-      onVote(voteType === currentVoteType ? "neutral" : voteType);
+    (voteStrength: VoteStrength) => {
+      const voteType =
+        voteStrength === currentVoteStrength
+          ? "neutral"
+          : createVoteType(voteStrength, direction);
+      onVote(voteType);
     },
-    [onVote, currentVoteType],
+    [onVote, currentVoteStrength, direction],
   );
 
   const clearState = useCallback(() => {
