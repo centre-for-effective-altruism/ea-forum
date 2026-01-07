@@ -20,7 +20,7 @@ import type { WatchdogConfig } from "../ckeditor5-watchdog/watchdog";
 import type { EditorCreatorFunction } from "../ckeditor5-watchdog/editorwatchdog";
 
 import { ContextWatchdogContext } from "./ckeditorcontext";
-import { randomId } from "@/lib/random";
+import { randomId } from "@/lib/utils/random";
 import { default as EditorWatchdog } from "../ckeditor5-watchdog/editorwatchdog";
 import { default as ContextWatchdog } from "../ckeditor5-watchdog/contextwatchdog";
 

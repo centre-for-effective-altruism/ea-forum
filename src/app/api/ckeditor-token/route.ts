@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { randomId } from "@/lib/random";
+import { randomId } from "@/lib/utils/random";
 import {
   CollaborativeEditingAccessLevel,
   permissionsLevelToCkEditorRole,
