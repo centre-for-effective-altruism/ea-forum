@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { slugify } from "@/lib/slugify";
+import { slugify } from "@/lib/utils/slugify";
 import Link from "next/link";
 import clsx from "clsx";
 import Type from "./Type";
