@@ -2,7 +2,7 @@ import type { ElementType, ReactNode } from "react";
 import type { Placement } from "@floating-ui/react";
 import type { PostListItem } from "@/lib/posts/postLists";
 import { formatRelativeTime } from "@/lib/timeUtils";
-import { htmlToTextDefault } from "@/lib/htmlToText";
+import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import { formatStat } from "@/lib/formatHelpers";
 import UserProfileImage from "./UserProfileImage";
 import Tooltip from "./Tooltip";

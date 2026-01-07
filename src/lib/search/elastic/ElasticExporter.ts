@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { helpers } from "@elastic/elasticsearch";
-import { htmlToTextDefault } from "../../../lib/htmlToText";
+import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import ElasticClient from "./ElasticClient";
 import type { SearchDocument } from "../searchDocuments";
 import { collectionNameToConfig, Mappings } from "./ElasticConfig";

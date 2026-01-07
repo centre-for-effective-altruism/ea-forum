@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ZodType } from "zod/v4";
-import { AdaptivePoller } from "./AdaptivePoller";
+import { AdaptivePoller } from "./utils/AdaptivePoller";
 import { LRUCache } from "lru-cache";
 import stringify from "json-stringify-deterministic";
 
