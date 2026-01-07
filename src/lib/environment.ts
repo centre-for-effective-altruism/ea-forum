@@ -33,4 +33,4 @@ const userAgent = new (class {
  */
 export const isMobile = () => isClient && userAgent.isMobile();
 
-export const isAnyTest = () => false;
+export const isAnyTest = () => process.env.VITEST === "true";
