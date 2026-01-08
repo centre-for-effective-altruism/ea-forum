@@ -2942,6 +2942,8 @@ export const revisions = pgTable(
   ],
 );
 
+export type Revision = typeof revisions.$inferSelect;
+
 export const sequences = pgTable(
   "Sequences",
   {
