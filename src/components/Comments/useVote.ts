@@ -21,7 +21,7 @@ type VoteStateUpdate = {
 const getInitialVoteState = (comment: CommentsList): VoteState => ({
   baseScore: comment.baseScore,
   voteCount: comment.voteCount,
-  currentUserVoteType: (comment.votes[0]?.voteType as VoteType) ?? "neutral",
+  currentUserVoteType: (comment.votes?.[0]?.voteType as VoteType) ?? "neutral",
   showVotingPatternWarning: false,
 });
 
