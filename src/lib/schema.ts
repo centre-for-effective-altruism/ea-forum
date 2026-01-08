@@ -6,13 +6,13 @@ import {
   uniqueIndex,
   unique,
   varchar,
-  timestamp as rawTimestamp,
   text,
   jsonb,
   integer,
   doublePrecision,
   boolean,
   pgMaterializedView,
+  customType,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -20,7 +20,30 @@ import {
  * This file must _ONLY_ export these schemas and types, and nothing else.
  */
 
-const timestamp = () => rawTimestamp({ withTimezone: true, mode: "string" });
+/**
+ * This is a custom timestamp type to meet our needs - _all_ time/date fields in
+ * Postgres should use this type. This type always includes a timezone, and we
+ * also automatically format the date from the custom format used by Postgres
+ * to standard ISO8601 (this is required to, for instance, send the data to
+ * elasticsearch without some complicated preprocessing).
+ */
+const timestamp = customType<{
+  data: string;
+  driverData: string;
+}>({
+  dataType() {
+    return "timestamptz";
+  },
+  fromDriver(value: string): string {
+    // Postgres: 2025-06-22 16:13:37.489301+00
+    // ISO8601:  2025-06-22T16:13:37.489301Z
+    return `${value.substring(0, 10)}T${value.substring(11, value.indexOf("+00"))}Z`;
+  },
+});
+
+/**
+ * Timestamp field with a default of the current time
+ */
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
 const universalFields = {
