@@ -43,11 +43,16 @@ export default function PostsItem({
         <div
           onClick={onClick}
           className={`
-            cursor-pointer w-full max-w-full h-full px-4 py-2 text-gray-600
-            grid grid-cols-[min-content_1fr_min-content_min-content] gap-4
+            cursor-pointer w-full max-w-full h-full px-3 py-2 text-gray-600
+            grid grid-cols-[min-content_1fr_min-content_min-content] gap-3
           `}
         >
-          <Score baseScore={baseScore} voteCount={voteCount} orient="vertical" />
+          <Score
+            baseScore={baseScore}
+            voteCount={voteCount}
+            orient="vertical"
+            className="min-w-[33px]"
+          />
           <div className="truncate">
             <Type style="postTitle" className="text-black truncate">
               <PostsTooltip As="span" post={post}>
