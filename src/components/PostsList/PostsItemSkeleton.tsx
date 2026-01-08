@@ -13,7 +13,7 @@ export default function PostsItemSkeleton() {
           grid grid-cols-[min-content_1fr_min-content_min-content] gap-4
         `}
       >
-        <div className="flex flex-col items-center justify-center gap-1 px-2">
+        <div className="flex flex-col items-center justify-center gap-1 px-2 w-[26px]">
           <SoftArrowUpIcon className="text-gray-400" />
           <div className="h-3 w-5 bg-gray-200" />
         </div>
