@@ -3,14 +3,19 @@ import PostsList from "./PostsList";
 
 export default async function FrontpagePostsList({
   initialLimit,
-  community = false,
+  onlyTagId,
+  excludeTagId,
+  className,
 }: Readonly<{
   initialLimit: number;
-  community?: boolean;
+  onlyTagId?: string;
+  excludeTagId?: string;
+  className?: string;
 }>) {
   const posts = await fetchFrontpagePostsList({
     limit: initialLimit,
-    community,
+    onlyTagId,
+    excludeTagId,
   });
-  return <PostsList posts={posts} />;
+  return <PostsList posts={posts} className={className} />;
 }

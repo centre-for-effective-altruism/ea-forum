@@ -1,9 +1,12 @@
+import { Suspense } from "react";
+import type { NextSearchParams } from "@/lib/typeHelpers";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
-import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import StructuredData from "@/components/StructuredData";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
+import HomePageFeedSkeleton from "@/components/HomePage/HomePageFeedSkeleton";
 import HomePageFeed from "@/components/HomePage/HomePageFeed";
-import HomePageDefaultFeed from "@/components/HomePage/HomePageDefaultFeed";
+import HomePageTabBarSkeleton from "@/components/HomePage/HomePageTagBarSkeleton";
+import HomePageTagBar from "@/components/HomePage/HomePageTagBar";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -28,12 +31,26 @@ const structuredData = {
   ].join(" "),
 };
 
-export default async function HomePage() {
-  const coreTags = await fetchCoreTags();
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<NextSearchParams>;
+}) {
+  const search = await searchParams;
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
-      <HomePageFeed defaultFeed={<HomePageDefaultFeed />} coreTags={coreTags} />
+      <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
+        <HomePageTagBar className="mb-4" />
+      </Suspense>
+      <Suspense
+        // This key forces react to render the fallback when navigating on the
+        // client instead of waiting for the server response
+        key={typeof search.tab === "string" ? search.tab : "frontpage"}
+        fallback={<HomePageFeedSkeleton postCount={30} />}
+      >
+        <HomePageFeed search={search} />
+      </Suspense>
     </HomePageColumns>
   );
 }

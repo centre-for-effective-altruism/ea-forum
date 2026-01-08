@@ -29,25 +29,19 @@ const viewablePostFilter = {
   status: postStatuses.STATUS_APPROVED,
 } as const;
 
-const createCommunityFilter = (community: boolean) => {
-  const tagId = process.env.COMMUNITY_TAG_ID;
-  if (!tagId) {
-    console.warn("Community tag ID is not configured");
-    return {};
-  }
-  if (community) {
-    return {
-      RAW: (postsTable: typeof posts) =>
-        sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
-    };
-  }
-  return {
-    RAW: (postsTable: typeof posts) => sql`
-      NOT (${postsTable.tagRelevance} ? ${tagId})
-      OR (${postsTable.tagRelevance} ->> ${tagId})::FLOAT < 1
-    `,
-  };
-};
+/** Create a filter to return _only_ posts with a particular tag */
+const onlyTagFilter = (tagId: string) => ({
+  RAW: (postsTable: typeof posts) =>
+    sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
+});
+
+/** Create a filter to exclude posts with a particular tag */
+const excludeTagFilter = (tagId: string) => ({
+  RAW: (postsTable: typeof posts) => sql`
+    NOT (${postsTable.tagRelevance} ? ${tagId})
+    OR (${postsTable.tagRelevance} ->> ${tagId})::FLOAT < 1
+  `,
+});
 
 const getFrontpageCutoffDate = () =>
   new Date(new Date().getTime() - CUTOFF_DAYS * 24 * 60 * 60 * 1000);
@@ -72,10 +66,12 @@ const magicSort = (postsTable: typeof posts) => sql`
 
 export const fetchFrontpagePostsList = ({
   limit,
-  community,
+  onlyTagId,
+  excludeTagId,
 }: {
   limit: number;
-  community: boolean;
+  onlyTagId?: string;
+  excludeTagId?: string;
 }) => {
   return db.query.posts.findMany({
     columns: {
@@ -125,7 +121,8 @@ export const fetchFrontpagePostsList = ({
     },
     where: {
       ...viewablePostFilter,
-      ...createCommunityFilter(community),
+      ...(onlyTagId ? onlyTagFilter(onlyTagId) : null),
+      ...(excludeTagId ? excludeTagFilter(excludeTagId) : null),
       isEvent: isNotTrue,
       sticky: isNotTrue,
       groupId: { isNull: true },

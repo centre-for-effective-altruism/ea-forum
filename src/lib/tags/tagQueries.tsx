@@ -1,6 +1,7 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 
-export const fetchCoreTags = () => {
+export const fetchCoreTags = cache(() => {
   return db.query.tags.findMany({
     columns: {
       _id: true,
@@ -18,6 +19,6 @@ export const fetchCoreTags = () => {
       name: "asc",
     },
   });
-};
+});
 
 export type CoreTag = Awaited<ReturnType<typeof fetchCoreTags>>[0];
