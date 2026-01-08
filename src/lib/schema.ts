@@ -100,6 +100,8 @@ export const users = pgTable(
     conversationsDisabled: boolean(),
     mentionsDisabled: boolean().notNull().default(false),
     deleted: boolean().notNull().default(false),
+    hideCommunitySection: boolean().notNull().default(false),
+    showCommunityInRecentDiscussion: boolean().notNull().default(false),
 
     /*
   "profile" JSONB,
@@ -119,8 +121,6 @@ export const users = pgTable(
   "noSingleLineComments" BOOL NOT NULL DEFAULT FALSE,
   "noCollapseCommentsPosts" BOOL NOT NULL DEFAULT FALSE,
   "noCollapseCommentsFrontpage" BOOL NOT NULL DEFAULT FALSE,
-  "hideCommunitySection" BOOL NOT NULL DEFAULT FALSE,
-  "showCommunityInRecentDiscussion" BOOL NOT NULL DEFAULT FALSE,
   "hidePostsRecommendations" BOOL NOT NULL DEFAULT FALSE,
   "keywordAlerts" TEXT[] NOT NULL DEFAULT '{}',
   "petrovOptOut" BOOL NOT NULL DEFAULT FALSE,

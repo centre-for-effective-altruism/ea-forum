@@ -16,7 +16,7 @@ export const postStatuses = {
   STATUS_DELETED: 5,
 };
 
-const viewablePostFilter = {
+export const viewablePostFilter = {
   draft: isNotTrue,
   deletedDraft: isNotTrue,
   isFuture: isNotTrue,
@@ -34,7 +34,7 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`;
 
 /** Create a filter to exclude posts with a particular tag */
-const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
+export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
 
 const getFrontpageCutoffDate = () =>
@@ -58,7 +58,7 @@ const magicSort = (postsTable: typeof posts) => sql`
   ${postsTable}."_id" DESC
 `;
 
-type PostsFilter = NonNullable<
+export type PostsFilter = NonNullable<
   Parameters<typeof db.query.posts.findMany>[0]
 >["where"];
 

@@ -4,6 +4,7 @@ import Type from "../Type";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
+import RecentDiscussionsFeed from "./RecentDiscussions/RecentDiscussionsFeed";
 
 export default async function HomePageFeed({
   search,
@@ -62,7 +63,7 @@ export default async function HomePageFeed({
           <Type className="mb-2" style="sectionTitleLarge">
             Recent discussion
           </Type>
-          <div>TODO: Recent discussions list</div>
+          <RecentDiscussionsFeed />
         </>
       )}
     </>
