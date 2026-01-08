@@ -30,18 +30,12 @@ const viewablePostFilter = {
 } as const;
 
 /** Create a filter to return _only_ posts with a particular tag */
-const onlyTagFilter = (tagId: string) => ({
-  RAW: (postsTable: typeof posts) =>
-    sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
-});
+const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
+  sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`;
 
 /** Create a filter to exclude posts with a particular tag */
-const excludeTagFilter = (tagId: string) => ({
-  RAW: (postsTable: typeof posts) => sql`
-    NOT (${postsTable.tagRelevance} ? ${tagId})
-    OR (${postsTable.tagRelevance} ->> ${tagId})::FLOAT < 1
-  `,
-});
+const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
+  sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
 
 const getFrontpageCutoffDate = () =>
   new Date(new Date().getTime() - CUTOFF_DAYS * 24 * 60 * 60 * 1000);
@@ -64,14 +58,24 @@ const magicSort = (postsTable: typeof posts) => sql`
   ${postsTable}."_id" DESC
 `;
 
-export const fetchFrontpagePostsList = ({
+type PostsFilter = NonNullable<
+  Parameters<typeof db.query.posts.findMany>[0]
+>["where"];
+
+type PostsOrderBy = NonNullable<
+  Parameters<typeof db.query.posts.findMany>[0]
+>["orderBy"];
+
+const fetchPostsList = ({
+  currentUserId,
+  where,
+  orderBy,
   limit,
-  onlyTagId,
-  excludeTagId,
 }: {
-  limit: number;
-  onlyTagId?: string;
-  excludeTagId?: string;
+  currentUserId: string | null;
+  where?: PostsFilter;
+  orderBy?: PostsOrderBy;
+  limit?: number;
 }) => {
   return db.query.posts.findMany({
     columns: {
@@ -118,11 +122,42 @@ export const fetchFrontpagePostsList = ({
             sql`SUBSTRING(${revisions}."html", 1, 200)`,
         },
       },
+      readStatus: currentUserId
+        ? {
+            columns: {
+              isRead: true,
+            },
+            where: {
+              userId: currentUserId,
+            },
+          }
+        : undefined,
     },
     where: {
       ...viewablePostFilter,
-      ...(onlyTagId ? onlyTagFilter(onlyTagId) : null),
-      ...(excludeTagId ? excludeTagFilter(excludeTagId) : null),
+      ...where,
+    },
+    orderBy,
+    limit,
+  });
+};
+
+export const fetchFrontpagePostsList = ({
+  currentUserId,
+  limit,
+  onlyTagId,
+  excludeTagId,
+}: {
+  currentUserId: string | null;
+  limit: number;
+  onlyTagId?: string;
+  excludeTagId?: string;
+}) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      ...(onlyTagId ? { RAW: onlyTagFilter(onlyTagId) } : null),
+      ...(excludeTagId ? { RAW: excludeTagFilter(excludeTagId) } : null),
       isEvent: isNotTrue,
       sticky: isNotTrue,
       groupId: { isNull: true },
@@ -201,3 +236,110 @@ export const fetchSidebarEvents = (limit: number) => {
 export type SidebarEventItem = Awaited<
   ReturnType<typeof fetchSidebarEvents>
 >[number];
+
+export const fetchMoreFromAuthorPostsList = async ({
+  currentUserId,
+  postId,
+  minScore = 30,
+  limit,
+}: {
+  currentUserId: string | null;
+  postId: string;
+  minScore?: number;
+  limit: number;
+}) => {
+  // TODO: Can we do this a single drizzle query instead of fetching the post?
+  const post = await db.query.posts.findFirst({
+    columns: {
+      userId: true,
+    },
+    where: {
+      _id: postId,
+    },
+  });
+  if (!post?.userId) {
+    return [];
+  }
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      _id: { ne: postId },
+      groupId: { isNull: true },
+      isEvent: isNotTrue,
+      baseScore: { gte: minScore },
+      disableRecommendation: isNotTrue,
+      user: {
+        _id: post.userId,
+        deleted: false,
+      },
+    },
+    orderBy: {
+      score: "desc",
+    },
+    limit,
+  });
+};
+
+export const fetchCuratedAndPopularPostsList = async ({
+  currentUserId,
+  limit,
+}: {
+  currentUserId: string | null;
+  limit: number;
+}) => {
+  const [curated, popular] = await Promise.all([
+    fetchPostsList({
+      currentUserId,
+      where: {
+        RAW: (postsTable) =>
+          sql`NOW() - ${postsTable.curatedDate} < '7 days'::INTERVAL`,
+        disableRecommendation: isNotTrue,
+        readStatus: currentUserId ? { isRead: isNotTrue } : undefined,
+      },
+      orderBy: {
+        curatedDate: "desc",
+      },
+      limit,
+    }),
+    fetchPostsList({
+      currentUserId,
+      where: {
+        RAW: (postsTable) => sql`
+          NOW() - ${postsTable.frontpageDate} < '7 days'::INTERVAL AND
+          ${excludeTagFilter(process.env.COMMUNITY_TAG_ID)(postsTable)}
+        `,
+        curatedDate: { isNull: true },
+        groupId: { isNull: true },
+        disableRecommendation: isNotTrue,
+        readStatus: currentUserId ? { isRead: isNotTrue } : undefined,
+        user: {
+          deleted: isNotTrue,
+        },
+      },
+      orderBy: {
+        baseScore: "desc",
+      },
+      limit,
+    }),
+  ]);
+  return [...curated, ...popular].slice(0, limit);
+};
+
+export const fetchRecentOpportunitiesPostsList = async ({
+  currentUserId,
+  limit,
+}: {
+  currentUserId: string | null;
+  limit: number;
+}) => {
+  // TODO: This logic for these recommendations in ForumMagnum is much more
+  // complicated - this will be for now though
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      RAW: onlyTagFilter(process.env.OPPORTUNITIES_TAG_ID),
+    },
+    orderBy: magicSort,
+    limit,
+  });
+};

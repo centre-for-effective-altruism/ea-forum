@@ -21,9 +21,13 @@ export default async function PostsPage({
           <CommentsSection postId={_id} className="mb-20" />
         </Suspense>
       </div>
-      <Suspense>
-        <FooterRecommendations postId={_id} />
-      </Suspense>
+      <div className="w-full bg-(--background) pt-15 pb-20">
+        <div className="w-[698px] max-w-full mx-auto">
+          <Suspense>
+            <FooterRecommendations postId={_id} />
+          </Suspense>
+        </div>
+      </div>
     </div>
   );
 }
