@@ -3,6 +3,7 @@ import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
+import PopularCommentsList from "./PopularCommentsList";
 
 export default async function HomePageFeed({
   search,
@@ -57,7 +58,7 @@ export default async function HomePageFeed({
           <Type className="mb-2" style="sectionTitleLarge">
             Popular comments
           </Type>
-          <div className="mb-10">TODO: Popular comments list</div>
+          <PopularCommentsList initialLimit={3} className="mb-10" />
           <Type className="mb-2" style="sectionTitleLarge">
             Recent discussion
           </Type>

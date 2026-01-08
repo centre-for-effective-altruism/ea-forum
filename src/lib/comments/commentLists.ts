@@ -2,7 +2,10 @@ import { arrayContains, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { comments } from "@/lib/schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
-import { isNotTrue } from "@/lib/utils/queryHelpers";
+import { isAnyInArray, isNotTrue } from "@/lib/utils/queryHelpers";
+import { postStatuses } from "../posts/postLists";
+import fromPairs from "lodash/fromPairs";
+import sortBy from "lodash/sortBy";
 
 export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
@@ -158,4 +161,96 @@ export const fetchFrontpageQuickTakes = ({
     },
     limit,
   });
+};
+
+type PopularCommentsConfig = {
+  currentUserId: string | null;
+  offset?: number;
+  limit?: number;
+  minScore?: number;
+  // The factor to divide age by for the recency bonus
+  recencyFactor?: number;
+  // The minimum age that a post will be considered as having, to avoid
+  // over selecting brand new comments - defaults to 2 hours
+  recencyBias?: number;
+};
+
+/**
+ * Fetch a list of popular comments for the homepage. Note that this is quite
+ * slow so we actually use a cached version of this below.
+ */
+const fetchPopularCommentsUncached = async ({
+  currentUserId,
+  minScore = 12,
+  offset = 0,
+  limit = 3,
+  recencyFactor = 250000,
+  recencyBias = 60 * 60 * 2,
+}: PopularCommentsConfig): Promise<CommentsList[]> => {
+  const communityTopicId = process.env.COMMUNITY_TAG_ID;
+  const popularComments = await db.execute(sql`
+    SELECT c._id
+    FROM (
+      SELECT DISTINCT ON ("postId") "_id"
+      FROM "Comments"
+      WHERE
+        CURRENT_TIMESTAMP - "postedAt" < '1 week'::INTERVAL
+        AND "shortform" IS NOT TRUE
+        AND "baseScore" >= ${minScore}
+        AND "retracted" IS NOT TRUE
+        AND "deleted" IS NOT TRUE
+        AND "deletedPublic" IS NOT TRUE
+        AND "needsReview" IS NOT TRUE
+      ORDER BY "postId", "baseScore" DESC
+    ) q
+    JOIN "Comments" c ON c."_id" = q."_id"
+    JOIN "Posts" p ON c."postId" = p."_id"
+    WHERE
+      p."hideFromPopularComments" IS NOT TRUE
+      AND p."frontpageDate" IS NOT NULL
+      AND p."status" = ${postStatuses.STATUS_APPROVED}
+      AND p."draft" IS FALSE
+      AND p."deletedDraft" IS FALSE
+      AND p."isFuture" IS FALSE
+      AND p."unlisted" IS FALSE
+      AND p."shortform" IS FALSE
+      AND p."authorIsUnreviewed" IS FALSE
+      AND p."hiddenRelatedQuestion" IS FALSE
+      AND p."isEvent" IS FALSE
+      AND p."postedAt" IS NOT NULL
+      AND COALESCE((p."tagRelevance"->${communityTopicId})::INTEGER, 0) < 1
+    ORDER BY
+      c."baseScore"
+      * EXP(
+          (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - c."postedAt") + ${recencyBias})
+            / -${recencyFactor}::DOUBLE PRECISION
+        ) DESC
+    OFFSET ${offset}
+    LIMIT ${limit}
+  `);
+  const popularCommentIds = popularComments.rows.map(({ _id }) => _id);
+  const result = await fetchCommentsList({
+    currentUserId,
+    where: {
+      RAW: (commentsTable) => isAnyInArray(commentsTable._id, popularCommentIds),
+    },
+  });
+  const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
+  return sortBy(result, (c) => order[c._id] ?? Number.MAX_SAFE_INTEGER);
+};
+
+const popularCommentsCache = {
+  comments: [] as CommentsList[],
+  lastFetchedAt: new Date(0).getTime(),
+  maxAgeSeconds: 60,
+};
+
+export const fetchPopularComments = async (config: PopularCommentsConfig) => {
+  const now = new Date().getTime();
+  const maxAgeMs = popularCommentsCache.maxAgeSeconds * 1000;
+  if (now - maxAgeMs > popularCommentsCache.lastFetchedAt) {
+    popularCommentsCache.comments = await fetchPopularCommentsUncached(config);
+    popularCommentsCache.lastFetchedAt = now;
+  }
+  return popularCommentsCache.comments;
 };
