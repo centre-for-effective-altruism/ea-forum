@@ -3,7 +3,7 @@
 import type { PostListItem } from "@/lib/posts/postLists";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { getPostReadTime, postGetPageUrl } from "@/lib/posts/postsHelpers";
+import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostsTooltip from "../PostsTooltip";
@@ -21,7 +21,7 @@ export default function PostsItem({
 }>) {
   const { _id, title, baseScore, commentCount, voteCount, sticky, user } = post;
   const postLink = postGetPageUrl({ post });
-  const readTime = getPostReadTime(
+  const readTime = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
     post.contents?.wordCount ?? null,
   );

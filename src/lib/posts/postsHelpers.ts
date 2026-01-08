@@ -60,7 +60,7 @@ export const getEventLocation = ({
   return "Online";
 };
 
-export const getPostReadTime = (
+export const getPostReadTimeMinutes = (
   readTimeMinutesOverride: number | null,
   wordCount: number | null,
 ) => {
