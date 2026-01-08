@@ -1,4 +1,3 @@
-import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { AuthenticationClient } from "auth0";
 import { db } from "@/lib/db";

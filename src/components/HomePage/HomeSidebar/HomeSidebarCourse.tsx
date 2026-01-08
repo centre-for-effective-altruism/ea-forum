@@ -1,7 +1,7 @@
 import { formatShortDate } from "@/lib/timeUtils";
 import ComputerDesktopIcon from "@heroicons/react/24/outline/ComputerDesktopIcon";
-import Link from "../Link";
-import Type from "../Type";
+import Link from "../../Link";
+import Type from "../../Type";
 
 export default function HomeSidebarCourse({
   title,

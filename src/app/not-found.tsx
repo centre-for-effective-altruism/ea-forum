@@ -1,4 +1,4 @@
-import HomePageColumns from "@/components/HomePageColumns";
+import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import Type from "@/components/Type";
 
 export default function NotFoundPage() {

@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import SoftArrowUpIcon from "./Icons/SoftArrowUpIcon";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
@@ -6,15 +7,21 @@ export default function Score({
   baseScore,
   voteCount,
   orient,
+  className,
 }: Readonly<{
   baseScore: number;
   voteCount: number;
   orient: "vertical" | "horizontal";
+  className?: string;
 }>) {
-  const className = orient === "vertical" ? "flex-col" : "flex-row-reverse";
+  const orientClass = orient === "vertical" ? "flex-col" : "flex-row-reverse";
   return (
     <div
-      className={`flex items-center justify-center gap-1 px-2 ${className}`}
+      className={clsx(
+        "flex items-center justify-center gap-1",
+        orientClass,
+        className,
+      )}
       data-component="Score"
     >
       <SoftArrowUpIcon className="text-gray-400" />

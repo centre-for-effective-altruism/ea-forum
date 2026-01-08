@@ -1,3 +1,4 @@
+import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import HomeSidebar from "./HomeSidebar/HomeSidebar";
-import Column from "./Column";
-import Nav from "./Nav/Nav";
+import Column from "../Column";
+import Nav from "../Nav/Nav";
 
 export default async function HomePageColumns({
   pageContext,
