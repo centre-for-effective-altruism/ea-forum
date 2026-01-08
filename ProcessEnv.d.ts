@@ -35,5 +35,6 @@ declare namespace NodeJS {
     LOG_DRIZZLE_QUERIES?: "true";
     COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
+    APRIL_FOOLS_TAG_ID: string;
   }
 }
