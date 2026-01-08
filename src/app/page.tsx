@@ -1,9 +1,9 @@
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import StructuredData from "@/components/StructuredData";
-import HomePageColumns from "@/components/HomePageColumns";
-import HomePageFeed from "@/components/HomePageFeed";
-import HomePageDefaultFeed from "@/components/HomePageDefaultFeed";
+import HomePageColumns from "@/components/HomePage/HomePageColumns";
+import HomePageFeed from "@/components/HomePage/HomePageFeed";
+import HomePageDefaultFeed from "@/components/HomePage/HomePageDefaultFeed";
 
 const structuredData = {
   "@context": "http://schema.org",

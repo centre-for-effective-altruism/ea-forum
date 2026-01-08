@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import Type from "./Type";
-import PostsListSkeleton from "./PostsList/PostsListSkeleton";
-import FrontpagePostsList from "./PostsList/FrontpagePostsList";
-import QuickTakesListSkeleton from "./QuickTakes/QuickTakesListSkeleton";
-import FrontpageQuickTakesList from "./QuickTakes/FrontpageQuickTakesList";
+import Type from "../Type";
+import PostsListSkeleton from "../PostsList/PostsListSkeleton";
+import FrontpagePostsList from "../PostsList/FrontpagePostsList";
+import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
+import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 
 export default function HomePageDefaultFeed() {
   return (

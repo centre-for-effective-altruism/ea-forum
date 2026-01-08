@@ -1,5 +1,5 @@
 import { AnalyticsContext, AnalyticsInViewTracker } from "@/lib/analyticsEvents";
-import Type from "../Type";
+import Type from "../../Type";
 
 export default function HomeSidebarDigestAd({
   className = "",

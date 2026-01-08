@@ -7,9 +7,9 @@ import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { sortedHomePageTags } from "@/lib/tags/homepageTags";
 import qs from "querystring";
 import clsx from "clsx";
-import Type from "./Type";
-import ThickChevronLeftIcon from "./Icons/ThickChevronLeftIcon";
-import ThickChevronRightIcon from "./Icons/ThickCheckronRightIcon";
+import Type from "../Type";
+import ThickChevronLeftIcon from "../Icons/ThickChevronLeftIcon";
+import ThickChevronRightIcon from "../Icons/ThickCheckronRightIcon";
 import "./home-page-tag-bar.css";
 
 /**

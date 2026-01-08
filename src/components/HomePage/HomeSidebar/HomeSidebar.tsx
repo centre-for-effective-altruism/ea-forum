@@ -8,8 +8,8 @@ import HomeSidebarDigestAd from "./HomeSidebarDigestAd";
 import HomeSidebarPost from "./HomeSidebarPost";
 import HomeSidebarEvent from "./HomeSidebarEvent";
 import HomeSidebarCourse from "./HomeSidebarCourse";
-import Type from "../Type";
-import Link from "../Link";
+import Type from "../../Type";
+import Link from "../../Link";
 
 export default async function HomeSidebar() {
   const [opportunities, upcomingEvents] = await Promise.all([
