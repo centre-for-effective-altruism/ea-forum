@@ -132,6 +132,7 @@ export default function HomePageTagBarDisplay({
 
   const onClick = useCallback(
     (tag: CoreTag | null) => {
+      setActiveTag(tag);
       const query = Object.fromEntries(searchParams.entries());
       if (tag) {
         query.tab = tag.slug;
