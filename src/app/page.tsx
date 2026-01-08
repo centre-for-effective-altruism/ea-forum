@@ -1,12 +1,9 @@
-import { Suspense } from "react";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
+import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import StructuredData from "@/components/StructuredData";
 import HomePageColumns from "@/components/HomePageColumns";
-import PostsListSkeleton from "@/components/PostsList/PostsListSkeleton";
-import FrontpagePostsList from "@/components/PostsList/FrontpagePostsList";
-import QuickTakesListSkeleton from "@/components/QuickTakes/QuickTakesListSkeleton";
-import FrontpageQuickTakesList from "@/components/QuickTakes/FrontpageQuickTakesList";
-import Type from "@/components/Type";
+import HomePageFeed from "@/components/HomePageFeed";
+import HomePageDefaultFeed from "@/components/HomePageDefaultFeed";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -31,42 +28,12 @@ const structuredData = {
   ].join(" "),
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const coreTags = await fetchCoreTags();
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
-      <Type className="mb-2" style="sectionTitleLarge">
-        New &amp; upvoted
-      </Type>
-      <div className="mb-10">
-        <Suspense fallback={<PostsListSkeleton count={11} />}>
-          <FrontpagePostsList initialLimit={11} />
-        </Suspense>
-      </div>
-      <Type className="mb-2" style="sectionTitleLarge">
-        Posts tagged community
-      </Type>
-      <div className="mb-10">
-        <Suspense fallback={<PostsListSkeleton count={5} />}>
-          <FrontpagePostsList initialLimit={5} community />
-        </Suspense>
-      </div>
-      <Type className="mb-2" style="sectionTitleLarge">
-        Quick takes
-      </Type>
-      <div className="mb-10">
-        <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
-          <FrontpageQuickTakesList initialLimit={5} />
-        </Suspense>
-      </div>
-      <Type className="mb-2" style="sectionTitleLarge">
-        Popular comments
-      </Type>
-      <div className="mb-10">TODO: Popular comments list</div>
-      <Type className="mb-2" style="sectionTitleLarge">
-        Recent discussion
-      </Type>
-      <div>TODO: Recent discussions list</div>
+      <HomePageFeed defaultFeed={<HomePageDefaultFeed />} coreTags={coreTags} />
     </HomePageColumns>
   );
 }
