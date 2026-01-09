@@ -1505,6 +1505,9 @@ export const lwEvents = pgTable(
   ],
 );
 
+export type LWEvent = typeof lwEvents.$inferSelect;
+export type NewLWEvent = typeof lwEvents.$inferInsert;
+
 export const notifications = pgTable(
   "Notifications",
   {

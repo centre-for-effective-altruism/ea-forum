@@ -58,6 +58,15 @@ const magicSort = (postsTable: typeof posts) => sql`
   ${postsTable}."_id" DESC
 `;
 
+export type PostRelationalProjection = Pick<
+  NonNullable<Parameters<typeof db.query.posts.findMany>[0]>,
+  "columns" | "with" | "extras"
+>;
+
+export type PostFromProjection<TConfig extends PostRelationalProjection> = Awaited<
+  ReturnType<typeof db.query.posts.findMany<TConfig>>
+>[number];
+
 export type PostsFilter = NonNullable<
   Parameters<typeof db.query.posts.findMany>[0]
 >["where"];
@@ -108,6 +117,7 @@ const fetchPostsList = ({
           organization: true,
           postCount: true,
           commentCount: true,
+          deleted: true,
         },
         extras: {
           biography: (users, { sql }) => sql`${users}.biography->>'html'`,

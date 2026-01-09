@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, MouseEvent, useCallback } from "react";
+import { FC, ReactNode, MouseEvent, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTracking } from "@/lib/analyticsEvents";
 

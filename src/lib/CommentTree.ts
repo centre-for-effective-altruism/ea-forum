@@ -1,4 +1,4 @@
-type ThreadableCommentType = {
+export type ThreadableCommentType = {
   _id: string;
   parentCommentId?: string | null;
   topLevelCommentId?: string | null;

@@ -52,6 +52,10 @@ const relations = defineRelations(
         from: r.posts._id,
         to: r.readStatuses.postId,
       }),
+      comments: r.many.comments({
+        from: r.posts._id,
+        to: r.comments.postId,
+      }),
     },
     comments: {
       user: r.one.users({

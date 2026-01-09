@@ -21,6 +21,7 @@ export const viewableCommentFilter = {
   rejected: isNotTrue,
   debateResponse: isNotTrue,
   authorIsUnreviewed: isNotTrue,
+  draft: isNotTrue,
 } as const;
 
 const fetchCommentsList = ({

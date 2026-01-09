@@ -44,7 +44,7 @@ export default function NotificationDisplay({
         >
           <div
             className={`
-              flex items-center justify-center text-(--always-white) rounded-full
+              flex items-center justify-center text-always-white rounded-full
               w-[24px] min-w-[24px] h-[24px] ${icon.className}
             `}
           >
