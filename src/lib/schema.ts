@@ -3018,7 +3018,7 @@ export const spotlights = pgTable(
     duration: doublePrecision().default(3).notNull(),
     customTitle: text(),
     customSubtitle: text(),
-    lastPromotedAt: timestamp().default("1970-01-01 00:00:00+00").notNull(),
+    lastPromotedAt: timestamp().default("'1970-01-01T00:00:00.000Z'").notNull(),
     draft: boolean().default(true).notNull(),
     spotlightImageId: text(),
     descriptionLatest: text("description_latest"),
