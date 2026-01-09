@@ -1,21 +1,32 @@
-import { useMemo } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import { getCurrentUser } from "@/lib/users/currentUser";
+import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
 import { commentsToCommentTree } from "@/lib/CommentTree";
 import CommentItem from "./CommentItem";
+import Type from "../Type";
 
-export default function CommentsSection({
-  comments,
+export default async function CommentsSection({
+  postId,
   className = "",
-}: Readonly<{ comments: CommentsList[]; className?: string }>) {
-  const tree = useMemo(() => commentsToCommentTree(comments), [comments]);
+}: Readonly<{ postId: string; className?: string }>) {
+  const currentUser = await getCurrentUser();
+  const comments = await fetchCommmentsForPost({
+    postId,
+    currentUserId: currentUser?._id ?? null,
+  });
+  const tree = commentsToCommentTree(comments);
   return (
-    <section
-      className={`flex flex-col gap-4 ${className}`}
-      data-component="CommentsSection"
-    >
-      {tree.map((node) => (
-        <CommentItem node={node} key={node.comment._id} />
-      ))}
-    </section>
+    <>
+      <Type style="commentsHeader" className="mt-18 mb-6">
+        Comments <span className="text-gray-600">{comments.length}</span>
+      </Type>
+      <section
+        className={`flex flex-col gap-4 ${className}`}
+        data-component="CommentsSection"
+      >
+        {tree.map((node) => (
+          <CommentItem node={node} key={node.comment._id} />
+        ))}
+      </section>
+    </>
   );
 }

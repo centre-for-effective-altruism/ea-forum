@@ -17,6 +17,13 @@ type CommentsOrderBy = NonNullable<
   Parameters<typeof db.query.comments.findMany>[0]
 >["orderBy"];
 
+export const viewableCommentFilter = {
+  rejected: isNotTrue,
+  debateResponse: isNotTrue,
+  authorIsUnreviewed: isNotTrue,
+  draft: isNotTrue,
+} as const;
+
 const fetchCommentsList = ({
   currentUserId,
   where,
@@ -78,9 +85,7 @@ const fetchCommentsList = ({
         : {}),
     },
     where: {
-      rejected: isNotTrue,
-      debateResponse: isNotTrue,
-      authorIsUnreviewed: isNotTrue,
+      ...viewableCommentFilter,
       ...where,
     },
     orderBy,

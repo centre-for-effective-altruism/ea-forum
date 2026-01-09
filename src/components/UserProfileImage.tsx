@@ -77,7 +77,7 @@ const InitialFallback = memo(function InitialFallback({
         r={size / 2}
       />
       <text
-        className="text-(--always-white) fill-(--always-white) leading-none font-sans"
+        className="text-always-white fill-always-white leading-none font-sans"
         x="50%"
         y="50%"
         alignmentBaseline="middle"

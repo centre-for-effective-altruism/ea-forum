@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
 import { NotificationsProvider } from "./Notifications/NotificationsProvider";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
+import { ItemsReadProvider } from "@/lib/hooks/useItemsRead";
 
 export default async function Providers({
   children,
@@ -13,7 +14,9 @@ export default async function Providers({
   return (
     <CurrentUserProvider user={currentUser}>
       <NotificationsProvider>
-        <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
+        <ItemsReadProvider>
+          <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
+        </ItemsReadProvider>
       </NotificationsProvider>
     </CurrentUserProvider>
   );

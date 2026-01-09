@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
-import { getPostReadTime } from "@/lib/posts/postsHelpers";
+import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
 import { formatShortDate } from "@/lib/timeUtils";
 import { db } from "@/lib/db";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
@@ -11,6 +11,7 @@ import UserProfileImage from "../UserProfileImage";
 import UsersTooltip from "../UsersTooltip";
 import PostBody from "../ContentStyles/PostBody";
 import Type from "../Type";
+import ReadProgress from "./ReadProgress";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const post = await db.query.posts.findFirst({
@@ -26,13 +27,13 @@ export default async function PostDisplay({ postId }: { postId: string }) {
     notFound();
   }
 
-  const readTime = getPostReadTime(
+  const readTimeMinutes = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
     post.contents?.wordCount ?? null,
   );
 
   return (
-    <>
+    <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
       <Type style="postsPageTitle" className="mb-10">
         {post.title}
       </Type>
@@ -51,7 +52,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             )}
           </Type>
           <Type style="bodyMedium" className="text-gray-600">
-            {readTime} min read
+            {readTimeMinutes} min read
             {" · "}
             {formatShortDate(post.postedAt)}
           </Type>
@@ -75,6 +76,6 @@ export default async function PostDisplay({ postId }: { postId: string }) {
       </div>
       <div className="mt-6">TODO: Tags</div>
       <PostBody html={post.contents?.html ?? null} className="mt-10" />
-    </>
+    </ReadProgress>
   );
 }

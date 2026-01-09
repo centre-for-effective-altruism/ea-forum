@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import PostsDisplay from "@/components/PostsPage/PostsDisplay";
 import PostDisplaySkeleton from "@/components/PostsPage/PostDisplaySkeleton";
-import LazyCommentsSection from "@/components/Comments/LazyCommentsSection";
 import FooterRecommendations from "@/components/PostsPage/FooterRecommendations";
 import CommentsSectionSkeleton from "@/components/Comments/CommentsSectionSkeleton";
+import CommentsSection from "@/components/Comments/CommentsSection";
 
 export default async function PostsPage({
   params,
@@ -18,11 +18,15 @@ export default async function PostsPage({
           <PostsDisplay postId={_id} />
         </Suspense>
         <Suspense fallback={<CommentsSectionSkeleton />}>
-          <LazyCommentsSection postId={_id} className="mb-20" />
+          <CommentsSection postId={_id} className="mb-20" />
         </Suspense>
-        <Suspense>
-          <FooterRecommendations postId={_id} />
-        </Suspense>
+      </div>
+      <div className="w-full bg-(--background) pt-15 pb-20">
+        <div className="w-[698px] max-w-full mx-auto">
+          <Suspense>
+            <FooterRecommendations postId={_id} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

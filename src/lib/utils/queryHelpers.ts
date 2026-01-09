@@ -1,5 +1,20 @@
 import { sql, SQL } from "drizzle-orm";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TTableBase = { findMany: (...args: any) => any };
+
+export type RelationalProjection<TTable extends TTableBase> = Partial<
+  Pick<NonNullable<Parameters<TTable["findMany"]>[0]>, "columns" | "with" | "extras">
+>;
+
+export type RelationalFilter<TTable extends TTableBase> = NonNullable<
+  Parameters<TTable["findMany"]>[0]
+>["where"];
+
+export type RelationalOrderBy<TTable extends TTableBase> = NonNullable<
+  Parameters<TTable["findMany"]>[0]
+>["orderBy"];
+
 /**
  * It's common to check nullable boolean fields as "not equal to true" instead
  * of "equal to false", in order to treat a null field as falsy. This is done

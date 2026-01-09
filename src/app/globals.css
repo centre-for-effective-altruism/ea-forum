@@ -44,6 +44,8 @@
   --color-comment-odd: #f2f2f2;
   --color-comment-even: #fff;
   --color-people-directory-row-hover: #fbfbfb;
+  --color-recent-discussions-gray: #757575;
+  --color-recent-discussions-green: #72b065;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -63,8 +65,8 @@
   --color-editor-comment-border: rgba(255, 255, 255, 0.15);
   --color-editor-annotation: #b3b3b3;
 
-  --always-white: #fff;
-  --always-black: #000;
+  --color-always-white: #fff;
+  --color-always-black: #000;
 
   --spacing: 4px;
 

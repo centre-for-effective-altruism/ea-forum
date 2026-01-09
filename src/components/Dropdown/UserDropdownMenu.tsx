@@ -2,7 +2,7 @@ import { ReactNode, useCallback, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
-import { logoutAction } from "@/lib/actions/authActions";
+import { logoutAction } from "@/lib/users/authActions";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import BookmarkIcon from "@heroicons/react/24/outline/BookmarkIcon";

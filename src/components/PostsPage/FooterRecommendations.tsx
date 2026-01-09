@@ -1,26 +1,50 @@
+import { getCurrentUser } from "@/lib/users/currentUser";
+import {
+  fetchCuratedAndPopularPostsList,
+  fetchMoreFromAuthorPostsList,
+  fetchRecentOpportunitiesPostsList,
+} from "@/lib/posts/postLists";
+import PostsList from "../PostsList/PostsList";
 import Type from "../Type";
 
 export default async function FooterRecommendations({ postId }: { postId: string }) {
-  // TODO
-  void postId;
+  const currentUser = await getCurrentUser();
+  const [moreFromAuthor, curatedAndPopular, recentOpportunities] = await Promise.all(
+    [
+      fetchMoreFromAuthorPostsList({
+        currentUserId: currentUser?._id ?? null,
+        postId,
+        limit: 3,
+      }),
+      fetchCuratedAndPopularPostsList({
+        currentUserId: currentUser?._id ?? null,
+        limit: 3,
+      }),
+      fetchRecentOpportunitiesPostsList({
+        currentUserId: currentUser?._id ?? null,
+        limit: 3,
+      }),
+    ],
+  );
   return (
-    <div className="w-full bg-(--background) pt-15 pb-20">
-      <div className="w-[698px] max-w-full mx-auto">
-        {/*
-        {post.user && (
-          <Type style="sectionTitleLarge" className="mb-2">
-            More from {post.user.displayName}
+    <>
+      {moreFromAuthor.length > 0 && (
+        <>
+          <Type style="sectionTitleLarge" className="mb-3">
+            More from the author
           </Type>
-        )}
-          */}
-        <Type style="sectionTitleLarge" className="mb-2">
-          Curated and popular this week
-        </Type>
-        <Type style="sectionTitleLarge" className="mb-2">
-          {/* TODO pick a tag */}
-          Recent opportunities in Cause prioritization
-        </Type>
-      </div>
-    </div>
+          <PostsList posts={moreFromAuthor} className="mb-12" />
+        </>
+      )}
+      <Type style="sectionTitleLarge" className="mb-3">
+        Curated and popular this week
+      </Type>
+      {/* TODO: This post list should always use card view */}
+      <PostsList posts={curatedAndPopular} className="mb-12" />
+      <Type style="sectionTitleLarge" className="mb-3">
+        Recent opportunities to take action
+      </Type>
+      <PostsList posts={recentOpportunities} />
+    </>
   );
 }

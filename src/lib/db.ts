@@ -1,5 +1,6 @@
 import "server-only";
 import { isAnyTest } from "./environment";
+import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
 import { drizzle as pgLiteDrizzle } from "drizzle-orm/pglite";
 import { btree_gin } from "@electric-sql/pglite/contrib/btree_gin";
@@ -14,18 +15,19 @@ import {
   localgroups,
   moderatorActions,
   posts,
+  readStatuses,
   revisions,
   tags,
   userLoginTokens,
   users,
   votes,
 } from "./schema";
-import { PGlite } from "@electric-sql/pglite";
 
 const relations = defineRelations(
   {
     users,
     posts,
+    readStatuses,
     comments,
     revisions,
     votes,
@@ -47,6 +49,14 @@ const relations = defineRelations(
       group: r.one.localgroups({
         from: r.posts.groupId,
         to: r.localgroups._id,
+      }),
+      readStatus: r.many.readStatuses({
+        from: r.posts._id,
+        to: r.readStatuses.postId,
+      }),
+      comments: r.many.comments({
+        from: r.posts._id,
+        to: r.comments.postId,
       }),
     },
     comments: {
