@@ -29,7 +29,7 @@ export default async function RecentDiscussionsFeed() {
               case "subscribeReminder":
               // TODO
               default:
-                console.error("Invalid recent discussions item type:", type);
+                console.warn("Invalid recent discussions item type:", type);
                 return null;
             }
           })}
