@@ -58,7 +58,7 @@ export const useRecordPostView = (post: ViewablePost) => {
         console.error("recordPostView error:", error);
       }
     },
-    [postsRead, currentUser, recordEvent],
+    [postsRead, setPostRead, currentUser, recordEvent],
   );
 
   const recordPostCommentsView = useCallback(
@@ -79,7 +79,7 @@ export const useRecordPostView = (post: ViewablePost) => {
         }
       }
     },
-    [currentUser, postsRead],
+    [currentUser, setPostRead, postsRead],
   );
 
   return { recordPostView, recordPostCommentsView, isRead };

@@ -7,7 +7,7 @@
     "check-format": "prettier --check .",
     "dev": "next dev --turbopack",
     "format": "prettier . --write --log-level warn",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings 0",
     "prepare": "husky",
     "pull-schema": "drizzle-kit pull",
     "start": "next start",
