@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { CurrentUser } from "../users/currentUser";
-import { fetchCurrentUserAction } from "../actions/userActions";
+import { fetchCurrentUserAction } from "../users/userActions";
 
 type CurrentUserContext = {
   currentUser: CurrentUser | null;

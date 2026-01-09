@@ -3,7 +3,7 @@ import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { loginAction } from "@/lib/actions/authActions";
+import { loginAction } from "@/lib/users/authActions";
 import Image from "next/image";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import BlurredBackgroundModal from "../BlurredBackgroundModal";

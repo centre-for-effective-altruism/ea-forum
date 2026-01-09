@@ -1,7 +1,13 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
-import { isNotTrue } from "@/lib/utils/queryHelpers";
+import { userDefaultProjection } from "../users/userQueries";
+import {
+  isNotTrue,
+  RelationalFilter,
+  RelationalOrderBy,
+  RelationalProjection,
+} from "@/lib/utils/queryHelpers";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -58,22 +64,15 @@ const magicSort = (postsTable: typeof posts) => sql`
   ${postsTable}."_id" DESC
 `;
 
-export type PostRelationalProjection = Pick<
-  NonNullable<Parameters<typeof db.query.posts.findMany>[0]>,
-  "columns" | "with" | "extras"
->;
+export type PostRelationalProjection = RelationalProjection<typeof db.query.posts>;
 
 export type PostFromProjection<TConfig extends PostRelationalProjection> = Awaited<
   ReturnType<typeof db.query.posts.findMany<TConfig>>
 >[number];
 
-export type PostsFilter = NonNullable<
-  Parameters<typeof db.query.posts.findMany>[0]
->["where"];
+export type PostsFilter = RelationalFilter<typeof db.query.posts>;
 
-type PostsOrderBy = NonNullable<
-  Parameters<typeof db.query.posts.findMany>[0]
->["orderBy"];
+type PostsOrderBy = RelationalOrderBy<typeof db.query.posts>;
 
 const fetchPostsList = ({
   currentUserId,
@@ -105,24 +104,7 @@ const fetchPostsList = ({
       readTimeMinutesOverride: true,
     },
     with: {
-      user: {
-        columns: {
-          _id: true,
-          slug: true,
-          displayName: true,
-          createdAt: true,
-          profileImageId: true,
-          karma: true,
-          jobTitle: true,
-          organization: true,
-          postCount: true,
-          commentCount: true,
-          deleted: true,
-        },
-        extras: {
-          biography: (users, { sql }) => sql`${users}.biography->>'html'`,
-        },
-      },
+      user: userDefaultProjection,
       contents: {
         columns: {
           wordCount: true,

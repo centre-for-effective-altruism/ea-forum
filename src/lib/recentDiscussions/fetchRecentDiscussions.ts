@@ -12,6 +12,7 @@ import { isNotTrue } from "../utils/queryHelpers";
 import sortBy from "lodash/sortBy";
 import type { Comment, posts, Revision, Tag } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
+import { userDefaultProjection } from "../users/userQueries";
 
 const getPostProjection = ({
   currentUserId,
@@ -37,25 +38,7 @@ const getPostProjection = ({
       lastCommentedAt: true,
     },
     with: {
-      // TODO: Unify these user projections with post lists
-      user: {
-        columns: {
-          _id: true,
-          slug: true,
-          displayName: true,
-          createdAt: true,
-          profileImageId: true,
-          karma: true,
-          jobTitle: true,
-          organization: true,
-          postCount: true,
-          commentCount: true,
-          deleted: true,
-        },
-        extras: {
-          biography: (users, { sql }) => sql`${users}.biography->>'html'`,
-        },
-      },
+      user: userDefaultProjection,
       readStatus: currentUserId
         ? {
             columns: {
@@ -76,24 +59,7 @@ const getPostProjection = ({
           postedAt: true,
         },
         with: {
-          user: {
-            columns: {
-              _id: true,
-              slug: true,
-              displayName: true,
-              createdAt: true,
-              profileImageId: true,
-              karma: true,
-              jobTitle: true,
-              organization: true,
-              postCount: true,
-              commentCount: true,
-              deleted: true,
-            },
-            extras: {
-              biography: (users, { sql }) => sql`${users}.biography->>'html'`,
-            },
-          },
+          user: userDefaultProjection,
         },
         where: {
           ...viewableCommentFilter,
