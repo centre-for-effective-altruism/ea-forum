@@ -24,6 +24,8 @@ export const voteableSchemas = {
 
 export type VoteableCollectionName = keyof typeof voteableSchemas;
 
+export type VoteableSchema = (typeof voteableSchemas)[keyof typeof voteableSchemas];
+
 export const getVoteableDocument = async (
   collectionName: VoteableCollectionName,
   documentId: string,
@@ -158,7 +160,7 @@ export const recalculateDocumentScores = async (
     },
     where: {
       documentId: document._id,
-      cancelled: { eq: false },
+      cancelled: false,
     },
     orderBy: {
       votedAt: "asc",

@@ -1,7 +1,7 @@
 import maxBy from "lodash/maxBy";
 import { and, eq } from "drizzle-orm";
 import { randomId } from "@/lib/utils/random";
-import { db, DbOrTransaction } from "../db";
+import { db, Transaction } from "../db";
 import { votes, Comment, Revision } from "../schema";
 import { collectionIsSearchIndexed } from "../search/elastic/elasticIndexes";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
@@ -19,6 +19,7 @@ import {
   VoteableCollectionName,
   VoteableDocument,
   VoteableDocumentAuthor,
+  VoteableSchema,
   voteableSchemas,
 } from "./voteableDocument";
 import {
@@ -30,6 +31,7 @@ import {
 
 const clearVotes = async ({
   collectionName,
+  schema,
   document,
   authors,
   user,
@@ -38,6 +40,7 @@ const clearVotes = async ({
   txn,
 }: {
   collectionName: VoteableCollectionName;
+  schema: VoteableSchema;
   document: VoteableDocument;
   authors: VoteableDocumentAuthor[];
   user: CurrentUser;
@@ -51,8 +54,8 @@ const clearVotes = async ({
    * be true except for votes being nullified by mods.
    */
   silenceNotification?: boolean;
-  txn: DbOrTransaction;
-}) => {
+  txn: Transaction;
+}): Promise<VoteableDocument> => {
   const allVotes = await txn.query.votes.findMany({
     columns: {
       _id: true,
@@ -115,8 +118,14 @@ const clearVotes = async ({
   }
 
   const updatedScores = await recalculateDocumentScores(document, txn);
-  const newDocument: VoteableDocument = { ...document, ...updatedScores };
-  return newDocument;
+  await txn
+    .update(schema)
+    .set({
+      ...("inactive" in schema ? { inactive: false } : null),
+      ...updatedScores,
+    })
+    .where(eq(schema._id, document._id));
+  return { ...document, ...updatedScores };
 };
 
 export const performVote = async ({
@@ -187,16 +196,21 @@ export const performVote = async ({
     },
   });
 
+  const schema = voteableSchemas[collectionName];
+
   let showVotingPatternWarning = false;
   if (existingVote && existingVote.voteType === voteType && !extendedVote) {
     if (toggleIfAlreadyVoted) {
-      document = await clearVotes({
-        collectionName,
-        document,
-        authors,
-        user,
-        txn: db,
-      });
+      document = await db.transaction((txn) =>
+        clearVotes({
+          collectionName,
+          schema,
+          document,
+          authors,
+          user,
+          txn,
+        }),
+      );
     }
     return {
       baseScore: document.baseScore,
@@ -241,7 +255,6 @@ export const performVote = async ({
     // Update scores on the voted document
     const updatedScores = await recalculateDocumentScores(document, txn);
     const newDocument: VoteableDocument = { ...document, ...updatedScores };
-    const schema = voteableSchemas[collectionName];
     await txn
       .update(schema)
       .set({
@@ -253,6 +266,7 @@ export const performVote = async ({
     // Invalidate any old votes
     await clearVotes({
       collectionName,
+      schema,
       document,
       authors,
       user,

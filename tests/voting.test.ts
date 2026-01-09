@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 
 suite("Voting", () => {
   suite("Perform vote", () => {
-    test("Can vote on post comment", async () => {
+    test("Can vote and undo vote on post comment", async () => {
       const author = await createTestUser();
       expect(author.karma).toBe(0);
       expect(author.voteReceivedCount).toBe(null);
@@ -36,54 +36,113 @@ suite("Voting", () => {
       const power = userSmallVotePower(voter.karma, 1);
       expect(power).toBe(1);
 
-      const { baseScore, voteCount, voteType, showVotingPatternWarning } =
-        await performVote({
+      // Do the vote
+      {
+        const voteResult = await performVote({
           collectionName: "Comments",
           document: comment,
           user: voter,
           voteType: "smallUpvote",
         });
-      expect(baseScore).toBe(power);
-      expect(voteCount).toBe(1);
-      expect(voteType).toBe("smallUpvote");
-      expect(showVotingPatternWarning).toBe(false);
+        expect(voteResult.baseScore).toBe(power);
+        expect(voteResult.voteCount).toBe(1);
+        expect(voteResult.voteType).toBe("smallUpvote");
+        expect(voteResult.showVotingPatternWarning).toBe(false);
 
-      const [updatedCommenter, updatedVoter, updatedComment, vote] =
-        await Promise.all([
-          db.query.users.findFirst({
-            where: {
-              _id: commenter._id,
-            },
-          }),
-          db.query.users.findFirst({
-            where: {
-              _id: voter._id,
-            },
-          }),
-          db.query.comments.findFirst({
-            where: {
-              _id: comment._id,
-            },
-          }),
-          db.query.votes.findFirst({
-            where: {
-              documentId: comment._id,
-              userId: voter._id,
-            },
-          }),
-        ]);
-      expect(updatedCommenter!.karma).toBe(power);
-      expect(updatedCommenter!.voteReceivedCount).toBe(1);
-      expect(updatedCommenter!.smallUpvoteReceivedCount).toBe(1);
-      expect(updatedVoter!.voteCount).toBe(1);
-      expect(updatedVoter!.smallUpvoteCount).toBe(1);
-      expect(updatedComment!.baseScore).toBe(power);
-      expect(updatedComment!.voteCount).toBe(1);
-      expect(updatedComment!.inactive).toBe(false);
-      expect(vote!.voteType).toBe("smallUpvote");
-      expect(vote!.power).toBe(power);
-      expect(vote!.cancelled).toBe(false);
-      expect(vote!.isUnvote).toBe(false);
+        const [updatedCommenter, updatedVoter, updatedComment, vote] =
+          await Promise.all([
+            db.query.users.findFirst({
+              where: {
+                _id: commenter._id,
+              },
+            }),
+            db.query.users.findFirst({
+              where: {
+                _id: voter._id,
+              },
+            }),
+            db.query.comments.findFirst({
+              where: {
+                _id: comment._id,
+              },
+            }),
+            db.query.votes.findFirst({
+              where: {
+                documentId: comment._id,
+                userId: voter._id,
+              },
+              orderBy: {
+                votedAt: "desc",
+              },
+            }),
+          ]);
+        expect(updatedCommenter!.karma).toBe(power);
+        expect(updatedCommenter!.voteReceivedCount).toBe(1);
+        expect(updatedCommenter!.smallUpvoteReceivedCount).toBe(1);
+        expect(updatedVoter!.voteCount).toBe(1);
+        expect(updatedVoter!.smallUpvoteCount).toBe(1);
+        expect(updatedComment!.baseScore).toBe(power);
+        expect(updatedComment!.voteCount).toBe(1);
+        expect(updatedComment!.inactive).toBe(false);
+        expect(vote!.voteType).toBe("smallUpvote");
+        expect(vote!.power).toBe(power);
+        expect(vote!.cancelled).toBe(false);
+        expect(vote!.isUnvote).toBe(false);
+      }
+
+      // Undo the vote
+      {
+        const voteResult = await performVote({
+          collectionName: "Comments",
+          document: comment,
+          user: voter,
+          voteType: "smallUpvote",
+        });
+        expect(voteResult.baseScore).toBe(0);
+        expect(voteResult.voteCount).toBe(0);
+        expect(voteResult.voteType).toBe("neutral");
+        expect(voteResult.showVotingPatternWarning).toBe(false);
+
+        const [updatedCommenter, updatedVoter, updatedComment, vote] =
+          await Promise.all([
+            db.query.users.findFirst({
+              where: {
+                _id: commenter._id,
+              },
+            }),
+            db.query.users.findFirst({
+              where: {
+                _id: voter._id,
+              },
+            }),
+            db.query.comments.findFirst({
+              where: {
+                _id: comment._id,
+              },
+            }),
+            db.query.votes.findFirst({
+              where: {
+                documentId: comment._id,
+                userId: voter._id,
+              },
+              orderBy: {
+                votedAt: "desc",
+              },
+            }),
+          ]);
+        expect(updatedCommenter!.karma).toBe(0);
+        expect(updatedCommenter!.voteReceivedCount).toBe(0);
+        expect(updatedCommenter!.smallUpvoteReceivedCount).toBe(0);
+        expect(updatedVoter!.voteCount).toBe(0);
+        expect(updatedVoter!.smallUpvoteCount).toBe(0);
+        expect(updatedComment!.baseScore).toBe(0);
+        expect(updatedComment!.voteCount).toBe(0);
+        expect(updatedComment!.inactive).toBe(false);
+        expect(vote!.voteType).toBe("smallUpvote");
+        expect(vote!.power).toBe(-power);
+        expect(vote!.cancelled).toBe(true);
+        expect(vote!.isUnvote).toBe(true);
+      }
     });
   });
 });
