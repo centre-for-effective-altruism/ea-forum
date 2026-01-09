@@ -4,7 +4,7 @@ import { calculateVotePower, VoteType } from "@/lib/votes/voteHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useTracking } from "@/lib/analyticsEvents";
-import { onVoteAction } from "@/lib/actions/voteActions";
+import { onVoteAction } from "@/lib/votes/voteActions";
 
 type VoteState = {
   baseScore: number;
