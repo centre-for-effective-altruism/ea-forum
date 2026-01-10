@@ -1,4 +1,4 @@
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import { calculateVotePower, VoteType } from "@/lib/votes/voteHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
@@ -47,9 +47,6 @@ const doOptimisticVote = (
 
 /**
  * Frontend logic for voting on documents including optimistic client-side updates.
- * Note that once the user votes we treat the optimistic update as the new source
- * of truth - we could get new values from the server, but it would be confusing
- * if someone else votes at the same time and suddenly the karma jumps up by a lot.
  * TODO: This currently only support comments.
  */
 export const useVote = (comment: CommentsList) => {
@@ -58,7 +55,8 @@ export const useVote = (comment: CommentsList) => {
   const { onSignup } = useLoginPopoverContext();
   const { captureEvent } = useTracking();
   const [_isPending, startTransition] = useTransition();
-  const [vote, setVote] = useState(getInitialVoteState.bind(null, comment));
+  const [vote, setVote] = useState(() => getInitialVoteState(comment));
+  const requestIdRef = useRef(0);
 
   const onVote = useCallback(
     (voteType: VoteType) => {
@@ -66,12 +64,18 @@ export const useVote = (comment: CommentsList) => {
         onSignup();
         return;
       }
+
       setVote((prev) =>
         doOptimisticVote(prev, { voteType, userKarma: currentUser.karma }),
       );
+
       const collectionName = "Comments";
+      const requestId = ++requestIdRef.current;
       startTransition(async () => {
         const result = await onVoteAction(collectionName, _id, voteType);
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
         setVote({
           baseScore: result.baseScore,
           voteCount: result.voteCount,
@@ -79,6 +83,7 @@ export const useVote = (comment: CommentsList) => {
           showVotingPatternWarning: result.showVotingPatternWarning,
         });
       });
+
       captureEvent("vote", { collectionName });
     },
     [currentUser, onSignup, captureEvent, startTransition, _id],

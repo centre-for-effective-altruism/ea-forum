@@ -98,7 +98,7 @@ const clearVotes = async ({
     if (!vote) {
       continue;
     }
-    // Create an un-vote for each of the existing votes
+    // Create an unvote for each of the existing votes
     await txn.insert(votes).values({
       ...vote,
       _id: randomId(),
@@ -252,17 +252,6 @@ export const performVote = async ({
       votedAt: new Date().toISOString(),
     });
 
-    // Update scores on the voted document
-    const updatedScores = await recalculateDocumentScores(document, txn);
-    const newDocument: VoteableDocument = { ...document, ...updatedScores };
-    await txn
-      .update(schema)
-      .set({
-        ...("inactive" in schema ? { inactive: false } : null),
-        ...updatedScores,
-      })
-      .where(eq(schema._id, document._id));
-
     // Invalidate any old votes
     await clearVotes({
       collectionName,
@@ -273,6 +262,17 @@ export const performVote = async ({
       excludeLatest: true,
       txn,
     });
+
+    // Update scores on the voted document
+    const updatedScores = await recalculateDocumentScores(document, txn);
+    const newDocument: VoteableDocument = { ...document, ...updatedScores };
+    await txn
+      .update(schema)
+      .set({
+        ...("inactive" in schema ? { inactive: false } : null),
+        ...updatedScores,
+      })
+      .where(eq(schema._id, document._id));
 
     // Run callbacks
     await Promise.all([

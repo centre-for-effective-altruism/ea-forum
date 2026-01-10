@@ -3,6 +3,7 @@ export type ThreadableCommentType = {
   parentCommentId?: string | null;
   topLevelCommentId?: string | null;
   baseScore: number;
+  postedAt: string;
 };
 
 export interface CommentTreeNode<T extends ThreadableCommentType> {
@@ -24,7 +25,20 @@ const updateDepths = <T extends ThreadableCommentType>(
 const sortByKarma = <T extends ThreadableCommentType>(
   nodes: CommentTreeNode<T>[],
 ) => {
-  nodes.sort((a, b) => a.comment.baseScore - b.comment.baseScore);
+  // Sort by karma, then date, then _id
+  nodes.sort((a, b) => {
+    const scoreDiff = b.comment.baseScore - a.comment.baseScore;
+    if (scoreDiff !== 0) {
+      return scoreDiff;
+    }
+    const dateDiff =
+      new Date(b.comment.postedAt).getTime() -
+      new Date(a.comment.postedAt).getTime();
+    if (dateDiff !== 0) {
+      return dateDiff;
+    }
+    return b.comment._id.localeCompare(a.comment._id);
+  });
   for (const node of nodes) {
     sortByKarma(node.children);
   }

@@ -77,7 +77,8 @@ const fetchCommentsList = ({
                 power: true,
               },
               where: {
-                userId: { eq: currentUserId },
+                userId: currentUserId,
+                cancelled: false,
               },
               limit: 1,
             },
