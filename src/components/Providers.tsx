@@ -4,6 +4,7 @@ import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext"
 import { NotificationsProvider } from "./Notifications/NotificationsProvider";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import { ItemsReadProvider } from "@/lib/hooks/useItemsRead";
+import ClientCookieProvider from "./Cookies/ClientCookieProvider";
 
 export default async function Providers({
   children,
@@ -12,12 +13,14 @@ export default async function Providers({
 }>) {
   const currentUser = await getCurrentUser();
   return (
-    <CurrentUserProvider user={currentUser}>
-      <NotificationsProvider>
-        <ItemsReadProvider>
-          <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
-        </ItemsReadProvider>
-      </NotificationsProvider>
-    </CurrentUserProvider>
+    <ClientCookieProvider>
+      <CurrentUserProvider user={currentUser}>
+        <NotificationsProvider>
+          <ItemsReadProvider>
+            <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
+          </ItemsReadProvider>
+        </NotificationsProvider>
+      </CurrentUserProvider>
+    </ClientCookieProvider>
   );
 }

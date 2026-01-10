@@ -36,6 +36,7 @@
     "pure-rand": "^7.0.1",
     "react": "^19.2.3",
     "react-click-away-listener": "^2.4.0",
+    "react-cookie": "^8.0.1",
     "react-dom": "^19.2.3",
     "react-hot-toast": "^2.6.0",
     "react-transition-group": "^4.4.5",
