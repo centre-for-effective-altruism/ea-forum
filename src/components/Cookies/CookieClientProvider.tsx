@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { CookiesProvider } from "react-cookie";
 
-export default function ClientCookieProvider({
+export default function CookieClientProvider({
   children,
 }: Readonly<{
   children: ReactNode;
