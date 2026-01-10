@@ -60,14 +60,24 @@ export const formatLongDateWithTime = (when: Date | string) => {
   });
 };
 
-export const nDaysAgo = (n: number) => {
+export const nDaysAgo = (n: number): Date => {
   const date = new Date();
   date.setDate(date.getDate() - n);
   return date;
 };
 
-export const nHoursAgo = (n: number) => {
+export const nHoursAgo = (n: number): Date => {
   const date = new Date();
   date.setHours(date.getHours() - n);
   return date;
 };
+
+export const nYearsFromNow = (n: number): Date => {
+  const now = new Date();
+  const result = new Date(now);
+  result.setFullYear(now.getFullYear() + n);
+  return result;
+};
+
+export const secondsAgo = (since: Date): number =>
+  Math.floor((Date.now() - since.getTime()) / 1000);

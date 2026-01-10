@@ -31,6 +31,10 @@ declare namespace NodeJS {
     NEXT_PUBLIC_CK_WEBSOCKET_URL: string;
     NEXT_PUBLIC_CK_UPLOAD_URL: string;
 
+    // Other services
+    NEXT_PUBLIC_IPAPI_KEY?: string;
+    NEXT_PUBLIC_INTERCOM_APP_ID: string;
+
     // Site config
     LOG_DRIZZLE_QUERIES?: "true";
     COMMUNITY_TAG_ID: string;
