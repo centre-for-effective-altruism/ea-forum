@@ -26,7 +26,7 @@
   --color-warning-translucent: "rgba(255,152,0,0.1)";
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
-  --color-login-backdrop: rgba(217, 217, 217, 0.5);
+  --color-modal-backdrop: rgba(217, 217, 217, 0.5);
   --color-login-input: #efefef;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;

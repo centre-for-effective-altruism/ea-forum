@@ -9,7 +9,7 @@ import qs from "querystring";
 import clsx from "clsx";
 import Type from "../Type";
 import ThickChevronLeftIcon from "../Icons/ThickChevronLeftIcon";
-import ThickChevronRightIcon from "../Icons/ThickCheckronRightIcon";
+import ThickChevronRightIcon from "../Icons/ThickChevronRightIcon";
 import "./home-page-tag-bar.css";
 
 /**

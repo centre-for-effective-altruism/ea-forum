@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import type {
@@ -12,6 +11,7 @@ import RecentDiscussionIcon, {
 } from "./RecentDiscussionIcon";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
+import Link from "@/components/Link";
 
 type RecentDiscussionItemDocument =
   | {

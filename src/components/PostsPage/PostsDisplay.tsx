@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
@@ -10,8 +9,9 @@ import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import UserProfileImage from "../UserProfileImage";
 import UsersTooltip from "../UsersTooltip";
 import PostBody from "../ContentStyles/PostBody";
-import Type from "../Type";
 import ReadProgress from "./ReadProgress";
+import Type from "../Type";
+import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const post = await db.query.posts.findFirst({

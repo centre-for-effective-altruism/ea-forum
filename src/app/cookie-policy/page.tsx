@@ -1,10 +1,14 @@
+import type { Metadata } from "next";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getUniqueCookieProviders } from "@/lib/cookies/cookies";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
 import CookieTable from "@/components/Cookies/CookieTable";
+import CookiePopoverLink from "@/components/Cookies/CookiePopoverLink";
 
-// TODO: Implement cookie dialog on clicking "here"
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+};
 
 export default function CookiePolicyPage() {
   const uniqueNecessaryProviders = getUniqueCookieProviders("necessary");
@@ -14,9 +18,9 @@ export default function CookiePolicyPage() {
     <AnalyticsContext pageContext="cookiePolicy">
       <div
         className="
-        w-[682px] max-w-full mx-auto pb-25 flex flex-col gap-4
-        [&_a]:cursor-pointer [&_a]:text-primary [&_a]:hover:opacity-50
-      "
+          w-[682px] max-w-full mx-auto pb-25 flex flex-col gap-4
+          [&_a]:cursor-pointer [&_a]:text-primary [&_a]:hover:opacity-50
+        "
       >
         <Type style="postsPageTitle" className="text-center mt-15 mb-2">
           Cookie Notice
@@ -35,7 +39,7 @@ export default function CookiePolicyPage() {
         <Type style="bodySerif">
           We use cookies on the EA Forum. This cookie notice applies only to the EA
           Forum. You may access and change your cookie preferences at any time by
-          clicking <a>here</a>.
+          clicking <CookiePopoverLink>here</CookiePopoverLink>.
         </Type>
         <Type style="bodySerif">
           If you choose to reject cookies you are ultimately responsible for removing

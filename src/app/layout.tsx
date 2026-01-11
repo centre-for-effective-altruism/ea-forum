@@ -21,7 +21,10 @@ const charis = Charis_SIL({
 });
 
 export const metadata: Metadata = {
-  title: "Effective Altruism Forum",
+  title: {
+    template: "%s — EA Forum",
+    default: "Effective Altruism Forum",
+  },
   description:
     "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
 };
