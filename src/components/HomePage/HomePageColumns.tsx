@@ -14,12 +14,16 @@ export default async function HomePageColumns({
   return (
     <AnalyticsContext pageContext={pageContext}>
       <Column
-        className="grid grid-cols-[min-content_780px_min-content] gap-10 p-8"
+        className="
+          max-mobile-nav:block max-mobile-nav:w-[780px]
+          grid grid-cols-[min-content_780px_min-content] justify-between
+          max-w-full mx-auto px-2 py-4 sm:p-4 md:p-8
+        "
         data-component="HomePageColumns"
       >
-        <Nav />
+        <Nav className="max-mobile-nav:hidden sticky top-[98px] self-start" />
         <div>{children}</div>
-        <HomeSidebar />
+        <HomeSidebar className="max-hide-sidebar:hidden sticky top-[98px] self-start" />
       </Column>
     </AnalyticsContext>
   );

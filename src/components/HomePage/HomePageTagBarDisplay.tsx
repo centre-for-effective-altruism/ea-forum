@@ -187,7 +187,9 @@ export default function HomePageTagBarDisplay({
                       : "bg-gray-200 text-gray-900 hover:bg-gray-300",
                   )}
                 >
-                  <Type>{tag ? tag.shortName || tag.name : "Frontpage"}</Type>
+                  <Type className="max-md:text-[12px]">
+                    {tag ? tag.shortName || tag.name : "Frontpage"}
+                  </Type>
                 </button>
               ))}
             </div>

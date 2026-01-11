@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getIntroCourseDetails } from "@/lib/introCourseDetails";
+import clsx from "clsx";
 import HomeSidebarOpportunitiesList from "./HomeSidebarOpportunitiesList";
 import HomeSidebarEventsList from "./HomeSidebarEventsList";
 import HomeSidebarPostsListSkeleton from "./HomeSidebarPostsListSkeleton";
@@ -9,11 +10,13 @@ import HomeSidebarCourse from "./HomeSidebarCourse";
 import Type from "../../Type";
 import Link from "../../Link";
 
-export default function HomeSidebar() {
+export default function HomeSidebar({
+  className,
+}: Readonly<{ className?: string }>) {
   const introCourse = getIntroCourseDetails();
   return (
     <AnalyticsContext pageSectionContext="homeRhs">
-      <section className="w-[310px]" data-component="HomeSidebar">
+      <section className={clsx("w-[260px]", className)} data-component="HomeSidebar">
         <HomeSidebarDigestAd className="mb-6" />
 
         <AnalyticsContext pageSubSectionContext="opportunities">

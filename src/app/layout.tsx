@@ -4,6 +4,7 @@ import { Charis_SIL, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
+import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({
           <div id="modal-target" className="relative" />
           <div id="tooltip-target" />
           <Header />
+          <MobileNav />
           <main className="grow">{children}</main>
           <IntercomButton />
           <Toaster position="bottom-center" />

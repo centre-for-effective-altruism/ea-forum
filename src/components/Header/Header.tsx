@@ -3,6 +3,8 @@
 import { useCallback, useState } from "react";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useMobileNav } from "@/lib/hooks/useMobileNav";
+import Bars3Icon from "@heroicons/react/24/solid/Bars3Icon";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
@@ -31,10 +33,11 @@ export default function Header({
   const setUnfixed = useCallback(() => setIsUnfixed(true), []);
   const setFixed = useCallback(() => setIsUnfixed(false), []);
   const { onLogin, onSignup } = useLoginPopoverContext();
+  const { openMobileNav } = useMobileNav();
   const { currentUser } = useCurrentUser();
 
   return (
-    <div className="w-screen" data-component="Header">
+    <div className="w-full" data-component="Header">
       <Headroom
         disableInlineStyles
         downTolerance={10}
@@ -47,6 +50,16 @@ export default function Header({
       >
         <header className={`${HEADER_HEIGHT_CLASS} static bg-gray-50 shadow-xs`}>
           <Column As="nav" className="h-full px-5 flex items-center">
+            <button
+              aria-label="Toggle navigation menu"
+              onClick={openMobileNav}
+              className="
+                mobile-nav:hidden hover:bg-gray-200 p-2 rounded-full
+                cursor-pointer
+              "
+            >
+              <Bars3Icon className="w-6" />
+            </button>
             <Type style="logo" className="grow flex items-center">
               <Link href="/" className="inline-flex items-center gap-1">
                 <Image
@@ -55,7 +68,10 @@ export default function Header({
                   width={34}
                   height={34}
                 />
-                <span className="translate-y-px">Effective Altruism Forum</span>
+                <span className="translate-y-px">
+                  <span className="hidden md:inline">Effective Altruism Forum</span>
+                  <span className="md:hidden inline">EA Forum</span>
+                </span>
               </Link>
             </Type>
             <div className="flex gap-2 items-center">

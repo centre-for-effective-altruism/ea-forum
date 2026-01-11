@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { isClient } from "@/lib/environment";
 import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
@@ -26,6 +26,20 @@ export default function Popover({
 
   useBodyScrollLock(!!target && open);
 
+  useEffect(() => {
+    if (open) {
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose();
+        }
+      };
+      document.addEventListener("keydown", onKeyDown);
+      return () => {
+        document.removeEventListener("keydown", onKeyDown);
+      };
+    }
+  }, [open, onClose]);
+
   if (!target || !open) {
     return null;
   }
@@ -35,9 +49,9 @@ export default function Popover({
       data-component="Popover"
       className={clsx(
         "fixed left-0 top-0 w-full h-screen flex items-center justify-center",
-        "z-1000 bg-(--color-modal-backdrop)",
+        "z-(--zindex-popover) bg-(--color-modal-backdrop)",
         background === "blurred" && "backdrop-blur-xs",
-        background === "dim" && "bg-[rgba(0,0,0,0.5)]",
+        background === "dim" && "bg-popover-dim",
       )}
     >
       <ClickAwayListener onClickAway={onClose}>
