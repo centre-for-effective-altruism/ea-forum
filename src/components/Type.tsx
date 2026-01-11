@@ -2,6 +2,7 @@ import type { ElementType, ReactNode } from "react";
 
 const styles = {
   body: "font-sans text-[14px] font-[450]",
+  bodySerif: "font-serif text-[17px] font-[400] tracking-tight",
   bodyMedium: "font-sans text-[14px] font-[500]",
   bodySmall: "font-sans text-[13px] font-[450]",
   postTitle: "font-sans text-[16px] font-[600]",

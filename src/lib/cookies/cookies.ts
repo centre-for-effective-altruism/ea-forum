@@ -1,5 +1,6 @@
 import Cookies from "universal-cookie";
 import keyBy from "lodash/keyBy";
+import uniq from "lodash/uniq";
 import { TupleSet, UnionOf } from "../typeHelpers";
 import { getExplicitConsentRequiredAsync } from "./consentRequired";
 
@@ -348,4 +349,20 @@ export const isCookieAllowed = (
 
   console.error(`Unknown cookie: ${name}`);
   return false;
+};
+
+/**
+ * Get a sorted list of unique providers for a particular cookie type. The
+ * `undefined` result corresponse to cookies set by us.
+ */
+export const getUniqueCookieProviders = (
+  type: CookieType,
+): (string | undefined)[] => {
+  return uniq(
+    Object.values(cookiesTable)
+      .filter((cookie) => cookie.type === type)
+      .map((cookie) => cookie.thirdPartyName),
+  )
+    .sort()
+    .reverse();
 };
