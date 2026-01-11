@@ -38,3 +38,53 @@ export const stableSortTags = (tags: PostTag[]): PostTag[] => {
     return a.name.localeCompare(b.name);
   });
 };
+
+export const tagGetUrl = ({
+  tag,
+  isAbsolute,
+  hash,
+  ...urlSearchParams
+}: {
+  tag: { slug: string };
+  isAbsolute?: boolean;
+  hash?: string;
+  from?: string;
+  tab?: string;
+}) => {
+  const search = qs.stringify(urlSearchParams);
+  const searchSuffix = search ? `?${search}` : "";
+  const hashSuffix = hash ? `#${hash}` : "";
+  const url = `/topics/${tag.slug}`;
+  const urlWithSuffixes = `${url}${searchSuffix}${hashSuffix}`;
+  return isAbsolute ? combineUrls(getSiteUrl(), urlWithSuffixes) : urlWithSuffixes;
+};
+
+export const tagGetDiscussionUrl = (tag: { slug: string }, isAbsolute = false) => {
+  const suffix = `/topics/${tag.slug}/discussion`;
+  return isAbsolute ? combineUrls(getSiteUrl(), suffix) : suffix;
+};
+
+export const tagGetSubforumUrl = (tag: { slug: string }, isAbsolute = false) =>
+  tagGetUrl({ tag, tab: "posts", isAbsolute });
+
+export type TagCommentType = "SUBFORUM" | "DISCUSSION";
+
+export const tagGetCommentLink = ({
+  tagSlug,
+  commentId,
+  tagCommentType = "DISCUSSION",
+  isAbsolute = false,
+}: {
+  tagSlug: string;
+  commentId?: string | null;
+  tagCommentType: TagCommentType;
+  isAbsolute?: boolean;
+}): string => {
+  const base =
+    tagCommentType === "DISCUSSION"
+      ? tagGetDiscussionUrl({ slug: tagSlug }, isAbsolute)
+      : tagGetSubforumUrl({ slug: tagSlug }, isAbsolute);
+  return commentId
+    ? `${base}${base.includes("?") ? "&" : "?"}commentId=${commentId}`
+    : base;
+};

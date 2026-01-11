@@ -67,9 +67,7 @@ export class SearchClient {
 
   constructor(private options: SearchOptions) {}
 
-  search<T extends SearchBase>(
-    queries: SearchQuery[],
-  ): Promise<MultiResponse<T>> | void {
+  search<T extends SearchBase>(queries: SearchQuery[]): Promise<MultiResponse<T>> {
     const indexPrefix = getSearchIndexPrefix();
     if (indexPrefix) {
       for (const query of queries) {

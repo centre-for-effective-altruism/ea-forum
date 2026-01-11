@@ -10,7 +10,9 @@ export default function PeopleDirectoryResultRow({
   result?: SearchUser;
 }>) {
   const { onClick } = useClickableCell({
-    href: result ? `${userGetProfileUrl(result)}?from=people_directory` : "#",
+    href: result
+      ? `${userGetProfileUrl({ user: result })}?from=people_directory`
+      : "#",
     ignoreLinks: true,
     openInNewTab: true,
   });

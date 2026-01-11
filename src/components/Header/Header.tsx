@@ -20,6 +20,7 @@ import HeaderButton from "./HeaderButton";
 import UserProfileImage from "../UserProfileImage";
 import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
 import NotificationsDropdown from "../Notifications/NotificationsDropdown";
+import HeaderSearch from "./HeaderSearch";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
@@ -35,6 +36,9 @@ export default function Header({
   const { onLogin, onSignup } = useLoginPopoverContext();
   const { openMobileNav } = useMobileNav();
   const { currentUser } = useCurrentUser();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const toggleSearch = useCallback(() => setIsSearchOpen((open) => !open), []);
 
   return (
     <div className="w-full" data-component="Header">
@@ -75,7 +79,15 @@ export default function Header({
               </Link>
             </Type>
             <div className="flex gap-2 items-center">
-              <HeaderButton Icon={MagnifyingGlassIcon} description="Search" />
+              {isSearchOpen ? (
+                <HeaderSearch onClose={toggleSearch} />
+              ) : (
+                <HeaderButton
+                  Icon={MagnifyingGlassIcon}
+                  description="Search"
+                  onClick={toggleSearch}
+                />
+              )}
               {currentUser ? (
                 <>
                   <NotificationsDropdown>

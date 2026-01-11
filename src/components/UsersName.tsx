@@ -22,7 +22,7 @@ export default function UsersName({
     );
   }
 
-  let profileUrl = userGetProfileUrl(user);
+  let profileUrl = userGetProfileUrl({ user });
   if (pageSectionContext) {
     profileUrl += `?from=${pageSectionContext}`;
   }

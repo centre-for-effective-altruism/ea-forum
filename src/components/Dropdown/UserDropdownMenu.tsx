@@ -41,7 +41,7 @@ export default function UserDropdownMenu({
         {
           title: currentUser.displayName,
           Icon: ProfileImageIcon,
-          href: userGetProfileUrl(currentUser),
+          href: userGetProfileUrl({ user: currentUser }),
         },
         "divider",
         {
