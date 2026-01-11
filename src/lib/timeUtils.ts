@@ -34,11 +34,17 @@ export const formatRelativeTime = (
   return isLong ? "just now" : "now";
 };
 
+const yearFormatIfNotCurrent = (date: Date) =>
+  date.getFullYear() === new Date().getFullYear()
+    ? null
+    : ({ year: "numeric" } as const);
+
 export const formatShortDate = (when: Date | string) => {
   const date = when instanceof Date ? when : new Date(when);
   return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
+    ...yearFormatIfNotCurrent(date),
   });
 };
 
@@ -47,6 +53,7 @@ export const formatLongDate = (when: Date | string) => {
   return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
+    ...yearFormatIfNotCurrent(date),
   });
 };
 
@@ -55,6 +62,7 @@ export const formatLongDateWithTime = (when: Date | string) => {
   return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
+    ...yearFormatIfNotCurrent(date),
     hour: "2-digit",
     minute: "2-digit",
   });
