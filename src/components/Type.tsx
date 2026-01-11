@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react";
+import type { ElementType, MouseEvent, ReactNode } from "react";
 
 const styles = {
   body: "font-sans text-[14px] font-[450]",
@@ -13,6 +13,7 @@ const styles = {
   logo: "font-sans text-[19px] font-[400]",
   postsPageTitle: "font-serif text-[42px] font-[400] leading-[125%]",
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
+  tagChip: "font-sans text-[13px] font-[500]",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof styles;
@@ -20,18 +21,20 @@ export type TextStyle = keyof typeof styles;
 export default function Type({
   style = "body",
   As = "div",
-  id,
   className = "",
   children,
+  ...rest
 }: Readonly<{
   style?: TextStyle;
   As?: ElementType;
   id?: string;
+  role?: string;
+  onClick?: (ev: MouseEvent) => void;
   className?: string;
   children: ReactNode;
 }>) {
   return (
-    <As id={id} className={`${styles[style]} ${className}`} data-component="Type">
+    <As {...rest} className={`${styles[style]} ${className}`} data-component="Type">
       {children}
     </As>
   );

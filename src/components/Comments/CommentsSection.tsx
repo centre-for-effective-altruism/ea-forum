@@ -16,7 +16,7 @@ export default async function CommentsSection({
   const tree = commentsToCommentTree(comments);
   return (
     <>
-      <Type style="commentsHeader" className="mt-18 mb-6">
+      <Type style="commentsHeader" className="mt-18 mb-6" id="comments">
         Comments <span className="text-gray-600">{comments.length}</span>
       </Type>
       <section
