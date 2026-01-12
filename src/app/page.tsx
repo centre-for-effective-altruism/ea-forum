@@ -39,6 +39,7 @@ export default async function HomePage({
   const search = await searchParams;
   return (
     <HomePageColumns pageContext="homePage">
+      <div className="bg-yellow-200 p-4 text-center font-bold">Hello World</div>
       <StructuredData data={structuredData} />
       <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
         <HomePageTagBar className="mb-4" />
