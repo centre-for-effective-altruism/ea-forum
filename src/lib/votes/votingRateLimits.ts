@@ -165,7 +165,7 @@ export const checkVotingRateLimits = async (
             eq(votes.userId, user._id),
             eq(votes.cancelled, false),
             gt(votes.votedAt, oneDayAgo),
-            sql`${user._id} <> ANY(${votes.authorIds})`, // Self-votes don't count
+            sql`NOT (${user._id} = ANY(${votes.authorIds}))`, // Self-votes don't count
           ),
         ),
       // Votes on comments on this post by this user at any time in the past
