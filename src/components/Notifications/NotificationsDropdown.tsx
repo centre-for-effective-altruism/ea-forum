@@ -20,7 +20,7 @@ export default function NotificationsDropdown({
             data-component="NotificationsDropdown"
             className={`
               bg-white rounded shadow px-1 py-2 border border-gray-100
-              w-[400px] max-w-screen max-h-[90vh] overflow-y-auto
+              w-[400px] max-w-full max-h-[90vh] overflow-y-auto
             `}
           >
             <div className="px-2">

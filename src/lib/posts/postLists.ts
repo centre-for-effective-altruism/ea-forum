@@ -90,11 +90,14 @@ const fetchPostsList = ({
       _id: true,
       slug: true,
       title: true,
+      url: true,
       baseScore: true,
       voteCount: true,
       commentCount: true,
       postedAt: true,
       curatedDate: true,
+      frontpageDate: true,
+      question: true,
       isEvent: true,
       groupId: true,
       sticky: true,
@@ -102,6 +105,8 @@ const fetchPostsList = ({
       socialPreview: true,
       socialPreviewImageAutoUrl: true,
       readTimeMinutesOverride: true,
+      collabEditorDialogue: true,
+      tagRelevance: true,
     },
     with: {
       user: userDefaultProjection,
@@ -164,6 +169,30 @@ export const fetchFrontpagePostsList = ({
 export type PostListItem = Awaited<
   ReturnType<typeof fetchFrontpagePostsList>
 >[number];
+
+export const fetchStickyPostsList = ({
+  currentUserId,
+  limit,
+}: {
+  currentUserId: string | null;
+  limit: number;
+}) => {
+  const startHerePostId = process.env.START_HERE_POST_ID;
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      sticky: true,
+      ...(currentUserId && startHerePostId
+        ? { _id: { ne: startHerePostId } }
+        : null),
+    },
+    orderBy: {
+      stickyPriority: "desc",
+      postedAt: "asc",
+    },
+    limit,
+  });
+};
 
 export const fetchSidebarOpportunities = (limit: number) => {
   const tagId = process.env.OPPORTUNITIES_TAG_ID;

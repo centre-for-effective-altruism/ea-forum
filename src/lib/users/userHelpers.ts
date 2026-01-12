@@ -6,8 +6,16 @@ import uniq from "lodash/uniq";
 import flatten from "lodash/flatten";
 import intersection from "lodash/intersection";
 
-export const userGetProfileUrl = ({ slug }: { slug: string | null }) =>
-  slug ? `/users/${slug}` : "#";
+export const userGetProfileUrl = ({
+  user,
+  from,
+}: {
+  user: { slug: string | null };
+  from?: string;
+}) => {
+  const url = user.slug ? `/users/${user.slug}` : "#";
+  return from ? `${url}?from=${from}` : url;
+};
 
 export const userGetStatsUrl = ({ slug }: Pick<CurrentUser, "slug">) =>
   `/users/${slug}/stats`;

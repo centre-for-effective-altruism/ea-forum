@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { loginAction } from "@/lib/users/authActions";
 import Image from "next/image";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
-import BlurredBackgroundModal from "../BlurredBackgroundModal";
+import Popover from "../Popover";
 import LightbulbIcon from "../Icons/LightbulbIcon";
 import PasswordPolicy from "./PasswordPolicy";
 import LoginInput from "./LoginInput";
@@ -182,7 +182,12 @@ export default function LoginPopover() {
 
   const canSubmit = !!email && (!!password || isResettingPassword) && !pending;
   return (
-    <BlurredBackgroundModal open={open} onClose={onClose}>
+    <Popover
+      open={open}
+      onClose={onClose}
+      background="blurred"
+      className="w-[386px]"
+    >
       <AnalyticsContext pageElementContext="loginPopover">
         <div
           className="w-full flex flex-col gap-6 items-center text-center relative"
@@ -314,6 +319,6 @@ export default function LoginPopover() {
           )}
         </div>
       </AnalyticsContext>
-    </BlurredBackgroundModal>
+    </Popover>
   );
 }

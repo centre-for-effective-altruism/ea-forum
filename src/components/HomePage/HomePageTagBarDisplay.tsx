@@ -9,7 +9,7 @@ import qs from "querystring";
 import clsx from "clsx";
 import Type from "../Type";
 import ThickChevronLeftIcon from "../Icons/ThickChevronLeftIcon";
-import ThickChevronRightIcon from "../Icons/ThickCheckronRightIcon";
+import ThickChevronRightIcon from "../Icons/ThickChevronRightIcon";
 import "./home-page-tag-bar.css";
 
 /**
@@ -187,7 +187,9 @@ export default function HomePageTagBarDisplay({
                       : "bg-gray-200 text-gray-900 hover:bg-gray-300",
                   )}
                 >
-                  <Type>{tag ? tag.shortName || tag.name : "Frontpage"}</Type>
+                  <Type className="max-md:text-[12px]">
+                    {tag ? tag.shortName || tag.name : "Frontpage"}
+                  </Type>
                 </button>
               ))}
             </div>

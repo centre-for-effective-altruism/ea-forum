@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { slugify } from "@/lib/utils/slugify";
-import Link from "next/link";
 import clsx from "clsx";
 import Type from "./Type";
+import Link from "./Link";
 
 export default function SectionTitle({
   title,

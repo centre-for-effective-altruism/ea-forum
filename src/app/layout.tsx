@@ -4,6 +4,8 @@ import { Charis_SIL, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
+import MobileNav from "@/components/Nav/MobileNav";
+import IntercomButton from "@/components/Intercom/IntercomButton";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,7 +22,10 @@ const charis = Charis_SIL({
 });
 
 export const metadata: Metadata = {
-  title: "Effective Altruism Forum",
+  title: {
+    template: "%s — EA Forum",
+    default: "Effective Altruism Forum",
+  },
   description:
     "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
 };
@@ -50,7 +55,9 @@ export default function RootLayout({
           <div id="modal-target" className="relative" />
           <div id="tooltip-target" />
           <Header />
+          <MobileNav />
           <main className="grow">{children}</main>
+          <IntercomButton />
           <Toaster position="bottom-center" />
         </Providers>
       </body>

@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme {
+  --breakpoint-hide-sidebar: 1370px;
+  --breakpoint-mobile-nav: 1100px;
+
   --background: #f6f8f9;
   --foreground: rgba(0, 0, 0, 0.87);
 
@@ -26,7 +29,7 @@
   --color-warning-translucent: "rgba(255,152,0,0.1)";
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
-  --color-login-backdrop: rgba(217, 217, 217, 0.5);
+  --color-modal-backdrop: rgba(217, 217, 217, 0.5);
   --color-login-input: #efefef;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
@@ -46,6 +49,8 @@
   --color-people-directory-row-hover: #fbfbfb;
   --color-recent-discussions-gray: #757575;
   --color-recent-discussions-green: #72b065;
+  --color-popover-dim: rgba(0, 0, 0, 0.4);
+  --color-curated-star: #ffc500;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -79,6 +84,9 @@
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-headroom: 1300;
+  --zindex-popover: 1301;
+  --zindex-mobile-nav: 1302;
+  --zindex-tooltip: 1303;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -151,7 +159,7 @@ body {
   top: unset;
   left: 0;
   right: 0;
-  zindex: var(--zindex-headroom);
+  z-index: var(--zindex-headroom);
 }
 .headroom-root .headroom--unfixed {
   position: relative;

@@ -48,7 +48,7 @@ export default function CommentItem({
           <UsersTooltip user={user as any /* TODO types */}>
             <Type className="font-[600]">
               {user && user.slug && (
-                <Link href={userGetProfileUrl(user)}>{user.displayName}</Link>
+                <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
               )}
             </Type>
           </UsersTooltip>

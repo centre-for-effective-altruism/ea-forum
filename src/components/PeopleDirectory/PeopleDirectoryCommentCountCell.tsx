@@ -8,7 +8,7 @@ export default function PeopleDirectoryCommentCountCell({
 }: Readonly<{
   user: SearchUser;
 }>) {
-  const url = userGetProfileUrl(user) + "#contributions";
+  const url = userGetProfileUrl({ user }) + "#contributions";
   return (
     <Type style="directoryCell" data-component="PeopleDirectoryCommentCountCell">
       <Link

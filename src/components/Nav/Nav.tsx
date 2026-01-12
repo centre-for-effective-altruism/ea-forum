@@ -2,6 +2,7 @@
 
 import type { ComponentProps } from "react";
 import { usePathname } from "next/navigation";
+import clsx from "clsx";
 import HomeIcon from "@heroicons/react/24/outline/HomeIcon";
 import HomeSelectedIcon from "@heroicons/react/20/solid/HomeIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
@@ -113,10 +114,10 @@ const links = [
   },
 ] satisfies Pick<ComponentProps<typeof NavLink>, "title" | "href">[];
 
-export default function Nav() {
+export default function Nav({ className }: Readonly<{ className?: string }>) {
   const pathname = usePathname();
   return (
-    <nav className="w-[220px]" data-component="Nav">
+    <nav className={clsx("w-[200px]", className)} data-component="Nav">
       <div className="w-[min-content]">
         {items.map(({ href, ...props }) => (
           <NavItem

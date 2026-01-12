@@ -31,11 +31,18 @@ declare namespace NodeJS {
     NEXT_PUBLIC_CK_WEBSOCKET_URL: string;
     NEXT_PUBLIC_CK_UPLOAD_URL: string;
 
+    // Other services
+    NEXT_PUBLIC_IPAPI_KEY?: string;
+    NEXT_PUBLIC_INTERCOM_APP_ID: string;
+
     // Site config
-    LOG_DRIZZLE_QUERIES?: "true";
+    LOG_DRIZZLE_QUERIES?: "true" | "false";
+    START_HERE_POST_ID: string;
     COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
     TRANSLATION_TAG_ID: string;
     APRIL_FOOLS_TAG_ID: string;
+    NEXT_PUBLIC_OPEN_THREAD_TAG_ID: string;
+    NEXT_PUBLIC_AMA_TAG_ID: string;
   }
 }

@@ -2,14 +2,14 @@
 
 import { useRef, ReactNode } from "react";
 import { usePostReadProgress } from "@/lib/hooks/usePostReadProgress";
-import type { Post } from "@/lib/schema";
+import type { PostDisplay } from "@/lib/posts/postQueries";
 
 export default function ReadProgress({
   post,
   readTimeMinutes,
   children,
 }: {
-  post: Post;
+  post: PostDisplay;
   readTimeMinutes: number;
   children: ReactNode;
 }) {

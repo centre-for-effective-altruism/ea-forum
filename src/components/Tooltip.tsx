@@ -72,7 +72,7 @@ export default function Tooltip({
             {...getFloatingProps()}
             className={`
               absolute bg-(--color-tooltip-background) text-gray-50 rounded
-              z-1000 px-2 py-1 overflow-hidden ${tooltipClassName}
+              z-(--zindex-tooltip) px-2 py-1 overflow-hidden ${tooltipClassName}
             `}
             data-component="Tooltip"
           >

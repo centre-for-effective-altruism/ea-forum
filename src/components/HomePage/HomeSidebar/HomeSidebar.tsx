@@ -1,25 +1,22 @@
+import { Suspense } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getIntroCourseDetails } from "@/lib/introCourseDetails";
-import {
-  fetchSidebarEvents,
-  fetchSidebarOpportunities,
-} from "@/lib/posts/postLists";
+import clsx from "clsx";
+import HomeSidebarOpportunitiesList from "./HomeSidebarOpportunitiesList";
+import HomeSidebarEventsList from "./HomeSidebarEventsList";
+import HomeSidebarPostsListSkeleton from "./HomeSidebarPostsListSkeleton";
 import HomeSidebarDigestAd from "./HomeSidebarDigestAd";
-import HomeSidebarPost from "./HomeSidebarPost";
-import HomeSidebarEvent from "./HomeSidebarEvent";
 import HomeSidebarCourse from "./HomeSidebarCourse";
 import Type from "../../Type";
 import Link from "../../Link";
 
-export default async function HomeSidebar() {
-  const [opportunities, upcomingEvents] = await Promise.all([
-    fetchSidebarOpportunities(3),
-    fetchSidebarEvents(3),
-  ]);
+export default function HomeSidebar({
+  className,
+}: Readonly<{ className?: string }>) {
   const introCourse = getIntroCourseDetails();
   return (
     <AnalyticsContext pageSectionContext="homeRhs">
-      <section className="w-[310px]" data-component="HomeSidebar">
+      <section className={clsx("w-[260px]", className)} data-component="HomeSidebar">
         <HomeSidebarDigestAd className="mb-6" />
 
         <AnalyticsContext pageSubSectionContext="opportunities">
@@ -29,9 +26,9 @@ export default async function HomeSidebar() {
             </Link>
           </Type>
           <div className="mb-6">
-            {opportunities.map((post) => (
-              <HomeSidebarPost post={post} key={post._id} />
-            ))}
+            <Suspense fallback={<HomeSidebarPostsListSkeleton count={3} />}>
+              <HomeSidebarOpportunitiesList count={3} />
+            </Suspense>
           </div>
         </AnalyticsContext>
 
@@ -40,9 +37,9 @@ export default async function HomeSidebar() {
             <Link href="/events">Upcoming events</Link>
           </Type>
           <div className="mb-6">
-            {upcomingEvents.map((post) => (
-              <HomeSidebarEvent post={post} key={post._id} />
-            ))}
+            <Suspense fallback={<HomeSidebarPostsListSkeleton count={3} />}>
+              <HomeSidebarEventsList count={3} />
+            </Suspense>
           </div>
         </AnalyticsContext>
 

@@ -1,13 +1,14 @@
 "use client";
 
 import type { PostListItem } from "@/lib/posts/postLists";
-import { useClickableCell } from "@/lib/hooks/useClickableCell";
+import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostsTooltip from "../PostsTooltip";
 import UsersTooltip from "../UsersTooltip";
+import PostIcons from "./PostIcons";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
@@ -54,11 +55,16 @@ export default function PostsItem({
             className="min-w-[33px]"
           />
           <div className="truncate">
-            <Type style="postTitle" className="text-black truncate">
-              <PostsTooltip As="span" post={post}>
-                <Link href={postLink}>{title}</Link>
-              </PostsTooltip>
-            </Type>
+            <div className="flex items-center gap-1">
+              <InteractionWrapper>
+                <PostIcons post={post} />
+              </InteractionWrapper>
+              <Type style="postTitle" className="text-black truncate">
+                <PostsTooltip As="span" post={post}>
+                  <Link href={postLink}>{title}</Link>
+                </PostsTooltip>
+              </Type>
+            </div>
             <Type style="bodySmall">
               <UsersTooltip As="span" user={user}>
                 {user?.displayName ?? "[Anonymous]"}

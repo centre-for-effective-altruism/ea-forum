@@ -1,10 +1,14 @@
+import { Suspense } from "react";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
+import StickyPostsList from "../PostsList/StickyPostsList";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
 import RecentDiscussionsFeed from "./RecentDiscussions/RecentDiscussionsFeed";
+import PostsListSkeleton from "../PostsList/PostsListSkeleton";
+import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 
 export default async function HomePageFeed({
   search,
@@ -24,46 +28,63 @@ export default async function HomePageFeed({
           <Type className="mb-2" style="sectionTitleLarge">
             New &amp; upvoted
           </Type>
-          <FrontpagePostsList
-            initialLimit={30}
-            onlyTagId={activeTag._id}
-            className="mb-10"
-          />
+          <div className="mb-10">
+            <Suspense fallback={<PostsListSkeleton count={30} />}>
+              <FrontpagePostsList initialLimit={30} onlyTagId={activeTag._id} />
+            </Suspense>
+          </div>
         </>
       ) : (
         <>
           <Type className="mb-2" style="sectionTitleLarge">
             New &amp; upvoted
           </Type>
-          <FrontpagePostsList
-            initialLimit={11}
-            excludeTagId={communityTagId}
-            className="mb-10"
-          />
+          <div className="mb-2">
+            <Suspense fallback={<PostsListSkeleton count={2} />}>
+              <StickyPostsList initialLimit={30} />
+            </Suspense>
+          </div>
+          <div className="mb-10">
+            <Suspense fallback={<PostsListSkeleton count={11} />}>
+              <FrontpagePostsList initialLimit={11} excludeTagId={communityTagId} />
+            </Suspense>
+          </div>
           {communityTagId && (
             <>
               <Type className="mb-2" style="sectionTitleLarge">
                 Posts tagged community
               </Type>
-              <FrontpagePostsList
-                initialLimit={5}
-                onlyTagId={communityTagId}
-                className="mb-10"
-              />
+              <div className="mb-10">
+                <Suspense fallback={<PostsListSkeleton count={5} />}>
+                  <FrontpagePostsList initialLimit={5} onlyTagId={communityTagId} />
+                </Suspense>
+              </div>
             </>
           )}
           <Type className="mb-2" style="sectionTitleLarge">
             Quick takes
           </Type>
-          <FrontpageQuickTakesList initialLimit={5} className="mb-10" />
+          <div className="mb-10">
+            <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
+              <FrontpageQuickTakesList initialLimit={5} />
+            </Suspense>
+          </div>
           <Type className="mb-2" style="sectionTitleLarge">
             Popular comments
           </Type>
-          <PopularCommentsList initialLimit={3} className="mb-10" />
+          <div className="mb-10">
+            <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
+              <PopularCommentsList initialLimit={3} />
+            </Suspense>
+          </div>
           <Type className="mb-2" style="sectionTitleLarge">
             Recent discussion
           </Type>
-          <RecentDiscussionsFeed />
+          <Suspense
+            fallback={<div className="bg-gray-200 w-full h-[400px] rounded" />}
+          >
+            <RecentDiscussionsFeed />
+          </Suspense>
         </>
       )}
     </>
