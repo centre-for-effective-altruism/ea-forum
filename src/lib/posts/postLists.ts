@@ -108,6 +108,10 @@ const fetchPostsList = ({
       collabEditorDialogue: true,
       tagRelevance: true,
     },
+    extras: {
+      customHtmlHighlight: (posts, { sql }) =>
+        sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, 350)`,
+    },
     with: {
       user: userDefaultProjection,
       contents: {
@@ -116,7 +120,7 @@ const fetchPostsList = ({
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            sql`SUBSTRING(${revisions}."html", 1, 200)`,
+            sql<string>`SUBSTRING(${revisions}."html", 1, 350)`,
         },
       },
       readStatus: currentUserId

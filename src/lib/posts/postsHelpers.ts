@@ -2,6 +2,7 @@ import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
+import { htmlToTextDefault } from "../utils/htmlToText";
 
 export const postGetPageUrl = ({
   post,
@@ -92,4 +93,12 @@ export const getPostSocialImageUrl = (post: PostWithSocialPreview) => {
     return getSocialImagePreviewPrefix() + manualId;
   }
   return post.socialPreviewImageAutoUrl ?? null;
+};
+
+export const getPostPlaintextDescription = (post: PostListItem): string | null => {
+  const highlightHtml = post.customHtmlHighlight || post.contents?.htmlHighlight;
+  if (!highlightHtml) {
+    return null;
+  }
+  return htmlToTextDefault(highlightHtml) || null;
 };

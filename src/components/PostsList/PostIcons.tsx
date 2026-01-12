@@ -26,7 +26,7 @@ const PostIcon: FC<{
       title={<Type style="bodySmall">{children}</Type>}
     >
       <Link href={href} openInNewTab={openInNewTab} className="text-gray-600">
-        <Icon className={clsx("w-4", className)} />
+        <Icon className={clsx("w-4 mr-1", className)} />
       </Link>
     </Tooltip>
   );
@@ -41,7 +41,7 @@ export default function PostIcons({
   const openThreadTagId = process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID;
   const amaTagid = process.env.NEXT_PUBLIC_AMA_TAG_ID;
   return (
-    <div data-component="PostIcons" className="flex items-center gap-1">
+    <div data-component="PostIcons" className="flex items-center">
       {post.sticky && (
         <PostIcon
           href={postGetPageUrl({ post })}

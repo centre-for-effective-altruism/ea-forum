@@ -22,7 +22,7 @@ export default function TagChipDisplay({
       )}
     >
       <Type
-        style="tagChip"
+        style="postDescription"
         className={clsx(
           "h-[28px] p-[6px_8px] flex items-center whitespace-nowrap",
           variant === "postType" ? "text-gray-600" : "text-gray-1000",
