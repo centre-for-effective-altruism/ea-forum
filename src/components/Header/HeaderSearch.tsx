@@ -10,6 +10,8 @@ import HeaderSearchTag from "./HeaderSearchTag";
 import HeaderSearchComment from "./HeaderSearchComment";
 import HeaderSearchSequence from "./HeaderSearchSequence";
 import Loading from "../Loading";
+import Type from "../Type";
+import Link from "../Link";
 import type {
   SearchComment,
   SearchPost,
@@ -35,6 +37,7 @@ export default function HeaderSearch({
 }>) {
   const client = getSearchClient();
   const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Partial<HeaderSearchResults>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const responseRef = useRef(0);
@@ -42,6 +45,7 @@ export default function HeaderSearch({
   const onChange = useCallback(
     (ev: ChangeEvent<HTMLInputElement>) => {
       const query = ev.target.value;
+      setLoading(true);
       setQuery(query);
       setResults({});
       const requestId = ++responseRef.current;
@@ -67,6 +71,7 @@ export default function HeaderSearch({
               results[index] = hits as any;
             }
           }
+          setLoading(false);
           setResults(results);
         }
       })();
@@ -102,42 +107,66 @@ export default function HeaderSearch({
             absolute top-[66px] right-0 w-[440px] max-w-full bg-gray-0 shadow-md
           "
         >
-          {hasResults ? (
+          {loading && (
+            <div className="w-full flex justify-center py-6">
+              <Loading />
+            </div>
+          )}
+          {hasResults && !loading && (
             <div
               className="
-                  flex flex-col gap-[1px] bg-gray-300 overflow-auto
-                  max-h-[calc(100vh-66px)] [&>*]:bg-gray-0 [&>*]:p-2
-                "
+                flex flex-col gap-[1px] bg-gray-300 overflow-auto
+                max-h-[calc(100vh-66px)] [&>*]:bg-gray-0 [&>*]:p-2
+              "
             >
-              <div>
-                {results.users?.map((user) => (
-                  <HeaderSearchUser user={user} key={user._id} />
-                ))}
-              </div>
-              <div>
-                {results.posts?.map((post) => (
-                  <HeaderSearchPost post={post} key={post._id} />
-                ))}
-              </div>
-              <div>
-                {results.tags?.map((tag) => (
-                  <HeaderSearchTag tag={tag} key={tag._id} />
-                ))}
-              </div>
-              <div>
-                {results.comments?.map((comment) => (
-                  <HeaderSearchComment comment={comment} key={comment._id} />
-                ))}
-              </div>
-              <div>
-                {results.sequences?.map((sequence) => (
-                  <HeaderSearchSequence sequence={sequence} key={sequence._id} />
-                ))}
-              </div>
+              {results.users && results.users.length > 0 && (
+                <div>
+                  {results.users.map((user) => (
+                    <HeaderSearchUser user={user} key={user._id} />
+                  ))}
+                </div>
+              )}
+              {results.posts && results.posts.length > 0 && (
+                <div>
+                  {results.posts.map((post) => (
+                    <HeaderSearchPost post={post} key={post._id} />
+                  ))}
+                </div>
+              )}
+              {results.tags && results.tags.length > 0 && (
+                <div>
+                  {results.tags.map((tag) => (
+                    <HeaderSearchTag tag={tag} key={tag._id} />
+                  ))}
+                </div>
+              )}
+              {results.comments && results.comments.length > 0 && (
+                <div>
+                  {results.comments.map((comment) => (
+                    <HeaderSearchComment comment={comment} key={comment._id} />
+                  ))}
+                </div>
+              )}
+              {results.sequences && results.sequences.length > 0 && (
+                <div>
+                  {results.sequences.map((sequence) => (
+                    <HeaderSearchSequence sequence={sequence} key={sequence._id} />
+                  ))}
+                </div>
+              )}
+              <Type style="bodyMedium" className="flex justify-center">
+                <Link
+                  href={`/search?query=${encodeURIComponent(query)}`}
+                  className="text-primary font-[600] hover:opacity-60"
+                >
+                  See all results
+                </Link>
+              </Type>
             </div>
-          ) : (
-            <div className="w-full flex justify-center">
-              <Loading />
+          )}
+          {!hasResults && !loading && (
+            <div className="w-full flex justify-center py-6">
+              <Type style="sectionTitleSmall">No results</Type>
             </div>
           )}
         </div>
