@@ -53,7 +53,7 @@ export default function Header({
         className="headroom-root"
       >
         <header className={`${HEADER_HEIGHT_CLASS} static bg-gray-50 shadow-xs`}>
-          <Column As="nav" className="h-full px-5 flex items-center">
+          <Column As="nav" className="h-full px-1 sm:px-5 flex items-center">
             <button
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
@@ -74,7 +74,9 @@ export default function Header({
                 />
                 <span className="translate-y-px">
                   <span className="hidden md:inline">Effective Altruism Forum</span>
-                  <span className="md:hidden inline">EA Forum</span>
+                  <span className="max-[400px]:hidden md:hidden inline">
+                    EA Forum
+                  </span>
                 </span>
               </Link>
             </Type>
