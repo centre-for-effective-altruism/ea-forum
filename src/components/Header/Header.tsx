@@ -95,7 +95,9 @@ export default function Header({
                   <NotificationsDropdown>
                     <HeaderButton Icon={BellIcon} description="Notifications" />
                   </NotificationsDropdown>
-                  <HeaderButton Icon={EnvelopeIcon} description="Messages" />
+                  <Link href="/inbox" className="hover:opacity-100!">
+                    <HeaderButton Icon={EnvelopeIcon} description="Messages" />
+                  </Link>
                   <UserDropdownMenu>
                     <button
                       className={`
