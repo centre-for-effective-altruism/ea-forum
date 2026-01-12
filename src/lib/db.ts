@@ -13,6 +13,7 @@ import { defineRelations } from "drizzle-orm";
 import {
   comments,
   localgroups,
+  moderatorActions,
   posts,
   readStatuses,
   revisions,
@@ -32,6 +33,7 @@ const relations = defineRelations(
     votes,
     localgroups,
     tags,
+    moderatorActions,
     userLoginTokens,
   },
   (r) => ({
@@ -109,3 +111,18 @@ export const db = isAnyTest()
       relations,
       logger: process.env.LOG_DRIZZLE_QUERIES === "true",
     });
+
+export type Db = typeof db;
+
+/**
+ * When creating a database transaction with `db.transaction` we're passed a
+ * transaction object to use instead of `db`. This is a helper type so that we
+ * can easily pass that transaction to other functions without neededing to
+ * worry about the complex generic types resuling from our schema.
+ * When taking this as a function argument, it's often more ergonomic to use
+ * `DbOrTransaction` below, since both objects offer the same API.
+ */
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Either a raw database connection or a database transaction */
+export type DbOrTransaction = Db | Transaction;

@@ -2,12 +2,12 @@
 
 import type { JsonRecord } from "../typeHelpers";
 import { db } from "../db";
-import { lwEvents, NewLWEvent } from "../schema";
+import { lwEvents, InsertLWEvent } from "../schema";
 import { getCurrentUser } from "../users/currentUser";
 import { randomId } from "../utils/random";
 import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 
-export type CreateLWEvent = Omit<NewLWEvent, "_id" | "userId" | "properties"> & {
+export type CreateLWEvent = Omit<InsertLWEvent, "_id" | "userId" | "properties"> & {
   properties?: JsonRecord;
 };
 

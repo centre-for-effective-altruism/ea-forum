@@ -60,6 +60,7 @@ export const users = pgTable(
     ...universalFields,
     username: text(),
     displayName: text().notNull(),
+    previousDisplayName: text(),
     slug: text().notNull(),
     oldSlugs: text().array().default([""]).notNull(),
     profileImageId: text(),
@@ -100,12 +101,22 @@ export const users = pgTable(
     conversationsDisabled: boolean(),
     mentionsDisabled: boolean().notNull().default(false),
     deleted: boolean().notNull().default(false),
+    voteCount: doublePrecision(),
+    smallUpvoteCount: doublePrecision(),
+    smallDownvoteCount: doublePrecision(),
+    bigUpvoteCount: doublePrecision(),
+    bigDownvoteCount: doublePrecision(),
+    voteReceivedCount: doublePrecision(),
+    smallUpvoteReceivedCount: doublePrecision(),
+    smallDownvoteReceivedCount: doublePrecision(),
+    bigUpvoteReceivedCount: doublePrecision(),
+    bigDownvoteReceivedCount: doublePrecision(),
+    reviewedByUserId: varchar({ length: 27 }),
     hideCommunitySection: boolean().notNull().default(false),
     showCommunityInRecentDiscussion: boolean().notNull().default(false),
 
     /*
   "profile" JSONB,
-  "previousDisplayName" TEXT,
   "lwWikiImport" BOOL,
   "lastUsedTimezone" TEXT,
   "whenConfirmationEmailSent" TIMESTAMPTZ,
@@ -233,16 +244,6 @@ export const users = pgTable(
   "reviewedByUserId" VARCHAR(27),
   "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "voteCount" DOUBLE PRECISION,
-  "smallUpvoteCount" DOUBLE PRECISION,
-  "smallDownvoteCount" DOUBLE PRECISION,
-  "bigUpvoteCount" DOUBLE PRECISION,
-  "bigDownvoteCount" DOUBLE PRECISION,
-  "voteReceivedCount" DOUBLE PRECISION,
-  "smallUpvoteReceivedCount" DOUBLE PRECISION,
-  "smallDownvoteReceivedCount" DOUBLE PRECISION,
-  "bigUpvoteReceivedCount" DOUBLE PRECISION,
-  "bigDownvoteReceivedCount" DOUBLE PRECISION,
   "usersContactedBeforeReview" TEXT[],
   "fullName" TEXT,
   "shortformFeedId" VARCHAR(27),
@@ -309,6 +310,7 @@ export const users = pgTable(
 );
 
 export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
 
 export const bans = pgTable(
   "Bans",
@@ -966,6 +968,7 @@ export const comments = pgTable(
 );
 
 export type Comment = typeof comments.$inferSelect;
+export type InsertComment = typeof comments.$inferInsert;
 
 export const clientIds = pgTable(
   "ClientIds",
@@ -1506,7 +1509,7 @@ export const lwEvents = pgTable(
 );
 
 export type LWEvent = typeof lwEvents.$inferSelect;
-export type NewLWEvent = typeof lwEvents.$inferInsert;
+export type InsertLWEvent = typeof lwEvents.$inferInsert;
 
 export const notifications = pgTable(
   "Notifications",
@@ -2690,6 +2693,7 @@ export const posts = pgTable(
 );
 
 export type Post = typeof posts.$inferSelect;
+export type InsertPost = typeof posts.$inferInsert;
 
 export const reports = pgTable(
   "Reports",
@@ -2946,6 +2950,7 @@ export const revisions = pgTable(
 );
 
 export type Revision = typeof revisions.$inferSelect;
+export type InsertRevision = typeof revisions.$inferInsert;
 
 export const sequences = pgTable(
   "Sequences",
@@ -3013,7 +3018,7 @@ export const spotlights = pgTable(
     duration: doublePrecision().default(3).notNull(),
     customTitle: text(),
     customSubtitle: text(),
-    lastPromotedAt: timestamp().default("1970-01-01 00:00:00+00").notNull(),
+    lastPromotedAt: timestamp().default("'1970-01-01T00:00:00.000Z'").notNull(),
     draft: boolean().default(true).notNull(),
     spotlightImageId: text(),
     descriptionLatest: text("description_latest"),
@@ -3509,6 +3514,8 @@ export const votes = pgTable(
     ),
   ],
 );
+
+export type Vote = typeof votes.$inferSelect;
 
 export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
   qb

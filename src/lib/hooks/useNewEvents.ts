@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { NewLWEvent } from "../schema";
+import type { InsertLWEvent } from "../schema";
 import type { JsonRecord } from "../typeHelpers";
 import { v4 as uuid } from "uuid";
 import { type CreateLWEvent, createLWEventAction } from "../lwEvents/lwEventActions";
 import omit from "lodash/omit";
 
 type EventProperties = JsonRecord &
-  Pick<NewLWEvent, "userId" | "documentId" | "important" | "intercom">;
+  Pick<InsertLWEvent, "userId" | "documentId" | "important" | "intercom">;
 
 export const useNewEvents = () => {
   const [events, setEvents] = useState<Record<string, CreateLWEvent>>({});

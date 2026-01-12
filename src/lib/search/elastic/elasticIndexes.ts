@@ -34,5 +34,7 @@ export const getSearchIndexName = (
   }
 };
 
-export const collectionIsSearchIndexed = (collectionName: string) =>
+export const collectionIsSearchIndexed = (
+  collectionName: string,
+): collectionName is SearchIndexCollectionName =>
   searchIndexedCollectionNames.includes(collectionName as SearchIndexCollectionName);

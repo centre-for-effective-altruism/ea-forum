@@ -1,23 +1,14 @@
 import type { CommentsList } from "@/lib/comments/commentLists";
-import type { VoteType } from "@/lib/actions/voteActions";
+import { getVoteDownStrength, getVoteUpStrength } from "@/lib/votes/voteHelpers";
+import { useVote } from "./useVote";
 import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-// TODO
-// eslint-disable-next-line no-console
-const onVote = (voteType: VoteType) => console.log("vote", voteType);
-
 export default function VoteButtons({
   comment,
-}: Readonly<{
-  comment: CommentsList;
-}>) {
-  const { baseScore, voteCount, votes } = comment;
-  const currentUserVote = votes?.[0] ?? null;
-  // TODO
-  // eslint-disable-next-line no-console
-  console.log("MARK", currentUserVote);
+}: Readonly<{ comment: CommentsList }>) {
+  const { onVote, baseScore, voteCount, currentUserVoteType } = useVote(comment);
   return (
     <div
       data-component="VoteButtons"
@@ -27,7 +18,7 @@ export default function VoteButtons({
       "
     >
       <VoteButton
-        currentVoteType="neutral"
+        currentVoteStrength={getVoteDownStrength(currentUserVoteType)}
         direction="Downvote"
         orientation="left"
         onVote={onVote}
@@ -44,7 +35,7 @@ export default function VoteButtons({
         {baseScore}
       </Tooltip>
       <VoteButton
-        currentVoteType="neutral"
+        currentVoteStrength={getVoteUpStrength(currentUserVoteType)}
         direction="Upvote"
         orientation="right"
         onVote={onVote}

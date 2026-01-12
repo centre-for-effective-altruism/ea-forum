@@ -7,16 +7,14 @@ export const elasticSyncDocument = async (
   collectionName: SearchIndexCollectionName,
   documentId: string,
 ) => {
+  if (isAnyTest()) {
+    return;
+  }
   try {
     const client = new ElasticClient();
     const exporter = new ElasticExporter(client);
     await exporter.updateDocument(collectionName, documentId);
   } catch (e) {
-    if (!isAnyTest()) {
-      console.error(
-        `[${collectionName}] Failed to index Elasticsearch document:`,
-        e,
-      );
-    }
+    console.error(`[${collectionName}] Failed to index Elasticsearch document:`, e);
   }
 };
