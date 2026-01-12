@@ -175,8 +175,8 @@ export const performVote = async ({
         _id: (document as Comment).postId!,
       },
     });
-    const authorIds = post ? [...post.coauthorUserIds, post.userId] : [];
-    if (!authorIds.includes(user._id)) {
+    const postAuthorIds = post ? [...post.coauthorUserIds, post.userId] : [];
+    if (!postAuthorIds.includes(user._id)) {
       throw new Error("Cannot vote on debate responses unless you're a coauthor");
     }
   }
