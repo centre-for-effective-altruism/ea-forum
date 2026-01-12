@@ -95,30 +95,6 @@ const CURATED_BONUS = 10;
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
 
-/**
- * We apply a score boost to subforum comments using the formula:
- *   max(b, m * (1 - ((x / d) ** p)))
- * where b is the base (the minimum boost received after the duration
- * has expired), m is the magnitude (the maximum boost when the comment
- * is first posted), d is the duration in hours, p is the exponent
- * (defining the dropoff curve), and x is the elapsed time since the
- * comment was posted in hours.
- */
-const subforumCommentBonus = {
-  base: 5,
-  magnitude: 100,
-  duration: 8,
-  exponent: 0.3,
-} as const;
-
-const getSubforumCommentBonus = (document: VoteableDocument, ageInHours: number) => {
-  if ("tagCommentType" in document && document.tagCommentType === "SUBFORUM") {
-    const { base, magnitude, duration, exponent } = subforumCommentBonus;
-    return Math.max(base, magnitude * (1 - (ageInHours / duration) ** exponent));
-  }
-  return 0;
-};
-
 const recalculateScore = (document: VoteableDocument) => {
   if ("postedAt" in document && document.postedAt) {
     const postedAt = new Date(document.postedAt).getTime();
@@ -135,7 +111,6 @@ const recalculateScore = (document: VoteableDocument) => {
     if ("curatedDate" in document && document.curatedDate) {
       baseScore += CURATED_BONUS;
     }
-    baseScore += getSubforumCommentBonus(document, ageInHours);
 
     // HN algorithm
     const newScore =
