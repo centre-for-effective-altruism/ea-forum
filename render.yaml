@@ -1,0 +1,62 @@
+# Exported from Render on 2026-01-12T12:42:08Z
+version: "1"
+previews:
+  generation: automatic
+  expireAfterDays: 7
+projects:
+  - name: EA Forum
+    environments:
+      - name: Production
+        services:
+          - type: web
+            name: ea-forum
+            runtime: node
+            repo: https://github.com/centre-for-effective-altruism/eaforum3
+            plan: free
+            envVars:
+              - key: APRIL_FOOLS_TAG_ID
+                sync: false
+              - key: TRANSLATION_TAG_ID
+                sync: false
+              - key: OPPORTUNITIES_TAG_ID
+                sync: false
+              - key: COMMUNITY_TAG_ID
+                sync: false
+              - key: LOG_DRIZZLE_QUERIES
+                sync: false
+              - key: ELASTIC_PASSWORD
+                sync: false
+              - key: ELASTIC_CLOUD_ID
+                sync: false
+              - key: DATABASE_URL
+                sync: false
+              - key: ELASTIC_ORIGIN_DATE
+                sync: false
+              - key: ELASTIC_USERNAME
+                sync: false
+              - key: NEXT_PUBLIC_SEARCH_INDEX_PREFIX
+                sync: false
+              - key: AUTH0_SCOPE
+                sync: false
+              - key: AUTH0_ORIGINAL_DOMAIN
+                sync: false
+              - key: AUTH0_CLIENT_SECRET
+                sync: false
+              - key: NEXT_PUBLIC_AUTH0_CONNECTION
+                sync: false
+              - key: NEXT_PUBLIC_AUTH0_CLIENT_ID
+                sync: false
+              - key: NEXT_PUBLIC_AUTH0_DOMAIN
+                sync: false
+              - key: ENVIRONMENT
+                sync: false
+              - key: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+                sync: false
+              - key: NEXT_PUBLIC_SITE_URL
+                sync: false
+              - key: PORT
+                sync: false
+            region: virginia
+            buildCommand: npm install; npm run build
+            startCommand: npm run start
+            autoDeployTrigger: commit
