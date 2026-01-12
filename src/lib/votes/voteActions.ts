@@ -19,10 +19,10 @@ export const onVoteAction = async (
     getVoteableDocument(collectionName, documentId),
   ]);
   if (!user) {
-    throw new Error("Not authenticated");
+    throw new Error("Not logged in");
   }
   if (!document) {
-    throw new Error("Invalid voteable document");
+    throw new Error("Document not found");
   }
   return await performVote({
     collectionName,

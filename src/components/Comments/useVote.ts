@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, useTransition } from "react";
+import toast from "react-hot-toast";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import { calculateVotePower, VoteType } from "@/lib/votes/voteHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
@@ -65,24 +66,34 @@ export const useVote = (comment: CommentsList) => {
         return;
       }
 
-      setVote((prev) =>
-        doOptimisticVote(prev, { voteType, userKarma: currentUser.karma }),
-      );
+      // Save the previous vote in case an error is thrown
+      let previousVote: VoteState;
+      setVote((prev) => {
+        previousVote = prev;
+        return doOptimisticVote(prev, { voteType, userKarma: currentUser.karma });
+      });
 
       const collectionName = "Comments";
       requestIdRef.current++;
       const requestId = requestIdRef.current;
       startTransition(async () => {
-        const result = await onVoteAction(collectionName, _id, voteType);
-        if (requestId !== requestIdRef.current) {
-          return;
+        try {
+          const result = await onVoteAction(collectionName, _id, voteType);
+          if (requestId === requestIdRef.current) {
+            setVote({
+              baseScore: result.baseScore,
+              voteCount: result.voteCount,
+              currentUserVoteType: result.voteType,
+              showVotingPatternWarning: result.showVotingPatternWarning,
+            });
+          }
+        } catch (e) {
+          console.error("Vote error:", e);
+          if (requestId === requestIdRef.current) {
+            toast.error(e instanceof Error ? e.message : "Something went wrong");
+            setVote(previousVote);
+          }
         }
-        setVote({
-          baseScore: result.baseScore,
-          voteCount: result.voteCount,
-          currentUserVoteType: result.voteType,
-          showVotingPatternWarning: result.showVotingPatternWarning,
-        });
       });
 
       captureEvent("vote", { collectionName });
