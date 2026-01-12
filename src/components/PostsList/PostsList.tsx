@@ -1,9 +1,9 @@
 "use client";
 
 import type { PostListItem } from "@/lib/posts/postLists";
+import type { PostsListViewType } from "@/lib/posts/postsListView";
 import {
   usePostsListView,
-  PostsListViewType,
   defaultPostsViewType,
 } from "@/lib/hooks/usePostsListView";
 import PostsItem from "./PostsItem";

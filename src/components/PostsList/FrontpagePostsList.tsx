@@ -1,4 +1,4 @@
-import { PostsListViewType } from "@/lib/hooks/usePostsListView";
+import type { PostsListViewType } from "@/lib/posts/postsListView";
 import { fetchFrontpagePostsList } from "@/lib/posts/postLists";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import PostsList from "./PostsList";

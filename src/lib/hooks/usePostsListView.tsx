@@ -8,15 +8,8 @@ import {
   useContext,
   useState,
 } from "react";
-import { TupleSet, UnionOf } from "../typeHelpers";
 import { useCookiesWithConsent } from "../cookies/useCookiesWithConsent";
-
-const postsListViewTypes = new TupleSet(["list", "card"] as const);
-
-export type PostsListViewType = UnionOf<typeof postsListViewTypes>;
-
-export const isPostsListViewType = (value: string): value is PostsListViewType =>
-  postsListViewTypes.has(value);
+import { isPostsListViewType, PostsListViewType } from "../posts/postsListView";
 
 type PostsListViewContext = {
   view: PostsListViewType;
@@ -48,10 +41,13 @@ const useCookieValue = (): {
   };
 };
 
-export const PostsListViewProvider: FC<{ children: ReactNode }> = ({ children }) => {
+export const PostsListViewProvider: FC<{
+  ssrValue?: PostsListViewType;
+  children: ReactNode;
+}> = ({ ssrValue, children }) => {
   const { cookieValue, setCookieValue } = useCookieValue();
   const [view, setView_] = useState<PostsListViewType>(
-    cookieValue ?? defaultPostsViewType,
+    ssrValue ?? cookieValue ?? defaultPostsViewType,
   );
 
   const setView = useCallback(

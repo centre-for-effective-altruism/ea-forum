@@ -1,7 +1,7 @@
 "use client";
 
 import type { PostListItem } from "@/lib/posts/postLists";
-import type { PostsListViewType } from "@/lib/hooks/usePostsListView";
+import type { PostsListViewType } from "@/lib/posts/postsListView";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";

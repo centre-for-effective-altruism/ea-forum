@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, RefObject, useEffect, useState } from "react";
 import {
   autoUpdate,
   flip,
@@ -15,10 +15,12 @@ import {
 export default function Dropdown({
   placement,
   menu,
+  dismissRef,
   children,
 }: Readonly<{
   placement?: Placement;
   menu: ReactNode;
+  dismissRef?: RefObject<(() => void) | null>;
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,9 +45,20 @@ export default function Dropdown({
     role,
   ]);
 
+  useEffect(() => {
+    if (dismissRef) {
+      dismissRef.current = () => setIsOpen(false);
+    }
+  }, [dismissRef]);
+
   return (
     <>
-      <div ref={setReference} {...getReferenceProps()} data-component="Dropdown">
+      <div
+        className="inline-block"
+        ref={setReference}
+        {...getReferenceProps()}
+        data-component="Dropdown"
+      >
         {children}
       </div>
       {isOpen && (
