@@ -70,7 +70,8 @@ export const useVote = (comment: CommentsList) => {
       );
 
       const collectionName = "Comments";
-      const requestId = ++requestIdRef.current;
+      requestIdRef.current++;
+      const requestId = requestIdRef.current;
       startTransition(async () => {
         const result = await onVoteAction(collectionName, _id, voteType);
         if (requestId !== requestIdRef.current) {
