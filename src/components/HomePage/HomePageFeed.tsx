@@ -40,7 +40,9 @@ export default async function HomePageFeed({
             <PostsListViewPicker />
           </div>
           <div className="mb-10">
-            <Suspense fallback={<PostsListSkeleton count={30} />}>
+            <Suspense
+              fallback={<PostsListSkeleton count={30} viewType="fromContext" />}
+            >
               <FrontpagePostsList
                 initialLimit={30}
                 onlyTagId={activeTag._id}
@@ -63,7 +65,9 @@ export default async function HomePageFeed({
             </Suspense>
           </div>
           <div className="mb-10">
-            <Suspense fallback={<PostsListSkeleton count={11} />}>
+            <Suspense
+              fallback={<PostsListSkeleton count={11} viewType="fromContext" />}
+            >
               <FrontpagePostsList
                 initialLimit={11}
                 excludeTagId={communityTagId}

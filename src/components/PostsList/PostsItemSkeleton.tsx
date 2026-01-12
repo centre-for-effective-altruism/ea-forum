@@ -1,6 +1,52 @@
+import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListView";
 import SoftArrowUpIcon from "../Icons/SoftArrowUpIcon";
 
-export default function PostsItemSkeleton() {
+export default function PostsItemSkeleton({
+  viewType = defaultPostsViewType,
+}: Readonly<{
+  viewType?: PostsListViewType;
+}>) {
+  if (viewType === "card") {
+    return (
+      <article
+        aria-hidden
+        className="
+          w-full max-w-full h-[144px] rounded bg-gray-50 border border-gray-100
+        "
+        data-component="PostsItemSkeleton"
+      >
+        <div
+          className="
+            w-full max-w-full px-4 py-2
+            grid grid-cols-[min-content_1fr_min-content_min-content] gap-4
+          "
+        >
+          <div className="flex flex-col items-center justify-center gap-1 px-2 w-[26px]">
+            <SoftArrowUpIcon className="text-gray-400" />
+            <div className="h-3 w-5 bg-gray-200 rounded" />
+          </div>
+          <div className="flex flex-col justify-center gap-2 mt-2">
+            <div className="h-3 w-80 bg-gray-300 rounded" />
+            <div className="h-3 w-50 bg-gray-200 rounded" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-3 w-8 bg-gray-200 rounded" />
+          </div>
+          <div className="flex items-center">
+            <div className="h-5 w-2 bg-gray-200 rounded" />
+          </div>
+        </div>
+        <div className="flex items-end gap-6 pl-[56px] pr-5 pb-4 -mt-2">
+          <div className="grow flex flex-col gap-2">
+            <div className="w-full h-4 bg-gray-200 rounded" />
+            <div className="w-full h-4 bg-gray-200 rounded" />
+            <div className="w-full h-4 bg-gray-200 rounded" />
+          </div>
+          <div className="w-[160px] h-[80px] bg-gray-200 rounded" />
+        </div>
+      </article>
+    );
+  }
   return (
     <article
       aria-hidden
@@ -8,10 +54,10 @@ export default function PostsItemSkeleton() {
       data-component="PostsItemSkeleton"
     >
       <div
-        className={`
+        className="
           w-full max-w-full h-full px-4 py-2
           grid grid-cols-[min-content_1fr_min-content_min-content] gap-4
-        `}
+        "
       >
         <div className="flex flex-col items-center justify-center gap-1 px-2 w-[26px]">
           <SoftArrowUpIcon className="text-gray-400" />

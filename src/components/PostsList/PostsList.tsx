@@ -1,11 +1,8 @@
 "use client";
 
 import type { PostListItem } from "@/lib/posts/postLists";
-import type { PostsListViewType } from "@/lib/posts/postsListView";
-import {
-  usePostsListView,
-  defaultPostsViewType,
-} from "@/lib/hooks/usePostsListView";
+import { usePostsListView } from "@/lib/hooks/usePostsListView";
+import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListView";
 import PostsItem from "./PostsItem";
 import clsx from "clsx";
 

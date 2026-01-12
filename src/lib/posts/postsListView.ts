@@ -6,3 +6,5 @@ export type PostsListViewType = UnionOf<typeof postsListViewTypes>;
 
 export const isPostsListViewType = (value: string): value is PostsListViewType =>
   postsListViewTypes.has(value);
+
+export const defaultPostsViewType = "list";

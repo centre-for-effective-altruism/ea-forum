@@ -9,14 +9,16 @@ import {
   useState,
 } from "react";
 import { useCookiesWithConsent } from "../cookies/useCookiesWithConsent";
-import { isPostsListViewType, PostsListViewType } from "../posts/postsListView";
+import {
+  defaultPostsViewType,
+  isPostsListViewType,
+  PostsListViewType,
+} from "../posts/postsListView";
 
 type PostsListViewContext = {
   view: PostsListViewType;
   setView: (view: PostsListViewType) => void;
 };
-
-export const defaultPostsViewType = "list";
 
 const postsListViewContext = createContext<PostsListViewContext>({
   view: defaultPostsViewType,
