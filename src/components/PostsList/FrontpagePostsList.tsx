@@ -1,13 +1,16 @@
+import { PostsListViewType } from "@/lib/hooks/usePostsListView";
 import { fetchFrontpagePostsList } from "@/lib/posts/postLists";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import PostsList from "./PostsList";
 
 export default async function FrontpagePostsList({
+  viewType,
   initialLimit,
   onlyTagId,
   excludeTagId,
   className,
 }: Readonly<{
+  viewType?: PostsListViewType | "fromContext";
   initialLimit: number;
   onlyTagId?: string;
   excludeTagId?: string;
@@ -20,5 +23,5 @@ export default async function FrontpagePostsList({
     onlyTagId,
     excludeTagId,
   });
-  return <PostsList posts={posts} className={className} />;
+  return <PostsList posts={posts} viewType={viewType} className={className} />;
 }

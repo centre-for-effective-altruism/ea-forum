@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
+import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import StickyPostsList from "../PostsList/StickyPostsList";
@@ -22,7 +23,7 @@ export default async function HomePageFeed({
       ? coreTags.find((tag) => tag.slug === search.tab)
       : null;
   return (
-    <>
+    <PostsListViewProvider>
       {activeTag ? (
         <>
           <Type className="mb-2" style="sectionTitleLarge">
@@ -30,7 +31,11 @@ export default async function HomePageFeed({
           </Type>
           <div className="mb-10">
             <Suspense fallback={<PostsListSkeleton count={30} />}>
-              <FrontpagePostsList initialLimit={30} onlyTagId={activeTag._id} />
+              <FrontpagePostsList
+                initialLimit={30}
+                onlyTagId={activeTag._id}
+                viewType="fromContext"
+              />
             </Suspense>
           </div>
         </>
@@ -46,7 +51,11 @@ export default async function HomePageFeed({
           </div>
           <div className="mb-10">
             <Suspense fallback={<PostsListSkeleton count={11} />}>
-              <FrontpagePostsList initialLimit={11} excludeTagId={communityTagId} />
+              <FrontpagePostsList
+                initialLimit={11}
+                excludeTagId={communityTagId}
+                viewType="fromContext"
+              />
             </Suspense>
           </div>
           {communityTagId && (
@@ -87,6 +96,6 @@ export default async function HomePageFeed({
           </Suspense>
         </>
       )}
-    </>
+    </PostsListViewProvider>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import type { PostListItem } from "@/lib/posts/postLists";
+import type { PostsListViewType } from "@/lib/hooks/usePostsListView";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";
@@ -18,6 +19,7 @@ export default function PostsItem({
   openInNewTab,
 }: Readonly<{
   post: PostListItem;
+  viewType?: PostsListViewType;
   openInNewTab?: boolean;
 }>) {
   const { _id, title, baseScore, commentCount, voteCount, sticky, user } = post;

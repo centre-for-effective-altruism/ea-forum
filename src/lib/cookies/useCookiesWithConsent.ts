@@ -8,7 +8,7 @@ import { useCookiePreferences } from "./useCookiePreferences";
 
 export const useCookiesWithConsent = <
   T extends CookieName,
-  Cookies = { [K in T]?: unknown },
+  Cookies = { [K in T]?: string },
 >(
   dependencies?: T[],
 ): [
