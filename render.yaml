@@ -1,21 +1,22 @@
 # Render Blueprint for EA Forum
 version: "1"
 
-# Preview environments - creates isolated environment for each PR
-previews:
-  generation: automatic
-  expireAfterDays: 7
-
-# Services at root level (required for previews to work properly)
-services:
-  - type: web
-    name: ea-forum
-    runtime: node
-    repo: https://github.com/centre-for-effective-altruism/eaforum3
-    plan: free
-    region: virginia
-    buildCommand: npm install; npm run build
-    startCommand: npm run start
-    envVars:
-      # Shared environment group for both prod and preview
-      - fromGroup: eaforum-prod
+projects:
+  - name: EA Forum
+    environments:
+      - name: Production
+        # Preview environments config at the environment level
+        previews:
+          generation: automatic
+          expireAfterDays: 7
+        services:
+          - type: web
+            name: ea-forum
+            runtime: node
+            repo: https://github.com/centre-for-effective-altruism/eaforum3
+            plan: free
+            region: virginia
+            buildCommand: npm install; npm run build
+            startCommand: npm run start
+            envVars:
+              - fromGroup: eaforum-prod
