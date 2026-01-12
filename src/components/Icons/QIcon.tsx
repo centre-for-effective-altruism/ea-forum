@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from "react";
 
-export default function LightbulbIcon(props: HTMLAttributes<SVGElement>) {
+export default function QIcon(props: HTMLAttributes<SVGElement>) {
   return (
     <svg
       width="10"
