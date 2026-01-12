@@ -87,6 +87,19 @@
   --zindex-popover: 1301;
   --zindex-mobile-nav: 1302;
   --zindex-tooltip: 1303;
+
+  --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
+
+  @keyframes bounce-delay {
+    0%,
+    80%,
+    100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1);
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
