@@ -1,12 +1,14 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
 import { commentsToCommentTree } from "@/lib/CommentTree";
+import clsx from "clsx";
 import CommentItem from "./CommentItem";
+import NewComment from "./NewComment";
 import Type from "../Type";
 
 export default async function CommentsSection({
   postId,
-  className = "",
+  className,
 }: Readonly<{ postId: string; className?: string }>) {
   const currentUser = await getCurrentUser();
   const comments = await fetchCommmentsForPost({
@@ -17,12 +19,22 @@ export default async function CommentsSection({
   return (
     <>
       <Type style="commentsHeader" className="mt-18 mb-6" id="comments">
-        Comments <span className="text-gray-600">{comments.length}</span>
+        Comments{" "}
+        {comments.length > 0 && (
+          <span className="text-gray-600">{comments.length}</span>
+        )}
       </Type>
+      <NewComment postId={postId} className="mb-6" />
       <section
-        className={`flex flex-col gap-4 ${className}`}
+        className={clsx("flex flex-col gap-4", className)}
         data-component="CommentsSection"
       >
+        {tree.length === 0 && (
+          <div className="text-gray-600 text-center">
+            <Type>No comments on this post yet.</Type>
+            <Type>Be the first to respond.</Type>
+          </div>
+        )}
         {tree.map((node) => (
           <CommentItem node={node} key={node.comment._id} />
         ))}

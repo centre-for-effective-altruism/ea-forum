@@ -1,24 +1,42 @@
 import clsx from "clsx";
 import { FC } from "react";
 
-const Dot: FC<{ className?: string }> = ({ className }) => (
+const Dot: FC<{ colorClassName?: string; className?: string }> = ({
+  colorClassName,
+  className,
+}) => (
   <span
     className={clsx(
       "inline-block h-[10px] w-[10px] rounded-full animate-bounce-delay",
-      "bg-gray-600",
+      colorClassName ?? "bg-gray-600",
       className,
     )}
   />
 );
 
-export default function Loading({ className }: { className?: string }) {
+export default function Loading({
+  colorClassName,
+  className,
+}: {
+  colorClassName?: string;
+  className?: string;
+}) {
   return (
     <div
-      className={clsx("mx-auto block h-[26px] max-w-[100px] text-center", className)}
+      className={clsx(
+        "flex items-center justify-center mx-auto h-[26px]",
+        className,
+      )}
     >
-      <Dot className="[animation-delay:-0.32s] mr-[5px]" />
-      <Dot className="[animation-delay:-0.16s] mr-[5px]" />
-      <Dot />
+      <Dot
+        colorClassName={colorClassName}
+        className="[animation-delay:-0.32s] mr-[5px]"
+      />
+      <Dot
+        colorClassName={colorClassName}
+        className="[animation-delay:-0.16s] mr-[5px]"
+      />
+      <Dot colorClassName={colorClassName} />
     </div>
   );
 }

@@ -9,7 +9,7 @@ export default function WarningBanner({ messageHtml }: { messageHtml: string }) 
         font-sans text-[14px] font-[500] leading-[20px] p-2 mb-2 rounded
       "
     >
-      <WarningIcon className="font-[14px] transform-[translateY(3px)]" />
+      <WarningIcon className="w-4 transform-[translateY(2px)]" />
       <div
         className="grow [&_a]:underline"
         dangerouslySetInnerHTML={{ __html: messageHtml }}

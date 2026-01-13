@@ -35,6 +35,24 @@ import WarningBanner from "../WarningBanner";
 import Type from "../Type";
 import "./ckeditor-styles.css";
 
+export type EditorOnChangeProps = {
+  contents: EditorContents;
+  autosave: boolean;
+};
+
+/**
+ * Main CkEditor component
+ * TODO: This is pretty much a verbatim copy from ForumMagnum but just converted
+ * from a class component to a functional component. I'm pretty sure there's a
+ * good amount of stuff here that we don't need any more but I'm not sure yet
+ * exactly what.
+ * TODO: Currently in dev mode mounting the editor throws the error:
+ *    CKEditorError: editor-source-element-already-used
+ * This is due to the editor being mounted and then remounted in react strict
+ * mode. This issue doesn't happen in prod (where strict mode is disabled), and
+ * even in dev mode the editor watchdog is able to immediately recover, but it
+ * would still be nice to fix this to clean up the dev console.
+ */
 const Editor = forwardRef<
   EditorAPI | null,
   {
@@ -46,7 +64,7 @@ const Editor = forwardRef<
     fieldName: string;
     formProps?: FormProps;
     value: EditorContents;
-    onChange?: (props: { contents: EditorContents; autosave: boolean }) => void;
+    onChange?: (props: EditorOnChangeProps) => void;
     onFocus?: (event: EventInfo, editor: TEditor) => void;
     placeholder?: string;
     commentStyles?: boolean;
@@ -68,6 +86,7 @@ const Editor = forwardRef<
      * with CkEditor. Otherwise ignored.
      */
     accessLevel?: CollaborativeEditingAccessLevel;
+    className?: string;
   }
 >(function Editor(
   {
@@ -85,6 +104,7 @@ const Editor = forwardRef<
     isCollaborative,
     accessLevel,
     document,
+    className,
   },
   ref,
 ) {
@@ -189,7 +209,7 @@ const Editor = forwardRef<
   const isGrey = formVariant === "grey";
   const CkEditor = commentEditor ? CommentEditor : PostEditor;
   return (
-    <div data-component="Editor">
+    <div data-component="Editor" className={className}>
       {label && isGrey && (
         <SectionTitle title={label} noTopMargin titleClassName="font-[12px]" />
       )}

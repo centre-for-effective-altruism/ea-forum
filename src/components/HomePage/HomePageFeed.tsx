@@ -13,6 +13,7 @@ import PopularCommentsList from "./PopularCommentsList";
 import RecentDiscussionsFeed from "./RecentDiscussions/RecentDiscussionsFeed";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
+import NewQuickTake from "../QuickTakes/NewQuickTake";
 
 export default async function HomePageFeed({
   search,
@@ -90,6 +91,7 @@ export default async function HomePageFeed({
           <Type className="mb-2" style="sectionTitleLarge">
             Quick takes
           </Type>
+          <NewQuickTake className="mb-1" />
           <div className="mb-10">
             <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
               <FrontpageQuickTakesList initialLimit={5} />

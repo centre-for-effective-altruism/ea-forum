@@ -1,6 +1,10 @@
+"use client";
+
 import { MouseEvent, ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTracking } from "@/lib/analyticsEvents";
+import clsx from "clsx";
+import Loading from "./Loading";
 
 const variants = {
   primaryFilled: "text-white bg-(--color-primary) hover:bg-(--color-primary-dark)",
@@ -14,6 +18,7 @@ export default function Button({
   variant = "primaryFilled",
   type = "button",
   disabled,
+  loading,
   eventProps,
   href,
   onClick: onClick_,
@@ -24,6 +29,7 @@ export default function Button({
   variant?: ButtonVariant;
   type?: "submit" | "reset" | "button";
   disabled?: boolean;
+  loading?: boolean;
   eventProps?: Record<string, string>;
   href?: string;
   onClick?: (ev: MouseEvent<HTMLButtonElement>) => void;
@@ -54,13 +60,23 @@ export default function Button({
       type={type}
       onClick={onClick}
       data-testid={testId}
-      className={`
-        min-w-[30px] text-[14px] font-[500] leading-[20px] px-3 py-2 rounded
-        ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
-        ${variants[variant]} ${className}
-      `}
+      className={clsx(
+        "min-w-[30px] text-[14px] font-[500] leading-[20px] px-3 py-2 rounded",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+        loading && "relative",
+        variants[variant],
+        className,
+      )}
     >
-      {children}
+      <span className={clsx(loading && "opacity-0")}>{children}</span>
+      {loading && (
+        <Loading
+          colorClassName={
+            variant.indexOf("primary") >= 0 ? "bg-always-white" : undefined
+          }
+          className="absolute top-0 left-0 right-0 h-full!"
+        />
+      )}
     </button>
   );
 }

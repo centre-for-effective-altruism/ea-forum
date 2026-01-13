@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { Editor } from "@ckeditor/ckeditor5-core";
 import type { EventInfo } from "@ckeditor/ckeditor5-utils";
@@ -46,33 +46,36 @@ export default function CommentEditor({
   const [editorObject, setEditorObject] = useState<Editor | null>(null);
   const webSocketUrl = process.env.NEXT_PUBLIC_CK_WEBSOCKET_URL;
   const ckEditorCloudConfigured = !!webSocketUrl;
-  const CommentEditor = getCkCommentEditor();
+  const CommentEditor = useMemo(() => getCkCommentEditor(), []);
   const placeholder = requestedPlaceholder ?? defaultEditorPlaceholder;
 
-  const editorConfig = {
-    ...commentEditorToolbarConfig,
-    cloudServices: ckEditorCloudConfigured
-      ? {
-          // A tokenUrl token is needed here in order for image upload to work.
-          // (It's accessible via drag-and-drop onto the comment box, and is
-          // stored on CkEditor's CDN).
-          // The collaborative editor is not activated because no `websocketUrl`
-          // or `documentId` is provided.
-          tokenUrl: generateCkEditorTokenRequest(collectionName, fieldName),
-          uploadUrl: process.env.NEXT_PUBLIC_CK_UPLOAD_URL,
-          bundleVersion: ckEditorBundleVersion,
-        }
-      : undefined,
-    autosave: {
-      save: (editor: Editor) => onSave?.(editor.getData()),
-    },
-    initialData: data || "",
-    placeholder,
-    mention: mentionPluginConfiguration,
-    cloudinary: {
-      getCloudName: getCloudinaryCloudName,
-    },
-  };
+  const editorConfig = useMemo(
+    () => ({
+      ...commentEditorToolbarConfig,
+      cloudServices: ckEditorCloudConfigured
+        ? {
+            // A tokenUrl token is needed here in order for image upload to work.
+            // (It's accessible via drag-and-drop onto the comment box, and is
+            // stored on CkEditor's CDN).
+            // The collaborative editor is not activated because no `websocketUrl`
+            // or `documentId` is provided.
+            tokenUrl: generateCkEditorTokenRequest(collectionName, fieldName),
+            uploadUrl: process.env.NEXT_PUBLIC_CK_UPLOAD_URL,
+            bundleVersion: ckEditorBundleVersion,
+          }
+        : undefined,
+      autosave: {
+        save: (editor: Editor) => onSave?.(editor.getData()),
+      },
+      initialData: data || "",
+      placeholder,
+      mention: mentionPluginConfiguration,
+      cloudinary: {
+        getCloudName: getCloudinaryCloudName,
+      },
+    }),
+    [ckEditorCloudConfigured, collectionName, fieldName, onSave, data, placeholder],
+  );
 
   useSyncCkEditorPlaceholder(editorObject, placeholder);
 
@@ -90,12 +93,12 @@ export default function CommentEditor({
   return (
     <div data-component="CommentEditor">
       <CKEditor
+        key="comment-editor"
         editor={CommentEditor}
         onReady={onReady}
         onChange={onChange}
         onFocus={onFocus}
         config={editorConfig}
-        data={data}
         isCollaborative={false}
       />
     </div>
