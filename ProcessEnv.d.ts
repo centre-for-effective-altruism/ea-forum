@@ -1,9 +1,11 @@
 declare namespace NodeJS {
   export interface ProcessEnv {
     // General settings
+    LOG_DRIZZLE_QUERIES?: "true" | "false";
+    ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_SITE_URL: string;
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
-    ENVIRONMENT: "dev" | "staging" | "prod";
+    CONTACT_EMAIL: string;
 
     // Auth0 settings
     NEXT_PUBLIC_AUTH0_DOMAIN: string;
@@ -36,7 +38,6 @@ declare namespace NodeJS {
     NEXT_PUBLIC_INTERCOM_APP_ID: string;
 
     // Site config
-    LOG_DRIZZLE_QUERIES?: "true" | "false";
     START_HERE_POST_ID: string;
     COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
