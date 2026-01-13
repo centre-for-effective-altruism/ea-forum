@@ -1,4 +1,4 @@
-import { ReactNode, RefObject, useEffect, useState } from "react";
+import { ReactNode, RefObject, useImperativeHandle, useState } from "react";
 import {
   autoUpdate,
   flip,
@@ -45,11 +45,7 @@ export default function Dropdown({
     role,
   ]);
 
-  useEffect(() => {
-    if (dismissRef) {
-      dismissRef.current = () => setIsOpen(false);
-    }
-  }, [dismissRef]);
+  useImperativeHandle(dismissRef, () => () => setIsOpen(false));
 
   return (
     <>
