@@ -7,42 +7,49 @@ import { randomId } from "../utils/random";
 import { db } from "../db";
 import { dataToHtml } from "../conversionUtils/dataToHtml";
 import { dataToWordCount } from "../conversionUtils/dataToWordCount";
+import { htmlToChangeMetrics } from "./htmlToChangeMetrics";
 
 export const createRevision = async (
   user: Pick<User, "_id" | "isAdmin">,
-  editorData: EditorData,
+  {
+    originalContents,
+    dataWithDiscardedSuggestions,
+    commitMessage,
+    updateType,
+  }: EditorData,
   data: {
     documentId: string;
     collectionName: string;
     fieldName: string;
-    updateType?: string;
-    version?: string;
-    commitMessage?: string;
     draft?: boolean;
     googleDocMetadata?: Json;
-    skipAttributions?: boolean;
   },
 ): Promise<Revision> => {
-  const { originalContents, dataWithDiscardedSuggestions } = editorData;
   const editorType = originalContents.type;
   const visibleData = dataWithDiscardedSuggestions ?? originalContents.data;
   const [html, wordCount] = await Promise.all([
     dataToHtml(visibleData, editorType, { sanitize: !user.isAdmin }),
     dataToWordCount(visibleData, editorType),
   ]);
-  const changeMetrics = {};
+  const now = new Date().toISOString();
   const result = await db
     .insert(revisions)
     .values({
       ...data,
       _id: randomId(),
-      editedAt: new Date().toISOString(),
-      version: data.version ?? "1.0.0",
+      userId: user._id,
+      version: data.draft ? "0.1.0" : "1.0.0",
+      updateType: updateType ?? "initial",
       html,
       wordCount,
-      changeMetrics,
-      originalContents: editorData.originalContents,
+      commitMessage,
+      originalContents,
+      changeMetrics: htmlToChangeMetrics("", html),
+      skipAttributions: false,
+      editedAt: now,
+      createdAt: now,
     })
     .returning();
+  // TODO Pingbacks
   return result[0];
 };

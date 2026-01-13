@@ -29,8 +29,7 @@ suite("Comments", () => {
         updateType: "minor",
         commitMessage: "",
       } as const;
-      const commentId = "";
-      await createPostComment(post._id, null, editorData);
+      const commentId = await createPostComment(post._id, null, editorData);
 
       const comment = await db.query.comments.findFirst({
         where: {

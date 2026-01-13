@@ -17,4 +17,5 @@ development `.env` file in 1password.
 ## License
 
 The forum is free software under the GNU Affero GPL v3. See the included
-`LICENSE.txt` file for details.
+`LICENSE.txt` file for details. Several libraries are also included as source
+in `src/vendor` as these have their own licenses.

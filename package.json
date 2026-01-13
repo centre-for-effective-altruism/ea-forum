@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^1.0.0-beta.3-36e9b9e",
     "hepburn": "^1.2.2",
+    "html-lexer": "^0.5.0",
     "html-to-text": "^9.0.5",
     "json-stringify-deterministic": "^1.0.12",
     "jsonwebtoken": "^9.0.3",
