@@ -1,10 +1,15 @@
 "use server";
 
+import { headers } from "next/headers";
 import type { EditorData } from "../ckeditor/editorHelpers";
 import { db } from "../db";
 import { getCurrentUser } from "../users/currentUser";
 
-export const createPostComment = async (postId: string, data: EditorData) => {
+export const createPostComment = async (
+  postId: string,
+  parentCommentId: string | null,
+  data: EditorData,
+) => {
   const { originalContents } = data;
   if (originalContents.type !== "ckEditorMarkup") {
     throw new Error("Invalid editor type");
@@ -13,16 +18,39 @@ export const createPostComment = async (postId: string, data: EditorData) => {
     throw new Error("Comment is empty");
   }
 
-  const [user, post] = await Promise.all([
+  const [headerStore, user, post, parentComment] = await Promise.all([
+    headers(),
     getCurrentUser(),
     db.query.posts.findFirst({
       columns: {
         _id: true,
       },
+      with: {
+        contents: {
+          columns: {
+            version: true,
+          },
+        },
+      },
       where: {
         _id: postId,
       },
     }),
+    parentCommentId
+      ? db.query.comments.findFirst({
+          columns: {
+            _id: true,
+            topLevelCommentId: true,
+            answer: true,
+            parentAnswerId: true,
+            tagId: true,
+            tagCommentType: true,
+          },
+          where: {
+            _id: parentCommentId,
+          },
+        })
+      : null,
   ]);
   if (!user) {
     throw new Error("You must be logged in to comment");
@@ -30,8 +58,9 @@ export const createPostComment = async (postId: string, data: EditorData) => {
   if (!post) {
     throw new Error("Post not found");
   }
+  if (parentCommentId && !parentComment) {
+    throw new Error("Parent comment not found");
+  }
 
-  // TODO
-  // eslint-disable-next-line no-console
-  console.log("ok");
+  void headerStore;
 };

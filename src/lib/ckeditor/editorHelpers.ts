@@ -5,7 +5,7 @@ import { canMention, countMentions } from "./pingbacks";
 
 export type EditorDocument = Document;
 
-export type EditorTypeString = "html" | "markdown" | "ckEditorMarkup";
+export type EditorTypeString = "html" | "markdown" | "ckEditorMarkup" | "draftJS";
 
 /**
  * Contents of an editor, with `value` in the native format of the editor
@@ -14,7 +14,7 @@ export type EditorTypeString = "html" | "markdown" | "ckEditorMarkup";
  */
 export type EditorContents = {
   type: EditorTypeString;
-  value: string;
+  data: string;
 };
 
 export type FormProps = {
@@ -25,7 +25,7 @@ export type FormProps = {
 export type EditorUpdateType = "initial" | "patch" | "minor" | "major";
 
 export type EditorData = {
-  originalContents: { type: EditorTypeString; data: string };
+  originalContents: EditorContents;
   updateType: EditorUpdateType;
   commitMessage: string;
   dataWithDiscardedSuggestions?: string;
@@ -44,7 +44,7 @@ export const getUserDefaultEditor = (user: CurrentUser | null): EditorTypeString
 
 export const getBlankEditorContents = (
   editorType: EditorTypeString,
-): EditorContents => ({ type: editorType, value: "" });
+): EditorContents => ({ type: editorType, data: "" });
 
 export const getCKEditorDocumentId = (
   documentId: string | null,

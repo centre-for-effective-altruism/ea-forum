@@ -19,7 +19,7 @@ export default function NewComment({
   const editorRef = useRef<EditorAPI>(null);
   const [contents, setContents] = useState<EditorContents>({
     type: "ckEditorMarkup",
-    value: "",
+    data: "",
   });
 
   const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
@@ -36,7 +36,7 @@ export default function NewComment({
       }
       setLoading(true);
       const data = await editorApi.submitData();
-      await createPostComment(postId, data);
+      await createPostComment(postId, null, data);
     } catch (e) {
       console.error("Editor submit error:", e);
       toast.error(e instanceof Error ? e.message : "Something went wrong");

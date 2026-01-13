@@ -124,7 +124,7 @@ const Editor = forwardRef<
     debounce(() => {
       if (value.type === "markdown") {
         const httpImageRE = /!\[[^\]]*?\]\(http:/g;
-        setMarkdownImgErrs(httpImageRE.test(value.value));
+        setMarkdownImgErrs(httpImageRE.test(value.data));
       }
     }, validationIntervalMs),
   ).current;
@@ -144,11 +144,11 @@ const Editor = forwardRef<
 
   const setContents = useCallback(
     (editorType: EditorTypeString, newValue: string) => {
-      if (value.value === newValue) {
+      if (value.data === newValue) {
         return;
       }
       onChange?.({
-        contents: { type: editorType, value: newValue },
+        contents: { type: editorType, data: newValue },
         autosave: true,
       });
       if (editorType === "markdown") {
@@ -167,7 +167,7 @@ const Editor = forwardRef<
       switch (value.type) {
         case "markdown":
         case "html":
-          data = value.value;
+          data = value.data;
           break;
         case "ckEditorMarkup":
           if (!ckEditorReference) {
@@ -182,9 +182,8 @@ const Editor = forwardRef<
           }
           break;
       }
-
       return {
-        originalContents: { type: value.type, data },
+        originalContents: { type: value.type, data: data! },
         updateType,
         commitMessage,
         dataWithDiscardedSuggestions,
@@ -226,7 +225,7 @@ const Editor = forwardRef<
           <div className="forum-editor">
             {editorWarning && <WarningBanner messageHtml={editorWarning} />}
             <CkEditor
-              data={value.value}
+              data={value.data}
               document={document}
               isCollaborative={isCollaborative}
               accessLevel={accessLevel}

@@ -50,11 +50,11 @@ export const createTestRevision = async (
   return result[0];
 };
 
-export const createTestPost = async (data: Partial<InsertPost>): Promise<Post> => {
+export const createTestPost = async (data?: Partial<InsertPost>): Promise<Post> => {
   const userId = data?.userId ?? (await createTestUser())._id;
   const postId = data?._id ?? randomId();
-  const title = data.title ?? randomId();
-  const createdAt = data.postedAt || data.createdAt || new Date().toISOString();
+  const title = data?.title ?? randomId();
+  const createdAt = data?.postedAt || data?.createdAt || new Date().toISOString();
   const revision = await createTestRevision({
     collectionName: "Posts",
     documentId: postId,
