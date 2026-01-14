@@ -10,6 +10,7 @@ import { denormalizeRevision } from "../revisions/revisionHelpers";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { performVote } from "../votes/voteMutations";
 import {
+  updateCommentAuthor,
   updateCommentPost,
   updateCommentTag,
   updateDescendentCommentCounts,
@@ -123,9 +124,11 @@ export const createPostComment = async ({
       .returning();
     const comment = insert[0];
 
+    // TODO: A lot of these callbacks shouldn't be run on draft comments
     await Promise.all([
       updateCommentPost(txn, comment),
       updateCommentTag(txn, comment),
+      updateCommentAuthor(txn, comment),
       updateReadStatusAfterComment(txn, comment),
       updateDescendentCommentCounts(txn, comment),
       performVote({
@@ -142,8 +145,6 @@ export const createPostComment = async ({
     // handleForumEventMetadataNew
     // notifyUsersOfPingbackMentions
     // upsertPolls
-    // updateCountOfReferencesOnOtherCollectionsAfterCreate
-    // lwCommentsNewUpvoteOwnComment
     // checkCommentForSpamWithAkismet
     // newCommentTriggerReview
     // trackCommentRateLimitHit

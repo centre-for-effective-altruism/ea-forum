@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { tags, Comment, posts, readStatuses, comments } from "@/lib/schema";
+import { tags, Comment, posts, readStatuses, comments, users } from "@/lib/schema";
 import { Transaction } from "../db";
 import { getCommentAncestorIds } from "./commentQueries";
 
@@ -7,13 +7,18 @@ export const updateCommentPost = async (txn: Transaction, comment: Comment) => {
   if (!comment.postId || comment.debateResponse) {
     return;
   }
-  const lastCommentedAt = comment.postedAt;
-  const lastCommentReplyAt = comment.parentCommentId ? lastCommentedAt : undefined;
   await txn
     .update(posts)
     .set({
-      lastCommentedAt,
-      ...(lastCommentReplyAt ? { lastCommentReplyAt } : null),
+      commentCount: sql<number>`${posts.commentCount} + 1`,
+      lastCommentedAt: comment.postedAt,
+      ...(comment.parentCommentId
+        ? {
+            lastCommentReplyAt: comment.postedAt,
+          }
+        : {
+            topLevelCommentCount: sql<number>`${posts.topLevelCommentCount} + 1`,
+          }),
     })
     .where(eq(posts._id, comment.postId));
 };
@@ -29,6 +34,16 @@ export const updateCommentTag = async (txn: Transaction, comment: Comment) => {
       )
       .where(eq(tags._id, comment.tagId));
   }
+};
+
+export const updateCommentAuthor = async (txn: Transaction, comment: Comment) => {
+  await txn
+    .update(users)
+    .set({
+      commentCount: sql<number>`${users.commentCount} + 1`,
+      maxCommentCount: sql<number>`${users.maxCommentCount} + 1`,
+    })
+    .where(eq(users._id, comment.userId));
 };
 
 /**
@@ -59,12 +74,23 @@ export const updateDescendentCommentCounts = async (
   txn: Transaction,
   comment: Comment,
 ) => {
+  if (!comment.parentCommentId) {
+    return;
+  }
   const ancestorIds = await getCommentAncestorIds(comment._id, txn);
-  await txn
-    .update(comments)
-    .set({
-      lastSubthreadActivity: comment.createdAt,
-      descendentCount: sql<number>`${comments.descendentCount} + 1`,
-    })
-    .where(inArray(comments._id, ancestorIds));
+  await Promise.all([
+    txn
+      .update(comments)
+      .set({
+        lastSubthreadActivity: comment.createdAt,
+        descendentCount: sql<number>`${comments.descendentCount} + 1`,
+      })
+      .where(inArray(comments._id, ancestorIds)),
+    txn
+      .update(comments)
+      .set({
+        directChildrenCount: sql<number>`${comments.directChildrenCount} + 1`,
+      })
+      .where(eq(comments._id, comment.parentCommentId)),
+  ]);
 };
