@@ -8,8 +8,10 @@ import { comments } from "../schema";
 import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision } from "../revisions/revisionHelpers";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
+import { getPostForCommentCreation } from "./commentQueries";
 import { performVote } from "../votes/voteMutations";
 import {
+  checkCommentRateLimits,
   updateCommentAuthor,
   updateCommentPost,
   updateCommentTag,
@@ -45,21 +47,7 @@ export const createPostComment = async ({
   }
 
   const [post, parentComment] = await Promise.all([
-    db.query.posts.findFirst({
-      columns: {
-        _id: true,
-      },
-      with: {
-        contents: {
-          columns: {
-            version: true,
-          },
-        },
-      },
-      where: {
-        _id: postId,
-      },
-    }),
+    getPostForCommentCreation(db, postId),
     parentCommentId
       ? db.query.comments.findFirst({
           columns: {
@@ -131,6 +119,7 @@ export const createPostComment = async ({
       updateCommentAuthor(txn, comment),
       updateReadStatusAfterComment(txn, comment),
       updateDescendentCommentCounts(txn, comment),
+      checkCommentRateLimits(txn, user, comment),
       performVote({
         txn,
         collectionName: "Comments",

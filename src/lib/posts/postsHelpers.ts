@@ -1,5 +1,6 @@
 import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
+import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
@@ -9,12 +10,7 @@ export const postGetPageUrl = ({
   sequenceId,
   isAbsolute,
 }: {
-  post: {
-    _id: string;
-    slug: string;
-    isEvent?: boolean;
-    groupId?: string | null;
-  };
+  post: Pick<Post, "_id" | "slug"> & Partial<Pick<Post, "isEvent" | "groupId">>;
   isAbsolute?: boolean;
   sequenceId?: string;
 }) => {

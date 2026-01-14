@@ -1,7 +1,10 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { tags, Comment, posts, readStatuses, comments, users } from "@/lib/schema";
-import { Transaction } from "../db";
+import type { Transaction } from "../db";
+import type { CurrentUser } from "../users/currentUser";
 import { getCommentAncestorIds } from "./commentQueries";
+import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
+import { captureEvent } from "../analytics/captureEvent";
+import { tags, Comment, posts, readStatuses, comments, users } from "@/lib/schema";
 
 export const updateCommentPost = async (txn: Transaction, comment: Comment) => {
   if (!comment.postId || comment.debateResponse) {
@@ -77,7 +80,7 @@ export const updateDescendentCommentCounts = async (
   if (!comment.parentCommentId) {
     return;
   }
-  const ancestorIds = await getCommentAncestorIds(comment._id, txn);
+  const ancestorIds = await getCommentAncestorIds(txn, comment._id);
   await Promise.all([
     txn
       .update(comments)
@@ -93,4 +96,25 @@ export const updateDescendentCommentCounts = async (
       })
       .where(eq(comments._id, comment.parentCommentId)),
   ]);
+};
+
+export const checkCommentRateLimits = async (
+  txn: Transaction,
+  user: CurrentUser,
+  comment: Comment,
+) => {
+  const rateLimit = await rateLimitDateWhenUserNextAbleToComment(txn, user, null);
+  // If the user has created a comment that makes them hit the rate limit, record
+  // an event (ignore the universal 8 sec rate limit)
+  if (rateLimit && rateLimit.rateLimitType !== "universal") {
+    // Note: This isn't sent when a comment is blocked due to the rate limit, only
+    // if the *next* comment would be blocked. See "commentBlockedDueToRateLimit"
+    // for tracking comments that are blocked
+    captureEvent("commentRateLimitHit", {
+      rateLimitType: rateLimit.rateLimitType ?? null,
+      rateLimitName: rateLimit.rateLimitName,
+      userId: user._id,
+      commentId: comment._id,
+    });
+  }
 };

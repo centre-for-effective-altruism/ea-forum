@@ -1021,6 +1021,8 @@ export const commentModeratorActions = pgTable(
   ],
 );
 
+export type ModeratorAction = typeof moderatorActions.$inferSelect;
+
 export const databaseMetadata = pgTable(
   "DatabaseMetadata",
   {
@@ -3171,6 +3173,8 @@ export const userRateLimits = pgTable(
     ),
   ],
 );
+
+export type UserRateLimit = typeof userRateLimits.$inferSelect;
 
 export const userTagRels = pgTable(
   "UserTagRels",

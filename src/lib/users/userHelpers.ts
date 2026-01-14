@@ -296,6 +296,15 @@ export const userIsPostGroupOrganizer = async (
  * True if the user is a coauthor of this post (returns false for the main author).
  */
 export const userIsPostCoauthor = (
-  user: CurrentUser | null,
-  post: Post | null,
+  user: Pick<User, "_id"> | null,
+  post: Pick<Post, "coauthorUserIds"> | null,
 ): boolean => !!user && !!post && post.coauthorUserIds.indexOf(user._id) >= 0;
+
+/**
+ * True if the user is either the main author or a coauthor of the post.
+ */
+export const userIsPostAuthor = (
+  user: Pick<User, "_id"> | null,
+  post: Pick<Post, "userId" | "coauthorUserIds"> | null,
+): boolean =>
+  !!user && !!post && (user._id === post.userId || userIsPostCoauthor(user, post));

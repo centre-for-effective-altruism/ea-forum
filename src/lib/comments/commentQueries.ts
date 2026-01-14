@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
-import { db, DbOrTransaction } from "../db";
+import { DbOrTransaction } from "../db";
 
 export const getCommentAncestorIds = async (
+  txn: DbOrTransaction,
   commentId: string,
-  txn: DbOrTransaction = db,
 ): Promise<string[]> => {
   type CommentWithAncestor = {
     _id: string;
@@ -26,3 +26,28 @@ export const getCommentAncestorIds = async (
   `);
   return result.rows.map((row) => row._id);
 };
+
+/** Fetches a post, returning just the fields needed to create a comment on it */
+export const getPostForCommentCreation = (txn: DbOrTransaction, postId: string) =>
+  txn.query.posts.findFirst({
+    columns: {
+      _id: true,
+      ignoreRateLimits: true,
+      userId: true,
+      coauthorUserIds: true,
+    },
+    with: {
+      contents: {
+        columns: {
+          version: true,
+        },
+      },
+    },
+    where: {
+      _id: postId,
+    },
+  });
+
+export type PostForCommentCreation = NonNullable<
+  Awaited<ReturnType<typeof getPostForCommentCreation>>
+>;
