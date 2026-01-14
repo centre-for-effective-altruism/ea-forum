@@ -68,7 +68,7 @@ export default function Button({
         className,
       )}
     >
-      <span className={clsx(loading && "opacity-0")}>{children}</span>
+      <span className={clsx(loading ? "opacity-0" : "contents")}>{children}</span>
       {loading && (
         <Loading
           colorClassName={

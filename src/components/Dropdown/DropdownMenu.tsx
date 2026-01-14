@@ -6,14 +6,12 @@ import DropdownItem from "./DropdownItem";
 export default function DropdownMenu({
   placement,
   items,
-  onClickItem,
   dismissRef,
   className,
   children,
 }: Readonly<{
   placement?: Placement;
   items: (ComponentProps<typeof DropdownItem> | "divider")[];
-  onClickItem?: (title: string) => void;
   dismissRef?: RefObject<(() => void) | null>;
   className?: string;
   children: ReactNode;
@@ -31,11 +29,7 @@ export default function DropdownMenu({
             item === "divider" ? (
               <hr key={i} className="border-t border-solid border-gray-300 my-2" />
             ) : (
-              <DropdownItem
-                key={item.title}
-                {...item}
-                onClick={onClickItem?.bind(null, item.title)}
-              />
+              <DropdownItem key={item.title} {...item} />
             ),
           )}
         </div>

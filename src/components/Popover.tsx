@@ -1,10 +1,8 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { isClient } from "@/lib/environment";
-import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
-import ClickAwayListener from "react-click-away-listener";
 import clsx from "clsx";
 
 export default function Popover({
@@ -20,54 +18,81 @@ export default function Popover({
   className?: string;
   children: ReactNode;
 }>) {
-  const [target] = useState<HTMLElement | null>(() =>
-    isClient ? document.getElementById("modal-target") : null,
-  );
-
-  useBodyScrollLock(!!target && open);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (open) {
-      const onKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-        }
-      };
-      document.addEventListener("keydown", onKeyDown);
-      return () => {
-        document.removeEventListener("keydown", onKeyDown);
-      };
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
     }
-  }, [open, onClose]);
+    if (open) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else {
+      if (dialog.open) {
+        dialog.close();
+      }
+    }
+  }, [open]);
 
-  if (!target || !open) {
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    // Handle native dialog close events (like ESC key)
+    const handleClose = () => onClose();
+
+    // Handle click on the ::backdrop pseudo-element
+    const handleClick = (e: MouseEvent) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
+      if (!isInDialog) {
+        handleClose();
+      }
+    };
+
+    dialog.addEventListener("close", handleClose);
+    dialog.addEventListener("click", handleClick);
+
+    return () => {
+      dialog.removeEventListener("close", handleClose);
+      dialog.removeEventListener("click", handleClick);
+    };
+  }, [onClose]);
+
+  if (!isClient || !open) {
     return null;
   }
 
   return createPortal(
-    <div
+    <dialog
+      ref={dialogRef}
       data-component="Popover"
       className={clsx(
-        "fixed left-0 top-0 w-full h-screen flex items-center justify-center",
-        "z-(--zindex-popover) bg-(--color-modal-backdrop)",
-        background === "blurred" && "backdrop-blur-xs",
-        background === "dim" && "bg-popover-dim",
+        "backdrop:bg-(--color-modal-backdrop)",
+        background === "blurred" && "backdrop:backdrop-blur-xs",
+        background === "dim" && "backdrop:bg-popover-dim",
+        "p-0 border-0 bg-transparent max-w-none max-h-none",
+        "fixed inset-0 m-auto w-fit h-fit",
       )}
     >
-      <ClickAwayListener onClickAway={onClose}>
-        <div
-          role="dialog"
-          aria-modal="true"
-          className={clsx(
-            "max-h-[90vh] max-w-full overflow-auto bg-white p-8 rounded",
-            "border-1 border-gray-200",
-            className,
-          )}
-        >
-          {children}
-        </div>
-      </ClickAwayListener>
-    </div>,
-    target,
+      <div
+        className={clsx(
+          "max-h-[90vh] max-w-full overflow-auto bg-white p-8 rounded",
+          "border-1 border-gray-200",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </dialog>,
+    document.body,
   );
 }
