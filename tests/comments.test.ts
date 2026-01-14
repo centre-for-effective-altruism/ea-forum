@@ -1,26 +1,16 @@
-import { expect, suite, test, vi } from "vitest";
+import { expect, suite, test } from "vitest";
 import { createTestPost, createTestUser } from "./testHelpers";
 import { createPostComment } from "@/lib/comments/commentMutations";
-import { getCurrentUser } from "@/lib/users/currentUser";
 import { db } from "@/lib/db";
-
-vi.mock("@/lib/users/currentUser", () => ({
-  getCurrentUser: vi.fn(),
-}));
-vi.mock("next/headers", () => ({
-  headers: () => ({
-    get: (name: string) => name,
-  }),
-}));
 
 suite("Comments", () => {
   suite("New comment on post", () => {
     test("Can leave a new top-level comment on a post", async () => {
       const post = await createTestPost();
+      expect(post.lastCommentedAt).toBe(null);
+      expect(post.lastCommentReplyAt).toBe(null);
 
       const commenter = await createTestUser();
-      vi.mocked(getCurrentUser).mockResolvedValue(commenter);
-
       const editorData = {
         originalContents: {
           type: "ckEditorMarkup",
@@ -29,14 +19,31 @@ suite("Comments", () => {
         updateType: "minor",
         commitMessage: "",
       } as const;
-      const commentId = await createPostComment(post._id, null, editorData);
-
-      const comment = await db.query.comments.findFirst({
-        where: {
-          _id: commentId,
-        },
+      const commentId = await createPostComment({
+        user: commenter,
+        postId: post._id,
+        parentCommentId: null,
+        data: editorData,
+        userAgent: "user-agent",
+        referrer: "referrer",
       });
-      expect(comment).toBeTruthy();
+
+      const [comment, updatedPost] = await Promise.all([
+        db.query.comments.findFirst({
+          where: {
+            _id: commentId,
+          },
+        }),
+        db.query.posts.findFirst({
+          where: {
+            _id: post._id,
+          },
+        }),
+      ]);
+      expect(comment?.parentCommentId).toBe(null);
+      expect(comment?.descendentCount).toBe(0);
+      expect(updatedPost!.lastCommentedAt).toBeTruthy();
+      expect(updatedPost!.lastCommentReplyAt).toBe(null);
     });
   });
 });

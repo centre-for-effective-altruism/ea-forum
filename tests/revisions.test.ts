@@ -2,6 +2,7 @@ import { expect, suite, test } from "vitest";
 import { createTestUser } from "./testHelpers";
 import { createRevision } from "@/lib/revisions/revisionMutations";
 import { randomId } from "@/lib/utils/random";
+import { db } from "@/lib/db";
 import type { EditorContents, EditorData } from "@/lib/ckeditor/editorHelpers";
 import type { ChangeMetrics } from "@/lib/revisions/htmlToChangeMetrics";
 
@@ -17,7 +18,7 @@ suite("Revisions", () => {
       commitMessage: "",
     };
     const documentId = randomId();
-    const revision = await createRevision(user, editorData, {
+    const revision = await createRevision(db, user, editorData, {
       documentId,
       collectionName: "Comments",
       fieldName: "contents",

@@ -1796,6 +1796,7 @@ export const posts = pgTable(
     slug: text().notNull(),
     viewCount: doublePrecision().default(0).notNull(),
     lastCommentedAt: timestamp(),
+    lastCommentReplyAt: timestamp(),
     clickCount: doublePrecision().default(0).notNull(),
     deletedDraft: boolean().default(false).notNull(),
     status: doublePrecision().notNull(),

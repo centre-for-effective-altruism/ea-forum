@@ -4,12 +4,13 @@ import type { EditorData } from "../ckeditor/editorHelpers";
 import { revisions, Revision, User } from "../schema";
 import type { Json } from "../typeHelpers";
 import { randomId } from "../utils/random";
-import { db } from "../db";
+import { DbOrTransaction } from "../db";
 import { dataToHtml } from "../conversionUtils/dataToHtml";
 import { dataToWordCount } from "../conversionUtils/dataToWordCount";
 import { htmlToChangeMetrics } from "./htmlToChangeMetrics";
 
 export const createRevision = async (
+  txn: DbOrTransaction,
   user: Pick<User, "_id" | "isAdmin">,
   {
     originalContents,
@@ -32,7 +33,7 @@ export const createRevision = async (
     dataToWordCount(visibleData, editorType),
   ]);
   const now = new Date().toISOString();
-  const result = await db
+  const result = await txn
     .insert(revisions)
     .values({
       ...data,
@@ -50,6 +51,7 @@ export const createRevision = async (
       createdAt: now,
     })
     .returning();
-  // TODO Pingbacks
+  // TODO Pingbacks, assertPollsAllowed, upvoteOwnTagRevision,
+  // updateDenormalizedHtmlAttributionsDueToRev
   return result[0];
 };

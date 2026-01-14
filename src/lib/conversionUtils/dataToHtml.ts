@@ -25,7 +25,6 @@ export const dataToHtml = async (
     case "ckEditorMarkup": {
       const html = sanitizeHtml(data); // Sanitized CKEditor markup is just html
       const trimmedHtml = trimLeadingAndTrailingWhiteSpace(html);
-      // TODO: ForumMagnum has a callback here to handle dialogue HTML
       if (options?.skipMathjax) {
         return Promise.resolve(trimmedHtml);
       }

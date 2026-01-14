@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
-import { createPostComment } from "@/lib/comments/commentMutations";
+import { createPostCommentAction } from "@/lib/comments/commentActions";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import Editor, { EditorOnChangeProps } from "../Editor/Editor";
@@ -36,7 +36,11 @@ export default function NewComment({
       }
       setLoading(true);
       const data = await editorApi.submitData();
-      await createPostComment(postId, null, data);
+      await createPostCommentAction({
+        postId,
+        parentCommentId: null,
+        data,
+      });
     } catch (e) {
       console.error("Editor submit error:", e);
       toast.error(e instanceof Error ? e.message : "Something went wrong");
