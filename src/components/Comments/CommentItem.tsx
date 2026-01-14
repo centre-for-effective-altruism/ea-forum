@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
-import type { CommentTreeNode } from "@/lib/CommentTree";
+import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";

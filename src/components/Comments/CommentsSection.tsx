@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
-import { commentsToCommentTree } from "@/lib/CommentTree";
+import { commentsToCommentTree } from "@/lib/comments/CommentTree";
 import clsx from "clsx";
 import CommentItem from "./CommentItem";
 import NewComment from "./NewComment";
