@@ -7,13 +7,14 @@ import { randomId } from "../utils/random";
 import { comments } from "../schema";
 import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision } from "../revisions/revisionHelpers";
+import { elasticSyncDocument } from "../search/elastic/elasticSync";
+import { performVote } from "../votes/voteMutations";
 import {
   updateCommentPost,
   updateCommentTag,
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
 } from "./commentCallbacks";
-import { elasticSyncDocument } from "../search/elastic/elasticSync";
 
 const MINIMUM_APPROVAL_KARMA = 5;
 
@@ -127,6 +128,14 @@ export const createPostComment = async ({
       updateCommentTag(txn, comment),
       updateReadStatusAfterComment(txn, comment),
       updateDescendentCommentCounts(txn, comment),
+      performVote({
+        txn,
+        collectionName: "Comments",
+        document: comment,
+        user,
+        voteType: "smallUpvote",
+        skipRateLimits: true,
+      }),
     ]);
 
     // TODO:
