@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import {
   CloudinaryPropsType,
   makeCloudinaryImageUrl,
-} from "@/lib/cloudinaryHelpers";
+} from "@/lib/cloudinary/cloudinaryHelpers";
 
 const DEFAULT_HEADER_HEIGHT = 300;
 

@@ -12,6 +12,7 @@ import { cube } from "@electric-sql/pglite/contrib/cube";
 import { defineRelations } from "drizzle-orm";
 import {
   comments,
+  images,
   localgroups,
   moderatorActions,
   posts,
@@ -34,6 +35,7 @@ const relations = defineRelations(
     votes,
     localgroups,
     tags,
+    images,
     moderatorActions,
     userRateLimits,
     userLoginTokens,

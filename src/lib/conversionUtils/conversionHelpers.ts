@@ -1,7 +1,7 @@
 "server-only";
 
 import { CheerioAPI, load as cheerioLoad } from "cheerio";
-import { Element } from "domhandler";
+import type { Element } from "domhandler";
 
 const isEmptyParagraphOrBreak = (elem: Element) => {
   if (elem.type === "tag" && elem.name === "p") {
@@ -32,7 +32,7 @@ const removeLeadingEmptyParagraphsAndBreaks = (
 };
 
 export const trimLeadingAndTrailingWhiteSpace = (html: string): string => {
-  const $ = cheerioLoad(`<div id="root">${html}</div>`);
+  const $ = cheerioLoad(`<div id="root">${html}</div>`, null, false);
   const topLevelElements = $("#root").children().get();
   // Iterate once forward until we find non-empty paragraph to trim leading
   // empty paragraphs

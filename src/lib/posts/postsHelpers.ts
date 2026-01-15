@@ -2,7 +2,7 @@ import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
-import { getCloudinaryCloudName } from "../cloudinaryHelpers";
+import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 
 export const postGetPageUrl = ({

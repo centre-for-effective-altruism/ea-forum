@@ -4,7 +4,6 @@ declare namespace NodeJS {
     LOG_DRIZZLE_QUERIES?: "true" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_SITE_URL: string;
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
     CONTACT_EMAIL: string;
 
     // Auth0 settings
@@ -32,6 +31,11 @@ declare namespace NodeJS {
     CK_API_SECRET_KEY: string;
     NEXT_PUBLIC_CK_WEBSOCKET_URL: string;
     NEXT_PUBLIC_CK_UPLOAD_URL: string;
+
+    // Cloudinary
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
+    CLOUDINARY_API_KEY: string;
+    CLOUDINARY_API_SECRET: string;
 
     // Other services
     NEXT_PUBLIC_IPAPI_KEY?: string;

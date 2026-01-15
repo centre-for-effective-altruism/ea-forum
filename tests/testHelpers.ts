@@ -50,6 +50,16 @@ export const createTestRevision = async (
   return result[0];
 };
 
+export const createTestRevisionFromHtml = async (html: string, version = "1.0.0") =>
+  createTestRevision({
+    originalContents: {
+      type: "ckEditorMarkup",
+      data: html,
+    },
+    html,
+    version,
+  });
+
 export const createTestPost = async (data?: Partial<InsertPost>): Promise<Post> => {
   const userId = data?.userId ?? (await createTestUser())._id;
   const postId = data?._id ?? randomId();

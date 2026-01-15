@@ -2,6 +2,7 @@
 
 import type { EditorData } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
+import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { randomId } from "../utils/random";
 import { comments } from "../schema";
@@ -9,6 +10,7 @@ import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision } from "../revisions/revisionHelpers";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { getPostForCommentCreation } from "./commentQueries";
+import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { performVote } from "../votes/voteMutations";
 import {
   checkCommentRateLimits,
@@ -72,7 +74,7 @@ export const createPostComment = async ({
   }
 
   const commentId = randomId();
-  await db.transaction(async (txn) => {
+  const revision = await db.transaction(async (txn) => {
     const revision = await createRevision(txn, user, data, {
       documentId: commentId,
       collectionName: "Comments",
@@ -136,11 +138,24 @@ export const createPostComment = async ({
     // upsertPolls
     // checkCommentForSpamWithAkismet
     // newCommentTriggerReview
-    // trackCommentRateLimitHit
     // checkModGPTOnCommentCreate
     // commentsNewNotifications
-    // uploadImagesInEditableFields
+
+    return revision;
   });
+
+  // This is potentially slow - do it outside of the transaction to avoid
+  // keeping a lock
+  const { newRevision } = await convertImagesInObject(db, revision);
+  if (newRevision) {
+    await db
+      .update(comments)
+      .set({
+        contentsLatest: newRevision._id,
+        contents: denormalizeRevision(newRevision),
+      })
+      .where(eq(comments._id, commentId));
+  }
 
   void elasticSyncDocument("Comments", commentId);
 

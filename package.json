@@ -23,6 +23,7 @@
     "auth0": "^5.2.0",
     "bowser": "^2.13.1",
     "cheerio": "^1.1.2",
+    "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^1.0.0-beta.3-36e9b9e",
     "hepburn": "^1.2.2",

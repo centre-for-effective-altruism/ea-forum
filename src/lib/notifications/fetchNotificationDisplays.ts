@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { getSocialImagePreviewPrefix } from "../cloudinaryHelpers";
+import { getSocialImagePreviewPrefix } from "@/lib/cloudinary/cloudinaryHelpers";
 import type { NotificationDisplay } from "./notificationDisplayTypes";
 
 // This should return an object of type `NotificationDisplayUser`

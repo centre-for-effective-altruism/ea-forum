@@ -63,7 +63,7 @@ const countCharsInTag = (parsedHtml: CheerioAPI, tagName: string): number => {
   let cumulative = 0;
   for (let i = 0; i < instancesOfTag.length; i++) {
     const tag = instancesOfTag[i];
-    const text = cheerioLoad(tag).text();
+    const text = cheerioLoad(tag, null, false).text();
     cumulative += text.length;
   }
   return cumulative;
