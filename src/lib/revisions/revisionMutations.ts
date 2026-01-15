@@ -7,6 +7,7 @@ import { DbOrTransaction } from "../db";
 import { dataToHtml } from "../conversionUtils/dataToHtml";
 import { dataToWordCount } from "../conversionUtils/dataToWordCount";
 import { htmlToChangeMetrics } from "./htmlToChangeMetrics";
+import { assertPollsAllowed } from "../forumEvents/forumEventHelpers";
 
 export const createRevision = async (
   txn: DbOrTransaction,
@@ -50,9 +51,10 @@ export const createRevision = async (
       createdAt: now,
     })
     .returning();
+  const revision = result[0];
+  assertPollsAllowed(revision);
   // TODO:
-  // assertPollsAllowed
   // upvoteOwnTagRevision
   // updateDenormalizedHtmlAttributionsDueToRev
-  return result[0];
+  return revision;
 };

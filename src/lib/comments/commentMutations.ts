@@ -1,5 +1,4 @@
-"use server";
-
+import "server-only";
 import type { EditorData } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import { eq } from "drizzle-orm";

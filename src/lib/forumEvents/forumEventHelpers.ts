@@ -1,4 +1,6 @@
+import { CheerioAPI, load as cheerioLoad } from "cheerio";
 import { TupleSet, UnionOf } from "../typeHelpers";
+import type { Revision } from "../schema";
 
 export const FORUM_EVENT_FORMATS = new TupleSet([
   "BASIC",
@@ -48,4 +50,35 @@ export type ForumEventCommentMetadata = {
     /** The content that is prefilled into the comment box after voting */
     commentPrompt?: string | null;
   } | null;
+};
+
+const getPollElements = ($: CheerioAPI) => $(".ck-poll[data-internal-id]");
+
+const pollsAllowedFields = [
+  { collectionName: "Comments", fieldName: "contents" },
+  { collectionName: "Posts", fieldName: "contents" },
+];
+
+export const assertPollsAllowed = (revision?: Revision | null) => {
+  if (!revision) {
+    return;
+  }
+
+  const { html, collectionName, fieldName } = revision;
+  if (!html) {
+    return;
+  }
+
+  const $ = cheerioLoad(html, null, false);
+  const pollElements = getPollElements($);
+  if (pollElements.length > 0) {
+    const isAllowed = pollsAllowedFields.some(
+      (allowedField) =>
+        allowedField.collectionName === collectionName &&
+        allowedField.fieldName === fieldName,
+    );
+    if (!isAllowed) {
+      throw new Error("Polls are only allowed in post and comment bodies.");
+    }
+  }
 };
