@@ -37,7 +37,6 @@ function shouldHandleLocally(pathname: string): boolean {
 }
 
 export function proxy(request: NextRequest) {
-  // Skip proxy entirely in standalone mode
   if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
     return NextResponse.next();
   }
@@ -48,7 +47,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Proxy to the old site
+  // Proxy to the legacy site
   const url = new URL(request.url);
   url.protocol = legacySiteUrl.protocol;
   url.hostname = legacySiteUrl.hostname;
@@ -57,7 +56,7 @@ export function proxy(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
-// Don't run proxy on Next.js internal routes
+// Don't run proxy on NextJS internal routes
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
