@@ -1,6 +1,5 @@
-"server-only";
-
-import { AkismetClient } from "akismet-api";
+import "server-only";
+import { AkismetClient } from "@/vendor/akismet-api/akismet";
 import { isDevelopment } from "./environment";
 import { getSiteUrl } from "./routeHelpers";
 import type { DbOrTransaction } from "./db";
