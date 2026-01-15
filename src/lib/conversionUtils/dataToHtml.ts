@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import type { EditorTypeString } from "../ckeditor/editorHelpers";
 import { sanitizeHtml } from "./sanitizeHtml";
 import { processMathjax } from "./mathjax";

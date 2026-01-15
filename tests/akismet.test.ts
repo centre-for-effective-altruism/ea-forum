@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 const mockCheckSpam = vi.fn();
 const mockVerifyKey = vi.fn();
 
-vi.mock("akismet-api", () => ({
+vi.mock("@/vendor/akismet-api/akismet", () => ({
   AkismetClient: vi.fn(function (this: Record<string, unknown>) {
     this.checkSpam = mockCheckSpam;
     this.verifyKey = mockVerifyKey;

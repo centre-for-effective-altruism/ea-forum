@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import sanitizeHtmlLib from "sanitize-html";
 
 const sanitizeAllowedTags = [

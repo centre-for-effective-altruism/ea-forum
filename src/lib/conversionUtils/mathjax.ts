@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import type { LiteElement } from "mathjax-full/js/adaptors/lite/Element";
 import { mathjax } from "mathjax-full/js/mathjax";
 import { TeX } from "mathjax-full/js/input/tex";

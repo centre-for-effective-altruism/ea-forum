@@ -5,11 +5,14 @@ import {
   InsertComment,
   InsertPost,
   InsertRevision,
+  InsertTag,
   InsertUser,
   Post,
   posts,
   Revision,
   revisions,
+  Tag,
+  tags,
   User,
   users,
 } from "@/lib/schema";
@@ -113,5 +116,30 @@ export const createTestComment = async (
     ...data,
   };
   const result = await db.insert(comments).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestTag = async (data: Partial<InsertTag>): Promise<Tag> => {
+  const userId = data?.userId ?? (await createTestUser())._id;
+  const tagId = data?._id ?? randomId();
+  const createdAt = data.createdAt || new Date().toISOString();
+  const revision = await createTestRevision({
+    collectionName: "Comments",
+    documentId: tagId,
+    fieldName: "contents",
+    userId,
+    createdAt,
+  });
+  const insertValues: InsertTag = {
+    _id: tagId,
+    name: data.name ?? randomId(),
+    slug: data.slug ?? randomId(),
+    userId,
+    descriptionLatest: revision._id,
+    description: "",
+    createdAt,
+    ...data,
+  };
+  const result = await db.insert(tags).values(insertValues).returning();
   return result[0];
 };

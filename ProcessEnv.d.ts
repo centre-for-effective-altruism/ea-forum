@@ -44,6 +44,8 @@ declare namespace NodeJS {
 
     // Site config
     START_HERE_POST_ID: string;
+    INTRO_POST_ID: string;
+    CONTACT_POST_ID: string;
     COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
     TRANSLATION_TAG_ID: string;

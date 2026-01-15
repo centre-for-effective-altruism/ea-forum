@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import { randomId } from "../utils/random";
 import { processMathjax } from "./mathjax";
 import { trimLeadingAndTrailingWhiteSpace } from "./conversionHelpers";

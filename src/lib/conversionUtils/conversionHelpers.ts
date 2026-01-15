@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import { CheerioAPI, load as cheerioLoad } from "cheerio";
 import type { Element } from "domhandler";
 

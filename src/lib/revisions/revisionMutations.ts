@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import type { EditorData } from "../ckeditor/editorHelpers";
 import { revisions, Revision, User } from "../schema";
 import type { Json } from "../typeHelpers";
@@ -51,7 +50,9 @@ export const createRevision = async (
       createdAt: now,
     })
     .returning();
-  // TODO Pingbacks, assertPollsAllowed, upvoteOwnTagRevision,
+  // TODO:
+  // assertPollsAllowed
+  // upvoteOwnTagRevision
   // updateDenormalizedHtmlAttributionsDueToRev
   return result[0];
 };

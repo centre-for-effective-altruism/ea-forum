@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
       destination: "/posts/ht2dScQTpeBXB6uMb/how-to-use-the-forum-intro",
     },
     {
+      source: "/intro",
+      destination: "/posts/wenu9kmeqdNfzKdFa/what-is-effective-altruism-2",
+    },
+    {
       source: "/copyright",
       destination: "/posts/KK6AE8HzPkR2KnqSg/new-forum-license-creative-commons",
     },

@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import type { Json } from "../typeHelpers";
 
 export const captureEvent = (name: string, props: Json) => {

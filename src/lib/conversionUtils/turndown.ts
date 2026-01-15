@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import TurndownService from "turndown";
 // @ts-expect-error This library doesn't have types
 import { gfm } from "turndown-plugin-gfm";

@@ -8,6 +8,7 @@ import { randomId } from "../utils/random";
 import { comments } from "../schema";
 import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision } from "../revisions/revisionHelpers";
+import { htmlToPingbacks } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { getPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
@@ -83,6 +84,7 @@ export const createPostComment = async ({
       fieldName: "contents",
       draft,
     });
+    const pingbacks = revision.html ? await htmlToPingbacks(revision.html) : null;
 
     // TODO: Create shortform post if needed
     // TODO: shortform, shortformFrontpage, spam, needsReview, relevantTagIds
@@ -107,6 +109,7 @@ export const createPostComment = async ({
           (parentComment?.answer ? parentCommentId : null),
         contents: denormalizeRevision(revision),
         contentsLatest: revision._id,
+        pingbacks,
         postVersion: post.contents?.version || "1.0.0",
         postedAt: now,
         createdAt: now,

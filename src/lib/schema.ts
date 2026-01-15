@@ -3397,6 +3397,7 @@ export const tags = pgTable(
 );
 
 export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
 
 export const votes = pgTable(
   "Votes",
