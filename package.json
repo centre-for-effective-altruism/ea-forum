@@ -6,6 +6,7 @@
     "build": "next build",
     "check-format": "prettier --check .",
     "dev": "next dev --turbopack",
+    "dev:standalone": "DISABLE_PROXY=true next dev --turbopack",
     "format": "prettier . --write --log-level warn",
     "lint": "eslint --max-warnings 0",
     "prepare": "husky",

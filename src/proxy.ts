@@ -37,6 +37,11 @@ function shouldHandleLocally(pathname: string): boolean {
 }
 
 export function proxy(request: NextRequest) {
+  // Skip proxy entirely in standalone mode
+  if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
 
   if (shouldHandleLocally(pathname)) {
