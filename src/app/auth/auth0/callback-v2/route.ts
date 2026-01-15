@@ -48,7 +48,7 @@ export const GET = async (req: NextRequest) => {
     const origin = new URL(req.url).origin;
     const tokenResponse = await client.oauth.authorizationCodeGrant({
       code,
-      // This must match the redirect_uri sent when initiating login
+      // This must be the URL of this route
       redirect_uri: `${origin}/auth/auth0/callback-v2`,
     });
 
