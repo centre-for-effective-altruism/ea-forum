@@ -11,6 +11,7 @@ import { denormalizeRevision } from "../revisions/revisionHelpers";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { getPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
+import { triggerReviewIfNeededById } from "../users/userReview";
 import { performVote } from "../votes/voteMutations";
 import {
   checkCommentForSpam,
@@ -143,9 +144,9 @@ export const createPostComment = async ({
 
   await checkCommentForSpam(db, user, commentId, revision, post);
 
+  void triggerReviewIfNeededById(user._id);
+
   // TODO
-  // newCommentTriggerReview
-  // checkModGPTOnCommentCreate
   // commentsNewNotifications
 
   // This is potentially slow - do it outside of the transaction to avoid
