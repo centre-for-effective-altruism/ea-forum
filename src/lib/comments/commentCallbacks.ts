@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { DbOrTransaction, Transaction } from "../db";
 import type { CurrentUser } from "../users/currentUser";
+import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { postGetPageUrl } from "../posts/postsHelpers";
 import { akismetCheckComment } from "../akismet";
 import { getCommentAncestorIds, PostForCommentCreation } from "./commentQueries";
@@ -15,6 +16,7 @@ import {
   users,
   Revision,
 } from "@/lib/schema";
+import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 
 /** Threshold after which you are no longer affected by spam detection */
 const SPAM_KARMA_THRESHOLD = 10;
@@ -130,6 +132,53 @@ export const checkCommentRateLimits = async (
       commentId: comment._id,
     });
   }
+};
+
+export const addForumEventSticker = async (txn: Transaction, comment: Comment) => {
+  const metadata = comment.forumEventMetadata as ForumEventCommentMetadata | null;
+  if (metadata?.eventFormat !== "STICKERS") {
+    return;
+  }
+  if (!comment.forumEventId) {
+    throw new Error("Event comment must have forumEventId");
+  }
+  if (!metadata.sticker?._id) {
+    throw new Error("Must include sticker");
+  }
+
+  const event = await txn.query.forumEvents.findFirst({
+    columns: {
+      maxStickersPerUser: true,
+    },
+    where: {
+      _id: comment.forumEventId,
+    },
+  });
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  const { _id, x, y, theta, emoji } = metadata.sticker;
+  const stickerData = {
+    _id,
+    ...(x !== undefined && { x }),
+    ...(y !== undefined && { y }),
+    ...(theta !== undefined && { theta }),
+    ...(emoji !== undefined && { emoji }),
+    commentId: comment._id,
+    userId: comment.userId,
+  };
+
+  await upsertForumEventSticker({
+    txn,
+    forumEventId: comment.forumEventId,
+    stickerData,
+    maxStickersPerUser: event.maxStickersPerUser,
+  });
+  captureEvent("upsertForumEventSticker", {
+    forumEventId: comment.forumEventId,
+    stickerData,
+  });
 };
 
 export const checkCommentForSpam = async (

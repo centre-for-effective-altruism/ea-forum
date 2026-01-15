@@ -117,7 +117,20 @@ export const users = pgTable(
     needsReview: boolean().notNull().default(false),
     snoozedUntilContentCount: doublePrecision(),
     mapLocation: jsonb(),
+    mongoLocation: jsonb(),
+    googleLocation: jsonb(),
+    location: text(),
+    mapLocationSet: boolean(),
     usersContactedBeforeReview: text().array(),
+    linkedinProfileURL: text(),
+    facebookProfileURL: text(),
+    blueskyProfileURL: text(),
+    twitterProfileURL: text(),
+    twitterProfileURLAdmin: text(),
+    githubProfileURL: text(),
+    profileTagIds: varchar({ length: 27 }).array().notNull().default([]),
+    organizerOfGroupIds: varchar({ length: 27 }).array().notNull().default([]),
+    programParticipation: text().array(),
 
     /*
   "profile" JSONB,
@@ -223,10 +236,6 @@ export const users = pgTable(
   "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "mongoLocation" JSONB,
-  "googleLocation" JSONB,
-  "location" TEXT,
-  "mapLocationSet" BOOL,
   "mapMarkerText" TEXT,
   "htmlMapMarkerText" TEXT,
   "nearbyEventsNotifications" BOOL NOT NULL DEFAULT FALSE,
@@ -270,15 +279,6 @@ export const users = pgTable(
   "paymentInfo" TEXT,
   "profileUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',
   "fmCrosspostUserId" TEXT,
-  "linkedinProfileURL" TEXT,
-  "facebookProfileURL" TEXT,
-  "blueskyProfileURL" TEXT,
-  "twitterProfileURL" TEXT,
-  "twitterProfileURLAdmin" TEXT,
-  "githubProfileURL" TEXT,
-  "profileTagIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
-  "organizerOfGroupIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
-  "programParticipation" TEXT[],
   "postingDisabled" BOOL,
   "allCommentingDisabled" BOOL,
   "commentingOnOtherUsersDisabled" BOOL,
@@ -1651,6 +1651,9 @@ export const forumEvents = pgTable(
     ),
   ],
 );
+
+export type ForumEvent = typeof forumEvents.$inferSelect;
+export type InsertForumEvent = typeof forumEvents.$inferInsert;
 
 export const postViews = pgTable(
   "PostViews",

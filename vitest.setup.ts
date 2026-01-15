@@ -3,6 +3,7 @@ import { beforeAll, vi } from "vitest";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { postgresExtensions } from "@/lib/postgresExtensions";
+import { postgresFunctions } from "@/lib/postgresFunctions";
 
 // server-only breaks vitest if not mocked
 vi.mock("server-only", () => {
@@ -19,4 +20,6 @@ beforeAll(async () => {
   // Push the database schema to the in-memory test DB
   const { apply } = await pushSchema(schema, db);
   await apply();
+
+  await Promise.all(postgresFunctions.map((func) => db.execute(func.source)));
 });

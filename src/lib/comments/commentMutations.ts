@@ -15,6 +15,7 @@ import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { performVote } from "../votes/voteMutations";
 import {
+  addForumEventSticker,
   checkCommentForSpam,
   checkCommentRateLimits,
   updateCommentAuthor,
@@ -87,7 +88,7 @@ export const createPostComment = async ({
     const pingbacks = revision.html ? await htmlToPingbacks(revision.html) : null;
 
     // TODO: Create shortform post if needed
-    // TODO: shortform, shortformFrontpage, spam, needsReview, relevantTagIds
+    // shortform, shortformFrontpage, relevantTagIds
 
     const now = new Date().toISOString();
     const insert = await txn
@@ -127,6 +128,7 @@ export const createPostComment = async ({
       updateReadStatusAfterComment(txn, comment),
       updateDescendentCommentCounts(txn, comment),
       checkCommentRateLimits(txn, user, comment),
+      addForumEventSticker(txn, comment),
       performVote({
         txn,
         collectionName: "Comments",
@@ -138,8 +140,6 @@ export const createPostComment = async ({
     ]);
 
     // TODO:
-    // handleForumEventMetadataNew
-    // notifyUsersOfPingbackMentions
     // upsertPolls
 
     return revision;
@@ -149,8 +149,9 @@ export const createPostComment = async ({
 
   void triggerReviewIfNeededById(user._id);
 
-  // TODO
+  // TODO: Notifications:
   // commentsNewNotifications
+  // notifyUsersOfPingbackMentions
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock

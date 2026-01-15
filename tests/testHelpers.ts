@@ -1,8 +1,13 @@
 import { db } from "@/lib/db";
+import { randomId } from "@/lib/utils/random";
+import { slugify } from "@/lib/utils/slugify";
 import {
   Comment,
   comments,
+  ForumEvent,
+  forumEvents,
   InsertComment,
+  InsertForumEvent,
   InsertPost,
   InsertRevision,
   InsertTag,
@@ -16,8 +21,6 @@ import {
   User,
   users,
 } from "@/lib/schema";
-import { randomId } from "@/lib/utils/random";
-import { slugify } from "@/lib/utils/slugify";
 
 export const createTestUser = async (data?: Partial<InsertUser>): Promise<User> => {
   const testUsername = data?.username || data?.displayName || randomId();
@@ -141,5 +144,21 @@ export const createTestTag = async (data: Partial<InsertTag>): Promise<Tag> => {
     ...data,
   };
   const result = await db.insert(tags).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestForumEvent = async (
+  data: Partial<InsertForumEvent>,
+): Promise<ForumEvent> => {
+  const eventId = data?._id ?? randomId();
+  const createdAt = data.createdAt || new Date().toISOString();
+  const insertValues: InsertForumEvent = {
+    _id: eventId,
+    createdAt,
+    title: data.title ?? randomId(),
+    startDate: data.startDate ?? new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(forumEvents).values(insertValues).returning();
   return result[0];
 };
