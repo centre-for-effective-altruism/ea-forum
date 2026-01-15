@@ -1,10 +1,23 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import type { Transaction } from "../db";
+import type { DbOrTransaction, Transaction } from "../db";
 import type { CurrentUser } from "../users/currentUser";
-import { getCommentAncestorIds } from "./commentQueries";
+import { postGetPageUrl } from "../posts/postsHelpers";
+import { akismetCheckComment } from "../akismet";
+import { getCommentAncestorIds, PostForCommentCreation } from "./commentQueries";
 import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
 import { captureEvent } from "../analytics/captureEvent";
-import { tags, Comment, posts, readStatuses, comments, users } from "@/lib/schema";
+import {
+  tags,
+  Comment,
+  posts,
+  readStatuses,
+  comments,
+  users,
+  Revision,
+} from "@/lib/schema";
+
+/** Threshold after which you are no longer affected by spam detection */
+const SPAM_KARMA_THRESHOLD = 10;
 
 export const updateCommentPost = async (txn: Transaction, comment: Comment) => {
   if (!comment.postId || comment.debateResponse) {
@@ -117,4 +130,39 @@ export const checkCommentRateLimits = async (
       commentId: comment._id,
     });
   }
+};
+
+export const checkCommentForSpam = async (
+  txn: DbOrTransaction,
+  user: CurrentUser,
+  commentId: string,
+  commentRevision: Revision,
+  post: PostForCommentCreation,
+) => {
+  if (user.reviewedByUserId || user.karma >= SPAM_KARMA_THRESHOLD) {
+    return;
+  }
+
+  const start = Date.now();
+  const postUrl = postGetPageUrl({ post });
+  const isSpam = await akismetCheckComment(txn, user, commentRevision, postUrl);
+  const timeElapsed = Date.now() - start;
+  captureEvent("checkForAkismetSpamCompleted", {
+    commentId,
+    timeElapsed,
+  });
+  if (!isSpam) {
+    return;
+  }
+
+  console.warn("Deleting comment from user below spam threshold:", commentId);
+  await txn
+    .update(comments)
+    .set({
+      deleted: true,
+      deletedDate: new Date().toISOString(),
+      deletedReason:
+        "This comment has been marked as spam by the Akismet spam integration. We've sent the poster a PM with the content. If this deletion seems wrong to you, please send us a message on Intercom (the icon in the bottom-right of the page).",
+    })
+    .where(eq(comments._id, commentId));
 };

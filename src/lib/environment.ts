@@ -1,5 +1,11 @@
 import Bowser from "bowser";
 
+export const isProduction = process.env.ENVIRONMENT === "prod";
+
+export const isStaging = process.env.ENVIRONMENT === "staging";
+
+export const isDevelopment = process.env.ENVIRONMENT === "dev";
+
 export const isServer = typeof window === "undefined";
 
 export const isClient = !isServer;

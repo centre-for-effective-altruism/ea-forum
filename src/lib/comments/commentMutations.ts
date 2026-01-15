@@ -13,6 +13,7 @@ import { getPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { performVote } from "../votes/voteMutations";
 import {
+  checkCommentForSpam,
   checkCommentRateLimits,
   updateCommentAuthor,
   updateCommentPost,
@@ -136,13 +137,16 @@ export const createPostComment = async ({
     // handleForumEventMetadataNew
     // notifyUsersOfPingbackMentions
     // upsertPolls
-    // checkCommentForSpamWithAkismet
-    // newCommentTriggerReview
-    // checkModGPTOnCommentCreate
-    // commentsNewNotifications
 
     return revision;
   });
+
+  await checkCommentForSpam(db, user, commentId, revision, post);
+
+  // TODO
+  // newCommentTriggerReview
+  // checkModGPTOnCommentCreate
+  // commentsNewNotifications
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock

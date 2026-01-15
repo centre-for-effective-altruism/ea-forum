@@ -32,8 +32,11 @@ export const getPostForCommentCreation = (txn: DbOrTransaction, postId: string) 
   txn.query.posts.findFirst({
     columns: {
       _id: true,
-      ignoreRateLimits: true,
+      slug: true,
+      isEvent: true,
+      groupId: true,
       userId: true,
+      ignoreRateLimits: true,
       coauthorUserIds: true,
     },
     with: {

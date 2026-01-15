@@ -1,10 +1,25 @@
-import { expect, suite, test } from "vitest";
+import { beforeEach, expect, suite, test, vi } from "vitest";
 import { createTestPost, createTestUser } from "./testHelpers";
 import { createPostComment } from "@/lib/comments/commentMutations";
 import { userSmallVotePower } from "@/lib/votes/voteHelpers";
 import { db } from "@/lib/db";
 
+const mockAkismetCheckComment = vi.hoisted(() => vi.fn());
+
+vi.mock(import("@/lib/akismet"), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    akismetCheckComment: mockAkismetCheckComment,
+  };
+});
+
 suite("Comments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAkismetCheckComment.mockResolvedValue(false);
+  });
+
   suite("New comment on post", () => {
     test("Can leave a new top-level comment on a post", async () => {
       const post = await createTestPost();
@@ -137,6 +152,35 @@ suite("Comments", () => {
       expect(author!.commentCount).toBe(1);
       expect(author!.maxCommentCount).toBe(1);
       expect(author!.karma).toBe(0);
+    });
+    test("Spam comments are deleted", async () => {
+      mockAkismetCheckComment.mockResolvedValue(true);
+      const post = await createTestPost();
+      const commenter = await createTestUser({ reviewedByUserId: null });
+      const editorData = {
+        originalContents: {
+          type: "ckEditorMarkup",
+          data: "<p>Hello world</p>",
+        },
+        updateType: "minor",
+        commitMessage: "",
+      } as const;
+      const commentId = await createPostComment({
+        user: commenter,
+        postId: post._id,
+        parentCommentId: null,
+        data: editorData,
+        userAgent: "user-agent",
+        referrer: "referrer",
+      });
+      const comment = await db.query.comments.findFirst({
+        where: {
+          _id: commentId,
+        },
+      });
+      expect(comment!.deleted).toBe(true);
+      expect(comment!.deletedDate).toBeTruthy();
+      expect(comment!.deletedReason).toContain("marked as spam");
     });
   });
 });
