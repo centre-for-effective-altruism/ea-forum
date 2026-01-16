@@ -39,6 +39,7 @@ const nextConfig: NextConfig = {
       destination: "/posts/jpqJKZm9JXgMTwSfg/contact-us",
     },
   ],
+  serverExternalPackages: ["mathjax-full"],
 };
 
 export default nextConfig;
