@@ -160,7 +160,13 @@ const Editor = forwardRef<
 
   useImperativeHandle(ref, () => ({
     focus: () => ckEditorReference?.focus(),
-    submitData: async () => {
+    clear: () => {
+      if (!ckEditorReference) {
+        throw new Error("Missing CKEditor reference");
+      }
+      ckEditorReference.setData("");
+    },
+    getSubmitData: async () => {
       let data: string;
       let dataWithDiscardedSuggestions;
 

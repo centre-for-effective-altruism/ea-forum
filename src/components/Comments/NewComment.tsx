@@ -37,13 +37,14 @@ export default function NewComment({
         throw new Error("Editor API not found");
       }
       setLoading(true);
-      const data = await editorApi.submitData();
+      const data = await editorApi.getSubmitData();
       const comment = await createPostCommentAction({
         postId,
         parentCommentId: null,
         data,
       });
       addTopLevelComment(comment);
+      editorRef.current?.clear();
     } catch (e) {
       console.error("Editor submit error:", e);
       toast.error(e instanceof Error ? e.message : "Something went wrong");
