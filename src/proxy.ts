@@ -33,6 +33,28 @@ const newSitePatterns = [
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
 
+// Cookie payload for the old site to know which routes are owned by the new site
+const OWNED_ROUTES_COOKIE_NAME = "ea_forum_v2_owned_routes";
+const ownedRoutesPayload = JSON.stringify({
+  v: 1.0,
+  patterns: newSitePatterns.map((r) => r.source),
+});
+
+// Static check: cookies have a 4KB limit
+const COOKIE_SIZE_LIMIT = 4 * 1024;
+const encodedPayload = encodeURIComponent(ownedRoutesPayload);
+const cookieSize = OWNED_ROUTES_COOKIE_NAME.length + 1 + encodedPayload.length; // name=value
+if (cookieSize > COOKIE_SIZE_LIMIT * 0.9) {
+  const message =
+    `ea_forum_v2_owned_routes cookie is getting close to the 4KB limit (${cookieSize} bytes). ` +
+    `Consider pruning or grouping route patterns.`;
+  if (process.env.NODE_ENV === "production") {
+    console.warn(message);
+  } else {
+    throw new Error(message);
+  }
+}
+
 function shouldHandleLocally(pathname: string): boolean {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
     return false;
@@ -62,7 +84,18 @@ export function proxy(request: NextRequest) {
   url.hostname = legacySiteUrl.hostname;
   url.port = legacySiteUrl.port;
 
-  return NextResponse.rewrite(url);
+  const response = NextResponse.rewrite(url);
+
+  const prefersNewSite = request.cookies.get("prefer_ea_forum_v2")?.value === "true";
+  if (prefersNewSite) {
+    response.cookies.set(OWNED_ROUTES_COOKIE_NAME, ownedRoutesPayload, {
+      path: "/",
+      httpOnly: false, // Needs to be readable by client JS
+      sameSite: "lax",
+    });
+  }
+
+  return response;
 }
 
 // Don't run proxy on NextJS internal routes
