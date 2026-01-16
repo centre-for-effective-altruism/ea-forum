@@ -34,9 +34,8 @@ const newSitePatterns = [
 // Lowest precedence: Route to the *old* site if neither of the above match
 
 // Cookie payload for the old site to know which routes are owned by the new site
-const OWNED_ROUTES_COOKIE_NAME = "ea_forum_v2_owned_routes";
+const OWNED_ROUTES_COOKIE_NAME = "ea_forum_v3_owned_routes";
 const ownedRoutesPayload = JSON.stringify({
-  v: 1.0,
   patterns: newSitePatterns.map((r) => r.source),
 });
 
@@ -46,7 +45,7 @@ const encodedPayload = encodeURIComponent(ownedRoutesPayload);
 const cookieSize = OWNED_ROUTES_COOKIE_NAME.length + 1 + encodedPayload.length; // name=value
 if (cookieSize > COOKIE_SIZE_LIMIT * 0.9) {
   const message =
-    `ea_forum_v2_owned_routes cookie is getting close to the 4KB limit (${cookieSize} bytes). ` +
+    `ea_forum_v3_owned_routes cookie is getting close to the 4KB limit (${cookieSize} bytes). ` +
     `Consider pruning or grouping route patterns.`;
   if (process.env.NODE_ENV === "production") {
     console.warn(message);
@@ -86,7 +85,7 @@ export function proxy(request: NextRequest) {
 
   const response = NextResponse.rewrite(url);
 
-  const prefersNewSite = request.cookies.get("prefer_ea_forum_v2")?.value === "true";
+  const prefersNewSite = request.cookies.get("prefer_ea_forum_v3")?.value === "true";
   if (prefersNewSite) {
     response.cookies.set(OWNED_ROUTES_COOKIE_NAME, ownedRoutesPayload, {
       path: "/",
