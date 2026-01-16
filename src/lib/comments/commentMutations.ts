@@ -12,6 +12,7 @@ import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { getPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
+import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import {
   addForumEventSticker,
@@ -23,7 +24,6 @@ import {
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
 } from "./commentCallbacks";
-import { upsertPolls } from "../forumEvents/forumEventMutations";
 
 const MINIMUM_APPROVAL_KARMA = 5;
 

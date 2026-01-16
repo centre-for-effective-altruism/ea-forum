@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import { createPostCommentAction } from "@/lib/comments/commentActions";
+import { useCommentsList } from "./useCommentsList";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import Editor, { EditorOnChangeProps } from "../Editor/Editor";
@@ -15,6 +16,7 @@ export default function NewComment({
   postId: string;
   className?: string;
 }>) {
+  const { addTopLevelComment } = useCommentsList();
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
   const [contents, setContents] = useState<EditorContents>({
@@ -36,18 +38,19 @@ export default function NewComment({
       }
       setLoading(true);
       const data = await editorApi.submitData();
-      await createPostCommentAction({
+      const comment = await createPostCommentAction({
         postId,
         parentCommentId: null,
         data,
       });
+      addTopLevelComment(comment);
     } catch (e) {
       console.error("Editor submit error:", e);
       toast.error(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }, [postId]);
+  }, [postId, addTopLevelComment]);
 
   return (
     <div
@@ -55,7 +58,6 @@ export default function NewComment({
       className={clsx(
         "border border-comment-border rounded p-2 [&_.ck.ck-content]:min-h-[100px]",
         "flex flex-col items-end gap-1",
-        "",
         className,
       )}
     >

@@ -9,6 +9,8 @@ export type ThreadableCommentType = {
 export interface CommentTreeNode<T extends ThreadableCommentType> {
   comment: T;
   depth: number;
+  /** True if this comment was created by an optimistic client-side update */
+  isLocal: boolean;
   children: CommentTreeNode<T>[];
 }
 
@@ -22,14 +24,23 @@ const updateDepths = <T extends ThreadableCommentType>(
   }
 };
 
-const sortByKarma = <T extends ThreadableCommentType>(
+/**
+ * Sort the comments in the tree.
+ * Local comments are always displayed first sorted newest to oldest.
+ * Non-local comments are then sorted by karma, then date, then _id.
+ */
+const sortTreeNodes = <T extends ThreadableCommentType>(
   nodes: CommentTreeNode<T>[],
 ) => {
-  // Sort by karma, then date, then _id
   nodes.sort((a, b) => {
-    const scoreDiff = b.comment.baseScore - a.comment.baseScore;
-    if (scoreDiff !== 0) {
-      return scoreDiff;
+    if (a.isLocal !== b.isLocal) {
+      return a.isLocal ? -1 : 1;
+    }
+    if (!a.isLocal && !b.isLocal) {
+      const scoreDiff = b.comment.baseScore - a.comment.baseScore;
+      if (scoreDiff !== 0) {
+        return scoreDiff;
+      }
     }
     const dateDiff =
       new Date(b.comment.postedAt).getTime() -
@@ -40,7 +51,7 @@ const sortByKarma = <T extends ThreadableCommentType>(
     return b.comment._id.localeCompare(a.comment._id);
   });
   for (const node of nodes) {
-    sortByKarma(node.children);
+    sortTreeNodes(node.children);
   }
 };
 
@@ -54,12 +65,22 @@ const sortByKarma = <T extends ThreadableCommentType>(
  */
 export const commentsToCommentTree = <T extends ThreadableCommentType>(
   comments: T[],
+  localComments: T[] = [],
 ): CommentTreeNode<T>[] => {
-  const commentTreeNodes: CommentTreeNode<T>[] = comments.map((comment) => ({
-    comment,
-    depth: 0,
-    children: [],
-  }));
+  const commentTreeNodes: CommentTreeNode<T>[] = [
+    ...comments.map((comment) => ({
+      comment,
+      depth: 0,
+      isLocal: false,
+      children: [],
+    })),
+    ...localComments.map((comment) => ({
+      comment,
+      depth: 0,
+      isLocal: true,
+      children: [],
+    })),
+  ];
 
   const commentTreeNodesById: Record<string, CommentTreeNode<T>> = {};
   for (const node of commentTreeNodes) {
@@ -81,6 +102,6 @@ export const commentsToCommentTree = <T extends ThreadableCommentType>(
     }
   }
   updateDepths(roots);
-  sortByKarma(roots);
+  sortTreeNodes(roots);
   return roots;
 };

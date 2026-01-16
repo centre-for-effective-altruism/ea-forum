@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { getCurrentUser } from "../users/currentUser";
 import { createPostComment } from "./commentMutations";
 import type { EditorData } from "../ckeditor/editorHelpers";
+import { fetchCommentsListItem } from "./commentLists";
 
 export const createPostCommentAction = async ({
   postId,
@@ -22,7 +23,7 @@ export const createPostCommentAction = async ({
   }
   const userAgent = headerStore.get("user-agent");
   const referrer = headerStore.get("referer");
-  return createPostComment({
+  const commentId = await createPostComment({
     user,
     postId,
     parentCommentId,
@@ -30,5 +31,9 @@ export const createPostCommentAction = async ({
     draft,
     userAgent,
     referrer,
+  });
+  return await fetchCommentsListItem({
+    currentUserId: user._id,
+    commentId,
   });
 };

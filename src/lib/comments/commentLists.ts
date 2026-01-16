@@ -94,6 +94,21 @@ const fetchCommentsList = ({
   });
 };
 
+export const fetchCommentsListItem = async ({
+  commentId,
+  currentUserId,
+}: {
+  commentId: string;
+  currentUserId: string | null;
+}) => {
+  const result = await fetchCommentsList({
+    currentUserId,
+    where: { _id: commentId },
+    limit: 1,
+  });
+  return result[0] ?? null;
+};
+
 export const fetchCommmentsForPost = ({
   postId,
   currentUserId,
