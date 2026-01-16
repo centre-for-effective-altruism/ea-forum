@@ -37,7 +37,11 @@ export default function PostsItem({
     post.readTimeMinutesOverride,
     post.contents?.wordCount ?? null,
   );
-  const { onClick } = useClickableCell({ href: postLink, openInNewTab });
+  const { onClick } = useClickableCell({
+    href: postLink,
+    openInNewTab,
+    ignoreLinks: true,
+  });
   const description = cardView ? getPostPlaintextDescription(post) : null;
   const imageUrl = getPostSocialImageUrl(post);
   return (
