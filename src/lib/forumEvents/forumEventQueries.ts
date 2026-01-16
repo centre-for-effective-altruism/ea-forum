@@ -1,11 +1,17 @@
 import { sql } from "drizzle-orm";
 import type { DbOrTransaction } from "../db";
-import type { ForumEvent } from "../schema";
+import type { ForumEvent, InsertForumEvent } from "../schema";
+import type { EditorContents } from "../ckeditor/editorHelpers";
+import {
+  createRevisionForDenormalizedEditableField,
+  createRevisionForNormalizedEditableField,
+} from "../revisions/revisionMutations";
 import {
   FORUM_EVENT_STICKER_VERSION,
   ForumEventSticker,
   ForumEventStickerData,
 } from "./forumEventHelpers";
+import { CurrentUser } from "../users/currentUser";
 
 /**
  * Asserts "publicData" is tagged with the format expected. If no format is set
@@ -114,4 +120,56 @@ export const upsertForumEventSticker = async ({
     )
     WHERE "_id" = ${forumEventId}
   `);
+};
+
+/**
+ * If true this field is normalized, else it's denormalized (because all the
+ * fields being the same would make things *way* too easy...)
+ */
+const forumEventEditableFields = {
+  frontpageDescription: false,
+  frontpageDescriptionMobile: false,
+  postPageDescription: false,
+  pollQuestion: true,
+} as const satisfies Record<string, boolean>;
+
+export const buildForumEventRevisions = async (
+  txn: DbOrTransaction,
+  user: CurrentUser,
+  documentId: string,
+  editableFields: {
+    frontpageDescription?: EditorContents;
+    frontpageDescriptionMobile?: EditorContents;
+    postPageDescription?: EditorContents;
+    pollQuestion?: EditorContents;
+  },
+): Promise<Partial<InsertForumEvent>> => {
+  const revisionPromises = [];
+  for (const fieldName_ in forumEventEditableFields) {
+    const fieldName = fieldName_ as keyof typeof forumEventEditableFields;
+    const originalContents = editableFields[fieldName];
+    if (originalContents) {
+      const create = forumEventEditableFields
+        ? createRevisionForNormalizedEditableField
+        : createRevisionForDenormalizedEditableField;
+      revisionPromises.push(
+        create(
+          txn,
+          user,
+          fieldName,
+          {
+            originalContents,
+            updateType: "initial",
+            commitMessage: "",
+          },
+          {
+            documentId,
+            collectionName: "ForumEvents",
+          },
+        ),
+      );
+    }
+  }
+  const revisions = await Promise.all(revisionPromises);
+  return Object.assign({}, ...revisions);
 };

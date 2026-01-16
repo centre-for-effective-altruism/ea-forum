@@ -6,7 +6,9 @@ import { postGetPageUrl } from "../posts/postsHelpers";
 import { akismetCheckComment } from "../akismet";
 import { getCommentAncestorIds, PostForCommentCreation } from "./commentQueries";
 import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
+import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 import { captureEvent } from "../analytics/captureEvent";
+import { isAnyTest } from "../environment";
 import {
   tags,
   Comment,
@@ -16,7 +18,6 @@ import {
   users,
   Revision,
 } from "@/lib/schema";
-import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 
 /** Threshold after which you are no longer affected by spam detection */
 const SPAM_KARMA_THRESHOLD = 10;
@@ -203,8 +204,9 @@ export const checkCommentForSpam = async (
   if (!isSpam) {
     return;
   }
-
-  console.warn("Deleting comment from user below spam threshold:", commentId);
+  if (!isAnyTest()) {
+    console.warn("Deleting comment from user below spam threshold:", commentId);
+  }
   await txn
     .update(comments)
     .set({

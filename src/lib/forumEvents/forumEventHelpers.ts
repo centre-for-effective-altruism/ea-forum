@@ -1,4 +1,4 @@
-import { CheerioAPI, load as cheerioLoad } from "cheerio";
+import { z } from "zod/v4";
 import { TupleSet, UnionOf } from "../typeHelpers";
 import type { Revision } from "../schema";
 
@@ -52,33 +52,49 @@ export type ForumEventCommentMetadata = {
   } | null;
 };
 
-const getPollElements = ($: CheerioAPI) => $(".ck-poll[data-internal-id]");
-
 const pollsAllowedFields = [
   { collectionName: "Comments", fieldName: "contents" },
   { collectionName: "Posts", fieldName: "contents" },
 ];
 
-export const assertPollsAllowed = (revision?: Revision | null) => {
-  if (!revision) {
-    return;
-  }
-
+export const revisionIsAllowedPolls = (revision: Revision) => {
   const { html, collectionName, fieldName } = revision;
   if (!html) {
-    return;
+    return false;
   }
-
-  const $ = cheerioLoad(html, null, false);
-  const pollElements = getPollElements($);
-  if (pollElements.length > 0) {
-    const isAllowed = pollsAllowedFields.some(
-      (allowedField) =>
-        allowedField.collectionName === collectionName &&
-        allowedField.fieldName === fieldName,
-    );
-    if (!isAllowed) {
-      throw new Error("Polls are only allowed in post and comment bodies.");
-    }
-  }
+  return pollsAllowedFields.some(
+    (allowedField) =>
+      allowedField.collectionName === collectionName &&
+      allowedField.fieldName === fieldName,
+  );
 };
+
+export const pollPropsSchema = z.object({
+  question: z.string(),
+  agreeWording: z.string(),
+  disagreeWording: z.string(),
+  colorScheme: z.object({
+    darkColor: z.string(),
+    lightColor: z.string(),
+    bannerTextColor: z.string(),
+  }),
+  duration: z.object({
+    days: z.number().min(0),
+    hours: z.number().min(0),
+    minutes: z.number().min(0),
+  }),
+});
+
+export type PollProps = z.infer<typeof pollPropsSchema>;
+
+const ONE_MINUTE_MS = 60 * 1000;
+const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
+const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+
+export const endDateFromDuration = (duration: PollProps["duration"]) =>
+  new Date(
+    Date.now() +
+      duration.days * ONE_DAY_MS +
+      duration.hours * ONE_HOUR_MS +
+      duration.minutes * ONE_MINUTE_MS,
+  );

@@ -1,13 +1,12 @@
 import "server-only";
 import type { EditorData } from "../ckeditor/editorHelpers";
-import { revisions, Revision, User } from "../schema";
 import type { Json } from "../typeHelpers";
+import { revisions, Revision, User } from "../schema";
 import { randomId } from "../utils/random";
 import { DbOrTransaction } from "../db";
 import { dataToHtml } from "../conversionUtils/dataToHtml";
 import { dataToWordCount } from "../conversionUtils/dataToWordCount";
 import { htmlToChangeMetrics } from "./htmlToChangeMetrics";
-import { assertPollsAllowed } from "../forumEvents/forumEventHelpers";
 
 export const createRevision = async (
   txn: DbOrTransaction,
@@ -51,10 +50,61 @@ export const createRevision = async (
       createdAt: now,
     })
     .returning();
-  const revision = result[0];
-  assertPollsAllowed(revision);
   // TODO:
   // upvoteOwnTagRevision
   // updateDenormalizedHtmlAttributionsDueToRev
-  return revision;
+  return result[0];
+};
+
+type NormalizedFieldRevision<T extends string> = {
+  [K in `${T}Latest`]: string;
+};
+
+type DenormalizedFieldRevision<T extends string> = NormalizedFieldRevision<T> & {
+  [K in T]: Revision;
+};
+
+export const createRevisionForDenormalizedEditableField = async <T extends string>(
+  txn: DbOrTransaction,
+  user: Pick<User, "_id" | "isAdmin">,
+  fieldName: T,
+  editorData: EditorData,
+  data: {
+    documentId: string;
+    collectionName: string;
+    draft?: boolean;
+    googleDocMetadata?: Json;
+  },
+): Promise<DenormalizedFieldRevision<T> | null> => {
+  const revision = await createRevision(txn, user, editorData, {
+    fieldName,
+    ...data,
+  });
+  return revision
+    ? ({
+        [fieldName]: revision,
+        [`${fieldName}Latest`]: revision._id,
+      } as DenormalizedFieldRevision<T>)
+    : null;
+};
+
+export const createRevisionForNormalizedEditableField = async <T extends string>(
+  txn: DbOrTransaction,
+  user: Pick<User, "_id" | "isAdmin">,
+  fieldName: T,
+  editorData: EditorData,
+  data: {
+    documentId: string;
+    collectionName: string;
+    draft?: boolean;
+    googleDocMetadata?: Json;
+  },
+): Promise<NormalizedFieldRevision<T> | null> => {
+  const revision = await createRevision(txn, user, editorData, {
+    fieldName,
+    ...data,
+  });
+  return revision
+    ? ({ [`${fieldName}Latest`]: revision._id } as NormalizedFieldRevision<T>)
+    : null;
 };

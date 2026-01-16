@@ -33,6 +33,7 @@ export const getPostForCommentCreation = (txn: DbOrTransaction, postId: string) 
     columns: {
       _id: true,
       slug: true,
+      draft: true,
       isEvent: true,
       groupId: true,
       userId: true,

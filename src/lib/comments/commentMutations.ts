@@ -23,6 +23,7 @@ import {
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
 } from "./commentCallbacks";
+import { upsertPolls } from "../forumEvents/forumEventMutations";
 
 const MINIMUM_APPROVAL_KARMA = 5;
 
@@ -128,6 +129,7 @@ export const createPostComment = async ({
       updateDescendentCommentCounts(txn, comment),
       checkCommentRateLimits(txn, user, comment),
       addForumEventSticker(txn, comment),
+      upsertPolls({ txn, user, revision, post, comment }),
       performVote({
         txn,
         collectionName: "Comments",
@@ -137,10 +139,6 @@ export const createPostComment = async ({
         skipRateLimits: true,
       }),
     ]);
-
-    // TODO:
-    // upsertPolls
-
     return revision;
   });
 
