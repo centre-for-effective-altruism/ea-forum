@@ -142,8 +142,7 @@ export const createPostComment = async ({
     return revision;
   });
 
-  await checkCommentForSpam(db, user, commentId, revision, post);
-
+  void checkCommentForSpam(db, user, commentId, revision, post);
   void triggerReviewIfNeededById(user._id);
 
   // TODO: Notifications:
