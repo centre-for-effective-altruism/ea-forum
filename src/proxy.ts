@@ -54,7 +54,7 @@ if (cookieSize > COOKIE_SIZE_LIMIT * 0.9) {
   }
 }
 
-function shouldHandleLocally(pathname: string): boolean {
+function isNewSiteAllowed(pathname: string): boolean {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
     return false;
   }
@@ -66,14 +66,30 @@ function shouldHandleLocally(pathname: string): boolean {
   return false;
 }
 
+function getUserPrefersNewSite(request: NextRequest): boolean {
+  const cookieValue = request.cookies.get("prefer_ea_forum_v3")?.value;
+
+  if (cookieValue === "true") {
+    return true;
+  }
+  if (cookieValue === "false") {
+    return false;
+  }
+
+  const isProduction = process.env.NODE_ENV === "production";
+  return !isProduction; // dev = true, prod = false
+}
+
 export function proxy(request: NextRequest) {
   if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
     return NextResponse.next();
   }
 
   const { pathname } = request.nextUrl;
+  const prefersNewSite = getUserPrefersNewSite(request);
 
-  if (shouldHandleLocally(pathname)) {
+  // Only route to new site if user prefers it AND the route matches new site patterns
+  if (prefersNewSite && isNewSiteAllowed(pathname)) {
     return NextResponse.next();
   }
 
@@ -85,7 +101,7 @@ export function proxy(request: NextRequest) {
 
   const response = NextResponse.rewrite(url);
 
-  const prefersNewSite = request.cookies.get("prefer_ea_forum_v3")?.value === "true";
+  // If user prefers new site, attach the ea_forum_v3_owned_routes cookie as a hint for SPA navigation
   if (prefersNewSite) {
     response.cookies.set(OWNED_ROUTES_COOKIE_NAME, ownedRoutesPayload, {
       path: "/",

@@ -7,6 +7,7 @@ import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
+import AdminToggle from "@/components/Admin/AdminToggle";
 import "./globals.css";
 
 const inter = Inter({
@@ -59,6 +60,7 @@ export default function RootLayout({
           <MobileNav />
           <main className="grow">{children}</main>
           <IntercomButton />
+          <AdminToggle />
           <Toaster position="bottom-center" />
         </Providers>
       </body>
