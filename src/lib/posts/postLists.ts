@@ -383,6 +383,8 @@ export const fetchPostsListFromView = (
   switch (view) {
     case "frontpage":
       return fetchFrontpagePostsList({ currentUserId, ...props });
+    case "sticky":
+      return fetchStickyPostsList({ currentUserId, ...props });
     default:
       throw new Error("Invalid posts list view");
   }

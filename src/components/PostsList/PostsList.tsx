@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
 import { getPosts } from "@/lib/posts/postsApi";
@@ -16,6 +16,7 @@ export default function PostsList({
   viewType = defaultPostsViewType,
   loadMoreView,
   maxOffset,
+  bottomRightNode,
   className,
 }: Readonly<{
   posts: PostListItem[];
@@ -27,6 +28,7 @@ export default function PostsList({
   viewType?: PostsListViewType | "fromContext";
   loadMoreView?: PostsListView;
   maxOffset?: number;
+  bottomRightNode?: ReactNode;
   className?: string;
 }>) {
   const [loading, setLoading] = useState(false);
@@ -67,7 +69,7 @@ export default function PostsList({
               viewType={actualViewType}
             />
           )}
-          <div className="mt-1">
+          <div className="mt-2 flex justify-between items-center">
             <Type
               onClick={onLoadMore}
               As="button"
@@ -76,6 +78,7 @@ export default function PostsList({
             >
               Load more
             </Type>
+            {bottomRightNode}
           </div>
         </>
       )}

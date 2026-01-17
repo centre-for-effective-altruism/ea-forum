@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { ReactNode, Suspense } from "react";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
 import { fetchPostsListFromView } from "@/lib/posts/postLists";
@@ -12,12 +12,14 @@ export default async function ViewBasedPostsList({
   view,
   viewType,
   hideLoadMore,
+  bottomRightNode,
 }: Readonly<{
   initialLimit?: number;
   maxOffset?: number;
   view: PostsListView;
   viewType?: PostsListViewType | "fromContext";
   hideLoadMore?: boolean;
+  bottomRightNode?: ReactNode;
 }>) {
   const currentUser = await getCurrentUser();
   const posts = await fetchPostsListFromView(currentUser?._id ?? null, {
@@ -35,6 +37,7 @@ export default async function ViewBasedPostsList({
         viewType={viewType}
         loadMoreView={hideLoadMore ? undefined : view}
         maxOffset={maxOffset}
+        bottomRightNode={bottomRightNode}
       />
     </Suspense>
   );

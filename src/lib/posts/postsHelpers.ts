@@ -6,7 +6,7 @@ import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 
 export const postsListViewSchema = z.object({
-  view: z.enum(["frontpage"]),
+  view: z.enum(["frontpage", "sticky"]),
   offset: z.int().gte(0).optional(),
   limit: z.int().gt(0),
   excludeTagId: z.string().optional(),
