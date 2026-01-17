@@ -1,12 +1,22 @@
 import "server-only";
 import { CurrentUser, getCurrentUser } from "./users/currentUser";
 
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 type RequestHandlerResponse = Response | Promise<Response>;
 
 type RequestHandlerArgs = {
   request: Request;
   currentUser: CurrentUser | null;
   params: Promise<Record<string, string>>;
+  url: URL;
 };
 
 type RequestHandler = (args: RequestHandlerArgs) => RequestHandlerResponse;
@@ -17,12 +27,19 @@ export const requestHandler = (handler: RequestHandler) => {
     { params }: { params: Promise<Record<string, string>> },
   ) => {
     const currentUser = await getCurrentUser();
-    const response = await handler({
-      request,
-      currentUser,
-      params,
-    });
-    return response;
+    try {
+      const response = await handler({
+        request,
+        currentUser,
+        params,
+        url: new URL(request.url),
+      });
+      return response;
+    } catch (e) {
+      const error = e instanceof Error ? e.message : "Something went wrong";
+      const status = e instanceof ApiError ? e.status : 400;
+      return Response.json({ error }, { status });
+    }
   };
   return wrappedRequestHandler;
 };

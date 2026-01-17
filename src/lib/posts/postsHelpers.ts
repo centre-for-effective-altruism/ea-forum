@@ -1,8 +1,19 @@
+import { z } from "zod/v4";
 import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "../cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
+
+export const postsListViewSchema = z.object({
+  view: z.enum(["frontpage"]),
+  offset: z.int().gte(0).optional(),
+  limit: z.int().gt(0),
+  excludeTagId: z.string().optional(),
+  onlyTagId: z.string().optional(),
+});
+
+export type PostsListView = z.infer<typeof postsListViewSchema>;
 
 export const postGetPageUrl = ({
   post,

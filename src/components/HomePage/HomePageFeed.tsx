@@ -6,6 +6,7 @@ import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
+import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import StickyPostsList from "../PostsList/StickyPostsList";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
@@ -66,15 +67,15 @@ export default async function HomePageFeed({
             </Suspense>
           </div>
           <div className="mb-10">
-            <Suspense
-              fallback={<PostsListSkeleton count={11} viewType="fromContext" />}
-            >
-              <FrontpagePostsList
-                initialLimit={11}
-                excludeTagId={communityTagId}
-                viewType="fromContext"
-              />
-            </Suspense>
+            <ViewBasedPostsList
+              viewType="fromContext"
+              maxOffset={200}
+              view={{
+                view: "frontpage",
+                limit: 11,
+                excludeTagId: communityTagId,
+              }}
+            />
           </div>
           {communityTagId && (
             <>
@@ -82,9 +83,15 @@ export default async function HomePageFeed({
                 Posts tagged community
               </Type>
               <div className="mb-10">
-                <Suspense fallback={<PostsListSkeleton count={5} />}>
-                  <FrontpagePostsList initialLimit={5} onlyTagId={communityTagId} />
-                </Suspense>
+                <ViewBasedPostsList
+                  viewType="fromContext"
+                  hideLoadMore
+                  view={{
+                    view: "frontpage",
+                    limit: 5,
+                    onlyTagId: communityTagId,
+                  }}
+                />
               </div>
             </>
           )}

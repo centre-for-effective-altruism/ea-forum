@@ -38,10 +38,11 @@ type BracketParams<S extends string> = S extends `/${infer Rest}`
     : BracketParam<Rest>
   : never;
 
-type ApiRouteOptions<Endpoint extends string, ResponseBody> = {
+type ApiRouteOptions<Endpoint extends string, SearchParams, ResponseBody> = {
   endpoint: Endpoint;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   access: "all" | "logged-in" | "admins";
+  searchParams?: ZodType<SearchParams>;
   responseSchema: ZodType<ResponseBody>;
 };
 
@@ -56,26 +57,37 @@ type UseApiRouteProps<
   skip?: boolean;
 };
 
-type FetchedResult = {
+type FetchedResult<ResponseBody> = {
   status: number;
-  json: unknown;
+  json: ResponseBody;
 };
 
 export class ApiRoute<
   Endpoint extends string,
   Path extends AbsolutePath<Endpoint>,
   Params extends BracketParams<Path>,
+  SearchParams,
   ResponseBody,
 > {
-  private cache = new LRUCache<string, Promise<FetchedResult>>({ max: 200 });
+  private cache = new LRUCache<string, Promise<FetchedResult<ResponseBody>>>({
+    max: 100,
+  });
 
-  constructor(private readonly options: ApiRouteOptions<Endpoint, ResponseBody>) {}
+  constructor(
+    private readonly options: ApiRouteOptions<Endpoint, SearchParams, ResponseBody>,
+  ) {}
 
-  async fetch(params: Record<Params, string>): Promise<FetchedResult> {
+  async fetch(
+    params: Record<Params, string>,
+    searchParams?: SearchParams,
+  ): Promise<FetchedResult<ResponseBody>> {
     let endpoint: string = this.options.endpoint;
     for (const param in params) {
       const value = params[param];
       endpoint = endpoint.replaceAll(`[${param}]`, value);
+    }
+    if (searchParams) {
+      endpoint += "?" + new URLSearchParams(searchParams).toString();
     }
     const result = await fetch(endpoint, {
       method: this.options.method,
@@ -89,7 +101,7 @@ export class ApiRoute<
   fetchWithCache(
     params: Record<Params, string>,
     stringifiedParams?: string,
-  ): Promise<FetchedResult> {
+  ): Promise<FetchedResult<ResponseBody>> {
     stringifiedParams ??= stringify(params);
     const cachedValue = this.cache.get(stringifiedParams);
     if (cachedValue) {

@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
+import type { PostsListView } from "./postsHelpers";
 import { userDefaultProjection } from "../users/userQueries";
 import {
   isNotTrue,
@@ -78,11 +79,13 @@ const fetchPostsList = ({
   currentUserId,
   where,
   orderBy,
+  offset,
   limit,
 }: {
   currentUserId: string | null;
   where?: PostsFilter;
   orderBy?: PostsOrderBy;
+  offset?: number;
   limit?: number;
 }) => {
   return db.query.posts.findMany({
@@ -139,17 +142,20 @@ const fetchPostsList = ({
       ...where,
     },
     orderBy,
+    offset,
     limit,
   });
 };
 
 export const fetchFrontpagePostsList = ({
   currentUserId,
+  offset,
   limit,
   onlyTagId,
   excludeTagId,
 }: {
   currentUserId: string | null;
+  offset?: number;
   limit: number;
   onlyTagId?: string;
   excludeTagId?: string;
@@ -166,6 +172,7 @@ export const fetchFrontpagePostsList = ({
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },
     },
     orderBy: magicSort,
+    offset,
     limit,
   });
 };
@@ -367,4 +374,16 @@ export const fetchRecentOpportunitiesPostsList = async ({
     orderBy: magicSort,
     limit,
   });
+};
+
+export const fetchPostsListFromView = (
+  currentUserId: string | null,
+  { view, ...props }: PostsListView,
+) => {
+  switch (view) {
+    case "frontpage":
+      return fetchFrontpagePostsList({ currentUserId, ...props });
+    default:
+      throw new Error("Invalid posts list view");
+  }
 };
