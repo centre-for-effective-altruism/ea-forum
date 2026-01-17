@@ -101,6 +101,7 @@ export default function TruncationContainer({
         ref={measureRef}
         className="absolute flex invisible h-0 overflow-hidden pointer-events-none"
         aria-hidden="true"
+        inert
       >
         {items.map((item, i) => (
           <Fragment key={i}>{item}</Fragment>
