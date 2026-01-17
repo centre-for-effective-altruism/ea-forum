@@ -30,6 +30,31 @@ const eslintConfig = [
           allow: ["warn", "error"],
         },
       ],
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "lodash",
+              message:
+                "Don't import all of lodash, import a specific lodash function. Eg; lodash/sumBy",
+            },
+            {
+              name: "lodash/fp",
+              message:
+                "Don't import all of lodash/fp, import a specific lodash function. Eg; lodash/fp/capitalize",
+            },
+            {
+              name: "next/link",
+              message: "Use @/components/Link instead of next/link",
+            },
+            {
+              name: "zod",
+              message: "Use zod/v4 instead of zod",
+            },
+          ],
+        },
+      ],
     },
   },
   {

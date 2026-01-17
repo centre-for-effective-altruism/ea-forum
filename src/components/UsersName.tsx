@@ -3,7 +3,7 @@ import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import UsersTooltip from "./UsersTooltip";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
-import Link from "next/link";
+import Link from "./Link";
 
 export default function UsersName({
   user,

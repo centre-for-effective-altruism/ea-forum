@@ -1,5 +1,5 @@
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import Link from "next/link";
+import Link from "@/components/Link";
 import Type from "@/components/Type";
 
 export default function BanNoticePage() {
