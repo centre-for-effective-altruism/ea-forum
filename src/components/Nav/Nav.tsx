@@ -17,6 +17,10 @@ import CalendarIcon from "@heroicons/react/24/outline/CalendarIcon";
 import CalendarSelectedIcon from "@heroicons/react/24/solid/CalendarIcon";
 import UserGroupIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import UserGroupSelectedIcon from "@heroicons/react/24/solid/UserGroupIcon";
+import {
+  PeopleDirectoryIcon,
+  PeopleDirectorySelectedIcon,
+} from "../Icons/UserWithLinesIcon";
 import NavItem from "./NavItem";
 import NavHr from "./NavHr";
 import NavLink from "./NavLink";
@@ -56,8 +60,8 @@ const items = [
     title: "People directory",
     href: "/people-directory",
     description: "Search and filter Forum users",
-    UnselectedIcon: ArchiveBoxIcon, // TODO
-    SelectedIcon: ArchiveBoxSelectedIcon, // TODO
+    UnselectedIcon: PeopleDirectoryIcon,
+    SelectedIcon: PeopleDirectorySelectedIcon,
   },
   {
     title: "Take action",
