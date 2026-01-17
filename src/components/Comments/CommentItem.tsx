@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/CommentTree";
-import { userGetProfileUrl } from "@/lib/users/userHelpers";
+import { userGetProfileUrl, userIsNew } from "@/lib/users/userHelpers";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
@@ -14,6 +14,7 @@ import VoteButtons from "./VoteButtons";
 import Type from "../Type";
 import Link from "../Link";
 import Tooltip from "../Tooltip";
+import SproutIcon from "../Icons/SproutIcon";
 
 export default function CommentItem({
   node: { comment, depth, children },
@@ -52,6 +53,20 @@ export default function CommentItem({
               )}
             </Type>
           </UsersTooltip>
+          {user && userIsNew(user) && (
+            <Tooltip
+              title={
+                <Type style="bodySmall">
+                  {user?.displayName} is either new on the EA Forum or doesn&apos;t
+                  have much karma yet
+                </Type>
+              }
+              placement="bottom-start"
+              tooltipClassName="max-w-[300px]"
+            >
+              <SproutIcon className="text-new-user-sprout" />
+            </Tooltip>
+          )}
           <Tooltip title={<Type>{formatLongDateWithTime(postedAt)}</Type>}>
             <Type className="text-gray-600">
               {formatRelativeTime(postedAt, { style: "short" })}
