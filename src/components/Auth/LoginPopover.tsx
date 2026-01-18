@@ -14,9 +14,7 @@ import Loading from "../Loading";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
-
-// TODO Setup sentry
-const captureException = (_error: unknown, _context: unknown) => {};
+import { captureException } from "@sentry/nextjs";
 
 export default function LoginPopover() {
   const { loginAction: action, setLoginAction: setAction } =

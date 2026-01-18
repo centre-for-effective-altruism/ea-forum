@@ -1,3 +1,4 @@
+import { captureException } from "@sentry/nextjs";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { postRecommendations, Post } from "../schema";
@@ -132,7 +133,7 @@ class RecommendationService {
     try {
       return await source.recommend(currentUser, count, strategy);
     } catch (e) {
-      // TODO: sentry
+      captureException(e);
       console.error("Recommendations error:", e);
       const settings = {
         postId: strategy.postId,

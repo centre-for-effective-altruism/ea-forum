@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { captureException } from "@sentry/nextjs";
 import { filterNonNull } from "@/lib/typeHelpers";
-import { captureException } from "@/lib/errorHandling";
 import { getSearchClient } from "@/lib/search/searchClient";
 import { useSearchAnalytics } from "@/lib/search/useSearchAnalytics";
 import { MultiSelectState, buildMultiSelectSummary } from "./useMultiSelect";
