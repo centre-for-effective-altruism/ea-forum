@@ -41,4 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# vscode
 *.code-workspace
+
+# Sentry Config File
+.env.sentry-build-plugin
