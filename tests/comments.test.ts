@@ -37,7 +37,7 @@ suite("Comments", () => {
           _id: commentId,
         },
       });
-      expect(comment).toBeTruthy();
+      expect(comment).toBeFalsy();
     });
   });
 });

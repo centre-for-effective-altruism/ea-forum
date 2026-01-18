@@ -18,6 +18,6 @@ export const userDefaultProjection = {
     deleted: true,
   },
   extras: {
-    biography: (users, { sql }) => sql`${users}.biography->>'html'`,
+    biographyHtml: (users, { sql }) => sql<string>`${users}.biography->>'html'`,
   },
 } as const satisfies UserRelationalProjection;
