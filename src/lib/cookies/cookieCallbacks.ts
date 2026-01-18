@@ -1,5 +1,6 @@
 import Cookies from "universal-cookie";
 import stringify from "json-stringify-deterministic";
+import { initRecaptcha } from "../recaptcha";
 import { ALL_COOKIES, CookieName, CookieType, isCookieAllowed } from "./cookies";
 
 type CookiePreferencesChangedCallbackProps = {
@@ -19,7 +20,7 @@ export const cookiePreferencesChanged = ({
   explicitlyChanged,
 }: CookiePreferencesChangedCallbackProps) => {
   // void initDatadog(); // TODO: Setup datadog
-  // void initReCaptcha(); // TODO: Setup recaptcha
+  void initRecaptcha();
 
   // Send a cookie_preferences_changed event to Google Tag Manager, which
   // triggers google analytics and hotjar to start

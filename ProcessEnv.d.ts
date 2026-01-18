@@ -36,6 +36,9 @@ declare namespace NodeJS {
     // Other services
     NEXT_PUBLIC_IPAPI_KEY?: string;
     NEXT_PUBLIC_INTERCOM_APP_ID: string;
+    AKISMET_API_KEY: string;
+    NEXT_PUBLIC_RECAPTCHA_KEY: string;
+    RECAPTCHA_PRIVATE_KEY: string;
 
     // Site config
     START_HERE_POST_ID: string;

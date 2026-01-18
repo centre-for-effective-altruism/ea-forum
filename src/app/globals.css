@@ -204,3 +204,10 @@ body {
 .ck-powered-by-balloon {
   display: none !important;
 }
+
+/**
+ * Hide ReCaptcha (see https://developers.google.com/recaptcha/docs/faq)
+ */
+.grecaptcha-badge {
+  visibility: hidden;
+}
