@@ -1,5 +1,5 @@
-import { combineUrls, getSiteUrl } from "../routeHelpers";
 import type { PostTag } from "./tagQueries";
+import { combineUrls, getSiteUrl } from "../routeHelpers";
 import qs from "querystring";
 
 export const tagGetPageUrl = ({
@@ -30,11 +30,9 @@ export const stableSortTags = (tags: PostTag[]): PostTag[] => {
     if (a.core !== b.core) {
       return a.core ? -1 : 1;
     }
-
     if (a.baseScore !== b.baseScore) {
       return (b.baseScore || 0) - (a.baseScore || 0);
     }
-
     return a.name.localeCompare(b.name);
   });
 };

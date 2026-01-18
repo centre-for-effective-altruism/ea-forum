@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import type { PostsListView } from "./postsHelpers";
 import { userDefaultProjection } from "../users/userQueries";
+import { postTagsProjection } from "../tags/tagQueries";
 import {
   isNotTrue,
   RelationalFilter,
@@ -23,6 +24,8 @@ export const postStatuses = {
   STATUS_DELETED: 5,
 };
 
+// TODO: This should be a function that takes the current user and does permission
+// checks
 export const viewablePostFilter = {
   draft: isNotTrue,
   deletedDraft: isNotTrue,
@@ -109,11 +112,11 @@ const fetchPostsList = ({
       socialPreviewImageAutoUrl: true,
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
-      tagRelevance: true,
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>
         sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, 350)`,
+      tags: postTagsProjection,
     },
     with: {
       user: userDefaultProjection,

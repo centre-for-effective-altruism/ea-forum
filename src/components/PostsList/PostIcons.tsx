@@ -37,9 +37,11 @@ export default function PostIcons({
 }: Readonly<{
   post: PostListItem;
 }>) {
-  const tagRelevance = post.tagRelevance as Record<string, number>;
   const openThreadTagId = process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID;
   const amaTagid = process.env.NEXT_PUBLIC_AMA_TAG_ID;
+  const openThreadRelevance =
+    post.tags.find((tag) => tag._id === openThreadTagId)?.baseScore ?? 0;
+  const amaRelevance = post.tags.find((tag) => tag._id === amaTagid)?.baseScore ?? 0;
   return (
     <div data-component="PostIcons" className="flex items-center">
       {post.sticky && (
@@ -86,12 +88,12 @@ export default function PostIcons({
           Personal blogpost
         </PostIcon>
       )}
-      {openThreadTagId && (tagRelevance[openThreadTagId] ?? 0) >= 1 && (
+      {openThreadTagId && openThreadRelevance >= 1 && (
         <PostIcon href={postGetPageUrl({ post })} Icon={OpenThreadIcon}>
           Open thread
         </PostIcon>
       )}
-      {amaTagid && (tagRelevance[amaTagid] ?? 0) >= 1 && (
+      {amaTagid && amaRelevance >= 1 && (
         <PostIcon href={postGetPageUrl({ post })} Icon={ChatBubbleIcon}>
           Ask Me Anything thread
         </PostIcon>
