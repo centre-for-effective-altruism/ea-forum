@@ -20,6 +20,15 @@ const newSitePatterns = [
   /^\/posts\/[^/]+$/, // Post pages without slug: /posts/[id]
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
+  /^\/people-directory$/, // People directory page
+  /^\/about$/, // About page
+  /^\/intro$/, // Intro page
+  /^\/contact$/, // Contact page
+  /^\/copyright$/, // Copyright page
+  /^\/cookie-policy$/, // Cookie policy
+  /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
+  /^\/ban-notice$/, // Ban notice
+  /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
@@ -59,6 +68,6 @@ export function proxy(request: NextRequest) {
 // Don't run proxy on NextJS internal routes
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/|favicon.ico|site\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
