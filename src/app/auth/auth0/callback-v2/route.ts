@@ -59,7 +59,9 @@ export const GET = async (req: NextRequest) => {
       throw new Error("Missing id token");
     }
 
-    const response = NextResponse.redirect(new URL(getReturnTo(state), req.url));
+    const response = NextResponse.redirect(
+      new URL(getReturnTo(state), process.env.NEXT_PUBLIC_SITE_URL),
+    );
 
     const { cookie } = await loginUserFromIdToken(id_token);
     response.cookies.set(cookie.name, cookie.value, cookie.options);
@@ -67,7 +69,9 @@ export const GET = async (req: NextRequest) => {
     return response;
   } catch (e) {
     if (e instanceof UserIsBannedError) {
-      return NextResponse.redirect(new URL("/ban-notice", req.url));
+      return NextResponse.redirect(
+        new URL("/ban-notice", process.env.NEXT_PUBLIC_SITE_URL),
+      );
     }
     // TODO: Capture in sentry
     console.error("Auth0 callback error", e);
