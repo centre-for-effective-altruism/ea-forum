@@ -28,11 +28,13 @@ const fetchCommentsList = ({
   currentUserId,
   where,
   orderBy,
+  offset,
   limit,
 }: {
   currentUserId: string | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
+  offset?: number;
   limit?: number;
 }) => {
   return db.query.comments.findMany({
@@ -90,6 +92,7 @@ const fetchCommentsList = ({
       ...where,
     },
     orderBy,
+    offset,
     limit,
   });
 };
@@ -110,11 +113,13 @@ export const fetchFrontpageQuickTakes = ({
   currentUserId,
   includeCommunity,
   relevantTagId,
+  offset,
   limit = 5,
 }: {
   currentUserId: string | null;
   includeCommunity?: boolean;
   relevantTagId?: string;
+  offset?: number;
   limit?: number;
 }) => {
   const fiveDaysAgo = nDaysAgo(5).toISOString();
@@ -165,6 +170,7 @@ export const fetchFrontpageQuickTakes = ({
       postedAt: "desc",
       _id: "desc",
     },
+    offset,
     limit,
   });
 };

@@ -1,20 +1,8 @@
 import { ApiError, requestHandler } from "@/lib/requestHandler";
 import { fetchFrontpagePostsList } from "@/lib/posts/postLists";
+import { parsePositiveInt } from "@/lib/utils/apiHelpers";
 
-const parsePositiveInt = (
-  value: string | null,
-  defaultValue: number,
-  errorMessage: string,
-) => {
-  if (!value) {
-    return defaultValue;
-  }
-  const parsed = parseInt(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 0) {
-    throw new ApiError(400, errorMessage);
-  }
-  return parsed;
-};
+const MAX_LIMIT = 50;
 
 export const GET = requestHandler(async ({ url, currentUser }) => {
   const view = url.searchParams.get("view");
@@ -34,7 +22,7 @@ export const GET = requestHandler(async ({ url, currentUser }) => {
   const posts = await fetchFrontpagePostsList({
     currentUserId: currentUser?._id ?? null,
     offset,
-    limit,
+    limit: Math.min(limit, MAX_LIMIT),
     excludeTagId,
     onlyTagId,
   });
