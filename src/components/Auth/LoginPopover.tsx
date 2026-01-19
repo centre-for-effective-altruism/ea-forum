@@ -139,7 +139,7 @@ export default function LoginPopover() {
       client_id: process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID,
       response_type: "code",
       scope: "openid profile email",
-      redirect_uri: `${window.location.origin}/auth/auth0/callback`,
+      redirect_uri: `${window.location.origin}/auth/auth0/callback-v2`,
       connection: "google-oauth2",
       state: btoa(
         JSON.stringify({
