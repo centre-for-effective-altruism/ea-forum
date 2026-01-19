@@ -1,6 +1,5 @@
 import "server-only";
 import { isAnyTest } from "./environment";
-import { Pool } from "pg";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
 import { drizzle as pgLiteDrizzle } from "drizzle-orm/pglite";
@@ -88,9 +87,6 @@ if (!process.env.DATABASE_URL && !isAnyTest()) {
   throw new Error("Postgres URL is not configured");
 }
 
-// Default pool size is 10 (pg default), can be overridden via DB_POOL_SIZE env var
-const DB_POOL_SIZE = 100;
-
 export const db = isAnyTest()
   ? pgLiteDrizzle({
       relations,
@@ -111,13 +107,9 @@ export const db = isAnyTest()
         },
       }),
     })
-  : pgDrizzle({
+  : pgDrizzle(process.env.DATABASE_URL, {
       relations,
       logger: process.env.LOG_DRIZZLE_QUERIES === "true",
-      client: new Pool({
-        connectionString: process.env.DATABASE_URL,
-        max: DB_POOL_SIZE,
-      }),
     });
 
 export type Db = typeof db;

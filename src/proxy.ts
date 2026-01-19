@@ -76,8 +76,7 @@ function getUserPrefersNewSite(request: NextRequest): boolean {
     return false;
   }
 
-  const isProduction = process.env.NODE_ENV === "production";
-  return !isProduction; // dev = true, prod = false
+  return false;
 }
 
 export function proxy(request: NextRequest) {
