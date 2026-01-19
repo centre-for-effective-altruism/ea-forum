@@ -37,19 +37,15 @@ export const useEAForumV3 = (): {
 
   const setPreferNewSite = useCallback(
     (value: boolean) => {
-      if (value) {
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-        setCookie(PREFER_NEW_SITE_COOKIE, "true", {
-          path: "/",
-          expires: oneYearFromNow,
-        });
-      } else {
-        removeCookie(PREFER_NEW_SITE_COOKIE, { path: "/" });
-      }
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      setCookie(PREFER_NEW_SITE_COOKIE, value ? "true" : "false", {
+        path: "/",
+        expires: oneYearFromNow,
+      });
       window.location.reload();
     },
-    [setCookie, removeCookie],
+    [setCookie],
   );
 
   return {

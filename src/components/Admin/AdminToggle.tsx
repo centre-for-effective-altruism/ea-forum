@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useEAForumV3 } from "@/lib/hooks/useEAForumV3";
 
 function ToggleSwitch({
@@ -34,18 +33,16 @@ function ToggleSwitch({
   );
 }
 
-export default function AdminToggle() {
+export default function SiteToggle() {
   const [mounted, setMounted] = useState(false);
-  const { currentUser } = useCurrentUser();
   const { preferNewSite, setPreferNewSite } = useEAForumV3();
-  const isRealAdmin = currentUser?.groups?.includes("realAdmins") ?? false;
 
   // Only render after mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || !currentUser || !isRealAdmin) {
+  if (!mounted) {
     return null;
   }
 

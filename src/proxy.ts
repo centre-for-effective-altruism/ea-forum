@@ -39,6 +39,8 @@ const ownedRoutesPayload = JSON.stringify({
   patterns: newSitePatterns.map((r) => r.source),
 });
 
+const DEFAULT_PREFERS_NEW_SITE = true;
+
 // Static check: cookies have a 4KB limit
 const COOKIE_SIZE_LIMIT = 4 * 1024;
 const encodedPayload = encodeURIComponent(ownedRoutesPayload);
@@ -76,7 +78,7 @@ function getUserPrefersNewSite(request: NextRequest): boolean {
     return false;
   }
 
-  return false;
+  return DEFAULT_PREFERS_NEW_SITE;
 }
 
 export function proxy(request: NextRequest) {
@@ -86,6 +88,7 @@ export function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const prefersNewSite = getUserPrefersNewSite(request);
+  const hasPreferenceCookie = request.cookies.has("prefer_ea_forum_v3");
 
   // Only route to new site if user prefers it AND the route matches new site patterns
   if (prefersNewSite && isNewSiteAllowed(pathname)) {
@@ -99,6 +102,18 @@ export function proxy(request: NextRequest) {
   url.port = legacySiteUrl.port;
 
   const response = NextResponse.rewrite(url);
+
+  // Set the preference cookie if it's not already set (so we can change the default)
+  if (!hasPreferenceCookie) {
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    response.cookies.set("prefer_ea_forum_v3", String(DEFAULT_PREFERS_NEW_SITE), {
+      path: "/",
+      httpOnly: false,
+      sameSite: "lax",
+      expires: oneYearFromNow,
+    });
+  }
 
   // If user prefers new site, attach the ea_forum_v3_owned_routes cookie as a hint for SPA navigation
   if (prefersNewSite) {
