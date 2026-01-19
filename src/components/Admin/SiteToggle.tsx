@@ -48,7 +48,7 @@ export default function SiteToggle() {
 
   return createPortal(
     <div
-      data-component="AdminToggle"
+      data-component="SiteToggle"
       className="fixed left-5 bottom-5 z-[1000] bg-white/80 rounded-lg shadow-md p-3 flex flex-col gap-2.5 font-sans text-[13px] max-sm:hidden print:hidden"
     >
       <div className="flex items-center justify-between gap-2">

@@ -7,7 +7,7 @@ import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
-import SiteToggle from "@/components/Admin/AdminToggle";
+import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
 const inter = Inter({
