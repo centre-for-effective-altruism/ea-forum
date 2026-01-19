@@ -33,16 +33,12 @@ export const createPostComment = async ({
   parentCommentId,
   data,
   draft,
-  userAgent,
-  referrer,
 }: {
   user: CurrentUser;
   postId: string;
   parentCommentId: string | null;
   data: EditorData;
   draft?: false;
-  userAgent: string | null;
-  referrer: string | null;
 }) => {
   const { originalContents } = data;
   if (originalContents.type !== "ckEditorMarkup") {
@@ -98,8 +94,6 @@ export const createPostComment = async ({
         postId: post._id,
         userId: user._id,
         author: user.displayName || user.username,
-        userAgent,
-        referrer,
         authorIsUnreviewed:
           !user?.reviewedByUserId && user.karma < MINIMUM_APPROVAL_KARMA,
         draft,

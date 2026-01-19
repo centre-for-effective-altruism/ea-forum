@@ -481,8 +481,8 @@ export const comments = pgTable(
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
     userIP: text(),
-    userAgent: text(),
-    referrer: text(),
+    // userAgent: text(), // Unused
+    // referrer: text(), // Unused
     authorIsUnreviewed: boolean().default(false).notNull(),
     answer: boolean().default(false).notNull(),
     parentAnswerId: varchar({ length: 27 }),
