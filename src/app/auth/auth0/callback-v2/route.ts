@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { captureException } from "@sentry/nextjs";
 import {
   getAuth0Client,
   loginUserFromIdToken,
@@ -44,10 +45,12 @@ export const GET = async (req: NextRequest) => {
     }
 
     const { client } = getAuth0Client("public");
+    // Use the request's origin to ensure redirect_uri matches what was sent
+    const origin = new URL(req.url).origin;
     const tokenResponse = await client.oauth.authorizationCodeGrant({
       code,
       // This must be the URL of this route
-      redirect_uri: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/auth0/callback`,
+      redirect_uri: `${origin}/auth/auth0/callback-v2`,
     });
 
     const { id_token } = tokenResponse.data;
@@ -65,7 +68,7 @@ export const GET = async (req: NextRequest) => {
     if (e instanceof UserIsBannedError) {
       return NextResponse.redirect(new URL("/ban-notice", req.url));
     }
-    // TODO: Capture in sentry
+    captureException(e);
     console.error("Auth0 callback error", e);
     return NextResponse.json({ error: "Auth0 callback error" }, { status: 400 });
   }

@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { captureException } from "@sentry/nextjs";
 import { fetchCurrentUserByHashedToken } from "../users/currentUser";
 import {
   getAuth0Client,
@@ -39,7 +40,7 @@ export const loginAction = async (email: string, password: string) => {
     if (e instanceof UserIsBannedError) {
       return { redirect: "/ban-notice" };
     }
-    // TODO: Capture in sentry
+    captureException(e);
     console.error("Login error:", e);
     if (e instanceof Error) {
       return { ok: false, error: e.message };

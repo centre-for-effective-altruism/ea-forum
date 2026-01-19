@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
+import type { PostsListView } from "./postsHelpers";
 import { userDefaultProjection } from "../users/userQueries";
+import { postTagsProjection } from "../tags/tagQueries";
 import {
   isNotTrue,
   RelationalFilter,
@@ -22,6 +24,8 @@ export const postStatuses = {
   STATUS_DELETED: 5,
 };
 
+// TODO: This should be a function that takes the current user and does permission
+// checks
 export const viewablePostFilter = {
   draft: isNotTrue,
   deletedDraft: isNotTrue,
@@ -78,11 +82,13 @@ const fetchPostsList = ({
   currentUserId,
   where,
   orderBy,
+  offset,
   limit,
 }: {
   currentUserId: string | null;
   where?: PostsFilter;
   orderBy?: PostsOrderBy;
+  offset?: number;
   limit?: number;
 }) => {
   return db.query.posts.findMany({
@@ -106,11 +112,11 @@ const fetchPostsList = ({
       socialPreviewImageAutoUrl: true,
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
-      tagRelevance: true,
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>
         sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, 350)`,
+      tags: postTagsProjection,
     },
     with: {
       user: userDefaultProjection,
@@ -139,17 +145,20 @@ const fetchPostsList = ({
       ...where,
     },
     orderBy,
+    offset,
     limit,
   });
 };
 
 export const fetchFrontpagePostsList = ({
   currentUserId,
+  offset,
   limit,
   onlyTagId,
   excludeTagId,
 }: {
   currentUserId: string | null;
+  offset?: number;
   limit: number;
   onlyTagId?: string;
   excludeTagId?: string;
@@ -166,6 +175,7 @@ export const fetchFrontpagePostsList = ({
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },
     },
     orderBy: magicSort,
+    offset,
     limit,
   });
 };
@@ -367,4 +377,18 @@ export const fetchRecentOpportunitiesPostsList = async ({
     orderBy: magicSort,
     limit,
   });
+};
+
+export const fetchPostsListFromView = (
+  currentUserId: string | null,
+  { view, ...props }: PostsListView,
+) => {
+  switch (view) {
+    case "frontpage":
+      return fetchFrontpagePostsList({ currentUserId, ...props });
+    case "sticky":
+      return fetchStickyPostsList({ currentUserId, ...props });
+    default:
+      throw new Error("Invalid posts list view");
+  }
 };

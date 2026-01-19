@@ -14,6 +14,7 @@ const styles = {
   postsPageTitle: "font-serif text-[42px] font-[400] leading-[125%]",
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
   postDescription: "font-sans text-[13px] font-[500]",
+  loadMore: "font-sans text-[14px] font-[600]",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof styles;

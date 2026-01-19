@@ -33,7 +33,7 @@ export default function NotificationDisplay({
   const icon = icons[type === "wrapped" ? "wrapped" : comment ? "comment" : "post"];
   return (
     <AnalyticsContext pageSubSectionContext="notificationsPageItem">
-      <PostsTooltip postId={post?._id ?? comment?.post?._id} placement="left-start">
+      <PostsTooltip post={post ?? comment?.post} placement="left-start">
         <Link
           href={link ?? "#"}
           className={`

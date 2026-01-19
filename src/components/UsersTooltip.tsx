@@ -37,14 +37,13 @@ export default function UsersTooltip({
     createdAt,
     jobTitle,
     organization,
-    biography,
+    biographyHtml,
     karma,
     postCount,
     commentCount,
   } = user;
   const role = formatRole(jobTitle, organization);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bio = formatBio((biography as any)?.html); // TODO types
+  const bio = formatBio(biographyHtml);
   return (
     <Tooltip
       placement={placement}

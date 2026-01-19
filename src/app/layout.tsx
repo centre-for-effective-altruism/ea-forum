@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Charis_SIL, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import clsx from "clsx";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
@@ -46,13 +47,13 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
-        className={`
-          antialiased w-full min-h-screen flex flex-col
-          ${inter.variable} ${charis.variable}
-        `}
+        className={clsx(
+          "antialiased w-full min-h-screen flex flex-col",
+          inter.variable,
+          charis.variable,
+        )}
       >
         <Providers>
-          <div id="modal-target" className="relative" />
           <div id="tooltip-target" />
           <Header />
           <MobileNav />

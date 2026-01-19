@@ -1,4 +1,6 @@
 import "server-only";
+import type { Json } from "./typeHelpers";
+import type { EditorContents } from "./ckeditor/editorHelpers";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -7,13 +9,14 @@ import {
   unique,
   varchar,
   text,
-  jsonb,
+  jsonb as jsonbRaw,
   integer,
   doublePrecision,
   boolean,
   pgMaterializedView,
   customType,
 } from "drizzle-orm/pg-core";
+import { DenormalizedRevision } from "./revisions/revisionHelpers";
 
 /**
  * This file contains the postgres schemas for all tables.
@@ -46,6 +49,10 @@ const timestamp = customType<{
  */
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
+const jsonb = <T = Json>() => jsonbRaw().$type<T>();
+
+const denormalizedRevision = () => jsonb<DenormalizedRevision>();
+
 const universalFields = {
   _id: varchar({ length: 27 }).primaryKey().notNull(),
   schemaVersion: doublePrecision().default(1),
@@ -68,13 +75,13 @@ export const users = pgTable(
     organization: text(),
     careerStage: text().array(),
     website: text(),
-    biography: jsonb(),
+    biography: denormalizedRevision(),
     biography_latest: text(),
-    moderationGuidelines: jsonb(),
+    moderationGuidelines: denormalizedRevision(),
     moderationGuidelines_latest: text(),
-    howOthersCanHelpMe: jsonb(),
+    howOthersCanHelpMe: denormalizedRevision(),
     howOthersCanHelpMe_latest: text(),
-    howICanHelpOthers: jsonb(),
+    howICanHelpOthers: denormalizedRevision(),
     howICanHelpOthers_latest: text(),
     karma: doublePrecision().notNull().default(0),
     postCount: doublePrecision().notNull().default(0),
@@ -82,9 +89,11 @@ export const users = pgTable(
     commentCount: doublePrecision().notNull().default(0),
     maxCommentCount: doublePrecision().notNull().default(0),
     banned: timestamp(),
-    services: jsonb(),
+    services: jsonb<Record<string, Json>>(),
     isAdmin: boolean().notNull().default(false),
-    theme: jsonb().notNull().default(`'{"name":"default"}'::JSONB`),
+    theme: jsonb<{ name: "default" | "auto" | "dark" }>()
+      .notNull()
+      .default({ name: "default" }),
     hideIntercom: boolean().notNull().default(false),
     acceptedTos: boolean().notNull().default(false),
     hideNavigationSidebar: boolean(),
@@ -94,7 +103,7 @@ export const users = pgTable(
     lastNotificationsCheck: timestamp(),
     expandedFrontpageSections: jsonb(),
     email: text(),
-    emails: jsonb().array(),
+    emails: jsonb<{ address: string; verified: boolean }[]>().array(),
     noindex: boolean().notNull().default(false),
     markDownPostEditor: boolean().notNull().default(false),
     groups: text().array(),
@@ -367,7 +376,7 @@ export const chapters = pgTable(
     number: doublePrecision(),
     sequenceId: varchar({ length: 27 }),
     postIds: varchar({ length: 27 }).array().default([""]).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
   },
   (table) => [
@@ -397,7 +406,7 @@ export const books = pgTable(
     displaySequencesAsGrid: boolean(),
     hideProgressBar: boolean(),
     showChapters: boolean(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     tocTitle: text(),
   },
@@ -445,7 +454,7 @@ export const collections = pgTable(
     gridImageId: text(),
     firstPageLink: text().notNull(),
     hideStartReadingButton: boolean(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     noindex: boolean().default(false).notNull(),
   },
@@ -516,7 +525,7 @@ export const comments = pgTable(
     schemaVersion: doublePrecision().default(1),
     createdAt: timestampDefaultNow(),
     legacyData: jsonb(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
@@ -1071,7 +1080,7 @@ export const curationNotices = pgTable(
     commentId: varchar({ length: 27 }),
     postId: varchar({ length: 27 }),
     deleted: boolean().default(false).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
   },
   (table) => [
@@ -1310,8 +1319,10 @@ export const localgroups = pgTable(
     types: text().array().default(["{LW}"]).notNull(),
     categories: text().array(),
     isOnline: boolean().default(false).notNull(),
-    mongoLocation: jsonb(),
-    googleLocation: jsonb(),
+    mongoLocation: jsonb<{ type: "Point"; coordinates: [number, number] }>(),
+    googleLocation: jsonb<{
+      geometry: { location: { lat: number; lng: number } };
+    }>(),
     location: text(),
     contactInfo: text(),
     facebookLink: text(),
@@ -1322,7 +1333,7 @@ export const localgroups = pgTable(
     bannerImageId: text(),
     inactive: boolean().default(false).notNull(),
     deleted: boolean().default(false).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     nameInAnotherLanguage: text(),
     salesforceId: text(),
@@ -1383,7 +1394,7 @@ export const messages = pgTable(
     userId: varchar({ length: 27 }).notNull(),
     conversationId: varchar({ length: 27 }).notNull(),
     noEmail: boolean().default(false).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
   },
   (table) => [
@@ -1619,14 +1630,14 @@ export const forumEvents = pgTable(
     lightColor: text().default("#ffffff").notNull(),
     tagId: varchar({ length: 27 }),
     bannerImageId: text(),
-    frontpageDescription: jsonb(),
+    frontpageDescription: denormalizedRevision(),
     frontpageDescriptionLatest: text("frontpageDescription_latest"),
-    postPageDescription: jsonb(),
+    postPageDescription: denormalizedRevision(),
     postPageDescriptionLatest: text("postPageDescription_latest"),
     contrastColor: text(),
     includesPoll: boolean().default(false).notNull(),
     publicData: jsonb(),
-    frontpageDescriptionMobile: jsonb(),
+    frontpageDescriptionMobile: denormalizedRevision(),
     frontpageDescriptionMobileLatest: text("frontpageDescriptionMobile_latest"),
     postId: varchar({ length: 27 }),
     customComponent: text(),
@@ -1841,7 +1852,7 @@ export const posts = pgTable(
     finalReviewVoteScoreAF: doublePrecision().default(0).notNull(),
     finalReviewVotesAF: doublePrecision().array().default([]).notNull(),
     lastCommentPromotedAt: timestamp(),
-    tagRelevance: jsonb(),
+    tagRelevance: jsonb<Record<string, number>>(),
     noIndex: boolean().default(false).notNull(),
     rsvps: jsonb().array(),
     activateRSVPs: boolean(),
@@ -2912,7 +2923,7 @@ export const revisions = pgTable(
     commitMessage: text(),
     userId: varchar({ length: 27 }),
     draft: boolean(),
-    originalContents: jsonb(),
+    originalContents: jsonb<EditorContents>(),
     html: text(),
     wordCount: doublePrecision().notNull(),
     changeMetrics: jsonb().notNull(),

@@ -308,3 +308,18 @@ export const userIsPostAuthor = (
   post: Pick<Post, "userId" | "coauthorUserIds"> | null,
 ): boolean =>
   !!user && !!post && (user._id === post.userId || userIsPostCoauthor(user, post));
+
+/**
+ * Count a user as "new" if they have low karma or joined less than a week ago
+ */
+export const userIsNew = (user: Pick<User, "createdAt" | "karma">): boolean => {
+  const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
+  const karmaThreshold = 50;
+  const userCreatedAt = new Date(user.createdAt);
+  const userKarma = user.karma;
+  const userBelowKarmaThreshold = karmaThreshold && userKarma < karmaThreshold;
+  return (
+    userBelowKarmaThreshold ||
+    userCreatedAt.getTime() > new Date().getTime() - oneWeekInMs
+  );
+};

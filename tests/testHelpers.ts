@@ -113,7 +113,7 @@ export const createTestComment = async (
     _id: commentId,
     userId,
     contentsLatest: revision._id,
-    contents: "",
+    contents: revision,
     createdAt,
     postedAt: createdAt,
     ...data,

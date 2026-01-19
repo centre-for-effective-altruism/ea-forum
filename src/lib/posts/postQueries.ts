@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { userDefaultProjection } from "../users/userQueries";
+import { postTagsProjection } from "../tags/tagQueries";
 
 export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
   void currentUserId; // TODO currentUserVote
@@ -17,7 +18,9 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       question: true,
       debate: true,
       shortform: true,
-      tagRelevance: true,
+    },
+    extras: {
+      tags: postTagsProjection,
     },
     where: {
       _id: postId,

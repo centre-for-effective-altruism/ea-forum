@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ZodType } from "zod/v4";
+import type { z, ZodType } from "zod/v4";
 import { AdaptivePoller } from "./utils/AdaptivePoller";
 import { LRUCache } from "lru-cache";
 import stringify from "json-stringify-deterministic";
@@ -38,10 +38,11 @@ type BracketParams<S extends string> = S extends `/${infer Rest}`
     : BracketParam<Rest>
   : never;
 
-type ApiRouteOptions<Endpoint extends string, ResponseBody> = {
+type ApiRouteOptions<Endpoint extends string, SearchParams, ResponseBody> = {
   endpoint: Endpoint;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   access: "all" | "logged-in" | "admins";
+  searchParams?: ZodType<SearchParams>;
   responseSchema: ZodType<ResponseBody>;
 };
 
@@ -49,33 +50,46 @@ type UseApiRouteProps<
   Endpoint extends string,
   Path extends AbsolutePath<Endpoint>,
   Params extends BracketParams<Path>,
+  SearchParams,
 > = {
   // TODO Strongly type params
   params: Record<Params, string>;
+  searchParams?: z.output<SearchParams>;
   pollIntervalMs?: number;
   skip?: boolean;
 };
 
-type FetchedResult = {
+type FetchedResult<ResponseBody> = {
   status: number;
-  json: unknown;
+  json: ResponseBody;
 };
 
 export class ApiRoute<
   Endpoint extends string,
   Path extends AbsolutePath<Endpoint>,
   Params extends BracketParams<Path>,
+  SearchParams,
   ResponseBody,
 > {
-  private cache = new LRUCache<string, Promise<FetchedResult>>({ max: 200 });
+  private cache = new LRUCache<string, Promise<FetchedResult<ResponseBody>>>({
+    max: 100,
+  });
 
-  constructor(private readonly options: ApiRouteOptions<Endpoint, ResponseBody>) {}
+  constructor(
+    private readonly options: ApiRouteOptions<Endpoint, SearchParams, ResponseBody>,
+  ) {}
 
-  async fetch(params: Record<Params, string>): Promise<FetchedResult> {
+  async fetch(
+    params: Record<Params, string>,
+    searchParams?: z.output<SearchParams>,
+  ): Promise<FetchedResult<ResponseBody>> {
     let endpoint: string = this.options.endpoint;
     for (const param in params) {
       const value = params[param];
       endpoint = endpoint.replaceAll(`[${param}]`, value);
+    }
+    if (searchParams) {
+      endpoint += "?" + new URLSearchParams(searchParams).toString();
     }
     const result = await fetch(endpoint, {
       method: this.options.method,
@@ -88,23 +102,28 @@ export class ApiRoute<
 
   fetchWithCache(
     params: Record<Params, string>,
+    searchParams: z.output<SearchParams> | undefined,
     stringifiedParams?: string,
-  ): Promise<FetchedResult> {
+    stringifiedSearchParams?: string,
+  ): Promise<FetchedResult<ResponseBody>> {
     stringifiedParams ??= stringify(params);
-    const cachedValue = this.cache.get(stringifiedParams);
+    stringifiedSearchParams ??= stringify(searchParams);
+    const key = stringifiedParams + stringifiedSearchParams;
+    const cachedValue = this.cache.get(key);
     if (cachedValue) {
       return cachedValue;
     }
-    const value = this.fetch(params);
-    this.cache.set(stringifiedParams, value);
+    const value = this.fetch(params, searchParams);
+    this.cache.set(key, value);
     return value;
   }
 
   use({
     params,
+    searchParams,
     pollIntervalMs,
     skip = false,
-  }: UseApiRouteProps<Endpoint, Path, Params>) {
+  }: UseApiRouteProps<Endpoint, Path, Params, SearchParams>) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [data, setData] = useState<ResponseBody | null>(null);
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -116,6 +135,14 @@ export class ApiRoute<
     // eslint-disable-next-line react-hooks/rules-of-hooks, react-hooks/exhaustive-deps
     const memoisedParams = useMemo(() => params, [stringifiedParams]);
 
+    const stringifiedSearchParams = stringify(searchParams);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const memoisedSearchParams = useMemo(
+      () => searchParams,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [stringifiedSearchParams],
+    );
+
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const refetch = useCallback(async () => {
       if (skip) {
@@ -125,7 +152,9 @@ export class ApiRoute<
       try {
         const { status, json } = await this.fetchWithCache(
           memoisedParams,
+          memoisedSearchParams,
           stringifiedParams,
+          stringifiedSearchParams,
         );
         if (status < 200 || status > 299) {
           if (typeof json === "string") {
@@ -151,7 +180,13 @@ export class ApiRoute<
       } finally {
         setLoading(false);
       }
-    }, [stringifiedParams, memoisedParams, skip]);
+    }, [
+      stringifiedParams,
+      memoisedParams,
+      stringifiedSearchParams,
+      memoisedSearchParams,
+      skip,
+    ]);
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {

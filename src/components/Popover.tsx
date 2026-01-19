@@ -1,16 +1,20 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { isClient } from "@/lib/environment";
-import { useBodyScrollLock } from "@/lib/hooks/useBodyScrollLock";
-import ClickAwayListener from "react-click-away-listener";
+import { Toaster } from "react-hot-toast";
 import clsx from "clsx";
 
+/**
+ * Managed React wrapper around HTML dialog. Dialogs are designed to be used
+ * impreatively, so adding a functional wrapper requires careful state
+ * management. Be careful when changing the effects here - it's very easy
+ * to break the onClose callback.
+ */
 export default function Popover({
   open,
   onClose,
-  background,
+  background = "dim",
   className,
   children,
 }: Readonly<{
@@ -20,54 +24,85 @@ export default function Popover({
   className?: string;
   children: ReactNode;
 }>) {
-  const [target] = useState<HTMLElement | null>(() =>
-    isClient ? document.getElementById("modal-target") : null,
-  );
-
-  useBodyScrollLock(!!target && open);
+  // Track if we're mounted to avoid trying to create a portal during SSR
+  const [mounted, setMounted] = useState(false);
+  // We're ready when event listeners are attached and we're ready to open
+  const [ready, setReady] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (open) {
-      const onKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-        }
-      };
-      document.addEventListener("keydown", onKeyDown);
-      return () => {
-        document.removeEventListener("keydown", onKeyDown);
-      };
-    }
-  }, [open, onClose]);
+    setMounted(true);
+  }, []);
 
-  if (!target || !open) {
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.target === dialog) {
+        // Backdrop click
+        onClose();
+      }
+    };
+
+    dialog.addEventListener("cancel", handleCancel);
+    dialog.addEventListener("pointerdown", handlePointerDown);
+    setReady(true);
+
+    return () => {
+      dialog.removeEventListener("cancel", handleCancel);
+      dialog.removeEventListener("pointerdown", handlePointerDown);
+      setReady(false);
+    };
+  }, [mounted, onClose]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+    if (open && !dialog.open) {
+      dialog.showModal();
+    }
+    if (!open && dialog.open) {
+      dialog.close();
+    }
+  }, [ready, open]);
+
+  if (!mounted) {
     return null;
   }
 
   return createPortal(
-    <div
+    <dialog
+      ref={dialogRef}
       data-component="Popover"
       className={clsx(
-        "fixed left-0 top-0 w-full h-screen flex items-center justify-center",
-        "z-(--zindex-popover) bg-(--color-modal-backdrop)",
-        background === "blurred" && "backdrop-blur-xs",
-        background === "dim" && "bg-popover-dim",
+        background === "blurred" && "backdrop:backdrop-blur-xs",
+        background === "dim" && "backdrop:bg-popover-dim",
+        "p-0 border-0 bg-transparent max-w-full max-h-screen",
+        "fixed inset-0 m-auto w-fit h-fit",
       )}
     >
-      <ClickAwayListener onClickAway={onClose}>
-        <div
-          role="dialog"
-          aria-modal="true"
-          className={clsx(
-            "max-h-[90vh] max-w-full overflow-auto bg-white p-8 rounded",
-            "border-1 border-gray-200",
-            className,
-          )}
-        >
-          {children}
-        </div>
-      </ClickAwayListener>
-    </div>,
-    target,
+      <div
+        className={clsx(
+          "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
+          "border-1 border-gray-200",
+          className,
+        )}
+      >
+        {children}
+      </div>
+      {/* Ensure toasts are position above the backdrop */}
+      <Toaster position="bottom-center" />
+    </dialog>,
+    document.body,
   );
 }

@@ -6,14 +6,13 @@ import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
-import StickyPostsList from "../PostsList/StickyPostsList";
-import FrontpagePostsList from "../PostsList/FrontpagePostsList";
+import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
 import RecentDiscussionsFeed from "./RecentDiscussions/RecentDiscussionsFeed";
-import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import NewQuickTake from "../QuickTakes/NewQuickTake";
+import Link from "../Link";
 
 export default async function HomePageFeed({
   search,
@@ -34,63 +33,117 @@ export default async function HomePageFeed({
     <PostsListViewProvider ssrValue={ssrPostView}>
       {activeTag ? (
         <>
-          <div className="mb-2 flex items-center">
-            <Type style="sectionTitleLarge" className="grow">
-              New &amp; upvoted
-            </Type>
-            <PostsListViewPicker />
+          <div className="mb-2 flex items-center justify-between">
+            <Type style="sectionTitleLarge">New &amp; upvoted</Type>
+            <div className="flex items-center gap-1">
+              <Type style="loadMore">
+                <Link
+                  href={`/topics/${search.tab}`}
+                  className="text-gray-600 hover:text-gray-1000"
+                >
+                  View more
+                </Link>
+              </Type>
+              <PostsListViewPicker />
+            </div>
           </div>
           <div className="mb-10">
-            <Suspense
-              fallback={<PostsListSkeleton count={30} viewType="fromContext" />}
-            >
-              <FrontpagePostsList
-                initialLimit={30}
-                onlyTagId={activeTag._id}
-                viewType="fromContext"
-              />
-            </Suspense>
+            <ViewBasedPostsList
+              viewType="fromContext"
+              initialLimit={30}
+              maxOffset={200}
+              view={{
+                view: "frontpage",
+                limit: 11,
+                onlyTagId: activeTag._id,
+              }}
+            />
           </div>
         </>
       ) : (
         <>
-          <div className="mb-2 flex items-center">
-            <Type style="sectionTitleLarge" className="grow">
-              New &amp; upvoted
-            </Type>
-            <PostsListViewPicker />
+          <div className="mb-2 flex items-center justify-between">
+            <Type style="sectionTitleLarge">New &amp; upvoted</Type>
+            <div className="flex items-center gap-1">
+              <Type
+                style="loadMore"
+                As="button"
+                className="cursor-pointer text-gray-600 hover:text-gray-1000"
+              >
+                Customize feed
+              </Type>
+              <PostsListViewPicker />
+            </div>
           </div>
           <div className="mb-2">
-            <Suspense fallback={<PostsListSkeleton count={2} />}>
-              <StickyPostsList initialLimit={30} />
-            </Suspense>
+            <ViewBasedPostsList
+              viewType="list"
+              hideLoadMore
+              view={{
+                view: "sticky",
+                limit: 5,
+              }}
+            />
           </div>
           <div className="mb-10">
-            <Suspense
-              fallback={<PostsListSkeleton count={11} viewType="fromContext" />}
-            >
-              <FrontpagePostsList
-                initialLimit={11}
-                excludeTagId={communityTagId}
-                viewType="fromContext"
-              />
-            </Suspense>
+            <ViewBasedPostsList
+              viewType="fromContext"
+              maxOffset={200}
+              view={{
+                view: "frontpage",
+                limit: 11,
+                excludeTagId: communityTagId,
+              }}
+              bottomRightNode={
+                <Type style="loadMore">
+                  <Link href="/allPosts" className="text-primary hover:opacity-70">
+                    Advanced sorting & filtering
+                  </Link>
+                </Type>
+              }
+            />
           </div>
           {communityTagId && (
             <>
-              <Type className="mb-2" style="sectionTitleLarge">
-                Posts tagged community
-              </Type>
+              <div className="flex justify-between item-center">
+                <Type className="mb-2" style="sectionTitleLarge">
+                  Posts tagged community
+                </Type>
+                <Type style="loadMore">
+                  <Link
+                    href="/topics/community"
+                    className="text-gray-600 hover:text-gray-1000"
+                  >
+                    View more
+                  </Link>
+                </Type>
+              </div>
               <div className="mb-10">
-                <Suspense fallback={<PostsListSkeleton count={5} />}>
-                  <FrontpagePostsList initialLimit={5} onlyTagId={communityTagId} />
-                </Suspense>
+                <ViewBasedPostsList
+                  viewType="fromContext"
+                  hideLoadMore
+                  view={{
+                    view: "frontpage",
+                    limit: 5,
+                    onlyTagId: communityTagId,
+                  }}
+                />
               </div>
             </>
           )}
-          <Type className="mb-2" style="sectionTitleLarge">
-            Quick takes
-          </Type>
+          <div className="flex justify-between item-center">
+            <Type className="mb-2" style="sectionTitleLarge">
+              Quick takes
+            </Type>
+            <Type style="loadMore">
+              <Link
+                href="/quicktakes"
+                className="text-gray-600 hover:text-gray-1000"
+              >
+                View more
+              </Link>
+            </Type>
+          </div>
           <NewQuickTake className="mb-1" />
           <div className="mb-10">
             <Suspense fallback={<QuickTakesListSkeleton count={5} />}>

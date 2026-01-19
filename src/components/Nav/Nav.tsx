@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import { useCallback, useState, type ComponentProps } from "react";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import HomeIcon from "@heroicons/react/24/outline/HomeIcon";
@@ -17,9 +17,14 @@ import CalendarIcon from "@heroicons/react/24/outline/CalendarIcon";
 import CalendarSelectedIcon from "@heroicons/react/24/solid/CalendarIcon";
 import UserGroupIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import UserGroupSelectedIcon from "@heroicons/react/24/solid/UserGroupIcon";
+import {
+  PeopleDirectoryIcon,
+  PeopleDirectorySelectedIcon,
+} from "../Icons/UserWithLinesIcon";
 import NavItem from "./NavItem";
 import NavHr from "./NavHr";
 import NavLink from "./NavLink";
+import RssPopover from "../RssPopover";
 
 const items = [
   {
@@ -56,8 +61,8 @@ const items = [
     title: "People directory",
     href: "/people-directory",
     description: "Search and filter Forum users",
-    UnselectedIcon: ArchiveBoxIcon, // TODO
-    SelectedIcon: ArchiveBoxSelectedIcon, // TODO
+    UnselectedIcon: PeopleDirectoryIcon,
+    SelectedIcon: PeopleDirectorySelectedIcon,
   },
   {
     title: "Take action",
@@ -105,6 +110,9 @@ const links = [
     href: "/quicktakes",
   },
   {
+    title: "RSS",
+  },
+  {
     title: "Cookie policy",
     href: "/cookie-policy",
   },
@@ -115,6 +123,9 @@ const links = [
 ] satisfies Pick<ComponentProps<typeof NavLink>, "title" | "href">[];
 
 export default function Nav({ className }: Readonly<{ className?: string }>) {
+  const [rssOpen, setRssOpen] = useState(false);
+  const onOpenRss = useCallback(() => setRssOpen(true), []);
+  const onCloseRss = useCallback(() => setRssOpen(false), []);
   const pathname = usePathname();
   return (
     <nav className={clsx("w-[200px]", className)} data-component="Nav">
@@ -130,9 +141,10 @@ export default function Nav({ className }: Readonly<{ className?: string }>) {
         <NavHr />
         {links.map(({ title, href }) => (
           <NavLink
-            key={href}
+            key={title}
             title={title}
             href={href}
+            onClick={title === "RSS" ? onOpenRss : undefined}
             isSelected={pathname === href}
           />
         ))}
@@ -143,6 +155,7 @@ export default function Nav({ className }: Readonly<{ className?: string }>) {
           isSelected={pathname === "/contact"}
         />
       </div>
+      <RssPopover open={rssOpen} onClose={onCloseRss} />
     </nav>
   );
 }

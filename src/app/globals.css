@@ -29,7 +29,6 @@
   --color-warning-translucent: "rgba(255,152,0,0.1)";
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
-  --color-modal-backdrop: rgba(217, 217, 217, 0.5);
   --color-login-input: #efefef;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
@@ -51,6 +50,7 @@
   --color-recent-discussions-green: #72b065;
   --color-popover-dim: rgba(0, 0, 0, 0.4);
   --color-curated-star: #ffc500;
+  --color-new-user-sprout: #5eb25c;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -203,4 +203,11 @@ body {
 .ck-powered-by,
 .ck-powered-by-balloon {
   display: none !important;
+}
+
+/**
+ * Hide ReCaptcha (see https://developers.google.com/recaptcha/docs/faq)
+ */
+.grecaptcha-badge {
+  visibility: hidden;
 }

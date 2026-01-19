@@ -1,11 +1,12 @@
 {
-  "name": "eaforum3",
+  "name": "ea-forum",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "next build",
     "check-format": "prettier --check .",
     "dev": "next dev --turbopack",
+    "dev:standalone": "DISABLE_PROXY=true next dev --turbopack",
     "format": "prettier . --write --log-level warn",
     "lint": "eslint --max-warnings 0",
     "prepare": "husky",
@@ -20,6 +21,7 @@
     "@elastic/elasticsearch": "^9.2.0",
     "@floating-ui/react": "^0.27.15",
     "@heroicons/react": "^2.2.0",
+    "@sentry/nextjs": "^10.34.0",
     "auth0": "^5.2.0",
     "bowser": "^2.13.1",
     "cheerio": "^1.1.2",

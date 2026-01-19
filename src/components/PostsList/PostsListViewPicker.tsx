@@ -7,15 +7,15 @@ import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import CardViewIcon from "../Icons/CardView";
 import ListViewIcon from "../Icons/ListViewIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
+import { PostsListViewType } from "@/lib/posts/postsListView";
 
 export default function PostsListViewPicker() {
   const { captureEvent } = useTracking();
   const { view, setView } = usePostsListView();
   const dismissRef = useRef<() => void>(null);
 
-  const onClickItem = useCallback(
-    (title: string) => {
-      const value = title.indexOf("Card") >= 0 ? "card" : "list";
+  const onClick = useCallback(
+    (value: PostsListViewType) => {
       setView(value);
       dismissRef.current?.();
       captureEvent("postsListViewToggle", { value });
@@ -27,18 +27,19 @@ export default function PostsListViewPicker() {
   return (
     <DropdownMenu
       placement="bottom-end"
-      onClickItem={onClickItem}
       dismissRef={dismissRef}
       items={[
         {
           title: "Card view",
           Icon: CardViewIcon,
           checked: view === "card",
+          onClick: () => onClick("card"),
         },
         {
           title: "List view",
           Icon: ListViewIcon,
           checked: view === "list",
+          onClick: () => onClick("list"),
         },
       ]}
     >

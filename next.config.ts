@@ -1,6 +1,8 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   images: {
     remotePatterns: [
       {
@@ -42,4 +44,22 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["mathjax-full"],
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+  org: "centre-for-effective-altruism",
+  project: "ea-forum",
+  silent: !process.env.CI,
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent
+  // ad-blockers.
+  tunnelRoute: "/monitoring",
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});

@@ -1,7 +1,7 @@
 import { suite, test, expect, beforeEach } from "vitest";
 import { createTestUser } from "./testHelpers";
 import { triggerReviewIfNeeded } from "@/lib/users/userReview";
-import { users } from "@/lib/schema";
+import { Revision, users } from "@/lib/schema";
 import { db } from "@/lib/db";
 
 const fetchNeedsReview = async (userId: string): Promise<boolean> => {
@@ -65,7 +65,7 @@ suite("triggerReviewIfNeeded (DB integration)", () => {
   test("triggers review when biography is present", async () => {
     const user = await createTestUser({
       reviewedByUserId: null,
-      biography: { html: "<p>Hello</p>" },
+      biography: { html: "<p>Hello</p>" } as Revision,
       needsReview: false,
     });
     await triggerReviewIfNeeded(user);

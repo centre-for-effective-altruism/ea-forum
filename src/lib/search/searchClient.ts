@@ -1,6 +1,6 @@
 import stringify from "json-stringify-deterministic";
 import { LRUCache } from "lru-cache";
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { SearchBase } from "./searchDocuments";
 
 const searchQuerySchema = z.object({
@@ -83,7 +83,7 @@ export class SearchClient {
       return Promise.resolve(cached) as Promise<MultiResponse<T>>;
     }
     const promise = new Promise<MultiResponse<T>>((resolve, reject) => {
-      fetch("/api/search", {
+      fetch("/api/search-v2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,14 +1,24 @@
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { Revision } from "../schema";
-import type { Json } from "../typeHelpers";
 
 export type RevisionUpdateType = "major" | "minor" | "patch" | "initial";
+
+export type DenormalizedRevision = {
+  html: string | null;
+  userId: string | null;
+  version: string;
+  editedAt: string | null;
+  wordCount: number;
+  updateType: string | null;
+  commitMessage: string | null;
+  originalContents: EditorContents | null;
+};
 
 /**
  * Given a revision from the database, return just the fields to be denormalized
  * into other tables.
  */
-export const denormalizeRevision = (revision: Revision): Json => {
+export const denormalizeRevision = (revision: Revision): DenormalizedRevision => {
   return {
     originalContents: revision.originalContents as EditorContents,
     html: revision.html,
@@ -17,6 +27,7 @@ export const denormalizeRevision = (revision: Revision): Json => {
     editedAt: revision.editedAt,
     wordCount: revision.wordCount,
     updateType: revision.updateType,
+    commitMessage: revision.commitMessage,
   };
 };
 
