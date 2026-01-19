@@ -135,7 +135,10 @@ export const checkCommentRateLimits = async (
   }
 };
 
-export const addForumEventSticker = async (txn: Transaction, comment: Comment) => {
+export const updateCommentForumEvent = async (
+  txn: Transaction,
+  comment: Comment,
+) => {
   const metadata = comment.forumEventMetadata as ForumEventCommentMetadata | null;
   if (metadata?.eventFormat !== "STICKERS") {
     return;

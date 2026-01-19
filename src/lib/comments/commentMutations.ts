@@ -15,7 +15,7 @@ import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import {
-  addForumEventSticker,
+  updateCommentForumEvent,
   checkCommentForSpam,
   checkCommentRateLimits,
   updateCommentAuthor,
@@ -122,7 +122,7 @@ export const createPostComment = async ({
       updateReadStatusAfterComment(txn, comment),
       updateDescendentCommentCounts(txn, comment),
       checkCommentRateLimits(txn, user, comment),
-      addForumEventSticker(txn, comment),
+      updateCommentForumEvent(txn, comment),
       upsertPolls({ txn, user, revision, post, comment }),
       performVote({
         txn,
