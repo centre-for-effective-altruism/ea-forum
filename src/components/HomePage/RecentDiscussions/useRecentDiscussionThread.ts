@@ -1,20 +1,18 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import {
-  commentsToCommentTree,
-  ThreadableCommentType,
-} from "@/lib/comments/CommentTree";
+import type { CommentsList } from "@/lib/comments/commentLists";
+import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
+import { commentsToCommentTree } from "@/lib/comments/CommentTree";
 
-export const useRecentDiscussionThread = <T extends ThreadableCommentType>({
+export const useRecentDiscussionThread = ({
   post,
   comments,
   initialExpandAllThreads,
 }: {
   post: RecentDiscussionPost;
-  comments?: T[];
+  comments?: CommentsList[];
   initialExpandAllThreads?: boolean;
 }) => {
   const [highlightVisible, setHighlightVisible] = useState(false);
@@ -49,7 +47,7 @@ export const useRecentDiscussionThread = <T extends ThreadableCommentType>({
     }, 0);
   }, [recordPostCommentsView, post]);
 
-  const nestedComments = commentsToCommentTree<T>(comments ?? []);
+  const nestedComments = commentsToCommentTree<CommentsList>(comments ?? []);
   const lastVisitedAt = markedAsVisitedAt || post.readStatus?.[0]?.lastUpdated;
 
   // For posts that have never been commented on, we do want to show them in the

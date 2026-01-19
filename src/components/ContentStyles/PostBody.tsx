@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import clsx from "clsx";
 import "./post-body.css";
 
 export default function PostBody({
@@ -16,7 +17,7 @@ export default function PostBody({
   return (
     <div
       dangerouslySetInnerHTML={{ __html: html }}
-      className={`post-body ${className}`}
+      className={clsx("post-body", className)}
       data-component="PostBody"
     >
       {children}

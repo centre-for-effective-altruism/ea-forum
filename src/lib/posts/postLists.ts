@@ -78,20 +78,13 @@ export type PostsFilter = RelationalFilter<typeof db.query.posts>;
 
 type PostsOrderBy = RelationalOrderBy<typeof db.query.posts>;
 
-const fetchPostsList = ({
-  currentUserId,
-  where,
-  orderBy,
-  offset,
-  limit,
-}: {
-  currentUserId: string | null;
-  where?: PostsFilter;
-  orderBy?: PostsOrderBy;
-  offset?: number;
-  limit?: number;
-}) => {
-  return db.query.posts.findMany({
+export const postsListProjection = (
+  currentUserId: string | null,
+  options?: {
+    highlightLength?: number;
+  },
+) =>
+  ({
     columns: {
       _id: true,
       slug: true,
@@ -112,10 +105,11 @@ const fetchPostsList = ({
       socialPreviewImageAutoUrl: true,
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
+      lastCommentedAt: true,
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>
-        sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, 350)`,
+        sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, ${options?.highlightLength || 350})`,
       tags: postTagsProjection,
     },
     with: {
@@ -126,13 +120,14 @@ const fetchPostsList = ({
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            sql<string>`SUBSTRING(${revisions}."html", 1, 350)`,
+            sql<string>`SUBSTRING(${revisions}."html", 1, ${options?.highlightLength || 350})`,
         },
       },
       readStatus: currentUserId
         ? {
             columns: {
               isRead: true,
+              lastUpdated: true,
             },
             where: {
               userId: currentUserId,
@@ -140,6 +135,23 @@ const fetchPostsList = ({
           }
         : undefined,
     },
+  }) as const satisfies PostRelationalProjection;
+
+const fetchPostsList = ({
+  currentUserId,
+  where,
+  orderBy,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  where?: PostsFilter;
+  orderBy?: PostsOrderBy;
+  offset?: number;
+  limit?: number;
+}) => {
+  return db.query.posts.findMany({
+    ...postsListProjection(currentUserId),
     where: {
       ...viewablePostFilter,
       ...where,

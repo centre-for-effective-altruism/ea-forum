@@ -2,10 +2,19 @@ import { arrayContains, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { comments } from "@/lib/schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
-import { isAnyInArray, isNotTrue } from "@/lib/utils/queryHelpers";
 import { postStatuses } from "../posts/postLists";
+import {
+  isAnyInArray,
+  isNotTrue,
+  RelationalProjection,
+} from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+import { userDefaultProjection } from "../users/userQueries";
+
+export type CommentRelationalProjection = RelationalProjection<
+  typeof db.query.comments
+>;
 
 export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
@@ -24,20 +33,8 @@ export const viewableCommentFilter = {
   draft: isNotTrue,
 } as const;
 
-const fetchCommentsList = ({
-  currentUserId,
-  where,
-  orderBy,
-  offset,
-  limit,
-}: {
-  currentUserId: string | null;
-  where?: CommentsFilter;
-  orderBy?: CommentsOrderBy;
-  offset?: number;
-  limit?: number;
-}) => {
-  return db.query.comments.findMany({
+export const commentListProjection = (currentUserId: string | null) =>
+  ({
     columns: {
       _id: true,
       postedAt: true,
@@ -53,19 +50,7 @@ const fetchCommentsList = ({
     },
     with: {
       user: {
-        columns: {
-          _id: true,
-          slug: true,
-          displayName: true,
-          createdAt: true,
-          profileImageId: true,
-          karma: true,
-          jobTitle: true,
-          organization: true,
-          postCount: true,
-          commentCount: true,
-          biography: true,
-        },
+        ...userDefaultProjection,
         where: {
           deleted: isNotTrue,
         },
@@ -87,6 +72,23 @@ const fetchCommentsList = ({
           }
         : {}),
     },
+  }) as const satisfies CommentRelationalProjection;
+
+const fetchCommentsList = ({
+  currentUserId,
+  where,
+  orderBy,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  where?: CommentsFilter;
+  orderBy?: CommentsOrderBy;
+  offset?: number;
+  limit?: number;
+}) => {
+  return db.query.comments.findMany({
+    ...commentListProjection(currentUserId),
     where: {
       ...viewableCommentFilter,
       ...where,

@@ -36,6 +36,9 @@ export const postGetPageUrl = ({
   return `${prefix}/posts/${post._id}/${post.slug}`;
 };
 
+export const postGetCommentsUrl: typeof postGetPageUrl = (...args) =>
+  postGetPageUrl(...args) + "#comments";
+
 export type GoogleLocation = {
   address_components: {
     types: string;

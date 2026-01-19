@@ -6,13 +6,16 @@ import {
   PostRelationalProjection,
   viewablePostFilter,
   PostFromProjection,
+  postsListProjection,
 } from "../posts/postLists";
-import { viewableCommentFilter } from "../comments/commentLists";
+import {
+  commentListProjection,
+  viewableCommentFilter,
+} from "../comments/commentLists";
 import { isNotTrue } from "../utils/queryHelpers";
 import sortBy from "lodash/sortBy";
 import type { Comment, posts, Revision, Tag } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
-import { userDefaultProjection } from "../users/userQueries";
 
 const getPostProjection = ({
   currentUserId,
@@ -24,43 +27,18 @@ const getPostProjection = ({
   maxCommentAgeHours: number;
   maxCommentsPerPost: number;
   excludeTopLevel: boolean;
-}) =>
-  ({
+}) => {
+  const projection = postsListProjection(currentUserId, { highlightLength: 500 });
+  return {
     columns: {
-      _id: true,
-      slug: true,
-      title: true,
+      ...projection.columns,
       draft: true,
-      isEvent: true,
-      groupId: true,
-      question: true,
-      postedAt: true,
-      lastCommentedAt: true,
     },
+    extras: projection.extras,
     with: {
-      user: userDefaultProjection,
-      readStatus: currentUserId
-        ? {
-            columns: {
-              isRead: true,
-              lastUpdated: true,
-            },
-            where: {
-              userId: currentUserId,
-            },
-          }
-        : undefined,
+      ...projection.with,
       comments: {
-        columns: {
-          _id: true,
-          baseScore: true,
-          parentCommentId: true,
-          topLevelCommentId: true,
-          postedAt: true,
-        },
-        with: {
-          user: userDefaultProjection,
-        },
+        ...commentListProjection(currentUserId),
         where: {
           ...viewableCommentFilter,
           score: { gt: 0 },
@@ -71,10 +49,10 @@ const getPostProjection = ({
           // programatically. This should be stable for the current version of
           // drizzle, but it's liable to break on version upgrades.
           RAW: (commentsTable) => sql`(
-          ${commentsTable}."postedAt" >
-            COALESCE("d0"."lastCommentedAt", NOW()) -
-              MAKE_INTERVAL(hours => ${maxCommentAgeHours})
-        )`,
+            ${commentsTable}."postedAt" >
+              COALESCE("d0"."lastCommentedAt", NOW()) -
+                MAKE_INTERVAL(hours => ${maxCommentAgeHours})
+          )`,
         },
         limit: maxCommentsPerPost,
         orderBy: {
@@ -82,7 +60,8 @@ const getPostProjection = ({
         },
       },
     },
-  }) as const satisfies PostRelationalProjection;
+  } as const satisfies PostRelationalProjection;
+};
 
 export type RecentDiscussionPost = PostFromProjection<
   ReturnType<typeof getPostProjection>

@@ -20,10 +20,14 @@ export default function TimeAgo({
   return (
     <Tooltip title={formatLongDate(date)} As={As} className={className}>
       <Type style={textStyle} As={As}>
-        <time dateTime={date.toISOString()} data-component="TimeAgo">
+        <time
+          dateTime={date.toISOString()}
+          className="cursor-default"
+          data-component="TimeAgo"
+        >
           {formatRelativeTime(date, { style: "short" })}
         </time>
-        {includeAgo && " ago"}
+        {includeAgo && <span className="hidden sm:inline"> ago</span>}
       </Type>
     </Tooltip>
   );
