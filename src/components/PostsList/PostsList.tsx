@@ -3,13 +3,13 @@
 import { ReactNode, useCallback, useState } from "react";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
-import { getPosts } from "@/lib/posts/postsApi";
+import { fetchPostsListAction } from "@/lib/posts/postActions";
 import { usePostsListView } from "@/lib/hooks/usePostsListView";
 import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListView";
 import clsx from "clsx";
+import PostsListSkeleton from "./PostsListSkeleton";
 import PostsItem from "./PostsItem";
 import Type from "../Type";
-import PostsListSkeleton from "./PostsListSkeleton";
 
 export default function PostsList({
   posts,
@@ -34,6 +34,7 @@ export default function PostsList({
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(posts.length);
   const [displayedPosts, setDisplayedPosts] = useState(posts);
+  const [canLoadMore, setCanLoadMore] = useState(true);
   const { view } = usePostsListView();
   const actualViewType = viewType === "fromContext" ? view : viewType;
 
@@ -47,8 +48,14 @@ export default function PostsList({
     setLoading(true);
 
     try {
-      const results = await getPosts.fetch({}, { ...loadMoreView, offset: offset_ });
-      setDisplayedPosts((posts) => [...posts, ...results.json?.posts]);
+      const results = await fetchPostsListAction({
+        ...loadMoreView,
+        offset: offset_,
+      });
+      setDisplayedPosts((posts) => [...posts, ...results]);
+      if (results.length < loadMoreView.limit) {
+        setCanLoadMore(false);
+      }
     } catch (e) {
       console.error("Error fetching posts:", e);
     } finally {
@@ -70,14 +77,18 @@ export default function PostsList({
             />
           )}
           <div className="mt-2 flex justify-between items-center">
-            <Type
-              onClick={onLoadMore}
-              As="button"
-              style="loadMore"
-              className="cursor-pointer text-primary hover:opacity-70"
-            >
-              Load more
-            </Type>
+            {canLoadMore ? (
+              <Type
+                onClick={onLoadMore}
+                As="button"
+                style="loadMore"
+                className="cursor-pointer text-primary hover:opacity-70"
+              >
+                Load more
+              </Type>
+            ) : (
+              <div />
+            )}
             {bottomRightNode}
           </div>
         </>
