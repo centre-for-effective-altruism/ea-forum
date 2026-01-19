@@ -39,7 +39,7 @@ suite("Comments", () => {
         user: commenter,
         postId: post._id,
         parentCommentId: null,
-        data: editorData,
+        editorData: editorData,
       });
 
       const power = userSmallVotePower(commenter.karma, 1);
@@ -99,7 +99,7 @@ suite("Comments", () => {
         user: commenter1,
         postId: post._id,
         parentCommentId: null,
-        data: editorData,
+        editorData: editorData,
       });
 
       const commenter2 = await createTestUser();
@@ -107,7 +107,7 @@ suite("Comments", () => {
         user: commenter2,
         postId: post._id,
         parentCommentId: commentId1,
-        data: editorData,
+        editorData: editorData,
       });
 
       const [childComment, parentComment, updatedPost, author] = await Promise.all([
@@ -163,7 +163,7 @@ suite("Comments", () => {
         user: commenter,
         postId: post._id,
         parentCommentId: null,
-        data: editorData,
+        editorData: editorData,
       });
       const comment = await db.query.comments.findFirst({
         where: {

@@ -41,7 +41,7 @@ export default function NewComment({
       const comment = await createPostCommentAction({
         postId,
         parentCommentId: null,
-        data,
+        editorData: data,
       });
       addTopLevelComment(comment);
       editorRef.current?.clear();

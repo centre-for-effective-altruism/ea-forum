@@ -31,16 +31,16 @@ export const createPostComment = async ({
   user,
   postId,
   parentCommentId,
-  data,
+  editorData,
   draft,
 }: {
   user: CurrentUser;
   postId: string;
   parentCommentId: string | null;
-  data: EditorData;
+  editorData: EditorData;
   draft?: false;
 }) => {
-  const { originalContents } = data;
+  const { originalContents } = editorData;
   if (originalContents.type !== "ckEditorMarkup") {
     throw new Error("Invalid editor type");
   }
@@ -75,7 +75,7 @@ export const createPostComment = async ({
 
   const commentId = randomId();
   const revision = await db.transaction(async (txn) => {
-    const revision = await createRevision(txn, user, data, {
+    const revision = await createRevision(txn, user, editorData, {
       documentId: commentId,
       collectionName: "Comments",
       fieldName: "contents",

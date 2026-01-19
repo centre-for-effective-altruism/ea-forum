@@ -8,12 +8,12 @@ import type { EditorData } from "../ckeditor/editorHelpers";
 export const createPostCommentAction = async ({
   postId,
   parentCommentId,
-  data,
+  editorData,
   draft,
 }: {
   postId: string;
   parentCommentId: string | null;
-  data: EditorData;
+  editorData: EditorData;
   draft?: false;
 }) => {
   const user = await getCurrentUser();
@@ -24,7 +24,7 @@ export const createPostCommentAction = async ({
     user,
     postId,
     parentCommentId,
-    data,
+    editorData,
     draft,
   });
   return await fetchCommentsListItem({
