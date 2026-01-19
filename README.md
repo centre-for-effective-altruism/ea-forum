@@ -1,4 +1,4 @@
-# EAForum3
+# EA Forum
 
 ### [Effective Altruism Forum](https://forum.effectivealtruism.org)
 
