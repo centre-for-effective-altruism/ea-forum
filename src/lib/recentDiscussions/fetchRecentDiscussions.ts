@@ -14,8 +14,13 @@ import {
 } from "../comments/commentLists";
 import { isNotTrue } from "../utils/queryHelpers";
 import sortBy from "lodash/sortBy";
-import type { Comment, posts, Revision, Tag } from "../schema";
+import type { Comment, posts, Tag } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
+import type {
+  RevisionFromProjection,
+  RevisionRelationalProjection,
+} from "../revisions/revisionQueries";
+import { userDefaultProjection } from "../users/userQueries";
 
 const getPostProjection = ({
   currentUserId,
@@ -76,17 +81,30 @@ export type RecentDiscussionComment = Pick<Comment, keyof typeof commentColumns>
 
 const tagColumns = {
   _id: true,
+  slug: true,
+  name: true,
   lastCommentedAt: true,
 } as const;
 
 export type RecentDiscussionTag = Pick<Tag, keyof typeof tagColumns>;
 
-const revisionColumns = {
-  _id: true,
-  editedAt: true,
-} as const;
+const revisionProjection = {
+  columns: {
+    _id: true,
+    editedAt: true,
+    changeMetrics: true,
+  },
+  with: {
+    user: userDefaultProjection,
+    tag: {
+      columns: tagColumns,
+    },
+  },
+} as const satisfies RevisionRelationalProjection;
 
-export type RecentDiscussionRevision = Pick<Revision, keyof typeof revisionColumns>;
+export type RecentDiscussionRevision = RevisionFromProjection<
+  typeof revisionProjection
+>;
 
 type FeedSubquery<ResultType, SortKeyType> = {
   type: string;
@@ -227,7 +245,7 @@ const buildRecentDiscussionsSubqueries = ({
       getSortKey: (tag) => new Date(tag.editedAt ?? 0),
       doQuery: (limit, cutoff) =>
         db.query.revisions.findMany({
-          columns: revisionColumns,
+          ...revisionProjection,
           where: {
             collectionName: "Tags",
             fieldName: "description",

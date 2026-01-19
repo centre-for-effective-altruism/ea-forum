@@ -82,6 +82,20 @@ const relations = defineRelations(
         },
       }),
     },
+    revisions: {
+      user: r.one.users({
+        from: r.revisions.userId,
+        to: r.users._id,
+      }),
+      tag: r.one.tags({
+        from: r.revisions.documentId,
+        to: r.tags._id,
+      }),
+      post: r.one.posts({
+        from: r.revisions.documentId,
+        to: r.posts._id,
+      }),
+    },
     userLoginTokens: {
       user: r.one.users({
         from: r.userLoginTokens.userId,

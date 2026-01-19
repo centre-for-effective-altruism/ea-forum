@@ -1,7 +1,11 @@
 import { AnalyticsContext, AnalyticsInViewTracker } from "@/lib/analyticsEvents";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchRecentDiscussions } from "@/lib/recentDiscussions/fetchRecentDiscussions";
+import {
+  fetchRecentDiscussions,
+  RecentDiscussionRevision,
+} from "@/lib/recentDiscussions/fetchRecentDiscussions";
 import RecentDiscussionsPostCommented from "./RecentDiscussionsPostCommented";
+import RecentDiscussionsTagRevised from "./RecentDiscussionsTagRevised";
 
 export default async function RecentDiscussionsFeed() {
   const currentUser = await getCurrentUser();
@@ -25,7 +29,12 @@ export default async function RecentDiscussionsFeed() {
               case "tagDiscussed":
               // TODO
               case "tagRevised":
-              // TODO
+                return (
+                  <RecentDiscussionsTagRevised
+                    revision={item as RecentDiscussionRevision}
+                    key={key}
+                  />
+                );
               case "subscribeReminder":
               // TODO
               default:

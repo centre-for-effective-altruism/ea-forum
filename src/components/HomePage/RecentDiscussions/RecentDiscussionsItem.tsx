@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import type {
-  RecentDiscussionComment,
   RecentDiscussionPost,
+  RecentDiscussionTag,
 } from "@/lib/recentDiscussions/fetchRecentDiscussions";
 import RecentDiscussionIcon, {
   RecentDiscussionIconName,
@@ -12,6 +12,7 @@ import RecentDiscussionIcon, {
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Link from "@/components/Link";
+import { tagGetUrl } from "@/lib/tags/tagHelpers";
 
 type RecentDiscussionItemDocument =
   | {
@@ -20,7 +21,7 @@ type RecentDiscussionItemDocument =
     }
   | {
       post?: never;
-      tag: RecentDiscussionComment;
+      tag: RecentDiscussionTag;
     };
 
 export type RecentDiscussionItemProps = RecentDiscussionItemDocument & {
@@ -80,24 +81,22 @@ export default function RecentDiscussionsItem({
                 {postTitleOverride ?? post.title}
               </Link>
             )}
-            {
-              tag &&
-                // TODO: Add recent discussions tag UI here
-                null
-              /*
-              <TagsTooltip tag={tag} As="span">
-                <Link to={tagGetUrl(tag)} className={classes.primaryText}>
-                  {tag.name}
-                </Link>
-              </TagsTooltip>
-                 */
-            }{" "}
+            {tag && (
+              /*<TagsTooltip tag={tag} As="span"> TODO Add tag tooltip*/
+              <Link
+                href={tagGetUrl({ tag })}
+                className="text-gray-1000 hover:opacity-70"
+              >
+                {tag.name}
+              </Link>
+              /*</TagsTooltip>*/
+            )}{" "}
             <TimeAgo time={timestamp} includeAgo As="span" />
           </div>
         </div>
         {children && (
           <div className="flex gap-2">
-            {/* dummy icon container here */}
+            <div className="sm:min-w-[24px]" />
             <div
               className="
                 grow min-w-[0] bg-gray-0 text-gray-1000 rounded p-3

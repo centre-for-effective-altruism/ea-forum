@@ -2926,7 +2926,7 @@ export const revisions = pgTable(
     originalContents: jsonb<EditorContents>(),
     html: text(),
     wordCount: doublePrecision().notNull(),
-    changeMetrics: jsonb().notNull(),
+    changeMetrics: jsonb<{ added: number; removed: number }>().notNull(),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
     extendedScore: jsonb(),
