@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import type {
+  RecentDiscussionComment,
   RecentDiscussionPost,
   RecentDiscussionTag,
 } from "@/lib/recentDiscussions/fetchRecentDiscussions";
@@ -16,7 +17,7 @@ import { tagGetUrl } from "@/lib/tags/tagHelpers";
 
 type RecentDiscussionItemDocument =
   | {
-      post: RecentDiscussionPost;
+      post: RecentDiscussionPost | NonNullable<RecentDiscussionComment["post"]>;
       tag?: never;
     }
   | {

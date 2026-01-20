@@ -477,7 +477,10 @@ export const comments = pgTable(
     author: text(),
     postId: varchar({ length: 27 }),
     tagId: varchar({ length: 27 }),
-    tagCommentType: text().default("DISCUSSION").notNull(),
+    tagCommentType: text()
+      .default("DISCUSSION")
+      .notNull()
+      .$type<"SUBFORUM" | "DISCUSSION">(),
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
     userIP: text(),

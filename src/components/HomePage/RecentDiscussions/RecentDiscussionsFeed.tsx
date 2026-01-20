@@ -2,14 +2,12 @@
 
 import { useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
-import type {
-  RecentDiscussionRevision,
-  RecentDiscussionsData,
-} from "@/lib/recentDiscussions/fetchRecentDiscussions";
+import type { RecentDiscussionsData } from "@/lib/recentDiscussions/fetchRecentDiscussions";
 import { getRecentDiscussionsAction } from "@/lib/recentDiscussions/recentDiscussionsActions";
 import InfiniteLoadTrigger from "@/components/InfiniteLoadTrigger";
 import RecentDiscussionsItemSkeleton from "./RecentDiscussionsItemSkeleton";
 import RecentDiscussionsPostCommented from "./RecentDiscussionsPostCommented";
+import RecentDiscussionsNewQuickTake from "./RecentDiscussionsNewQuickTake";
 import RecentDiscussionsTagRevised from "./RecentDiscussionsTagRevised";
 import RecentDiscussionsSubscribeReminder from "./RecentDiscussionsSubscribeReminder";
 
@@ -56,21 +54,17 @@ export default function RecentDiscussionsFeed({
           case "postCommented":
             return <RecentDiscussionsPostCommented post={item} key={key} />;
           case "newQuickTake":
-            // TODO
-            console.warn("Recent discussions: newQuickTake");
+            return <RecentDiscussionsNewQuickTake quickTake={item} key={key} />;
           case "quickTakeCommented":
             // TODO
             console.warn("Recent discussions: quickTakeCommented");
+            break;
           case "tagDiscussed":
             // TODO
             console.warn("Recent discussions: tagDiscussed");
+            break;
           case "tagRevised":
-            return (
-              <RecentDiscussionsTagRevised
-                revision={item as RecentDiscussionRevision}
-                key={key}
-              />
-            );
+            return <RecentDiscussionsTagRevised revision={item} key={key} />;
           case "subscribeReminder":
             return <RecentDiscussionsSubscribeReminder key={key} />;
           default:

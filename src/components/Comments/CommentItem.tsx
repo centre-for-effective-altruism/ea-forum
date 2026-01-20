@@ -5,6 +5,7 @@ import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { userGetProfileUrl, userIsNew } from "@/lib/users/userHelpers";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
+import clsx from "clsx";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
@@ -18,8 +19,14 @@ import SproutIcon from "../Icons/SproutIcon";
 
 export default function CommentItem({
   node: { comment, depth, children },
+  borderless,
 }: Readonly<{
   node: CommentTreeNode<CommentsList>;
+  /**
+   * Don't render a border or outside padding - used for embedding in another
+   * component.
+   */
+  borderless?: boolean;
 }>) {
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = useCallback(() => {
@@ -29,19 +36,28 @@ export default function CommentItem({
   return (
     <div
       data-component="CommentItem"
-      className={`
-        border border-(--color-comment-border) rounded-sm pl-3 pt-2 mb-1
-        ${depth & 1 ? "bg-(--color-comment-odd)" : "bg-(--color-comment-even)"}
-        ${depth === 0 ? "" : "border-r-0"}
-      `}
+      className={
+        borderless
+          ? undefined
+          : clsx(
+              "border border-(--color-comment-border) rounded-sm pl-3 pt-2 mb-1",
+              depth & 1 ? "bg-(--color-comment-odd)" : "bg-(--color-comment-even)",
+              depth === 0 ? "" : "border-r-0",
+            )
+      }
     >
-      <article id={_id} data-depth={depth} className="pr-3 mb-2">
+      <article
+        id={_id}
+        data-depth={depth}
+        className={borderless ? undefined : "pr-3 mb-2"}
+      >
         <div className="mb-2 flex items-center gap-2">
           <ChevronDownIcon
-            className={`
-              w-[16px] cursor-pointer text-gray-600 hover:opacity-70
-              ${!expanded && "-rotate-90"} transition-transform
-            `}
+            className={clsx(
+              "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
+              "transition-transform",
+              !expanded && "-rotate-90",
+            )}
             role="button"
             onClick={toggleExpanded}
           />

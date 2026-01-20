@@ -68,6 +68,14 @@ const relations = defineRelations(
       }),
     },
     comments: {
+      post: r.one.posts({
+        from: r.comments.postId,
+        to: r.posts._id,
+      }),
+      tag: r.one.tags({
+        from: r.comments.tagId,
+        to: r.tags._id,
+      }),
       user: r.one.users({
         from: r.comments.userId,
         to: r.users._id,

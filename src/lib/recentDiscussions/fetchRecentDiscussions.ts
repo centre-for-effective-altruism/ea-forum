@@ -9,18 +9,20 @@ import {
   postsListProjection,
 } from "../posts/postLists";
 import {
+  CommentFromProjection,
   commentListProjection,
+  CommentRelationalProjection,
   viewableCommentFilter,
 } from "../comments/commentLists";
-import { isNotTrue } from "../utils/queryHelpers";
-import sortBy from "lodash/sortBy";
-import type { Comment, posts, Tag } from "../schema";
-import type { CurrentUser } from "../users/currentUser";
 import type {
   RevisionFromProjection,
   RevisionRelationalProjection,
 } from "../revisions/revisionQueries";
 import { userDefaultProjection } from "../users/userQueries";
+import { isNotTrue } from "../utils/queryHelpers";
+import sortBy from "lodash/sortBy";
+import type { posts, Tag } from "../schema";
+import type { CurrentUser } from "../users/currentUser";
 
 const getPostProjection = ({
   currentUserId,
@@ -73,12 +75,26 @@ export type RecentDiscussionPost = PostFromProjection<
   ReturnType<typeof getPostProjection>
 >;
 
-const commentColumns = {
-  _id: true,
-  postedAt: true,
-} as const;
+const getCommentProjection = (currentUserId: string | null) => {
+  const base = commentListProjection(currentUserId);
+  return {
+    ...base,
+    with: {
+      ...base.with,
+      post: {
+        columns: {
+          _id: true,
+          slug: true,
+          title: true,
+        },
+      },
+    },
+  } as const satisfies CommentRelationalProjection;
+};
 
-export type RecentDiscussionComment = Pick<Comment, keyof typeof commentColumns>;
+export type RecentDiscussionComment = CommentFromProjection<
+  ReturnType<typeof getCommentProjection>
+>;
 
 const tagColumns = {
   _id: true,
@@ -191,7 +207,7 @@ const buildRecentDiscussionsSubqueries = ({
       getSortKey: (comment) => new Date(comment.postedAt).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.comments.findMany({
-          columns: commentColumns,
+          ...getCommentProjection(currentUser?._id ?? null),
           where: {
             ...viewableCommentFilter,
             baseScore: { gt: 0 },

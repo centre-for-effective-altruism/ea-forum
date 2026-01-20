@@ -16,6 +16,9 @@ export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
 >;
 
+export type CommentFromProjection<TConfig extends CommentRelationalProjection> =
+  Awaited<ReturnType<typeof db.query.comments.findMany<TConfig>>>[number];
+
 export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
 type CommentsFilter = NonNullable<
