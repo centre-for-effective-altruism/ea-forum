@@ -12,6 +12,7 @@ import {
   InsertRevision,
   InsertTag,
   InsertUser,
+  InsertVote,
   Post,
   posts,
   Revision,
@@ -20,6 +21,8 @@ import {
   tags,
   User,
   users,
+  Vote,
+  votes,
 } from "@/lib/schema";
 
 export const createTestUser = async (data?: Partial<InsertUser>): Promise<User> => {
@@ -160,5 +163,20 @@ export const createTestForumEvent = async (
     ...data,
   };
   const result = await db.insert(forumEvents).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestVote = async (data: Partial<InsertVote>): Promise<Vote> => {
+  const insertValues: InsertVote = {
+    _id: randomId(),
+    documentId: randomId(),
+    userId: randomId(),
+    collectionName: "Posts",
+    voteType: "smallUpvote",
+    power: 1,
+    votedAt: new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(votes).values(insertValues).returning();
   return result[0];
 };

@@ -3536,6 +3536,7 @@ export const votes = pgTable(
 );
 
 export type Vote = typeof votes.$inferSelect;
+export type InsertVote = typeof votes.$inferInsert;
 
 export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
   qb
