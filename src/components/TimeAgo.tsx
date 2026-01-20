@@ -1,5 +1,5 @@
 import type { ElementType } from "react";
-import { formatLongDate, formatRelativeTime } from "@/lib/timeUtils";
+import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
 import Tooltip from "./Tooltip";
 import Type, { TextStyle } from "./Type";
 
@@ -18,7 +18,11 @@ export default function TimeAgo({
 }>) {
   const date = new Date(time);
   return (
-    <Tooltip title={formatLongDate(date)} As={As} className={className}>
+    <Tooltip
+      title={<Type style="bodySmall">{formatLongDateWithTime(date)}</Type>}
+      As={As}
+      className={className}
+    >
       <Type style={textStyle} As={As}>
         <time
           dateTime={date.toISOString()}

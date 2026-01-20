@@ -56,11 +56,14 @@ export default function RecentDiscussionsFeed({
           case "postCommented":
             return <RecentDiscussionsPostCommented post={item} key={key} />;
           case "newQuickTake":
-          // TODO
+            // TODO
+            console.warn("Recent discussions: newQuickTake");
           case "quickTakeCommented":
-          // TODO
+            // TODO
+            console.warn("Recent discussions: quickTakeCommented");
           case "tagDiscussed":
-          // TODO
+            // TODO
+            console.warn("Recent discussions: tagDiscussed");
           case "tagRevised":
             return (
               <RecentDiscussionsTagRevised

@@ -37,6 +37,7 @@ const getPostProjection = ({
   return {
     columns: {
       ...projection.columns,
+      lastCommentReplyAt: true,
       draft: true,
     },
     extras: projection.extras,
@@ -113,10 +114,10 @@ type FeedSubquery<ResultType, SortKeyType> = {
 };
 
 type RecentDiscussionsSubquery =
-  | FeedSubquery<RecentDiscussionPost, Date>
-  | FeedSubquery<RecentDiscussionComment, Date>
-  | FeedSubquery<RecentDiscussionTag, Date>
-  | FeedSubquery<RecentDiscussionRevision, Date>;
+  | FeedSubquery<RecentDiscussionPost, number>
+  | FeedSubquery<RecentDiscussionComment, number>
+  | FeedSubquery<RecentDiscussionTag, number>
+  | FeedSubquery<RecentDiscussionRevision, number>;
 
 const getPostCommunityFilter = (
   postsTable: typeof posts,
@@ -168,24 +169,26 @@ const buildRecentDiscussionsSubqueries = ({
   return [
     {
       type: "postCommented",
-      getSortKey: (post) => new Date(post.lastCommentedAt ?? 0),
+      getSortKey: (post) => new Date(post.lastCommentedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
           ...postProjection,
           where: {
             ...postSelector,
             shortform: isNotTrue,
-            ...(cutoff ? { lastCommentedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { lastCommentedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             lastCommentedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionPost, Date>,
+    } as FeedSubquery<RecentDiscussionPost, number>,
     {
       type: "newQuickTake",
-      getSortKey: (comment) => new Date(comment.postedAt),
+      getSortKey: (comment) => new Date(comment.postedAt).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.comments.findMany({
           columns: commentColumns,
@@ -195,36 +198,38 @@ const buildRecentDiscussionsSubqueries = ({
             shortform: true,
             parentCommentId: { isNull: true },
             descendentCount: 0,
-            ...(cutoff ? { postedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { postedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             postedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionComment, Date>,
-    /* TODO: The branch that adds this field hasn't been merged to master yet
+    } as FeedSubquery<RecentDiscussionComment, number>,
     {
       type: "quickTakeCommented",
-      getSortKey: (post) => new Date(post.lastCommentReplyAt ?? 0),
+      getSortKey: (post) => new Date(post.lastCommentReplyAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
-          columns: postColumns,
+          ...postProjection,
           where: {
             ...postSelector,
             shortform: true,
-            ...(cutoff ? { lastCommentReplyAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { lastCommentReplyAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             lastCommentReplyAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionPost, Date>,
-    */
+    } as FeedSubquery<RecentDiscussionPost, number>,
     {
       type: "tagDiscussed",
-      getSortKey: (tag) => new Date(tag.lastCommentedAt ?? 0),
+      getSortKey: (tag) => new Date(tag.lastCommentedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.tags.findMany({
           columns: tagColumns,
@@ -232,17 +237,19 @@ const buildRecentDiscussionsSubqueries = ({
             wikiOnly: isNotTrue,
             deleted: isNotTrue,
             adminOnly: isNotTrue,
-            ...(cutoff ? { lastCommentedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { lastCommentedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             lastCommentedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionTag, Date>,
+    } as FeedSubquery<RecentDiscussionTag, number>,
     {
       type: "tagRevised",
-      getSortKey: (tag) => new Date(tag.editedAt ?? 0),
+      getSortKey: (tag) => new Date(tag.editedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.revisions.findMany({
           ...revisionProjection,
@@ -252,18 +259,20 @@ const buildRecentDiscussionsSubqueries = ({
             editedAt: { isNotNull: true },
             RAW: (revisionsTable) =>
               sql`(${revisionsTable}."changeMetrics"->'added')::INTEGER > 100`,
-            ...(cutoff ? { editedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { editedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             editedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionRevision, Date>,
+    } as FeedSubquery<RecentDiscussionRevision, number>,
   ];
 };
 
-type RecentDiscussionsItem = { sortKey: string } & (
+type RecentDiscussionsItem = { sortKey: number } & (
   | { type: "postCommented"; item: RecentDiscussionPost }
   | { type: "newQuickTake"; item: RecentDiscussionComment }
   | { type: "quickTakeCommented"; item: RecentDiscussionPost }
@@ -279,24 +288,25 @@ type RecentDiscussionsItem = { sortKey: string } & (
 const insertSubscribeReminder = (
   results: RecentDiscussionsItem[],
   offset: number | undefined = 0,
-  limit: number,
 ): RecentDiscussionsItem[] => {
   const index = 3;
-  if (offset > index) {
+  const pageStart = offset;
+  const pageEnd = offset + results.length;
+
+  if (pageStart > index || pageEnd <= index) {
     return results;
   }
-  const end = offset + limit;
-  if (end < index) {
-    return results;
-  }
-  const before = results.slice(0, offset);
-  const after = results.slice(offset);
-  const subscribeReminder = {
-    type: "subscribeReminder",
-    sortKey: String(index),
-    item: null,
-  } as const;
-  return [...before, subscribeReminder, ...after];
+
+  const insertAt = index - pageStart;
+  return [
+    ...results.slice(0, insertAt),
+    {
+      type: "subscribeReminder",
+      sortKey: NaN,
+      item: null,
+    },
+    ...results.slice(insertAt),
+  ];
 };
 
 export const fetchRecentDiscussions = async ({
@@ -314,6 +324,7 @@ export const fetchRecentDiscussions = async ({
   cutoff?: Date;
   offset?: number;
 }) => {
+  const cutoffMs = cutoff?.getTime();
   const subqueries = buildRecentDiscussionsSubqueries({
     currentUser,
     maxCommentAgeHours,
@@ -323,7 +334,7 @@ export const fetchRecentDiscussions = async ({
   // Perform the subqueries
   const unsortedSubqueryResults = (await Promise.all(
     subqueries.map(async (subquery) => {
-      const subqueryResults = await subquery.doQuery(limit, cutoff);
+      const subqueryResults = await subquery.doQuery(limit, cutoffMs);
       return subqueryResults.map((result) => ({
         type: subquery.type,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -335,12 +346,12 @@ export const fetchRecentDiscussions = async ({
 
   // Sort by shared sort key and apply cutoff
   const sortedResults = sortBy(unsortedSubqueryResults.flat(), "sortKey").reverse();
-  const withCutoffApplied = cutoff
-    ? sortedResults.filter(({ sortKey }) => new Date(sortKey) < cutoff)
+  const withCutoffApplied = cutoffMs
+    ? sortedResults.filter(({ sortKey }) => sortKey < cutoffMs)
     : sortedResults;
 
   // Insert the subscribe reminder and apply final limit
-  const allResults = insertSubscribeReminder(withCutoffApplied, offset, limit);
+  const allResults = insertSubscribeReminder(withCutoffApplied, offset);
   const results = allResults.slice(0, limit);
   const nextCutoff = results.length > 0 ? results[results.length - 1].sortKey : null;
   return {
