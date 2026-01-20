@@ -15,6 +15,7 @@ import ReadProgress from "./ReadProgress";
 import UsersName from "../UsersName";
 import Type from "../Type";
 import Link from "../Link";
+import LinkPostMessage from "./LinkPostMessage";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
@@ -69,6 +70,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <PostTags post={post} />
         </Suspense>
       </div>
+      <LinkPostMessage post={post} className="mt-10" />
       <PostBody html={post.contents?.html ?? null} className="mt-10" />
     </ReadProgress>
   );

@@ -7,6 +7,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
   return db.query.posts.findFirst({
     columns: {
       title: true,
+      url: true,
       baseScore: true,
       commentCount: true,
       readTimeMinutesOverride: true,
