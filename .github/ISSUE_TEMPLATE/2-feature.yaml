@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a new feature or document an idea
+title: "Short descriptive title"
+assignees: []
+type: "feature"
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 🧩 Summary
+      description: Briefly describe the feature in one or two sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: ✅ Definition of done
+      description: What needs to be true for this task to be considered complete?
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 📌 Notes
+      description: More context about the feature request.
+      placeholder: Add any other context about the feature request here, can include links, screenshots.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for taking the time to submit this!
