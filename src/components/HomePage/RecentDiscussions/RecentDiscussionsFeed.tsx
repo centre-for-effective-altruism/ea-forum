@@ -11,6 +11,7 @@ import InfiniteLoadTrigger from "@/components/InfiniteLoadTrigger";
 import RecentDiscussionsItemSkeleton from "./RecentDiscussionsItemSkeleton";
 import RecentDiscussionsPostCommented from "./RecentDiscussionsPostCommented";
 import RecentDiscussionsTagRevised from "./RecentDiscussionsTagRevised";
+import RecentDiscussionsSubscribeReminder from "./RecentDiscussionsSubscribeReminder";
 
 export default function RecentDiscussionsFeed({
   data,
@@ -68,7 +69,7 @@ export default function RecentDiscussionsFeed({
               />
             );
           case "subscribeReminder":
-          // TODO
+            return <RecentDiscussionsSubscribeReminder key={key} />;
           default:
             console.warn("Invalid recent discussions item type:", type);
             return null;

@@ -83,14 +83,14 @@ export default function RecentDiscussionsPostCommented({
   return (
     <RecentDiscussionsItem {...getItemProps(post)}>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-3 text-gray-600">
+        <div className="flex items-center gap-3 text-gray-600 pr-2">
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
             orient="vertical"
             className="min-w-[33px]"
           />
-          <div className="truncate">
+          <div className="truncate grow">
             <Type style="postTitle" className="text-black truncate">
               <PostsTooltip As="span" post={post}>
                 <Link

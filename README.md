@@ -14,6 +14,16 @@ The forum reads environment variables from a `.env` file. For a full list of
 expected environment variables see `ProcessEnv.d.ts`. CEA devs can find a
 development `.env` file in 1password.
 
+## Coding conventions
+
+ - Where possible fetch data from within
+   [server components](https://react.dev/reference/rsc/server-components),
+   when not possible use a
+   [server function](https://react.dev/reference/rsc/server-functions)
+ - Combine multiple class names using [clsx](https://www.npmjs.com/package/clsx)
+ - Where possible prefer Drizzle's
+   [relational API](https://orm.drizzle.team/docs/rqb-v2) for querying
+
 ## License
 
 The forum is free software under the GNU Affero GPL v3. See the included
