@@ -109,7 +109,7 @@ Schema: `/lib/collections/users/newSchema.ts`
 - `postingDisabled` (`BOOL`) - Blocks creating posts
 - `allCommentingDisabled` (`BOOL`) - Blocks all commenting
 - `commentingOnOtherUsersDisabled` (`BOOL`) - Can only comment on own posts
-- `conversationsDisabled` (`BOOL`) - Blocks DMs
+- `conversationsDisabled` (`BOOL`) - Blocks starting new DM conversations (checked in `userCanStartConversations()`)
 
 ### Per-User Bans
 
@@ -224,12 +224,14 @@ Users exempt from rate limits:
 
 ## New User Review System
 
-EA Forum has a `hideUnreviewedAuthorComments` setting (stored in database). When enabled:
+EA Forum has a `hideUnreviewedAuthorComments` setting (stored in database as `DatabasePublicSetting`). When enabled:
 
-1. New users cannot comment until reviewed (`userCanComment()` returns false)
-2. Comments by unreviewed users are hidden (filtered by `authorIsUnreviewed`)
-3. Posts by unreviewed users are also hidden from public view
-4. When mod sets `reviewedByUserId`, user can comment and their content becomes visible
+1. Comments by unreviewed users with karma < 5 are marked with `authorIsUnreviewed: true`
+2. Posts by unreviewed users with karma < 5 are also marked with `authorIsUnreviewed: true`
+3. Content with `authorIsUnreviewed: true` is filtered from public view
+4. When mod sets `reviewedByUserId`, the flags are cleared and content becomes visible
+
+**IMPORTANT: Soft block, not hard block.** The `userCanComment()` function in `permissions.ts` checks `hideUnreviewedAuthorComments`, but this function is **never called** in the server-side comment creation mutation. Unreviewed users CAN create comments - they're just marked with `authorIsUnreviewed: true` and hidden. This is a visibility filter, not a permission block.
 
 **Auto-approval threshold:** Users with `karma >= 5` are treated as auto-approved even without explicit `reviewedByUserId`. The `authorIsUnreviewed` flag is only set when `!reviewedByUserId && karma < 5`.
 
@@ -242,8 +244,9 @@ if (!commentAuthor?.reviewedByUserId && (commentAuthor?.karma || 0) < MINIMUM_AP
 }
 ```
 
-From `/lib/vulcan-users/permissions.ts`:
+**Unused function in `/lib/vulcan-users/permissions.ts`:**
 ```typescript
+// This function exists but is NEVER CALLED in comment creation
 export const userCanComment = (user): boolean => {
   if (!user) return false;
   if (userIsAdminOrMod(user)) return true;
@@ -254,8 +257,6 @@ export const userCanComment = (user): boolean => {
   return true;
 }
 ```
-
-**Note:** The `userCanComment()` check only looks at `reviewedByUserId`, not karma. So a user with karma < 5 and no review is blocked from commenting even though users with karma >= 5 get auto-approved for content visibility.
 
 ---
 
@@ -292,6 +293,8 @@ Not needed: `Bans` (uses `User.banned`), `Reports` (can defer)
 - `bannedUserIds`, `bannedPersonalUserIds`
 - `karma`, `groups`, `isAdmin`
 - `acceptedTos` (EA Forum only)
+
+Not needed for frontpage/post page: `conversationsDisabled` (DMs only)
 
 ### Post Fields Required
 
@@ -340,12 +343,11 @@ if (post.bannedUserIds?.includes(user._id)) return false;
 if (postAuthor?.bannedUserIds?.includes(user._id)) return false;
 if (postAuthor?.bannedPersonalUserIds?.includes(user._id) && !post.frontpageDate) return false;
 
-// userCanComment() - permissions.ts
-if (hideUnreviewedAuthorComments && !user.reviewedByUserId) return false;
-
 // + rate limit check (mod-applied, custom, automatic)
 // + sets authorIsUnreviewed if !reviewedByUserId && karma < 5
 ```
+
+**NOTE:** The `hideUnreviewedAuthorComments` setting does NOT block comment creation server-side. It only causes comments to be marked with `authorIsUnreviewed: true` and filtered from display. The `userCanComment()` function that checks this setting exists but is never called in the mutation.
 
 ### Display Filters
 
@@ -372,6 +374,18 @@ WHERE (deleted = false OR deleted_public = true)
 1. **Full implementation** - Port `rateLimitUtils.ts`, query Votes for karma features
 2. **Simplified** - Only enforce mod-applied limits, skip automatic
 3. **Denormalized** - Pre-compute karma features on User, update via triggers
+
+---
+
+## Database Settings
+
+ForumMagnum uses `DatabasePublicSetting` and `DatabaseServerSetting` classes that read values from the `DatabaseMetadata` collection (key `"publicSettings"` and `"serverSettings"`).
+
+**Critical settings for moderation:**
+- `hideUnreviewedAuthorComments` - Date string; comments/posts after this date by unreviewed users are hidden
+- `akismet.apiKey` / `akismet.url` - Spam detection integration
+
+If the new site shares the database with the old site, settings will be automatically synchronized. If using a separate database, settings must be manually kept in sync or read from the shared source.
 
 ---
 
