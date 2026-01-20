@@ -16,11 +16,12 @@ export default function RecentDiscussionsTagRevised({
   revision: RecentDiscussionRevision;
 }>) {
   const { setNode, entry } = useIsInView();
+  const isOnScreen = entry?.isIntersecting;
   const [diff, setDiff] = useState<string | null>(null);
   const { user, tag, changeMetrics } = revision;
 
   useEffect(() => {
-    if (revision.tag && entry?.isIntersecting && diff === null) {
+    if (revision.tag && isOnScreen && diff === null) {
       void (async () => {
         try {
           const diff = await getTagDiffAction(revision._id);
@@ -31,7 +32,7 @@ export default function RecentDiscussionsTagRevised({
         }
       })();
     }
-  }, [revision, entry, diff]);
+  }, [revision, isOnScreen, diff]);
 
   if (!tag) {
     return null;

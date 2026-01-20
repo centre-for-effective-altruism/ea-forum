@@ -349,3 +349,7 @@ export const fetchRecentDiscussions = async ({
     endOffset: (offset || 0) + results.length,
   };
 };
+
+export type RecentDiscussionsData = Awaited<
+  ReturnType<typeof fetchRecentDiscussions>
+>;

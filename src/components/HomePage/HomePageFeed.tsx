@@ -9,7 +9,7 @@ import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
-import RecentDiscussionsFeed from "./RecentDiscussions/RecentDiscussionsFeed";
+import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import NewQuickTake from "../QuickTakes/NewQuickTake";
 import Link from "../Link";
@@ -164,7 +164,7 @@ export default async function HomePageFeed({
           <Suspense
             fallback={<div className="bg-gray-200 w-full h-[400px] rounded" />}
           >
-            <RecentDiscussionsFeed />
+            <RecentDiscussionsSection />
           </Suspense>
         </>
       )}
