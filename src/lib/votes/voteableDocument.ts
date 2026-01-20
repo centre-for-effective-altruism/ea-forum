@@ -60,12 +60,15 @@ export const getVoteableDocument = async (
   }
 };
 
-export const fetchVoteableDocumentAuthors = (document: VoteableDocument) => {
+export const fetchVoteableDocumentAuthors = (
+  txn: DbOrTransaction,
+  document: VoteableDocument,
+) => {
   const authorIds = [document.userId];
   if ("coauthorUserIds" in document) {
     authorIds.push(...document.coauthorUserIds);
   }
-  return db.query.users.findMany({
+  return txn.query.users.findMany({
     columns: {
       _id: true,
       karma: true,
@@ -125,10 +128,10 @@ const recalculateScore = (document: VoteableDocument) => {
 };
 
 export const recalculateDocumentScores = async (
+  txn: DbOrTransaction,
   document: VoteableDocument,
-  txn?: DbOrTransaction,
 ) => {
-  const votes = await (txn ?? db).query.votes.findMany({
+  const votes = await txn.query.votes.findMany({
     columns: {
       power: true,
       voteType: true,

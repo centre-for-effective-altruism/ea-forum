@@ -3,7 +3,10 @@
 import { useCallback, useState } from "react";
 import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { commentsToCommentTree, ThreadableCommentType } from "@/lib/CommentTree";
+import {
+  commentsToCommentTree,
+  ThreadableCommentType,
+} from "@/lib/comments/CommentTree";
 
 export const useRecentDiscussionThread = <T extends ThreadableCommentType>({
   post,

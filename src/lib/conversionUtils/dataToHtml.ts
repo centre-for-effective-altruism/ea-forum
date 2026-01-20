@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import type { EditorTypeString } from "../ckeditor/editorHelpers";
 import { sanitizeHtml } from "./sanitizeHtml";
 import { processMathjax } from "./mathjax";
@@ -25,7 +24,6 @@ export const dataToHtml = async (
     case "ckEditorMarkup": {
       const html = sanitizeHtml(data); // Sanitized CKEditor markup is just html
       const trimmedHtml = trimLeadingAndTrailingWhiteSpace(html);
-      // TODO: ForumMagnum has a callback here to handle dialogue HTML
       if (options?.skipMathjax) {
         return Promise.resolve(trimmedHtml);
       }

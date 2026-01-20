@@ -1,7 +1,37 @@
 "use server";
 
 import { getCurrentUser } from "../users/currentUser";
-import { fetchFrontpageQuickTakes } from "./commentLists";
+import { createPostComment } from "./commentMutations";
+import { fetchCommentsListItem, fetchFrontpageQuickTakes } from "./commentLists";
+import type { EditorData } from "../ckeditor/editorHelpers";
+
+export const createPostCommentAction = async ({
+  postId,
+  parentCommentId,
+  editorData,
+  draft,
+}: {
+  postId: string;
+  parentCommentId: string | null;
+  editorData: EditorData;
+  draft?: false;
+}) => {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("You must be logged in to comment");
+  }
+  const commentId = await createPostComment({
+    user,
+    postId,
+    parentCommentId,
+    editorData,
+    draft,
+  });
+  return await fetchCommentsListItem({
+    currentUserId: user._id,
+    commentId,
+  });
+};
 
 export const fetchQuickTakesAction = async ({
   includeCommunity,

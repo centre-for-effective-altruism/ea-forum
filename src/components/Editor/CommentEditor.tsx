@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { Editor } from "@ckeditor/ckeditor5-core";
 import type { EventInfo } from "@ckeditor/ckeditor5-utils";
-import { getCloudinaryCloudName } from "@/lib/cloudinaryHelpers";
+import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { getCkCommentEditor } from "@/lib/ckeditor/getCkEditor";
 import { generateCkEditorTokenRequest } from "@/lib/ckeditor/ckEditorToken";
 import { mentionPluginConfiguration } from "@/lib/ckeditor/mentionsConfig";
