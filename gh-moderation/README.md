@@ -99,8 +99,8 @@ Schema: `/lib/collections/users/newSchema.ts`
 
 ### Account Status
 
-- `banned` (`TIMESTAMPTZ`) - If set to future date, user is banned
-- `deleted` (`BOOL`) - Account deleted, blocks posting/commenting
+- `banned` (`TIMESTAMPTZ`) - If set to future date, user is banned. Checked at session level (can't log in, existing sessions invalidated)
+- `deleted` (`BOOL`) - Account deleted, blocks posting/commenting (checked in mutations)
 - `reviewedByUserId` (`VARCHAR(27)` FK→Users) - Mod who reviewed user
 - `isReviewed` (computed) - `!!reviewedByUserId`
 
@@ -118,10 +118,11 @@ Schema: `/lib/collections/users/newSchema.ts`
 
 ### Other
 
-- `karma` (`INTEGER`) - Used by automatic rate limits
+- `karma` (`INTEGER`) - Used by automatic rate limits and auto-approval (>= 5)
 - `groups` (`TEXT[]`) - Permission groups
 - `isAdmin` (`BOOL`)
 - `createdAt` (`TIMESTAMPTZ`) - Used by `commentsLockedToAccountsCreatedAfter`
+- `acceptedTos` (`BOOL`) - EA Forum: required to publish non-draft posts
 
 ---
 
@@ -134,6 +135,7 @@ Schema: `/lib/collections/posts/newSchema.ts`
 - `status` (`INTEGER`) - 1=pending, 2=approved, 3=rejected, 4=spam, 5=deleted
 - `draft` (`BOOL`)
 - `deletedDraft` (`BOOL`)
+- `isFuture` (`BOOL`) - Scheduled for future publication
 
 ### Rejection
 
@@ -152,6 +154,8 @@ Schema: `/lib/collections/posts/newSchema.ts`
 
 - `shortform` (`BOOL`) - Only author can make top-level comments
 - `ignoreRateLimits` (`BOOL`) - Skip rate limit checks
+- `authorIsUnreviewed` (`BOOL`) - Denormalized: author unreviewed with karma < 5
+- `frontpageDate` (`TIMESTAMPTZ`) - If set, post is on frontpage (affects personal bans)
 
 ---
 
@@ -224,7 +228,19 @@ EA Forum has a `hideUnreviewedAuthorComments` setting (stored in database). When
 
 1. New users cannot comment until reviewed (`userCanComment()` returns false)
 2. Comments by unreviewed users are hidden (filtered by `authorIsUnreviewed`)
-3. When mod sets `reviewedByUserId`, user can comment and their comments become visible
+3. Posts by unreviewed users are also hidden from public view
+4. When mod sets `reviewedByUserId`, user can comment and their content becomes visible
+
+**Auto-approval threshold:** Users with `karma >= 5` are treated as auto-approved even without explicit `reviewedByUserId`. The `authorIsUnreviewed` flag is only set when `!reviewedByUserId && karma < 5`.
+
+From `/server/callbacks/commentCallbackFunctions.tsx`:
+```typescript
+const MINIMUM_APPROVAL_KARMA = 5;
+
+if (!commentAuthor?.reviewedByUserId && (commentAuthor?.karma || 0) < MINIMUM_APPROVAL_KARMA) {
+  return {...comment, authorIsUnreviewed: true}
+}
+```
 
 From `/lib/vulcan-users/permissions.ts`:
 ```typescript
@@ -238,6 +254,8 @@ export const userCanComment = (user): boolean => {
   return true;
 }
 ```
+
+**Note:** The `userCanComment()` check only looks at `reviewedByUserId`, not karma. So a user with karma < 5 and no review is blocked from commenting even though users with karma >= 5 get auto-approved for content visibility.
 
 ---
 
@@ -273,12 +291,14 @@ Not needed: `Bans` (uses `User.banned`), `Reports` (can defer)
 - `postingDisabled`, `allCommentingDisabled`, `commentingOnOtherUsersDisabled`
 - `bannedUserIds`, `bannedPersonalUserIds`
 - `karma`, `groups`, `isAdmin`
+- `acceptedTos` (EA Forum only)
 
 ### Post Fields Required
 
-- `status`, `draft`, `rejected`
+- `status`, `draft`, `deletedDraft`, `isFuture`, `rejected`
 - `commentsLocked`, `commentsLockedToAccountsCreatedAfter`, `bannedUserIds`
 - `hideCommentKarma`, `shortform`, `ignoreRateLimits`
+- `authorIsUnreviewed`, `frontpageDate` (for personal post bans)
 
 ### Comment Fields Required
 
@@ -288,32 +308,55 @@ Not needed: `Bans` (uses `User.banned`), `Reports` (can defer)
 
 ### Post Creation Checks
 
+From `/lib/collections/users/helpers.ts` and `/server/callbacks/postCallbackFunctions.tsx`:
+
 ```typescript
+// userCanPost()
 if (user.deleted) return false;
 if (user.postingDisabled) return false;
+
+// checkTosAccepted() - EA Forum only
+if (post.draft === false && !post.shortform && !user.acceptedTos) {
+  throw new Error(TOS_NOT_ACCEPTED_ERROR);
+}
+
 // + rate limit check (mod-applied, custom, automatic)
+// + sets authorIsUnreviewed if !reviewedByUserId && karma < 5
 ```
 
 ### Comment Creation Checks
 
+From `/lib/collections/users/helpers.ts` - `userIsAllowedToComment()`:
+
 ```typescript
 if (user.deleted) return false;
 if (user.allCommentingDisabled) return false;
-if (hideUnreviewedAuthorComments && !user.reviewedByUserId) return false;
 if (user.commentingOnOtherUsersDisabled && post.userId !== user._id) return false;
+if (post.shortform && post.userId !== user._id && !isReply) return false;
 if (post.commentsLocked) return false;
+if (post.rejected) return false;  // Can't comment on rejected posts
 if (post.commentsLockedToAccountsCreatedAfter < user.createdAt) return false;
 if (post.bannedUserIds?.includes(user._id)) return false;
 if (postAuthor?.bannedUserIds?.includes(user._id)) return false;
-if (post.shortform && post.userId !== user._id && !isReply) return false;
+if (postAuthor?.bannedPersonalUserIds?.includes(user._id) && !post.frontpageDate) return false;
+
+// userCanComment() - permissions.ts
+if (hideUnreviewedAuthorComments && !user.reviewedByUserId) return false;
+
 // + rate limit check (mod-applied, custom, automatic)
+// + sets authorIsUnreviewed if !reviewedByUserId && karma < 5
 ```
 
 ### Display Filters
 
-Posts:
+Posts (from `/server/permissions/accessFilters.ts`):
 ```sql
-WHERE status = 2 AND draft = false AND (rejected IS NULL OR rejected = false)
+WHERE status = 2
+  AND draft = false
+  AND deleted_draft = false
+  AND is_future = false
+  AND (rejected IS NULL OR rejected = false)
+  AND (author_is_unreviewed = false OR rejected = true)  -- unreviewed posts hidden unless rejected
 ```
 
 Comments:
@@ -321,7 +364,7 @@ Comments:
 WHERE (deleted = false OR deleted_public = true)
   AND (rejected IS NULL OR rejected = false)
   AND (spam IS NULL OR spam = false)
-  AND (author_is_unreviewed = false OR posted_at < hideUnreviewedDate OR user_id = current_user)
+  AND (author_is_unreviewed = false OR user_id = current_user)
 ```
 
 ### Rate Limit Options
