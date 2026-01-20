@@ -323,3 +323,23 @@ export const userIsNew = (user: Pick<User, "createdAt" | "karma">): boolean => {
     userCreatedAt.getTime() > new Date().getTime() - oneWeekInMs
   );
 };
+
+/**
+ * Return the current user's location, as a latitude-longitude pair, plus the
+ * boolean field `known`. If `known` is false, the lat/lng are invalid placeholders.
+ * If the user is logged in, we try to return the location specified in their
+ * account settings.
+ */
+export const userGetLocation = (
+  user: Pick<User, "mongoLocation"> | null,
+): {
+  lat: number;
+  lng: number;
+  known: boolean;
+} => {
+  const currentUserLat = user?.mongoLocation?.coordinates[1];
+  const currentUserLng = user?.mongoLocation?.coordinates[0];
+  return currentUserLat && currentUserLng
+    ? { lat: currentUserLat, lng: currentUserLng, known: true }
+    : { lat: 37.871853, lng: -122.258423, known: false };
+};

@@ -1,14 +1,44 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { CurrentUser, fetchCurrentUserByHashedToken } from "@/lib/users/currentUser";
-import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "@/lib/authHelpers";
+import { CurrentUser, getCurrentUser } from "@/lib/users/currentUser";
+import { db } from "../db";
+import { users } from "../schema";
+import {
+  updateMailchimpSubscription,
+  updateUserMailchimpSubscription,
+} from "../mailchimp";
+import { eq } from "drizzle-orm";
 
-export const fetchCurrentUserAction = async (): Promise<CurrentUser | null> => {
-  const cookieStore = await cookies();
-  const loginToken = cookieStore.get(LOGIN_TOKEN_COOKIE_NAME)?.value;
-  if (!loginToken) {
-    return null;
+export const fetchCurrentUserAction = async (): Promise<CurrentUser | null> =>
+  getCurrentUser();
+
+export const subscribeToDigestAction = async ({ email }: { email?: string }) => {
+  const list = "digest";
+  const status = "subscribed";
+  const currentUser = await getCurrentUser();
+  if (currentUser) {
+    await updateUserMailchimpSubscription({
+      list,
+      status,
+      user: currentUser,
+    });
+  } else if (email) {
+    await updateMailchimpSubscription({
+      list,
+      status,
+      email,
+    });
+  } else {
+    throw new Error("No email provided");
   }
-  return fetchCurrentUserByHashedToken(hashLoginToken(loginToken));
+};
+
+export const hideSubscribePokeAction = async () => {
+  const currentUser = await getCurrentUser();
+  if (currentUser) {
+    await db
+      .update(users)
+      .set({ hideSubscribePoke: true })
+      .where(eq(users._id, currentUser._id));
+  }
 };
