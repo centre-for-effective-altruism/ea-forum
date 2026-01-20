@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
@@ -10,7 +9,6 @@ import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import UserProfileImage from "../UserProfileImage";
 import PostBody from "../ContentStyles/PostBody";
 import PostTags from "../Tags/PostTags";
-import PostTagsSkeleton from "../Tags/PostTagsSkeleton";
 import ReadProgress from "./ReadProgress";
 import UsersName from "../UsersName";
 import Type from "../Type";
@@ -65,11 +63,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
         </div>
         <div className="flex gap-5">TODO: Buttons</div>
       </div>
-      <div className="mt-6">
-        <Suspense fallback={<PostTagsSkeleton />}>
-          <PostTags post={post} />
-        </Suspense>
-      </div>
+      <PostTags post={post} className="mt-6" />
       <LinkPostMessage post={post} className="mt-10" />
       <PostBody html={post.contents?.html ?? null} className="mt-10" />
     </ReadProgress>
