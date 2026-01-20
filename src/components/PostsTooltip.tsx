@@ -45,7 +45,7 @@ export default function PostsTooltip({
             <Type style="postTitle" className="font-[700]">
               {title}
             </Type>
-            {tags.length > 0 && (
+            {tags && tags.length > 0 && (
               <TruncationContainer
                 items={tags.map((tag) => (
                   <TagChip tag={tag} key={tag._id} />

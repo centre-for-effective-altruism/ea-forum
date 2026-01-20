@@ -9,6 +9,9 @@ export default async function PostTags({
 }: Readonly<{
   post: PostDisplay;
 }>) {
+  if (!post.tags) {
+    return null;
+  }
   const tags = stableSortTags(post.tags);
   const tagItems = tags.map((tag) => <TagChip tag={tag} key={tag._id} />);
   const typeTag = <PostTypeTag post={post} key="typetag" />;

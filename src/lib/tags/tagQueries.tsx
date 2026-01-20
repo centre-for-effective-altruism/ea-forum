@@ -30,7 +30,7 @@ export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core"> & {
 };
 
 export const postTagsProjection = (postsTable: typeof posts) =>
-  sql<PostTag[]>`
+  sql<PostTag[] | null>`
     SELECT ARRAY_AGG(JSONB_BUILD_OBJECT(
       '_id', post_tags."_id",
       'name', post_tags."name",
