@@ -150,6 +150,11 @@ Schema: `/lib/collections/posts/newSchema.ts`
 - `hideCommentKarma` (`BOOL`) - Hides karma on all comments
 - `bannedUserIds` (`VARCHAR(27)[]`) - Users banned from this post
 
+### Visibility
+
+- `onlyVisibleToLoggedIn` (`BOOL`) - Hides post from logged-out users
+- `unlisted` (`BOOL`) - Excluded from default views (still accessible via direct link)
+
 ### Other
 
 - `shortform` (`BOOL`) - Only author can make top-level comments
@@ -176,7 +181,7 @@ Schema: `/lib/collections/comments/newSchema.ts`
 - `spam` (`BOOL`) - Marked as spam
 - `rejected` (`BOOL`)
 - `rejectedReason` (`TEXT`)
-- `repliesBlockedUntil` (`TIMESTAMPTZ`) - Blocks replies until date
+- `repliesBlockedUntil` (`TIMESTAMPTZ`) - **Soft block**: UI hides reply button, but NOT enforced server-side
 - `hideKarma` (`BOOL`) - Denormalized from post
 - `authorIsUnreviewed` (`BOOL`) - Denormalized from author
 - `retracted` (`BOOL`) - Strikethrough styling
@@ -219,6 +224,21 @@ Users exempt from rate limits:
 - `sunshineRegiment` members
 - Users with active `exemptFromRateLimits` ModeratorAction
 - Comments on posts with `ignoreRateLimits: true`
+
+---
+
+## Voting Restrictions
+
+File: `/lib/collections/comments/voting.ts`
+
+Comment voting has these restrictions:
+- Must be logged in to vote
+- Cannot cast strong votes (`bigUpvote`, `bigDownvote`) on your own comments
+- Cannot cast agreement votes on your own comments
+
+Post voting has no special restrictions beyond requiring login.
+
+**Note:** At one point voting was disabled for users with < 1 karma, but this is currently disabled (see `voteButtonsDisabledForUser` in `/lib/collections/users/helpers.ts`).
 
 ---
 
@@ -302,12 +322,14 @@ Not needed for frontpage/post page: `conversationsDisabled` (DMs only)
 - `commentsLocked`, `commentsLockedToAccountsCreatedAfter`, `bannedUserIds`
 - `hideCommentKarma`, `shortform`, `ignoreRateLimits`
 - `authorIsUnreviewed`, `frontpageDate` (for personal post bans)
+- `onlyVisibleToLoggedIn`, `unlisted` (visibility controls)
 
 ### Comment Fields Required
 
 - `deleted`, `deletedPublic`, `deletedReason`, `deletedDate`, `deletedByUserId`
-- `spam`, `rejected`, `hideKarma`, `repliesBlockedUntil`
+- `draft`, `spam`, `rejected`, `hideKarma`, `repliesBlockedUntil`
 - `retracted`, `moderatorHat`, `authorIsUnreviewed`
+- `postedAt` (for grandfather clause in display filter)
 
 ### Post Creation Checks
 
@@ -353,21 +375,29 @@ if (postAuthor?.bannedPersonalUserIds?.includes(user._id) && !post.frontpageDate
 
 Posts (from `/server/permissions/accessFilters.ts`):
 ```sql
-WHERE status = 2
-  AND draft = false
-  AND deleted_draft = false
-  AND is_future = false
-  AND (rejected IS NULL OR rejected = false)
-  AND (author_is_unreviewed = false OR rejected = true)  -- unreviewed posts hidden unless rejected
+WHERE "status" = 2
+  AND "draft" = false
+  AND "deletedDraft" = false
+  AND "isFuture" = false
+  AND ("rejected" IS NULL OR "rejected" = false)
+  AND ("authorIsUnreviewed" = false)
+  AND ("onlyVisibleToLoggedIn" = false OR current_user IS NOT NULL)
+  -- unlisted posts are excluded from default views but accessible via direct link
 ```
 
 Comments:
 ```sql
-WHERE (deleted = false OR deleted_public = true)
-  AND (rejected IS NULL OR rejected = false)
-  AND (spam IS NULL OR spam = false)
-  AND (author_is_unreviewed = false OR user_id = current_user)
+WHERE ("deleted" = false OR "deletedPublic" = true)
+  AND ("rejected" IS NULL OR "rejected" = false)
+  AND ("draft" = false)
+  AND (
+    "authorIsUnreviewed" <> true
+    OR "postedAt" < :hideUnreviewedAuthorComments  -- grandfather clause
+    OR "userId" = :current_user_id
+  )
 ```
+
+**Important:** The `hideUnreviewedAuthorComments` setting is a DATE STRING. Comments posted BEFORE this date by unreviewed authors are still visible. Only comments posted AFTER this date with `authorIsUnreviewed = true` are hidden (unless viewed by the author).
 
 ### Rate Limit Options
 
