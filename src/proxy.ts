@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { SITE_AUTH_COOKIE, checkAuthToken } from "./lib/siteAuth";
 
 const LEGACY_SITE_URL = process.env.LEGACY_SITE_URL || "http://localhost:4000";
 const legacySiteUrl = new URL(LEGACY_SITE_URL);
@@ -29,6 +30,7 @@ const newSitePatterns = [
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
+  /^\/site-login$/, // Site password login
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
@@ -45,12 +47,25 @@ function shouldHandleLocally(pathname: string): boolean {
   return false;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Site-level password protection (if configured)
+  if (process.env.SITE_ACCESS_PASSWORD && pathname !== "/site-login") {
+    const authCookie = request.cookies.get(SITE_AUTH_COOKIE);
+    const authorized = await checkAuthToken(authCookie?.value);
+    if (!authorized) {
+      const url = request.nextUrl.clone();
+      const returnTo = pathname + url.search + url.hash;
+      url.pathname = "/site-login";
+      url.search = `?returnTo=${encodeURIComponent(returnTo)}`;
+      return NextResponse.redirect(url);
+    }
+  }
+
   if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
     return NextResponse.next();
   }
-
-  const { pathname } = request.nextUrl;
 
   if (shouldHandleLocally(pathname)) {
     return NextResponse.next();
