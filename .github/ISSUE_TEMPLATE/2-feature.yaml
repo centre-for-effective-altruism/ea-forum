@@ -25,7 +25,9 @@ body:
     attributes:
       label: 📌 Notes
       description: More context about the feature request.
-      placeholder: Add any other context about the feature request here, can include links, screenshots.
+      placeholder:
+        Add any other context about the feature request here, can include links,
+        screenshots.
 
   - type: markdown
     attributes:

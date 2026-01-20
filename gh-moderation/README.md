@@ -343,111 +343,142 @@ These checks must be implemented for correct behavior:
 
 This covers what's needed for regular users to fully interact with the site (read, create posts, create comments, vote) while moderators continue using the old site for mod actions.
 
+### CRITICAL: New User Review System
+
+**This is the biggest thing to understand.** EA Forum has a setting `hideUnreviewedAuthorComments` (a `DatabasePublicSetting`). When enabled:
+
+1. **New users CANNOT comment** until a mod reviews them
+2. The `userCanComment()` function returns `false` if `!user.reviewedByUserId`
+3. Comments by unreviewed users are hidden from other users (filtered by `authorIsUnreviewed`)
+4. When a mod reviews a user (sets `reviewedByUserId`), their comments become visible
+
+This means **you cannot ship for regular users without either:**
+- Disabling this setting (allowing unreviewed users to comment)
+- Implementing the review workflow so mods can approve users
+- Having mods approve users via the old site
+
+From `/lib/vulcan-users/permissions.ts`:
+```typescript
+export const userCanComment = (user): boolean => {
+  if (!user) return false;
+  if (userIsAdminOrMod(user)) return true;
+  if (user.allCommentingDisabled) return false;
+  if (hideUnreviewedAuthorCommentsSettings.get() && !user.reviewedByUserId) {
+    return false;  // <-- NEW USERS BLOCKED HERE
+  }
+  return true;
+}
+```
+
 ### Collections Required
 
 **Must have (read-only from new site):**
-- `ModeratorActions` - Query for active rate limits. Mods create these via old site.
-- `UserRateLimits` - Query for custom rate limits. Mods create these via old site.
+- `ModeratorActions` - Query for active rate limits
+- `UserRateLimits` - Query for custom rate limits
 
 **NOT needed:**
-- `Bans` - Only used for mod record-keeping. Enforcement uses `User.banned` field directly.
-- `Reports` - User reporting feature. Can defer.
+- `Bans` - Enforcement uses `User.banned` field directly
+- `Reports` - User reporting feature, can defer
+
+### Fields Required on Users
+
+**Account status:**
+- `banned` (`TIMESTAMPTZ`) - Block all actions if `banned > now`
+- `deleted` (`BOOL`) - Block posting and commenting
+- `reviewedByUserId` (`VARCHAR(27)`) - If null and `hideUnreviewedAuthorComments` is set, user can't comment
+- `createdAt` (`TIMESTAMPTZ`) - Used by `commentsLockedToAccountsCreatedAfter`
+
+**Granular restrictions (mod-set):**
+- `postingDisabled` (`BOOL`) - Blocks creating posts
+- `allCommentingDisabled` (`BOOL`) - Blocks all commenting
+- `commentingOnOtherUsersDisabled` (`BOOL`) - Can only comment on own posts
+- `conversationsDisabled` (`BOOL`) - Blocks DMs
+
+**Per-user bans:**
+- `bannedUserIds` (`VARCHAR(27)[]`) - Users banned from this user's posts
+- `bannedPersonalUserIds` (`VARCHAR(27)[]`) - Users banned from personal posts only
+
+**Other:**
+- `karma` (`INTEGER`) - Used by automatic rate limits
+- `groups` (`TEXT[]`) - For permission checks (sunshineRegiment, admins, etc.)
+- `isAdmin` (`BOOL`) - Admin flag
 
 ### Fields Required on Posts
 
-For display:
+**For display:**
 - `status` (`INTEGER`) - Filter to `status = 2`
 - `draft` (`BOOL`) - Filter out drafts
 - `rejected` (`BOOL`) - Filter out rejected
 - `hideCommentKarma` (`BOOL`) - Pass to comment display
 
-For comment creation:
-- `commentLocked` (`BOOL`) - Block new comments
-- `bannedUserIds` (`VARCHAR(27)[]`) - Check if user can comment
+**For comment creation:**
+- `commentsLocked` (`BOOL`) - Block ALL new comments (NOTE: not `commentLocked`)
+- `commentsLockedToAccountsCreatedAfter` (`TIMESTAMPTZ`) - Accounts created after this date can't comment
+- `bannedUserIds` (`VARCHAR(27)[]`) - Users banned from this specific post
 - `ignoreRateLimits` (`BOOL`) - Skip rate limit checks for this post
+- `shortform` (`BOOL`) - Special rules: only author can make top-level comments
 
 ### Fields Required on Comments
 
-For display:
-- `deleted` (`BOOL`) - Show placeholder
-- `deletedPublic` (`BOOL`) - Show deletion metadata
-- `deletedReason`, `deletedDate`, `deletedByUserId` - Placeholder content
+**For display:**
+- `deleted`, `deletedPublic`, `deletedReason`, `deletedDate`, `deletedByUserId`
 - `spam` (`BOOL`) - Filter out
 - `rejected` (`BOOL`) - Filter out
 - `hideKarma` (`BOOL`) - Hide karma display
 - `repliesBlockedUntil` (`TIMESTAMPTZ`) - Disable reply + show message
 - `retracted` (`BOOL`) - Strikethrough styling
 - `moderatorHat` (`BOOL`) - Special styling
+- `authorIsUnreviewed` (`BOOL`) - Hide if setting enabled and user not reviewed
 
-### Fields Required on Users
+### Post Creation Checks
 
-- `banned` (`TIMESTAMPTZ`) - Block all actions if `banned > now`
-- `bannedUserIds` (`VARCHAR(27)[]`) - Users banned from this user's posts
-- `bannedPersonalUserIds` (`VARCHAR(27)[]`) - Users banned from personal posts only
-- `karma` (`INTEGER`) - Used by automatic rate limits
-
-### Rate Limit Enforcement
-
-When creating a post, check:
 ```typescript
-// 1. Is user banned?
-if (user.banned && new Date(user.banned) > new Date()) {
-  throw new Error("User is banned");
+// From userCanPost() in /lib/collections/users/helpers.ts
+if (user.deleted) return false;
+if (user.postingDisabled) return false;
+return userCanDo(user, 'posts.new');
+```
+
+Plus rate limit checks (ModeratorActions, UserRateLimits, automatic).
+
+### Comment Creation Checks
+
+Full check from `/lib/collections/users/helpers.ts`:
+```typescript
+export const userIsAllowedToComment = (user, post, postAuthor, isReply): boolean => {
+  if (!user) return false;
+  if (user.deleted) return false;
+  if (user.allCommentingDisabled) return false;
+
+  // Can only comment on own posts?
+  if (user.commentingOnOtherUsersDisabled && post?.userId !== user._id)
+    return false;
+
+  if (post) {
+    // Shortform: only author can make top-level comments
+    if (post.shortform && post.userId !== user._id && !isReply)
+      return false;
+
+    if (post.commentsLocked) return false;
+    if (post.rejected) return false;
+
+    // Account too new for this post?
+    if ((post.commentsLockedToAccountsCreatedAfter ?? new Date()) < user.createdAt)
+      return false;
+
+    // Banned from this post or author?
+    if (userIsBannedFromPost(user, post, postAuthor)) return false;
+    if (userIsBannedFromAllPosts(user, post, postAuthor)) return false;
+    if (userIsBannedFromAllPersonalPosts(user, post, postAuthor) && !post.frontpageDate)
+      return false;
+  }
+  return true;
 }
-
-// 2. Is user exempt?
-if (userIsAdmin(user) || userIsMemberOf(user, "sunshineRegiment")) {
-  // exempt, skip rate limit
-}
-
-// 3. Check ModeratorActions for active rate limit
-const modAction = await ModeratorActions.findOne({
-  userId: user._id,
-  type: { $in: ['rateLimitOnePerDay', 'rateLimitOnePerThreeDays', ...] },
-  $or: [{ endedAt: null }, { endedAt: { $gt: new Date() } }]
-});
-
-// 4. Check UserRateLimits for custom rate limit
-const customLimit = await UserRateLimits.findOne({
-  userId: user._id,
-  type: 'allPosts',
-  $or: [{ endedAt: null }, { endedAt: { $gt: new Date() } }]
-});
-
-// 5. Calculate if user can post based on recent posts and rate limit
 ```
 
-When creating a comment, also check:
-```typescript
-// Post-level checks
-if (post.commentLocked) throw new Error("Comments locked");
+**PLUS** the `userCanComment()` check for unreviewed users (see above).
 
-// User banned from this post?
-const postAuthor = await Users.findOne(post.userId);
-if (post.bannedUserIds?.includes(user._id)) throw;
-if (postAuthor?.bannedUserIds?.includes(user._id)) throw;
-
-// Reply blocked on parent comment?
-if (parentComment?.repliesBlockedUntil > new Date()) throw;
-
-// Then same rate limit checks as posts, but with type: 'allComments'
-```
-
-### Ban Check Implementation
-
-From `/lib/collections/users/helpers.ts`:
-```typescript
-export const userIsBanned = (user: Pick<DbUser, "banned">) =>
-  user.banned && new Date(user.banned) > new Date();
-
-export const userIsBannedFromPost = (user, post, postAuthor) => {
-  return post.bannedUserIds?.includes(user._id);
-};
-
-export const userIsBannedFromAllPosts = (user, post, postAuthor) => {
-  return postAuthor?.bannedUserIds?.includes(user._id);
-};
-```
+**PLUS** rate limit checks.
 
 ### Display Filters
 
@@ -463,23 +494,18 @@ WHERE status = 2
 WHERE (deleted = false OR (deleted = true AND deleted_public = true))
   AND (rejected IS NULL OR rejected = false)
   AND (spam IS NULL OR spam = false)
+  -- If hideUnreviewedAuthorComments is set:
+  AND (author_is_unreviewed = false
+       OR posted_at < hideUnreviewedAuthorComments_date
+       OR user_id = current_user_id)
 ```
-
-### UI Behavior
-
-- Deleted comments: Show placeholder with "Deleted by {username}", date, reason
-- `hideKarma = true`: Don't show karma score
-- `repliesBlockedUntil > now`: Disable reply button, show "Replies blocked until {date}"
-- `retracted = true`: Strikethrough styling
-- `moderatorHat = true`: Special mod styling
-- `commentLocked = true`: Hide reply buttons on entire post
 
 ### What You DON'T Need
 
 - `Bans` collection - enforcement uses `User.banned` directly
 - `Reports` collection - user reporting, can defer
 - Sunshine Dashboard components
-- Any mod mutation endpoints (ban user, create rate limit, reject post, etc.)
+- Mod mutation endpoints
 
 ---
 
