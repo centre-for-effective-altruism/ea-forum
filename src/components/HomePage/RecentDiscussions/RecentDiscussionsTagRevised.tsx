@@ -63,7 +63,10 @@ export default function RecentDiscussionsTagRevised({
             <div className="bg-gray-200 w-full h-[120px] rounded" />
           </div>
         ) : (
-          <TagBody html={diff} />
+          <TagBody
+            html={diff}
+            className="[&_ins]:bg-diff-added [&_del]:bg-diff-removed"
+          />
         )}
       </div>
     </RecentDiscussionsItem>

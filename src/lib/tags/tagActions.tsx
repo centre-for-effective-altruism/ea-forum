@@ -1,11 +1,7 @@
 "use server";
 
 import { db } from "../db";
-
-const diffHtml = (_before: string, _after: string, _trim: boolean) => {
-  // TODO
-  return "<p>TODO: Generate tag diff</p>";
-};
+import { diffHtml } from "../revisions/htmlToChangeMetrics";
 
 export const getTagDiffAction = async (revisionId: string) => {
   const after = await db.query.revisions.findFirst({

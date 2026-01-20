@@ -11,7 +11,7 @@ export default async function RecentDiscussionsFeed() {
   const currentUser = await getCurrentUser();
   const items = await fetchRecentDiscussions({
     currentUser,
-    limit: 10,
+    limit: 20,
   });
   return (
     <AnalyticsContext pageSectionContext="recentDiscussion">

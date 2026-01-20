@@ -51,6 +51,8 @@
   --color-popover-dim: rgba(0, 0, 0, 0.4);
   --color-curated-star: #ffc500;
   --color-new-user-sprout: #5eb25c;
+  --color-diff-added: #d4ead4;
+  --color-diff-removed: #f0d3d3;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
