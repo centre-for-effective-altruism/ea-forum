@@ -94,6 +94,12 @@ const relations = defineRelations(
         to: r.comments._id,
       }),
     },
+    tags: {
+      comments: r.many.comments({
+        from: r.tags._id,
+        to: r.comments.tagId,
+      }),
+    },
     revisions: {
       user: r.one.users({
         from: r.revisions.userId,

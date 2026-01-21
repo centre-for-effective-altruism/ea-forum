@@ -5,6 +5,7 @@ import type { PostsListView } from "./postsHelpers";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
+  htmlSubstring,
   isNotTrue,
   RelationalFilter,
   RelationalOrderBy,
@@ -109,7 +110,10 @@ export const postsListProjection = (
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>
-        sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, ${options?.highlightLength || 350})`,
+        htmlSubstring(
+          sql`${posts}."customHighlight"->>'html'`,
+          options?.highlightLength || 350,
+        ),
       tags: postTagsProjection,
     },
     with: {
@@ -120,7 +124,7 @@ export const postsListProjection = (
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            sql<string>`SUBSTRING(${revisions}."html", 1, ${options?.highlightLength || 350})`,
+            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
         },
       },
       readStatus: currentUserId

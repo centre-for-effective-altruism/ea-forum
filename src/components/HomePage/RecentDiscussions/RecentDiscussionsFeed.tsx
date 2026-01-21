@@ -11,6 +11,7 @@ import RecentDiscussionsNewQuickTake from "./RecentDiscussionsNewQuickTake";
 import RecentDiscussionsQuickTakeCommented from "./RecentDiscussionsQuickTakeCommented";
 import RecentDiscussionsTagRevised from "./RecentDiscussionsTagRevised";
 import RecentDiscussionsSubscribeReminder from "./RecentDiscussionsSubscribeReminder";
+import RecentDiscussionsTagDiscussed from "./RecentDiscussionsTagDiscussed";
 
 export default function RecentDiscussionsFeed({
   data,
@@ -48,7 +49,7 @@ export default function RecentDiscussionsFeed({
   }, [displayedData, loading, limit]);
 
   return (
-    <div>
+    <div data-component="RecentDiscussionsFeed">
       {displayedData.results.map(({ type, sortKey, item }) => {
         const key = type + sortKey;
         switch (type) {
@@ -59,9 +60,7 @@ export default function RecentDiscussionsFeed({
           case "quickTakeCommented":
             return <RecentDiscussionsQuickTakeCommented post={item} key={key} />;
           case "tagDiscussed":
-            // TODO
-            console.warn("Recent discussions: tagDiscussed");
-            break;
+            return <RecentDiscussionsTagDiscussed tag={item} key={key} />;
           case "tagRevised":
             return <RecentDiscussionsTagRevised revision={item} key={key} />;
           case "subscribeReminder":
