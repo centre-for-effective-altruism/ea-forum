@@ -142,6 +142,7 @@ describe("fm-lite", () => {
           actor: "god",
           params: {
             postId: "p1",
+            parentCommentId: null,
             changes: {
               draft: false,
               status: PostStatus.APPROVED,
@@ -187,6 +188,7 @@ describe("fm-lite", () => {
           actor: "god",
           params: {
             postId: "p1",
+            parentCommentId: null,
             changes: { draft: false, status: PostStatus.SPAM },
           },
         },
@@ -321,6 +323,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -348,6 +351,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -375,6 +379,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -403,6 +408,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -434,6 +440,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Secret content that should be hidden",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -477,6 +484,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Buy cheap products now!",
             akismetWouldFlagAsSpam: true,
             postedAt: new Date(),
@@ -507,6 +515,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: commentDate,
@@ -532,6 +541,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -564,6 +574,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -596,6 +607,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -623,6 +635,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -645,6 +658,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -679,6 +693,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -705,6 +720,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "My deleted comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -742,6 +758,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Deleted content",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -777,6 +794,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "My spam comment",
             akismetWouldFlagAsSpam: true,
             postedAt: new Date(),
@@ -813,6 +831,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Spam content",
             akismetWouldFlagAsSpam: true,
             postedAt: new Date(),
@@ -840,6 +859,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -865,6 +885,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: commentDate,
@@ -891,6 +912,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: commentDate,
@@ -923,6 +945,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: commentDate,
@@ -949,6 +972,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: commentDate,
@@ -1013,6 +1037,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -1039,13 +1064,21 @@ describe("fm-lite", () => {
       const state = initialState();
       const result = createUser("god", state, { userId: "alice" });
       expect(result.ok).toBe(true);
-      expect(result.state.users.get("alice")).toEqual({
-        id: "alice",
-        isAdmin: false,
-        isMod: false,
-        karma: 0,
-        reviewedByUserId: null,
-      });
+      const user = result.state.users.get("alice");
+      expect(user).toBeDefined();
+      expect(user?.id).toBe("alice");
+      expect(user?.isAdmin).toBe(false);
+      expect(user?.isMod).toBe(false);
+      expect(user?.karma).toBe(0);
+      expect(user?.reviewedByUserId).toBeNull();
+      expect(user?.deleted).toBe(false);
+      expect(user?.allCommentingDisabled).toBe(false);
+      expect(user?.commentingOnOtherUsersDisabled).toBe(false);
+      expect(user?.bannedUserIds).toEqual([]);
+      expect(user?.bannedPersonalUserIds).toEqual([]);
+      expect(user?.canModerateOwnPost).toBe(false);
+      expect(user?.canModerateOwnPersonalPost).toBe(false);
+      expect(user?.createdAt).toBeInstanceOf(Date);
     });
 
     it("P3: fails if user already exists", () => {
@@ -1227,6 +1260,508 @@ describe("fm-lite", () => {
   });
 
   describe("[UNSTABLE] createComment", () => {
+    // ==========================================================================
+    // Permission check tests (P1 - access control)
+    // ==========================================================================
+
+    it("P1: deleted user cannot comment", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "deleted-user" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "deleted-user", changes: { deleted: true } },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("deleted-user", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("deleted");
+    });
+
+    it("P1: user with allCommentingDisabled cannot comment", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "disabled-user" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "disabled-user",
+            changes: { allCommentingDisabled: true },
+          },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("disabled-user", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("disabled");
+    });
+
+    it("P1: user with commentingOnOtherUsersDisabled cannot comment on others' posts", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "restricted-user" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "restricted-user",
+            changes: { commentingOnOtherUsersDisabled: true },
+          },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("restricted-user", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("own posts");
+    });
+
+    it("P2: user with commentingOnOtherUsersDisabled CAN comment on their own posts", () => {
+      const actions = [
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "restricted-user" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "restricted-user",
+            changes: { commentingOnOtherUsersDisabled: true },
+          },
+        },
+        {
+          type: "CREATE_POST" as const,
+          actor: "restricted-user",
+          params: { postId: "p1" },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("restricted-user", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P1: non-author cannot make top-level comment on shortform post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { shortform: true } },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null, // Top-level comment
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("shortform");
+    });
+
+    it("P2: author CAN make top-level comment on their own shortform post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { shortform: true } },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P2: non-author CAN reply to comment on shortform post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { shortform: true } },
+        },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Original",
+            akismetWouldFlagAsSpam: false,
+            postedAt: new Date(),
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("bob", state, {
+        commentId: "c2",
+        postId: "p1",
+        parentCommentId: "c1", // Reply, not top-level
+        contents: "Reply",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P1: cannot comment on post with commentsLocked", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { commentsLocked: true } },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("locked");
+    });
+
+    it("P1: cannot comment on rejected post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { rejected: true } },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("rejected");
+    });
+
+    it("P1: account created after commentsLockedToAccountsCreatedAfter cannot comment", () => {
+      const lockDate = new Date("2024-01-01");
+      const newUserCreatedAt = new Date("2024-06-01"); // After lock date
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "newbie", createdAt: newUserCreatedAt },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: {
+            postId: "p1",
+            changes: { commentsLockedToAccountsCreatedAfter: lockDate },
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("newbie", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("new accounts");
+    });
+
+    it("P2: account created before commentsLockedToAccountsCreatedAfter CAN comment", () => {
+      const lockDate = new Date("2024-06-01");
+      const oldUserCreatedAt = new Date("2024-01-01"); // Before lock date
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "oldtimer", createdAt: oldUserCreatedAt },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: {
+            postId: "p1",
+            changes: { commentsLockedToAccountsCreatedAfter: lockDate },
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("oldtimer", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P1: user in post.bannedUserIds cannot comment", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "banned-bob" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { bannedUserIds: ["banned-bob"] } },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("banned-bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("banned");
+    });
+
+    it("P1: user in author.bannedUserIds cannot comment when author has canModerateOwnPost", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "alice",
+            changes: { canModerateOwnPost: true, bannedUserIds: ["banned-bob"] },
+          },
+        },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "banned-bob" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("banned-bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("banned");
+    });
+
+    it("P2: user in author.bannedUserIds CAN comment when author does NOT have canModerateOwnPost", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { bannedUserIds: ["banned-bob"] } }, // No canModerateOwnPost
+        },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "banned-bob" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("banned-bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true); // Ban not enforced without permission
+    });
+
+    it("P1: user in author.bannedPersonalUserIds cannot comment on personal (non-frontpage) post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "alice",
+            changes: {
+              canModerateOwnPersonalPost: true,
+              bannedPersonalUserIds: ["banned-bob"],
+            },
+          },
+        },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "banned-bob" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        // Post is NOT on frontpage (frontpageDate: null is default)
+      ];
+      const state = deriveState(actions);
+      const result = createComment("banned-bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("personal posts");
+    });
+
+    it("P2: user in author.bannedPersonalUserIds CAN comment on frontpage post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "alice",
+            changes: {
+              canModerateOwnPersonalPost: true,
+              bannedPersonalUserIds: ["banned-bob"],
+            },
+          },
+        },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "banned-bob" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { frontpageDate: new Date() } }, // Post IS on frontpage
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("banned-bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true); // Frontpage exempts from personal ban
+    });
+
+    it("P3: fails if parentCommentId refers to non-existent comment", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: "nonexistent",
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("Parent comment");
+    });
+
+    // ==========================================================================
+    // Existing tests (P3 - validation and defaults)
+    // ==========================================================================
+
     it("P3: adds a comment with defaults", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1236,6 +1771,7 @@ describe("fm-lite", () => {
       const result = createComment("alice", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Test comment",
         akismetWouldFlagAsSpam: false,
         postedAt: new Date(),
@@ -1253,6 +1789,7 @@ describe("fm-lite", () => {
       const result = createComment("nonexistent", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Test",
         akismetWouldFlagAsSpam: false,
         postedAt: new Date(),
@@ -1269,6 +1806,7 @@ describe("fm-lite", () => {
       const result = createComment("alice", state, {
         commentId: "c1",
         postId: "nonexistent",
+        parentCommentId: null,
         contents: "Test",
         akismetWouldFlagAsSpam: false,
         postedAt: new Date(),
@@ -1287,6 +1825,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -1297,6 +1836,7 @@ describe("fm-lite", () => {
       const result = createComment("alice", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Test comment",
         akismetWouldFlagAsSpam: false,
         postedAt: new Date(),
@@ -1318,6 +1858,7 @@ describe("fm-lite", () => {
       const result = createComment("spammer", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Buy now!",
         akismetWouldFlagAsSpam: true,
         postedAt: new Date(),
@@ -1348,6 +1889,7 @@ describe("fm-lite", () => {
       const result = createComment("highkarma", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Content",
         akismetWouldFlagAsSpam: true,
         postedAt: new Date(),
@@ -1383,6 +1925,7 @@ describe("fm-lite", () => {
       const result = createComment("reviewed", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Content",
         akismetWouldFlagAsSpam: true,
         postedAt: new Date(),
@@ -1401,6 +1944,7 @@ describe("fm-lite", () => {
       const result = createComment("newbie", state, {
         commentId: "c1",
         postId: "p1",
+        parentCommentId: null,
         contents: "Content",
         akismetWouldFlagAsSpam: false,
         postedAt: new Date(),
@@ -1421,6 +1965,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),
@@ -1455,6 +2000,7 @@ describe("fm-lite", () => {
           params: {
             commentId: "c1",
             postId: "p1",
+            parentCommentId: null,
             contents: "Test comment",
             akismetWouldFlagAsSpam: false,
             postedAt: new Date(),

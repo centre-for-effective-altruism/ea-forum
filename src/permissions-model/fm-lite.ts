@@ -14,6 +14,22 @@ export interface User {
   karma: number;
   /** ID of mod who reviewed this user, or null if not reviewed */
   reviewedByUserId: string | null;
+  /** When the user account was created */
+  createdAt: Date;
+  /** Account is deleted - cannot post or comment */
+  deleted: boolean;
+  /** User is blocked from commenting anywhere */
+  allCommentingDisabled: boolean;
+  /** User can only comment on their own posts */
+  commentingOnOtherUsersDisabled: boolean;
+  /** Users banned from commenting on all of this user's posts (requires canModerateOwnPost) */
+  bannedUserIds: string[];
+  /** Users banned from commenting on this user's personal (non-frontpage) posts (requires canModerateOwnPersonalPost) */
+  bannedPersonalUserIds: string[];
+  /** Can use bannedUserIds to ban users from own posts. Corresponds to 'posts.moderate.own' permission (trustLevel1 group) */
+  canModerateOwnPost: boolean;
+  /** Can use bannedPersonalUserIds to ban users from personal posts. Corresponds to 'posts.moderate.own.personal' permission */
+  canModerateOwnPersonalPost: boolean;
 }
 
 /** Karma threshold for auto-approval. From MINIMUM_APPROVAL_KARMA in ForumMagnum */
@@ -27,6 +43,14 @@ export const USER_FIELDS: (keyof Omit<User, "id">)[] = [
   "isMod",
   "karma",
   "reviewedByUserId",
+  "createdAt",
+  "deleted",
+  "allCommentingDisabled",
+  "commentingOnOtherUsersDisabled",
+  "bannedUserIds",
+  "bannedPersonalUserIds",
+  "canModerateOwnPost",
+  "canModerateOwnPersonalPost",
 ];
 
 // =============================================================================
@@ -61,6 +85,15 @@ export interface Post {
   bannedUserIds: string[];
   // Author review status (denormalized)
   authorIsUnreviewed: boolean;
+  // Comment restrictions
+  /** Comments are locked on this post */
+  commentsLocked: boolean;
+  /** Accounts created after this date cannot comment. Null means no restriction. */
+  commentsLockedToAccountsCreatedAfter: Date | null;
+  /** Shortform post - only author can make top-level comments */
+  shortform: boolean;
+  /** Date post was added to frontpage. If set, post is on frontpage (affects bannedPersonalUserIds exemption) */
+  frontpageDate: Date | null;
 }
 
 export const POST_FIELDS: (keyof Omit<Post, "id" | "authorId">)[] = [
@@ -73,6 +106,10 @@ export const POST_FIELDS: (keyof Omit<Post, "id" | "authorId">)[] = [
   "unlisted",
   "bannedUserIds",
   "authorIsUnreviewed",
+  "commentsLocked",
+  "commentsLockedToAccountsCreatedAfter",
+  "shortform",
+  "frontpageDate",
 ];
 
 const defaultPost = (
@@ -91,6 +128,10 @@ const defaultPost = (
   unlisted: false,
   bannedUserIds: [],
   authorIsUnreviewed,
+  commentsLocked: false,
+  commentsLockedToAccountsCreatedAfter: null,
+  shortform: false,
+  frontpageDate: null,
 });
 
 // =============================================================================
@@ -101,6 +142,8 @@ export interface Comment {
   id: string;
   authorId: string;
   postId: string;
+  /** Parent comment ID for replies, null for top-level comments */
+  parentCommentId: string | null;
   /** The comment text/body */
   contents: string;
   draft: boolean;
@@ -119,6 +162,7 @@ export interface Comment {
 
 export const COMMENT_FIELDS: (keyof Omit<Comment, "id" | "authorId" | "postId">)[] =
   [
+    "parentCommentId",
     "contents",
     "draft",
     "rejected",
@@ -133,12 +177,14 @@ const defaultComment = (
   id: string,
   authorId: string,
   postId: string,
+  parentCommentId: string | null,
   contents: string,
   postedAt: Date,
 ): Comment => ({
   id,
   authorId,
   postId,
+  parentCommentId,
   contents,
   draft: false,
   rejected: false,
@@ -160,6 +206,14 @@ const UserChangesSchema = z
     isMod: z.boolean().optional(),
     karma: z.number().optional(),
     reviewedByUserId: z.string().nullable().optional(),
+    createdAt: z.date().optional(),
+    deleted: z.boolean().optional(),
+    allCommentingDisabled: z.boolean().optional(),
+    commentingOnOtherUsersDisabled: z.boolean().optional(),
+    bannedUserIds: z.array(z.string()).optional(),
+    bannedPersonalUserIds: z.array(z.string()).optional(),
+    canModerateOwnPost: z.boolean().optional(),
+    canModerateOwnPersonalPost: z.boolean().optional(),
   })
   .strict();
 
@@ -177,12 +231,17 @@ const PostChangesSchema = z
     unlisted: z.boolean().optional(),
     bannedUserIds: z.array(z.string()).optional(),
     authorIsUnreviewed: z.boolean().optional(),
+    commentsLocked: z.boolean().optional(),
+    commentsLockedToAccountsCreatedAfter: z.date().nullable().optional(),
+    shortform: z.boolean().optional(),
+    frontpageDate: z.date().nullable().optional(),
   })
   .strict();
 
 /** Schema for Comment changes (partial update) */
 const CommentChangesSchema = z
   .object({
+    parentCommentId: z.string().nullable().optional(),
     contents: z.string().optional(),
     draft: z.boolean().optional(),
     rejected: z.boolean().optional(),
@@ -196,7 +255,9 @@ const CommentChangesSchema = z
 
 /** Params schemas for each action type */
 export const ActionParamsSchemas = {
-  CREATE_USER: z.object({ userId: z.string() }).strict(),
+  CREATE_USER: z
+    .object({ userId: z.string(), createdAt: z.date().optional() })
+    .strict(),
   UPDATE_USER: z.object({ userId: z.string(), changes: UserChangesSchema }).strict(),
   CREATE_POST: z.object({ postId: z.string() }).strict(),
   UPDATE_POST: z.object({ postId: z.string(), changes: PostChangesSchema }).strict(),
@@ -204,6 +265,7 @@ export const ActionParamsSchemas = {
     .object({
       commentId: z.string(),
       postId: z.string(),
+      parentCommentId: z.string().nullable(),
       contents: z.string(),
       akismetWouldFlagAsSpam: z.boolean(),
       postedAt: z.date(),
@@ -329,7 +391,7 @@ export const createUser = (
   state: State,
   params: CreateUserParams,
 ): ActionResult => {
-  const { userId } = params;
+  const { userId, createdAt } = params;
   if (state.users.has(userId))
     return { ok: false, state, reason: `User '${userId}' already exists` };
 
@@ -340,6 +402,14 @@ export const createUser = (
     isMod: false,
     karma: 0,
     reviewedByUserId: null,
+    createdAt: createdAt ?? new Date(),
+    deleted: false,
+    allCommentingDisabled: false,
+    commentingOnOtherUsersDisabled: false,
+    bannedUserIds: [],
+    bannedPersonalUserIds: [],
+    canModerateOwnPost: false,
+    canModerateOwnPersonalPost: false,
   });
   return { ok: true, state: { ...state, users } };
 };
@@ -402,15 +472,136 @@ export const createComment = (
   state: State,
   params: CreateCommentParams,
 ): ActionResult => {
-  const { commentId, postId, contents, akismetWouldFlagAsSpam, postedAt } = params;
+  const {
+    commentId,
+    postId,
+    parentCommentId,
+    contents,
+    akismetWouldFlagAsSpam,
+    postedAt,
+  } = params;
+
+  // Basic validation
   const author = state.users.get(actor);
   if (!author) return { ok: false, state, reason: `Author '${actor}' not found` };
-  if (!state.posts.has(postId))
-    return { ok: false, state, reason: `Post '${postId}' not found` };
+
+  const post = state.posts.get(postId);
+  if (!post) return { ok: false, state, reason: `Post '${postId}' not found` };
+
   if (state.comments.has(commentId))
     return { ok: false, state, reason: `Comment '${commentId}' already exists` };
 
-  const comment = defaultComment(commentId, actor, postId, contents, postedAt);
+  // Validate parentCommentId if provided
+  if (parentCommentId !== null && !state.comments.has(parentCommentId)) {
+    return {
+      ok: false,
+      state,
+      reason: `Parent comment '${parentCommentId}' not found`,
+    };
+  }
+
+  // Get post author for ban checks
+  const postAuthor = state.users.get(post.authorId);
+
+  // ==========================================================================
+  // Permission checks (from userIsAllowedToComment in ForumMagnum)
+  // ==========================================================================
+
+  // Check 2: User not deleted
+  if (author.deleted) {
+    return { ok: false, state, reason: "User account is deleted" };
+  }
+
+  // Check 3: Commenting not disabled
+  if (author.allCommentingDisabled) {
+    return { ok: false, state, reason: "User commenting is disabled" };
+  }
+
+  // Check 4: Can comment on others' posts
+  if (author.commentingOnOtherUsersDisabled && post.authorId !== actor) {
+    return { ok: false, state, reason: "User can only comment on their own posts" };
+  }
+
+  // Check 5: Shortform top-level restriction
+  // On shortform posts, only the author can make top-level comments (parentCommentId === null)
+  if (post.shortform && post.authorId !== actor && parentCommentId === null) {
+    return {
+      ok: false,
+      state,
+      reason: "Only the author can make top-level comments on shortform posts",
+    };
+  }
+
+  // Check 6: Comments not locked
+  if (post.commentsLocked) {
+    return { ok: false, state, reason: "Comments are locked on this post" };
+  }
+
+  // Check 7: Post not rejected
+  if (post.rejected) {
+    return { ok: false, state, reason: "Cannot comment on rejected posts" };
+  }
+
+  // Check 8: Account age check
+  if (
+    post.commentsLockedToAccountsCreatedAfter !== null &&
+    author.createdAt > post.commentsLockedToAccountsCreatedAfter
+  ) {
+    return {
+      ok: false,
+      state,
+      reason: "Account created after comments were locked to new accounts",
+    };
+  }
+
+  // Check 9: Post-level ban
+  if (post.bannedUserIds.includes(actor)) {
+    return {
+      ok: false,
+      state,
+      reason: "User is banned from commenting on this post",
+    };
+  }
+
+  // Check 10: Author-level ban (requires postAuthor.canModerateOwnPost)
+  if (
+    postAuthor &&
+    postAuthor.bannedUserIds.includes(actor) &&
+    postAuthor.canModerateOwnPost
+  ) {
+    return {
+      ok: false,
+      state,
+      reason: "User is banned from commenting on this author's posts",
+    };
+  }
+
+  // Check 11: Personal post ban (requires postAuthor.canModerateOwnPersonalPost AND post not on frontpage)
+  if (
+    postAuthor &&
+    postAuthor.bannedPersonalUserIds.includes(actor) &&
+    postAuthor.canModerateOwnPersonalPost &&
+    post.frontpageDate === null
+  ) {
+    return {
+      ok: false,
+      state,
+      reason: "User is banned from commenting on this author's personal posts",
+    };
+  }
+
+  // ==========================================================================
+  // Create the comment
+  // ==========================================================================
+
+  const comment = defaultComment(
+    commentId,
+    actor,
+    postId,
+    parentCommentId,
+    contents,
+    postedAt,
+  );
 
   // Look up author state to compute derived fields
   const authorKarma = author.karma;
