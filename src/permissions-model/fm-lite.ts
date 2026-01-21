@@ -30,6 +30,11 @@ export interface User {
   canModerateOwnPost: boolean;
   /** Can use bannedPersonalUserIds to ban users from personal posts. Corresponds to 'posts.moderate.own.personal' permission */
   canModerateOwnPersonalPost: boolean;
+  // Rate limit fields
+  /** User is exempt from all rate limits (denormalized from ModeratorAction) */
+  exemptFromRateLimits: boolean;
+  /** Mod-applied rate limit in hours (null = no mod rate limit). Denormalized from ModeratorActions. */
+  modRateLimitHours: number | null;
 }
 
 /** Karma threshold for auto-approval. From MINIMUM_APPROVAL_KARMA in ForumMagnum */
@@ -51,6 +56,8 @@ export const USER_FIELDS: (keyof Omit<User, "id">)[] = [
   "bannedPersonalUserIds",
   "canModerateOwnPost",
   "canModerateOwnPersonalPost",
+  "exemptFromRateLimits",
+  "modRateLimitHours",
 ];
 
 // =============================================================================
@@ -94,6 +101,9 @@ export interface Post {
   shortform: boolean;
   /** Date post was added to frontpage. If set, post is on frontpage (affects bannedPersonalUserIds exemption) */
   frontpageDate: Date | null;
+  // Rate limit fields
+  /** Skip rate limit checks for comments on this post */
+  ignoreRateLimits: boolean;
 }
 
 export const POST_FIELDS: (keyof Omit<Post, "id" | "authorId">)[] = [
@@ -110,6 +120,7 @@ export const POST_FIELDS: (keyof Omit<Post, "id" | "authorId">)[] = [
   "commentsLockedToAccountsCreatedAfter",
   "shortform",
   "frontpageDate",
+  "ignoreRateLimits",
 ];
 
 const defaultPost = (
@@ -132,6 +143,7 @@ const defaultPost = (
   commentsLockedToAccountsCreatedAfter: null,
   shortform: false,
   frontpageDate: null,
+  ignoreRateLimits: false,
 });
 
 // =============================================================================
@@ -196,6 +208,51 @@ const defaultComment = (
 });
 
 // =============================================================================
+// Votes
+// =============================================================================
+
+export interface Vote {
+  id: string;
+  /** User who cast the vote */
+  voterId: string;
+  /** Document being voted on */
+  documentId: string;
+  /** Collection the document belongs to */
+  collectionName: "Posts" | "Comments";
+  /** Vote power (positive = upvote, negative = downvote) */
+  power: number;
+  /** When the vote was cast */
+  votedAt: Date;
+}
+
+// =============================================================================
+// Recent Karma Info (for rate limit calculations)
+// =============================================================================
+
+/**
+ * Information about a user's recent karma, used for automatic rate limit calculations.
+ * Based on ForumMagnum's RecentKarmaInfo type in /lib/rateLimits/types.ts
+ */
+export interface RecentKarmaInfo {
+  /** Total karma on user's 20 most recent pieces of content */
+  last20Karma: number;
+  /** Total karma received in the last 30 days */
+  lastMonthKarma: number;
+  /** Karma from votes on posts */
+  last20PostKarma: number;
+  /** Karma from votes on comments */
+  last20CommentKarma: number;
+  /** Number of unique users who downvoted content that ended up with negative total karma */
+  downvoterCount: number;
+  /** Number of unique users who downvoted posts that ended up with negative total karma */
+  postDownvoterCount: number;
+  /** Number of unique users who downvoted comments that ended up with negative total karma */
+  commentDownvoterCount: number;
+  /** Number of unique downvoters in the last month */
+  lastMonthDownvoterCount: number;
+}
+
+// =============================================================================
 // Action Schemas (Zod)
 // =============================================================================
 
@@ -214,6 +271,8 @@ const UserChangesSchema = z
     bannedPersonalUserIds: z.array(z.string()).optional(),
     canModerateOwnPost: z.boolean().optional(),
     canModerateOwnPersonalPost: z.boolean().optional(),
+    exemptFromRateLimits: z.boolean().optional(),
+    modRateLimitHours: z.number().nullable().optional(),
   })
   .strict();
 
@@ -235,6 +294,7 @@ const PostChangesSchema = z
     commentsLockedToAccountsCreatedAfter: z.date().nullable().optional(),
     shortform: z.boolean().optional(),
     frontpageDate: z.date().nullable().optional(),
+    ignoreRateLimits: z.boolean().optional(),
   })
   .strict();
 
@@ -274,6 +334,15 @@ export const ActionParamsSchemas = {
   UPDATE_COMMENT: z
     .object({ commentId: z.string(), changes: CommentChangesSchema })
     .strict(),
+  VOTE: z
+    .object({
+      voteId: z.string(),
+      documentId: z.string(),
+      collectionName: z.enum(["Posts", "Comments"]),
+      power: z.number(),
+      votedAt: z.date(),
+    })
+    .strict(),
 } as const;
 
 export type ActionType = keyof typeof ActionParamsSchemas;
@@ -285,6 +354,7 @@ export type CreatePostParams = z.infer<typeof ActionParamsSchemas.CREATE_POST>;
 export type UpdatePostParams = z.infer<typeof ActionParamsSchemas.UPDATE_POST>;
 export type CreateCommentParams = z.infer<typeof ActionParamsSchemas.CREATE_COMMENT>;
 export type UpdateCommentParams = z.infer<typeof ActionParamsSchemas.UPDATE_COMMENT>;
+export type VoteParams = z.infer<typeof ActionParamsSchemas.VOTE>;
 
 /**
  * Actions represent operations performed by an actor.
@@ -298,7 +368,8 @@ export type Action =
   | { type: "CREATE_POST"; actor: string; params: CreatePostParams }
   | { type: "UPDATE_POST"; actor: string; params: UpdatePostParams }
   | { type: "CREATE_COMMENT"; actor: string; params: CreateCommentParams }
-  | { type: "UPDATE_COMMENT"; actor: string; params: UpdateCommentParams };
+  | { type: "UPDATE_COMMENT"; actor: string; params: UpdateCommentParams }
+  | { type: "VOTE"; actor: string; params: VoteParams };
 
 /** Validate and parse an action, returning validation errors if invalid */
 export const parseAction = (
@@ -334,12 +405,14 @@ export interface State {
   users: Map<string, User>;
   posts: Map<string, Post>;
   comments: Map<string, Comment>;
+  votes: Map<string, Vote>;
 }
 
 export const initialState = (): State => ({
   users: new Map(),
   posts: new Map(),
   comments: new Map(),
+  votes: new Map(),
 });
 
 export const applyAction = (state: State, action: Action): ActionResult => {
@@ -356,6 +429,8 @@ export const applyAction = (state: State, action: Action): ActionResult => {
       return createComment(action.actor, state, action.params);
     case "UPDATE_COMMENT":
       return updateComment(action.actor, state, action.params);
+    case "VOTE":
+      return vote(action.actor, state, action.params);
   }
 };
 
@@ -410,6 +485,8 @@ export const createUser = (
     bannedPersonalUserIds: [],
     canModerateOwnPost: false,
     canModerateOwnPersonalPost: false,
+    exemptFromRateLimits: false,
+    modRateLimitHours: null,
   });
   return { ok: true, state: { ...state, users } };
 };
@@ -591,6 +668,19 @@ export const createComment = (
   }
 
   // ==========================================================================
+  // Rate Limit Checks
+  // ==========================================================================
+
+  const rateLimitResult = checkCommentRateLimit(actor, state, post, postedAt);
+  if (!rateLimitResult.allowed) {
+    return {
+      ok: false,
+      state,
+      reason: rateLimitResult.reason,
+    };
+  }
+
+  // ==========================================================================
   // Create the comment
   // ==========================================================================
 
@@ -640,6 +730,332 @@ export const updateComment = (
   const comments = new Map(state.comments);
   comments.set(commentId, { ...existing, ...changes });
   return { ok: true, state: { ...state, comments } };
+};
+
+export const vote = (
+  actor: string,
+  state: State,
+  params: VoteParams,
+): ActionResult => {
+  const { voteId, documentId, collectionName, power, votedAt } = params;
+
+  // Validate voter exists
+  const voter = state.users.get(actor);
+  if (!voter) return { ok: false, state, reason: `Voter '${actor}' not found` };
+
+  // Validate document exists
+  if (collectionName === "Posts") {
+    if (!state.posts.has(documentId)) {
+      return { ok: false, state, reason: `Post '${documentId}' not found` };
+    }
+  } else {
+    if (!state.comments.has(documentId)) {
+      return { ok: false, state, reason: `Comment '${documentId}' not found` };
+    }
+  }
+
+  // Check for duplicate vote ID
+  if (state.votes.has(voteId)) {
+    return { ok: false, state, reason: `Vote '${voteId}' already exists` };
+  }
+
+  const voteObj: Vote = {
+    id: voteId,
+    voterId: actor,
+    documentId,
+    collectionName,
+    power,
+    votedAt,
+  };
+
+  const votes = new Map(state.votes);
+  votes.set(voteId, voteObj);
+  return { ok: true, state: { ...state, votes } };
+};
+
+// =============================================================================
+// Rate Limit Constants and Helpers
+// =============================================================================
+
+/** Universal rate limit: 8 seconds between comments (from ForumMagnum) */
+export const UNIVERSAL_RATE_LIMIT_MS = 8000;
+
+/**
+ * Automatic rate limit thresholds based on karma.
+ * Simplified from ForumMagnum's autoCommentRateLimits in /lib/rateLimits/constants.ts
+ *
+ * These apply when a user has negative recent karma or multiple downvoters.
+ */
+export interface AutoRateLimit {
+  /** Minimum karma threshold to trigger this rate limit (user must be at or below this) */
+  karmaThreshold?: number;
+  /** Minimum downvoter count to trigger this rate limit */
+  downvoterThreshold?: number;
+  /** Time window in hours */
+  timeframeHours: number;
+  /** Max items allowed in the time window */
+  itemsPerTimeframe: number;
+}
+
+/**
+ * Simplified automatic rate limits for comments.
+ * Based on ForumMagnum but condensed to key thresholds.
+ */
+export const AUTO_COMMENT_RATE_LIMITS: AutoRateLimit[] = [
+  // Very negative recent karma: 1 comment per 24 hours
+  { karmaThreshold: -10, timeframeHours: 24, itemsPerTimeframe: 1 },
+  // Moderately negative recent karma: 1 comment per 6 hours
+  { karmaThreshold: -5, timeframeHours: 6, itemsPerTimeframe: 1 },
+  // Slightly negative recent karma: 3 comments per day
+  { karmaThreshold: 0, timeframeHours: 24, itemsPerTimeframe: 3 },
+  // Multiple downvoters: 3 comments per day
+  { downvoterThreshold: 3, timeframeHours: 24, itemsPerTimeframe: 3 },
+];
+
+interface VoteWithDocumentInfo {
+  vote: Vote;
+  documentAuthorId: string;
+  documentPostedAt: Date;
+  totalDocumentKarma: number;
+}
+
+/**
+ * Computes RecentKarmaInfo for a user based on votes on their content.
+ * This is used for automatic rate limit calculations.
+ * Based on calculateRecentKarmaInfo in ForumMagnum /lib/rateLimits/utils.ts
+ */
+export const computeRecentKarmaInfo = (
+  userId: string,
+  state: State,
+  now: Date = new Date(),
+): RecentKarmaInfo => {
+  // Get all votes with document info for documents authored by this user
+  const votesWithInfo: VoteWithDocumentInfo[] = [];
+
+  // Calculate total karma per document (needed for downvoter count calculation)
+  const documentKarmaMap = new Map<string, number>();
+  for (const vote of state.votes.values()) {
+    const current = documentKarmaMap.get(vote.documentId) ?? 0;
+    documentKarmaMap.set(vote.documentId, current + vote.power);
+  }
+
+  for (const vote of state.votes.values()) {
+    let documentAuthorId: string;
+    let documentPostedAt: Date;
+
+    if (vote.collectionName === "Posts") {
+      const post = state.posts.get(vote.documentId);
+      if (!post) continue;
+      documentAuthorId = post.authorId;
+      // Posts don't have postedAt in our model, use a placeholder
+      // In ForumMagnum, this comes from the post creation date
+      documentPostedAt = new Date(0); // Will be overridden if we add postedAt to posts
+    } else {
+      const comment = state.comments.get(vote.documentId);
+      if (!comment) continue;
+      documentAuthorId = comment.authorId;
+      documentPostedAt = comment.postedAt;
+    }
+
+    // Only include votes on documents authored by the target user
+    if (documentAuthorId === userId) {
+      // documentKarmaMap is built from all votes, so this document is guaranteed to be in the map
+      const totalDocumentKarma = documentKarmaMap.get(vote.documentId)!;
+      votesWithInfo.push({
+        vote,
+        documentAuthorId,
+        documentPostedAt,
+        totalDocumentKarma,
+      });
+    }
+  }
+
+  // Sort by document postedAt descending
+  votesWithInfo.sort(
+    (a, b) => b.documentPostedAt.getTime() - a.documentPostedAt.getTime(),
+  );
+
+  // Get unique document IDs in order of recency
+  const uniqueDocumentIds: string[] = [];
+  const seenDocIds = new Set<string>();
+  for (const vi of votesWithInfo) {
+    if (!seenDocIds.has(vi.vote.documentId)) {
+      seenDocIds.add(vi.vote.documentId);
+      uniqueDocumentIds.push(vi.vote.documentId);
+    }
+  }
+
+  // Get votes on top 20 documents
+  const top20DocIds = new Set(uniqueDocumentIds.slice(0, 20));
+  const top20DocVotes = votesWithInfo.filter((vi) =>
+    top20DocIds.has(vi.vote.documentId),
+  );
+
+  // Filter out self-votes (user voting on their own content)
+  const nonSelfTop20DocVotes = top20DocVotes.filter(
+    (vi) => vi.vote.voterId !== userId,
+  );
+  const nonSelfAllVotes = votesWithInfo.filter((vi) => vi.vote.voterId !== userId);
+
+  // Filter for posts and comments
+  const postVotes = nonSelfAllVotes.filter(
+    (vi) => vi.vote.collectionName === "Posts",
+  );
+  const commentVotes = nonSelfAllVotes.filter(
+    (vi) => vi.vote.collectionName === "Comments",
+  );
+
+  // Last month filter
+  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const lastMonthVotes = nonSelfTop20DocVotes.filter(
+    (vi) => vi.documentPostedAt > oneMonthAgo,
+  );
+
+  // Calculate karma sums
+  const last20Karma = nonSelfTop20DocVotes.reduce(
+    (sum, vi) => sum + vi.vote.power,
+    0,
+  );
+  const lastMonthKarma = lastMonthVotes.reduce((sum, vi) => sum + vi.vote.power, 0);
+  const last20PostKarma = postVotes.reduce((sum, vi) => sum + vi.vote.power, 0);
+  const last20CommentKarma = commentVotes.reduce(
+    (sum, vi) => sum + vi.vote.power,
+    0,
+  );
+
+  // Count unique downvoters on negative-karma documents
+  const getDownvoterCount = (votes: VoteWithDocumentInfo[]): number => {
+    const downvoters = votes
+      .filter((vi) => vi.vote.power < 0 && vi.totalDocumentKarma <= 0)
+      .map((vi) => vi.vote.voterId);
+    return new Set(downvoters).size;
+  };
+
+  return {
+    last20Karma,
+    lastMonthKarma,
+    last20PostKarma,
+    last20CommentKarma,
+    downvoterCount: getDownvoterCount(nonSelfTop20DocVotes),
+    postDownvoterCount: getDownvoterCount(postVotes),
+    commentDownvoterCount: getDownvoterCount(commentVotes),
+    lastMonthDownvoterCount: getDownvoterCount(lastMonthVotes),
+  };
+};
+
+export interface RateLimitResult {
+  allowed: boolean;
+  reason?: string;
+  /** When the user can next post (if rate limited) */
+  nextAllowedAt?: Date;
+}
+
+/**
+ * Check if a user is rate limited from creating a comment.
+ * Returns information about whether they can post and when they can next post.
+ */
+export const checkCommentRateLimit = (
+  userId: string,
+  state: State,
+  post: Post,
+  now: Date,
+): RateLimitResult => {
+  const user = state.users.get(userId);
+  if (!user) return { allowed: false, reason: "User not found" };
+
+  // Exemption check 1: User is exempt from all rate limits
+  if (user.exemptFromRateLimits) {
+    return { allowed: true };
+  }
+
+  // Exemption check 2: Post ignores rate limits
+  if (post.ignoreRateLimits) {
+    return { allowed: true };
+  }
+
+  // Get all comments by this user, sorted by postedAt descending
+  const userComments = Array.from(state.comments.values())
+    .filter((c) => c.authorId === userId)
+    .sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime());
+
+  // Check 1: Universal rate limit (8 seconds between comments)
+  if (userComments.length > 0) {
+    const mostRecentComment = userComments[0];
+    const timeSinceLastComment =
+      now.getTime() - mostRecentComment.postedAt.getTime();
+    if (timeSinceLastComment < UNIVERSAL_RATE_LIMIT_MS) {
+      const nextAllowedAt = new Date(
+        mostRecentComment.postedAt.getTime() + UNIVERSAL_RATE_LIMIT_MS,
+      );
+      return {
+        allowed: false,
+        reason: "Universal rate limit: please wait 8 seconds between comments",
+        nextAllowedAt,
+      };
+    }
+  }
+
+  // Check 2: Mod-applied rate limit
+  if (user.modRateLimitHours !== null && user.modRateLimitHours > 0) {
+    const rateLimitMs = user.modRateLimitHours * 60 * 60 * 1000;
+    const windowStart = new Date(now.getTime() - rateLimitMs);
+    const commentsInWindow = userComments.filter((c) => c.postedAt > windowStart);
+
+    if (commentsInWindow.length >= 1) {
+      // Find when the oldest comment in window will expire from the window
+      const oldestInWindow = commentsInWindow[commentsInWindow.length - 1];
+      const nextAllowedAt = new Date(
+        oldestInWindow.postedAt.getTime() + rateLimitMs,
+      );
+      return {
+        allowed: false,
+        reason: `Moderator rate limit: ${user.modRateLimitHours} hours between comments`,
+        nextAllowedAt,
+      };
+    }
+  }
+
+  // Check 3: Automatic karma-based rate limits
+  const recentKarmaInfo = computeRecentKarmaInfo(userId, state, now);
+
+  for (const limit of AUTO_COMMENT_RATE_LIMITS) {
+    let triggered = false;
+
+    // Check karma threshold
+    if (limit.karmaThreshold !== undefined) {
+      if (recentKarmaInfo.last20Karma <= limit.karmaThreshold) {
+        triggered = true;
+      }
+    }
+
+    // Check downvoter threshold
+    if (limit.downvoterThreshold !== undefined) {
+      if (recentKarmaInfo.downvoterCount >= limit.downvoterThreshold) {
+        triggered = true;
+      }
+    }
+
+    if (triggered) {
+      const rateLimitMs = limit.timeframeHours * 60 * 60 * 1000;
+      const windowStart = new Date(now.getTime() - rateLimitMs);
+      const commentsInWindow = userComments.filter((c) => c.postedAt > windowStart);
+
+      if (commentsInWindow.length >= limit.itemsPerTimeframe) {
+        // Find oldest comment that needs to expire
+        const oldestInWindow = commentsInWindow[limit.itemsPerTimeframe - 1];
+        const nextAllowedAt = new Date(
+          oldestInWindow.postedAt.getTime() + rateLimitMs,
+        );
+        return {
+          allowed: false,
+          reason: `Automatic rate limit: ${limit.itemsPerTimeframe} comment(s) per ${limit.timeframeHours} hours`,
+          nextAllowedAt,
+        };
+      }
+    }
+  }
+
+  return { allowed: true };
 };
 
 // =============================================================================

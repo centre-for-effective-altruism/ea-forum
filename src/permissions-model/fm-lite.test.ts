@@ -11,6 +11,9 @@ import {
   parseAction,
   initialState,
   deriveState,
+  vote,
+  computeRecentKarmaInfo,
+  checkCommentRateLimit,
   PostStatus,
   MINIMUM_APPROVAL_KARMA,
   SPAM_KARMA_THRESHOLD,
@@ -2011,6 +2014,859 @@ describe("fm-lite", () => {
       const result = updateComment("god", state, { commentId: "c1", changes: {} });
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.reason).toContain("No changes");
+    });
+  });
+
+  describe("[UNSTABLE] vote", () => {
+    it("P2: creates a vote on a post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = vote("bob", state, {
+        voteId: "v1",
+        documentId: "p1",
+        collectionName: "Posts",
+        power: 1,
+        votedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+      expect(result.state.votes.get("v1")).toBeDefined();
+      expect(result.state.votes.get("v1")?.voterId).toBe("bob");
+      expect(result.state.votes.get("v1")?.power).toBe(1);
+    });
+
+    it("P2: VOTE action works through deriveState", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "VOTE" as const,
+          actor: "bob",
+          params: {
+            voteId: "v1",
+            documentId: "p1",
+            collectionName: "Posts" as const,
+            power: 2,
+            votedAt: now,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      expect(state.votes.size).toBe(1);
+      expect(state.votes.get("v1")?.power).toBe(2);
+    });
+
+    it("P2: creates a vote on a comment", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Test",
+            akismetWouldFlagAsSpam: false,
+            postedAt: now,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: 2,
+        votedAt: now,
+      });
+      expect(result.ok).toBe(true);
+      expect(result.state.votes.get("v1")?.power).toBe(2);
+    });
+
+    it("P2: fails if voter doesn't exist", () => {
+      const state = initialState();
+      const result = vote("nobody", state, {
+        voteId: "v1",
+        documentId: "p1",
+        collectionName: "Posts",
+        power: 1,
+        votedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("not found");
+    });
+
+    it("P2: fails if post doesn't exist", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const result = vote("alice", state, {
+        voteId: "v1",
+        documentId: "missing",
+        collectionName: "Posts",
+        power: 1,
+        votedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("Post 'missing' not found");
+    });
+
+    it("P2: fails if comment doesn't exist", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const result = vote("alice", state, {
+        voteId: "v1",
+        documentId: "missing",
+        collectionName: "Comments",
+        power: 1,
+        votedAt: new Date(),
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("Comment 'missing' not found");
+    });
+
+    it("P2: fails if vote ID already exists", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result1 = vote("bob", state, {
+        voteId: "v1",
+        documentId: "p1",
+        collectionName: "Posts",
+        power: 1,
+        votedAt: new Date(),
+      });
+      expect(result1.ok).toBe(true);
+      const result2 = vote("bob", result1.state, {
+        voteId: "v1",
+        documentId: "p1",
+        collectionName: "Posts",
+        power: 2,
+        votedAt: new Date(),
+      });
+      expect(result2.ok).toBe(false);
+      expect(result2.reason).toContain("already exists");
+    });
+  });
+
+  describe("[UNSTABLE] computeRecentKarmaInfo", () => {
+    it("P2: returns zeros for user with no votes", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const info = computeRecentKarmaInfo("alice", state);
+      expect(info.last20Karma).toBe(0);
+      expect(info.lastMonthKarma).toBe(0);
+      expect(info.downvoterCount).toBe(0);
+    });
+
+    it("P2: computes karma from votes on user's comments", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Test",
+            akismetWouldFlagAsSpam: false,
+            postedAt: now,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      // Bob upvotes, Charlie upvotes with power 2
+      const state2 = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: 1,
+        votedAt: now,
+      }).state;
+      const state3 = vote("charlie", state2, {
+        voteId: "v2",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: 2,
+        votedAt: now,
+      }).state;
+
+      const info = computeRecentKarmaInfo("alice", state3, now);
+      expect(info.last20Karma).toBe(3);
+      expect(info.last20CommentKarma).toBe(3);
+    });
+
+    it("P2: excludes self-votes from karma calculation", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Test",
+            akismetWouldFlagAsSpam: false,
+            postedAt: now,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      // Alice self-upvotes
+      const state2 = vote("alice", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: 1,
+        votedAt: now,
+      }).state;
+
+      const info = computeRecentKarmaInfo("alice", state2, now);
+      expect(info.last20Karma).toBe(0); // Self-votes excluded
+    });
+
+    it("P2: counts unique downvoters on negative-karma content", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Test",
+            akismetWouldFlagAsSpam: false,
+            postedAt: now,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      // Bob and Charlie both downvote (comment ends up with -2 karma)
+      const state2 = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -1,
+        votedAt: now,
+      }).state;
+      const state3 = vote("charlie", state2, {
+        voteId: "v2",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -1,
+        votedAt: now,
+      }).state;
+
+      const info = computeRecentKarmaInfo("alice", state3, now);
+      expect(info.downvoterCount).toBe(2);
+      expect(info.last20Karma).toBe(-2);
+    });
+
+    it("P2: computes karma from votes on user's posts", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      // Bob upvotes the post
+      const state2 = vote("bob", state, {
+        voteId: "v1",
+        documentId: "p1",
+        collectionName: "Posts",
+        power: 5,
+        votedAt: now,
+      }).state;
+
+      const info = computeRecentKarmaInfo("alice", state2, now);
+      expect(info.last20PostKarma).toBe(5);
+      expect(info.last20Karma).toBe(5);
+    });
+
+    it("P2: handles orphaned post votes gracefully (defensive)", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      // Add a vote referencing a non-existent post (orphaned vote)
+      state.votes.set("orphan-vote", {
+        id: "orphan-vote",
+        voterId: "bob",
+        documentId: "nonexistent-post",
+        collectionName: "Posts",
+        power: 1,
+        votedAt: now,
+      });
+      // This should not throw, just skip the orphaned vote
+      const info = computeRecentKarmaInfo("alice", state, now);
+      expect(info.last20Karma).toBe(0);
+    });
+
+    it("P2: handles orphaned comment votes gracefully (defensive)", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+      ];
+      const state = deriveState(actions);
+      // Add a vote referencing a non-existent comment (orphaned vote)
+      state.votes.set("orphan-vote", {
+        id: "orphan-vote",
+        voterId: "bob",
+        documentId: "nonexistent-comment",
+        collectionName: "Comments",
+        power: 1,
+        votedAt: now,
+      });
+      // This should not throw, just skip the orphaned vote
+      const info = computeRecentKarmaInfo("alice", state, now);
+      expect(info.last20Karma).toBe(0);
+    });
+
+    it("P2: ignores votes on other users' content when computing karma", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p2" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "bob",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Bob's comment on Alice's post",
+            akismetWouldFlagAsSpam: false,
+            postedAt: now,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      // Charlie upvotes Bob's comment - this should NOT affect Alice's karma
+      const state2 = vote("charlie", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: 10,
+        votedAt: now,
+      }).state;
+
+      // Alice's recentKarmaInfo should be 0 since no votes on HER content
+      const aliceInfo = computeRecentKarmaInfo("alice", state2, now);
+      expect(aliceInfo.last20Karma).toBe(0);
+
+      // Bob's recentKarmaInfo should include the vote on his comment
+      const bobInfo = computeRecentKarmaInfo("bob", state2, now);
+      expect(bobInfo.last20Karma).toBe(10);
+    });
+  });
+
+  describe("[UNSTABLE] checkCommentRateLimit", () => {
+    it("P2: returns not allowed when user doesn't exist", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+      const result = checkCommentRateLimit("nonexistent", state, post, now);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain("User not found");
+    });
+
+    it("P2: allows comment when no rate limits apply", () => {
+      const now = new Date();
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+      const result = checkCommentRateLimit("alice", state, post, now);
+      expect(result.allowed).toBe(true);
+    });
+
+    it("P2: blocks comment within 8 seconds of previous comment (universal rate limit)", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Try to post 5 seconds later (within 8 second limit)
+      const fiveSecondsLater = new Date(baseTime.getTime() + 5000);
+      const result = checkCommentRateLimit("alice", state, post, fiveSecondsLater);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain("8 seconds");
+    });
+
+    it("P2: allows comment after 8 seconds (universal rate limit)", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Try to post 9 seconds later (after 8 second limit)
+      const nineSecondsLater = new Date(baseTime.getTime() + 9000);
+      const result = checkCommentRateLimit("alice", state, post, nineSecondsLater);
+      expect(result.allowed).toBe(true);
+    });
+
+    it("P2: user exempt from rate limits bypasses all checks", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { exemptFromRateLimits: true } },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Try to post 1 second later - should be allowed because exempt
+      const oneSecondLater = new Date(baseTime.getTime() + 1000);
+      const result = checkCommentRateLimit("alice", state, post, oneSecondLater);
+      expect(result.allowed).toBe(true);
+    });
+
+    it("P2: post.ignoreRateLimits bypasses all checks", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { ignoreRateLimits: true } },
+        },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Try to post 1 second later - should be allowed because post ignores rate limits
+      const oneSecondLater = new Date(baseTime.getTime() + 1000);
+      const result = checkCommentRateLimit("alice", state, post, oneSecondLater);
+      expect(result.allowed).toBe(true);
+    });
+
+    it("P2: mod rate limit blocks commenting within timeframe", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { modRateLimitHours: 2 } }, // 2 hours between comments
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Try to post 1 hour later (within 2 hour mod limit)
+      const oneHourLater = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const result = checkCommentRateLimit("alice", state, post, oneHourLater);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain("Moderator rate limit");
+    });
+
+    it("P2: mod rate limit allows commenting after timeframe", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { modRateLimitHours: 2 } },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Try to post 3 hours later (after 2 hour limit)
+      const threeHoursLater = new Date(baseTime.getTime() + 3 * 60 * 60 * 1000);
+      const result = checkCommentRateLimit("alice", state, post, threeHoursLater);
+      expect(result.allowed).toBe(true);
+    });
+
+    it("P2: automatic rate limit triggers for user with negative karma", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates 4 comments (exceeding 3 per day limit for karma=0 users)
+      for (let i = 1; i <= 4; i++) {
+        const commentTime = new Date(baseTime.getTime() + i * 10000); // 10 seconds apart
+        const result = createComment("alice", state, {
+          commentId: `c${i}`,
+          postId: "p1",
+          parentCommentId: null,
+          contents: `Comment ${i}`,
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentTime,
+        });
+        if (result.ok) {
+          state = result.state;
+        }
+      }
+
+      // Bob and Charlie downvote alice's comments to trigger negative karma
+      state = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+      state = vote("charlie", state, {
+        voteId: "v2",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+
+      // Now alice has negative karma and is at her comment limit
+      const post = state.posts.get("p1")!;
+      const laterTime = new Date(baseTime.getTime() + 60000); // 1 minute later
+      const result = checkCommentRateLimit("alice", state, post, laterTime);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain("Automatic rate limit");
+    });
+
+    it("P2: automatic rate limit triggers for user with many downvoters (positive karma)", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "dan" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "eve" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates 4 comments
+      for (let i = 1; i <= 4; i++) {
+        const commentTime = new Date(baseTime.getTime() + i * 10000);
+        const result = createComment("alice", state, {
+          commentId: `c${i}`,
+          postId: "p1",
+          parentCommentId: null,
+          contents: `Comment ${i}`,
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentTime,
+        });
+        if (result.ok) {
+          state = result.state;
+        }
+      }
+
+      // Eve upvotes comments c2, c3, c4 with high power so alice has positive total karma
+      state = vote("eve", state, {
+        voteId: "v_up1",
+        documentId: "c2",
+        collectionName: "Comments",
+        power: 5,
+        votedAt: baseTime,
+      }).state;
+      state = vote("eve", state, {
+        voteId: "v_up2",
+        documentId: "c3",
+        collectionName: "Comments",
+        power: 5,
+        votedAt: baseTime,
+      }).state;
+      state = vote("eve", state, {
+        voteId: "v_up3",
+        documentId: "c4",
+        collectionName: "Comments",
+        power: 5,
+        votedAt: baseTime,
+      }).state;
+
+      // 3 users downvote alice's c1 (triggers downvoterThreshold: 3)
+      // This makes c1 have negative karma
+      state = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -1,
+        votedAt: baseTime,
+      }).state;
+      state = vote("charlie", state, {
+        voteId: "v2",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -1,
+        votedAt: baseTime,
+      }).state;
+      state = vote("dan", state, {
+        voteId: "v3",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -1,
+        votedAt: baseTime,
+      }).state;
+
+      // Total karma: 15 - 3 = 12 (positive), but 3 downvoters on negative content
+      const info = computeRecentKarmaInfo("alice", state, baseTime);
+      expect(info.last20Karma).toBeGreaterThan(0); // Positive karma
+      expect(info.downvoterCount).toBe(3); // 3 downvoters on c1 (which has -3 karma)
+
+      const post = state.posts.get("p1")!;
+      const laterTime = new Date(baseTime.getTime() + 60000);
+      const result = checkCommentRateLimit("alice", state, post, laterTime);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain("Automatic rate limit");
+    });
+  });
+
+  describe("[UNSTABLE] createComment rate limits", () => {
+    it("P2: blocks comment due to universal rate limit", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+
+      // Create first comment
+      const result1 = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "First comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      expect(result1.ok).toBe(true);
+
+      // Try second comment 5 seconds later
+      const fiveSecondsLater = new Date(baseTime.getTime() + 5000);
+      const result2 = createComment("alice", result1.state, {
+        commentId: "c2",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Second comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: fiveSecondsLater,
+      });
+      expect(result2.ok).toBe(false);
+      expect(result2.reason).toContain("8 seconds");
+    });
+
+    it("P2: allows comment after rate limit expires", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+
+      // Create first comment
+      const result1 = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "First comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      expect(result1.ok).toBe(true);
+
+      // Second comment 10 seconds later (after 8 second limit)
+      const tenSecondsLater = new Date(baseTime.getTime() + 10000);
+      const result2 = createComment("alice", result1.state, {
+        commentId: "c2",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Second comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: tenSecondsLater,
+      });
+      expect(result2.ok).toBe(true);
+    });
+
+    it("P2: exempt user bypasses rate limits in createComment", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { exemptFromRateLimits: true } },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+
+      // Create first comment
+      const result1 = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "First comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      expect(result1.ok).toBe(true);
+
+      // Second comment 1 second later - allowed because exempt
+      const oneSecondLater = new Date(baseTime.getTime() + 1000);
+      const result2 = createComment("alice", result1.state, {
+        commentId: "c2",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Second comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: oneSecondLater,
+      });
+      expect(result2.ok).toBe(true);
     });
   });
 
