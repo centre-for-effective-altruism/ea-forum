@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+
 // =============================================================================
 // Users
 // =============================================================================
@@ -148,8 +150,79 @@ const defaultComment = (
 });
 
 // =============================================================================
-// Actions
+// Action Schemas (Zod)
 // =============================================================================
+
+/** Schema for User changes (partial update) */
+const UserChangesSchema = z
+  .object({
+    isAdmin: z.boolean().optional(),
+    isMod: z.boolean().optional(),
+    karma: z.number().optional(),
+    reviewedByUserId: z.string().nullable().optional(),
+  })
+  .strict();
+
+/** Schema for Post changes (partial update) */
+const PostChangesSchema = z
+  .object({
+    status: z
+      .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)])
+      .optional(),
+    draft: z.boolean().optional(),
+    deletedDraft: z.boolean().optional(),
+    isFuture: z.boolean().optional(),
+    rejected: z.boolean().optional(),
+    onlyVisibleToLoggedIn: z.boolean().optional(),
+    unlisted: z.boolean().optional(),
+    bannedUserIds: z.array(z.string()).optional(),
+    authorIsUnreviewed: z.boolean().optional(),
+  })
+  .strict();
+
+/** Schema for Comment changes (partial update) */
+const CommentChangesSchema = z
+  .object({
+    contents: z.string().optional(),
+    draft: z.boolean().optional(),
+    rejected: z.boolean().optional(),
+    deleted: z.boolean().optional(),
+    deletedPublic: z.boolean().optional(),
+    spam: z.boolean().optional(),
+    authorIsUnreviewed: z.boolean().optional(),
+    postedAt: z.date().optional(),
+  })
+  .strict();
+
+/** Params schemas for each action type */
+export const ActionParamsSchemas = {
+  CREATE_USER: z.object({ userId: z.string() }).strict(),
+  UPDATE_USER: z.object({ userId: z.string(), changes: UserChangesSchema }).strict(),
+  CREATE_POST: z.object({ postId: z.string() }).strict(),
+  UPDATE_POST: z.object({ postId: z.string(), changes: PostChangesSchema }).strict(),
+  CREATE_COMMENT: z
+    .object({
+      commentId: z.string(),
+      postId: z.string(),
+      contents: z.string(),
+      akismetWouldFlagAsSpam: z.boolean(),
+      postedAt: z.date(),
+    })
+    .strict(),
+  UPDATE_COMMENT: z
+    .object({ commentId: z.string(), changes: CommentChangesSchema })
+    .strict(),
+} as const;
+
+export type ActionType = keyof typeof ActionParamsSchemas;
+
+/** Derive TypeScript types from Zod schemas */
+export type CreateUserParams = z.infer<typeof ActionParamsSchemas.CREATE_USER>;
+export type UpdateUserParams = z.infer<typeof ActionParamsSchemas.UPDATE_USER>;
+export type CreatePostParams = z.infer<typeof ActionParamsSchemas.CREATE_POST>;
+export type UpdatePostParams = z.infer<typeof ActionParamsSchemas.UPDATE_POST>;
+export type CreateCommentParams = z.infer<typeof ActionParamsSchemas.CREATE_COMMENT>;
+export type UpdateCommentParams = z.infer<typeof ActionParamsSchemas.UPDATE_COMMENT>;
 
 /**
  * Actions represent operations performed by an actor.
@@ -158,12 +231,38 @@ const defaultComment = (
  * - A userId string for operations performed by a specific user
  */
 export type Action =
-  | { type: "CREATE_USER"; actor: string; params: { userId: string } }
-  | { type: "UPDATE_USER"; actor: string; params: { userId: string; changes: Partial<Omit<User, "id">> } }
-  | { type: "CREATE_POST"; actor: string; params: { postId: string } }
-  | { type: "UPDATE_POST"; actor: string; params: { postId: string; changes: Partial<Omit<Post, "id" | "authorId">> } }
-  | { type: "CREATE_COMMENT"; actor: string; params: { commentId: string; authorId: string; postId: string; contents: string; akismetWouldFlagAsSpam: boolean; postedAt: Date } }
-  | { type: "UPDATE_COMMENT"; actor: string; params: { commentId: string; changes: Partial<Omit<Comment, "id" | "authorId" | "postId">> } };
+  | { type: "CREATE_USER"; actor: string; params: CreateUserParams }
+  | { type: "UPDATE_USER"; actor: string; params: UpdateUserParams }
+  | { type: "CREATE_POST"; actor: string; params: CreatePostParams }
+  | { type: "UPDATE_POST"; actor: string; params: UpdatePostParams }
+  | { type: "CREATE_COMMENT"; actor: string; params: CreateCommentParams }
+  | { type: "UPDATE_COMMENT"; actor: string; params: UpdateCommentParams };
+
+/** Validate and parse an action, returning validation errors if invalid */
+export const parseAction = (
+  type: string,
+  actor: string,
+  params: unknown,
+): { ok: true; action: Action } | { ok: false; error: string } => {
+  const actionType = type.toUpperCase().replace(/ /g, "_") as ActionType;
+  const schema = ActionParamsSchemas[actionType];
+  if (!schema) {
+    return { ok: false, error: `Unknown action type: ${type}` };
+  }
+  const result = schema.safeParse(params);
+  if (!result.success) {
+    return {
+      ok: false,
+      error: result.error.issues
+        .map((e) => `${e.path.join(".")}: ${e.message}`)
+        .join(", "),
+    };
+  }
+  return {
+    ok: true,
+    action: { type: actionType, actor, params: result.data } as Action,
+  };
+};
 
 // =============================================================================
 // State
@@ -202,6 +301,9 @@ export const deriveState = (actions: Action[]): State => {
   let state = initialState();
   for (const action of actions) {
     const result = applyAction(state, action);
+    if (!result.ok) {
+      throw new Error(`Action ${action.type} failed: ${result.reason}`);
+    }
     state = result.state;
   }
   return state;
@@ -211,7 +313,12 @@ export const deriveState = (actions: Action[]): State => {
 // Action results
 // =============================================================================
 
-export type ActionResult<T = void> = { ok: boolean; state: State; reason?: string; result?: T };
+export type ActionResult<T = void> = {
+  ok: boolean;
+  state: State;
+  reason?: string;
+  result?: T;
+};
 
 // =============================================================================
 // Action functions
@@ -220,10 +327,9 @@ export type ActionResult<T = void> = { ok: boolean; state: State; reason?: strin
 export const createUser = (
   actor: string,
   state: State,
-  params: { userId: string },
+  params: CreateUserParams,
 ): ActionResult => {
   const { userId } = params;
-  if (!userId.trim()) return { ok: false, state, reason: "User ID cannot be empty" };
   if (state.users.has(userId))
     return { ok: false, state, reason: `User '${userId}' already exists` };
 
@@ -241,7 +347,7 @@ export const createUser = (
 export const updateUser = (
   actor: string,
   state: State,
-  params: { userId: string; changes: Partial<Omit<User, "id">> },
+  params: UpdateUserParams,
 ): ActionResult => {
   const { userId, changes } = params;
   const existing = state.users.get(userId);
@@ -257,11 +363,9 @@ export const updateUser = (
 export const createPost = (
   actor: string,
   state: State,
-  params: { postId: string },
+  params: CreatePostParams,
 ): ActionResult => {
   const { postId } = params;
-  if (!actor.trim()) return { ok: false, state, reason: "Actor cannot be empty" };
-  if (!postId.trim()) return { ok: false, state, reason: "Post ID cannot be empty" };
   const author = state.users.get(actor);
   if (!author) return { ok: false, state, reason: `Author '${actor}' not found` };
   if (state.posts.has(postId))
@@ -280,7 +384,7 @@ export const createPost = (
 export const updatePost = (
   actor: string,
   state: State,
-  params: { postId: string; changes: Partial<Omit<Post, "id" | "authorId">> },
+  params: UpdatePostParams,
 ): ActionResult => {
   const { postId, changes } = params;
   const existing = state.posts.get(postId);
@@ -296,36 +400,30 @@ export const updatePost = (
 export const createComment = (
   actor: string,
   state: State,
-  params: {
-    commentId: string;
-    authorId: string;
-    postId: string;
-    contents: string;
-    akismetWouldFlagAsSpam: boolean;
-    postedAt: Date;
-  },
+  params: CreateCommentParams,
 ): ActionResult => {
-  const { commentId, authorId, postId, contents, akismetWouldFlagAsSpam, postedAt } = params;
-  if (!commentId.trim()) return { ok: false, state, reason: "Comment ID cannot be empty" };
-  if (!authorId.trim()) return { ok: false, state, reason: "Author ID cannot be empty" };
-  if (!postId.trim()) return { ok: false, state, reason: "Post ID cannot be empty" };
-  const author = state.users.get(authorId);
-  if (!author) return { ok: false, state, reason: `Author '${authorId}' not found` };
+  const { commentId, postId, contents, akismetWouldFlagAsSpam, postedAt } = params;
+  const author = state.users.get(actor);
+  if (!author) return { ok: false, state, reason: `Author '${actor}' not found` };
   if (!state.posts.has(postId))
     return { ok: false, state, reason: `Post '${postId}' not found` };
   if (state.comments.has(commentId))
     return { ok: false, state, reason: `Comment '${commentId}' already exists` };
 
-  const comment = defaultComment(commentId, authorId, postId, contents, postedAt);
+  const comment = defaultComment(commentId, actor, postId, contents, postedAt);
 
   // Look up author state to compute derived fields
   const authorKarma = author.karma;
   const authorWasReviewed = !!author.reviewedByUserId;
-  comment.authorIsUnreviewed = !authorWasReviewed && authorKarma < MINIMUM_APPROVAL_KARMA;
+  comment.authorIsUnreviewed =
+    !authorWasReviewed && authorKarma < MINIMUM_APPROVAL_KARMA;
 
   // Compute spam: true only if akismetWouldFlagAsSpam AND author wasn't reviewed
   // AND author karma was below SPAM_KARMA_THRESHOLD
-  const isSpam = akismetWouldFlagAsSpam && !authorWasReviewed && authorKarma < SPAM_KARMA_THRESHOLD;
+  const isSpam =
+    akismetWouldFlagAsSpam &&
+    !authorWasReviewed &&
+    authorKarma < SPAM_KARMA_THRESHOLD;
   comment.spam = isSpam;
   if (isSpam) {
     comment.deleted = true;
@@ -339,11 +437,12 @@ export const createComment = (
 export const updateComment = (
   actor: string,
   state: State,
-  params: { commentId: string; changes: Partial<Omit<Comment, "id" | "authorId" | "postId">> },
+  params: UpdateCommentParams,
 ): ActionResult => {
   const { commentId, changes } = params;
   const existing = state.comments.get(commentId);
-  if (!existing) return { ok: false, state, reason: `Comment '${commentId}' not found` };
+  if (!existing)
+    return { ok: false, state, reason: `Comment '${commentId}' not found` };
   if (Object.keys(changes).length === 0)
     return { ok: false, state, reason: "No changes specified" };
 
@@ -389,14 +488,19 @@ export const viewPost = (
   if (post.draft) return { canView: false, reason: "Post is a draft" };
 
   // Deleted drafts not visible
-  if (post.deletedDraft) return { canView: false, reason: "Post is a deleted draft" };
+  if (post.deletedDraft)
+    return { canView: false, reason: "Post is a deleted draft" };
 
   // Future posts not visible yet
-  if (post.isFuture) return { canView: false, reason: "Post is scheduled for future" };
+  if (post.isFuture)
+    return { canView: false, reason: "Post is scheduled for future" };
 
   // Only approved posts are visible
   if (post.status !== PostStatus.APPROVED) {
-    return { canView: false, reason: `Post status is ${post.status}, not approved (2)` };
+    return {
+      canView: false,
+      reason: `Post status is ${post.status}, not approved (2)`,
+    };
   }
 
   // Rejected posts not visible
@@ -503,4 +607,3 @@ export const viewComment = (
 
   return { canView: true, comment, viewMode: "normal", canReadContents: true };
 };
-

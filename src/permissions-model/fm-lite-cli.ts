@@ -1,376 +1,226 @@
 /* eslint-disable no-console */
 import * as readline from "readline";
 import {
-  createWorld,
-  currentState,
-  execute,
-  createUser,
-  editUser,
-  createPost,
-  editPost,
+  applyAction,
+  parseAction,
+  initialState,
   viewPost,
-  reviewUser,
-  undo,
-  redo,
-  User,
-  Post,
-  POST_FIELDS,
+  viewComment,
+  ActionParamsSchemas,
+  State,
   USER_FIELDS,
+  POST_FIELDS,
+  COMMENT_FIELDS,
 } from "./fm-lite";
 
 // =============================================================================
-// Types
+// Session State
 // =============================================================================
 
-type Actor =
-  | { type: "god" | "admin" | "mod" | "member" | "logged-out" }
-  | { type: "user"; userId: string };
-
-// =============================================================================
-// UNSTABLE warnings for commands not yet 1-1 with ForumMagnum
-// =============================================================================
-
-const UNSTABLE: Record<string, string> = {
-  "create user": "No permission checks, no TOS acceptance",
-  "edit user": "No permission checks",
-  "create post": "No permission checks",
-  "edit post": "No permission checks",
-  "review user":
-    "No permission checks (should be mod/admin only), rejection not implemented",
-};
-
-const warnUnstable = (cmd: string): void => {
-  if (UNSTABLE[cmd]) {
-    console.log(`UNSTABLE: ${UNSTABLE[cmd]}`);
-  }
-};
-
-// =============================================================================
-// Session
-// =============================================================================
-
-const world = createWorld();
+let state: State = initialState();
 
 // =============================================================================
 // Parsing
 // =============================================================================
 
-const parseActor = (str: string): Actor | null => {
-  const s = str.trim().toLowerCase();
-  if (
-    s === "god" ||
-    s === "admin" ||
-    s === "mod" ||
-    s === "member" ||
-    s === "logged-out"
-  ) {
-    return { type: s };
-  }
-  if (s.startsWith("user ")) {
-    const userId = str.trim().slice(5).trim();
-    return userId ? { type: "user", userId } : null;
-  }
-  return null;
-};
-
-const parseFlags = (args: string[]): Record<string, string> => {
-  const flags: Record<string, string> = {};
+/** Parse --key value pairs from args into an object */
+const parseFlags = (args: string[]): Record<string, unknown> => {
+  const flags: Record<string, unknown> = {};
   for (let i = 0; i < args.length; i++) {
     if (args[i].startsWith("--") && i + 1 < args.length) {
-      flags[args[i].slice(2)] = args[i + 1];
+      const key = args[i].slice(2);
+      const value = args[i + 1];
+      // Parse value types
+      if (value === "true") flags[key] = true;
+      else if (value === "false") flags[key] = false;
+      else if (/^\d+$/.test(value)) flags[key] = parseInt(value, 10);
+      else if (/^\d{4}-\d{2}-\d{2}/.test(value)) flags[key] = new Date(value);
+      else if (value.includes(","))
+        flags[key] = value.split(",").map((s) => s.trim());
+      else flags[key] = value;
       i++;
     }
   }
   return flags;
 };
 
-/** Fields that are arrays (comma-separated in CLI) */
-const ARRAY_FIELDS = ["bannedUserIds"];
-
-const applyFlags = <T extends string>(
-  flags: Record<string, string>,
-  validFields: readonly T[],
-): { changes: Record<string, unknown>; unused: string[] } => {
-  const changes: Record<string, unknown> = {};
-  const unused: string[] = [];
-  for (const [key, value] of Object.entries(flags)) {
-    if (validFields.includes(key as T)) {
-      // Parse value based on type
-      if (ARRAY_FIELDS.includes(key)) {
-        changes[key] = value ? value.split(",").map((s) => s.trim()) : [];
-      } else if (value === "true") changes[key] = true;
-      else if (value === "false") changes[key] = false;
-      else if (/^\d+$/.test(value)) changes[key] = parseInt(value, 10);
-      else changes[key] = value;
-    } else {
-      unused.push(key);
-    }
-  }
-  return { changes, unused };
-};
-
-/** Get the effective viewer ID for an actor */
-const getViewerId = (actor: Actor): string | null => {
-  if (actor.type === "logged-out") return null;
-  if (actor.type === "user") return actor.userId;
-  // Magic roles: we need to look up or create a virtual user
-  // For now, return a magic ID that we'll handle specially
-  return `__${actor.type}__`;
+/** Convert "create user" to "CREATE_USER" */
+const toActionType = (words: string[]): string => {
+  return words.join("_").toUpperCase();
 };
 
 // =============================================================================
 // Commands
 // =============================================================================
 
+const showHelp = (): void => {
+  const actionTypes = Object.keys(ActionParamsSchemas).join(", ");
+  console.log(`
+Commands:
+  as <actor>: <verb> <noun> --param value ...
+
+Examples:
+  as god: create user --userId alice
+  as alice: create post --postId p1
+  as alice: update post --postId p1 --draft false
+  as god: update user --userId alice --karma 100
+  as bob: view post --postId p1
+  as bob: view comment --commentId c1
+
+State commands:
+  state           - Show current state summary
+  reset           - Reset to initial state
+  help            - Show this help
+
+Action types: ${actionTypes}
+
+User fields: ${USER_FIELDS.join(", ")}
+Post fields: ${POST_FIELDS.join(", ")}
+Comment fields: ${COMMENT_FIELDS.join(", ")}
+`);
+};
+
+const showState = (): void => {
+  console.log(`Users (${state.users.size}):`);
+  for (const [id, u] of state.users) {
+    const reviewed = u.reviewedByUserId
+      ? `reviewed by ${u.reviewedByUserId}`
+      : "unreviewed";
+    console.log(
+      `  ${id}: admin=${u.isAdmin}, mod=${u.isMod}, karma=${u.karma}, ${reviewed}`,
+    );
+  }
+  console.log(`Posts (${state.posts.size}):`);
+  for (const [id, p] of state.posts) {
+    console.log(
+      `  ${id}: author=${p.authorId}, status=${p.status}, draft=${p.draft}`,
+    );
+  }
+  console.log(`Comments (${state.comments.size}):`);
+  for (const [id, c] of state.comments) {
+    console.log(
+      `  ${id}: author=${c.authorId}, post=${c.postId}, draft=${c.draft}, deleted=${c.deleted}`,
+    );
+  }
+};
+
 const run = (line: string): void => {
   const trimmed = line.trim();
   if (!trimmed) return;
 
-  // Commands without actor
-  if (trimmed === "undo")
-    return void (undo(world)
-      ? console.log("Undone")
-      : console.log("Nothing to undo"));
-  if (trimmed === "redo")
-    return void (redo(world)
-      ? console.log("Redone")
-      : console.log("Nothing to redo"));
-  if (trimmed === "users") {
-    const state = currentState(world);
-    if (state.users.size === 0) return void console.log("No users");
-    for (const [id, u] of state.users) {
-      const reviewed = u.reviewedByUserId
-        ? `reviewed by ${u.reviewedByUserId}`
-        : "unreviewed";
-      console.log(
-        `  ${id}: isAdmin=${u.isAdmin}, isMod=${u.isMod}, karma=${u.karma}, ${reviewed}`,
-      );
-    }
-    return;
-  }
-  if (trimmed === "posts") {
-    const state = currentState(world);
-    if (state.posts.size === 0) return void console.log("No posts");
-    for (const [id, p] of state.posts) {
-      console.log(
-        `  ${id}: author=${p.authorId}, status=${p.status}, draft=${p.draft}`,
-      );
-    }
-    return;
-  }
-  if (trimmed === "help") {
-    console.log(`
-Commands:
-  as <actor>: create user <userId>
-  as <actor>: edit user <userId> --isAdmin true/false --isMod true/false --karma <n>
-  as <actor>: view user <userId>
-  as <actor>: review user <userId> --approve true
-  as <actor>: create post <postId> --authorId <userId> [--draft false --status 2 ...]
-  as <actor>: edit post <postId> [--draft false --status 2 ...]
-  as <actor>: view post <postId>
-
-Shortcuts: users | posts | undo | redo | help
-
-Actors:
-  god        - DB/dev access, bypasses all checks
-  admin      - isAdmin=true user
-  mod        - isMod=true user (sunshineRegiment)
-  member     - Regular logged-in user
-  logged-out - No user world
-  user <id>  - Specific user by ID
-
-User fields: ${USER_FIELDS.join(", ")}
-Post fields: ${POST_FIELDS.join(", ")}
-Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`);
-    return;
+  // Simple commands
+  if (trimmed === "help") return showHelp();
+  if (trimmed === "state") return showState();
+  if (trimmed === "reset") {
+    state = initialState();
+    return void console.log("State reset");
   }
 
   // Parse "as <actor>: <command>"
   const match = trimmed.match(/^as\s+(.+?):\s*(.+)$/i);
-  if (!match) return void console.log('Unknown command. Type "help" for usage.');
-
-  const actor = parseActor(match[1]);
-  if (!actor) return void console.log(`Unknown actor: '${match[1]}'`);
-
-  const state = currentState(world);
-  const args = match[2].split(/\s+/);
-  const [cmd, target, id] = args;
-
-  // CREATE USER
-  if (cmd === "create" && target === "user") {
-    if (!id) return void console.log("Usage: create user <userId>");
-    warnUnstable("create user");
-    const { unused } = applyFlags(parseFlags(args.slice(3)), USER_FIELDS);
-    if (unused.length)
-      console.log(
-        `Warning: unused flags: ${unused.map((f) => "--" + f).join(", ")}`,
-      );
-    const result = createUser(id, state);
-    if (!result.ok) return void console.log(`FAILED: ${result.reason}`);
-    execute(world, result);
-    console.log(`Created user '${id}'`);
-  }
-  // EDIT USER
-  else if (cmd === "edit" && target === "user") {
-    if (!id)
-      return void console.log(
-        "Usage: edit user <userId> --isAdmin true/false --isMod true/false",
-      );
-    warnUnstable("edit user");
-    const { changes, unused } = applyFlags(parseFlags(args.slice(3)), USER_FIELDS);
-    if (unused.length)
-      console.log(
-        `Warning: unused flags: ${unused.map((f) => "--" + f).join(", ")}`,
-      );
-    const result = editUser(id, changes as Partial<Omit<User, "id">>, state);
-    if (!result.ok) return void console.log(`FAILED: ${result.reason}`);
-    execute(world, result);
-    console.log(`Updated user '${id}'`);
-  }
-  // VIEW USER
-  else if (cmd === "view" && target === "user") {
-    if (!id) return void console.log("Usage: view user <userId>");
-    const user = state.users.get(id);
-    if (!user) return void console.log(`User '${id}' not found`);
-    const reviewed = user.reviewedByUserId
-      ? `reviewed by ${user.reviewedByUserId}`
-      : "unreviewed";
-    console.log(
-      `${user.id}: isAdmin=${user.isAdmin}, isMod=${user.isMod}, karma=${user.karma}, ${reviewed}`,
+  if (!match) {
+    return void console.log(
+      'Unknown command. Use "as <actor>: <command>" or type "help"',
     );
   }
-  // REVIEW USER
-  else if (cmd === "review" && target === "user") {
-    if (!id) return void console.log("Usage: review user <userId> --approve true");
-    warnUnstable("review user");
-    const flags = parseFlags(args.slice(3));
-    if (flags.approve !== "true") {
-      return void console.log(
-        "FAILED: --approve true is required (rejection not yet implemented)",
-      );
-    }
-    // Use actor as reviewer - for god/admin/mod, use magic ID; for user, use their ID
-    const reviewerId = actor.type === "user" ? actor.userId : `__${actor.type}__`;
-    const result = reviewUser(id, reviewerId, state);
-    if (!result.ok) return void console.log(`FAILED: ${result.reason}`);
-    execute(world, result);
-    console.log(`Approved user '${id}' (${result.events.length - 1} posts updated)`);
-  }
-  // CREATE POST
-  else if (cmd === "create" && target === "post") {
-    if (!id)
-      return void console.log("Usage: create post <postId> --authorId <userId>");
-    warnUnstable("create post");
-    const flags = parseFlags(args.slice(3));
-    const authorId = flags.authorId;
-    delete flags.authorId;
-    if (!authorId) return void console.log("FAILED: --authorId is required");
-    const { changes, unused } = applyFlags(flags, POST_FIELDS);
-    if (unused.length)
-      console.log(
-        `Warning: unused flags: ${unused.map((f) => "--" + f).join(", ")}`,
-      );
-    const result = createPost(id, authorId, state);
-    if (!result.ok) return void console.log(`FAILED: ${result.reason}`);
-    execute(world, result);
-    // Apply any initial field changes
-    if (Object.keys(changes).length > 0) {
-      const editResult = editPost(
-        id,
-        changes as Partial<Omit<Post, "id" | "authorId">>,
-        currentState(world),
-      );
-      if (editResult.ok) execute(world, editResult);
-    }
-    console.log(`Created post '${id}' by '${authorId}'`);
-  }
-  // EDIT POST
-  else if (cmd === "edit" && target === "post") {
-    if (!id)
-      return void console.log(
-        "Usage: edit post <postId> --draft false --status 2 ...",
-      );
-    warnUnstable("edit post");
-    const { changes, unused } = applyFlags(parseFlags(args.slice(3)), POST_FIELDS);
-    if (unused.length)
-      console.log(
-        `Warning: unused flags: ${unused.map((f) => "--" + f).join(", ")}`,
-      );
-    const result = editPost(
-      id,
-      changes as Partial<Omit<Post, "id" | "authorId">>,
-      state,
-    );
-    if (!result.ok) return void console.log(`FAILED: ${result.reason}`);
-    execute(world, result);
-    console.log(`Updated post '${id}'`);
-  }
-  // VIEW POST
-  else if (cmd === "view" && target === "post") {
-    if (!id) return void console.log("Usage: view post <postId>");
-    warnUnstable("view post");
 
-    // Resolve actor to viewer context
-    const viewerId = getViewerId(actor);
-    const viewerForCheck = viewerId;
+  const actor = match[1].trim();
+  const rest = match[2].trim();
+  const args = rest.split(/\s+/);
 
-    // For magic roles, create a virtual check
-    if (actor.type === "god") {
-      // God sees everything - just show the post
-      const post = state.posts.get(id);
-      if (!post) return void console.log(`Post '${id}' not found`);
-      console.log(
-        `[GOD VIEW] ${post.id}: author=${post.authorId}, status=${post.status}, draft=${post.draft}`,
-      );
-      console.log(`  All fields: ${JSON.stringify(post, null, 2)}`);
+  // Handle view commands specially (they don't modify state)
+  if (args[0] === "view") {
+    const target = args[1];
+    const flags = parseFlags(args.slice(2));
+
+    if (target === "post") {
+      const postId = flags.postId as string;
+      if (!postId) return void console.log("Usage: view post --postId <id>");
+      const result = viewPost(actor === "logged-out" ? null : actor, state, {
+        postId,
+      });
+      if (!result.canView) {
+        console.log(`Cannot view: ${result.reason}`);
+      } else {
+        const p = result.post!;
+        console.log(`Post ${p.id}:`);
+        console.log(`  author: ${p.authorId}`);
+        console.log(`  status: ${p.status}, draft: ${p.draft}`);
+        console.log(`  authorIsUnreviewed: ${p.authorIsUnreviewed}`);
+      }
       return;
     }
 
-    // For admin/mod/member magic roles, we need a user with those properties
-    if (actor.type === "admin" || actor.type === "mod" || actor.type === "member") {
-      // Check if magic user exists, describe what we're simulating
-      const magicUser = state.users.get(viewerId!);
-      if (!magicUser) {
-        console.log(`Note: Using virtual ${actor.type} user (not in state)`);
-        // For the check, we need to handle this specially
-        // Create a temporary state with the magic user
-        const tempState = {
-          ...state,
-          users: new Map(state.users).set(viewerId!, {
-            id: viewerId!,
-            isAdmin: actor.type === "admin",
-            isMod: actor.type === "mod",
-            karma: 1000, // Magic users have high karma
-            reviewedByUserId: "__system__", // Magic users are considered reviewed
-          }),
-        };
-        const result = viewPost(viewerId, id, tempState);
-        if (!result.canView) {
-          console.log(`Cannot view: ${result.reason}`);
-        } else {
-          const p = result.post!;
-          console.log(
-            `${p.id}: author=${p.authorId}, status=${p.status}, draft=${p.draft}`,
-          );
+    if (target === "comment") {
+      const commentId = flags.commentId as string;
+      if (!commentId)
+        return void console.log("Usage: view comment --commentId <id>");
+      const result = viewComment(actor === "logged-out" ? null : actor, state, {
+        commentId,
+      });
+      if (!result.canView) {
+        console.log(`Cannot view: ${result.reason}`);
+      } else {
+        const c = result.comment!;
+        console.log(`Comment ${c.id}:`);
+        console.log(`  author: ${c.authorId}, post: ${c.postId}`);
+        console.log(
+          `  viewMode: ${result.viewMode}, canReadContents: ${result.canReadContents}`,
+        );
+        if (result.canReadContents) {
+          console.log(`  contents: ${c.contents}`);
         }
-        return;
       }
+      return;
     }
 
-    const result = viewPost(viewerForCheck, id, state);
-    if (!result.canView) {
-      console.log(`Cannot view: ${result.reason}`);
-    } else {
-      const p = result.post!;
-      console.log(
-        `${p.id}: author=${p.authorId}, status=${p.status}, draft=${p.draft}`,
-      );
-    }
+    return void console.log(`Unknown view target: ${target}`);
   }
-  // UNKNOWN
-  else {
-    console.log(`Unknown command: '${match[2]}'`);
+
+  // Find where flags start (first --arg)
+  const flagStart = args.findIndex((a) => a.startsWith("--"));
+  const commandWords = flagStart === -1 ? args : args.slice(0, flagStart);
+  const flagArgs = flagStart === -1 ? [] : args.slice(flagStart);
+
+  // Convert command words to action type
+  const actionTypeStr = toActionType(commandWords);
+
+  // Parse flags into params
+  const params = parseFlags(flagArgs);
+
+  // For update actions, wrap non-id fields in a changes object
+  if (actionTypeStr.startsWith("UPDATE_")) {
+    const idField =
+      actionTypeStr === "UPDATE_USER"
+        ? "userId"
+        : actionTypeStr === "UPDATE_POST"
+          ? "postId"
+          : "commentId";
+    const idValue = params[idField];
+    delete params[idField];
+    const changes = { ...params };
+    // Clear params and rebuild with id + changes
+    for (const key of Object.keys(params)) delete params[key];
+    params[idField] = idValue;
+    params.changes = changes;
   }
+
+  // Parse and validate the action
+  const parseResult = parseAction(actionTypeStr, actor, params);
+  if (!parseResult.ok) {
+    return void console.log(
+      `Invalid action: ${"error" in parseResult ? parseResult.error : "unknown error"}`,
+    );
+  }
+
+  // Apply the action
+  const result = applyAction(state, parseResult.action);
+  if (!result.ok) {
+    return void console.log(`FAILED: ${result.reason}`);
+  }
+
+  state = result.state;
+  console.log(`OK: ${actionTypeStr}`);
 };
 
 // =============================================================================
