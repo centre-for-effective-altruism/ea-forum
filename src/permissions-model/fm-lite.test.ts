@@ -2491,6 +2491,72 @@ describe("fm-lite", () => {
       expect(result.allowed).toBe(true);
     });
 
+    it("P2: admin bypasses all rate limits", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { isAdmin: true } },
+        },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Admin can post 1 second later despite universal rate limit
+      const oneSecondLater = new Date(baseTime.getTime() + 1000);
+      const result = checkCommentRateLimit("alice", state, post, oneSecondLater);
+      expect(result.allowed).toBe(true);
+    });
+
+    it("P2: mod bypasses all rate limits", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { isMod: true } },
+        },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "First comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Mod can post 1 second later despite universal rate limit
+      const oneSecondLater = new Date(baseTime.getTime() + 1000);
+      const result = checkCommentRateLimit("alice", state, post, oneSecondLater);
+      expect(result.allowed).toBe(true);
+    });
+
     it("P2: user exempt from rate limits bypasses all checks", () => {
       const baseTime = new Date("2024-01-01T12:00:00Z");
       const actions = [
@@ -2559,12 +2625,14 @@ describe("fm-lite", () => {
       const baseTime = new Date("2024-01-01T12:00:00Z");
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
         {
           type: "UPDATE_USER" as const,
           actor: "god",
           params: { userId: "alice", changes: { modRateLimitHours: 2 } }, // 2 hours between comments
         },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        // Bob's post - alice comments here so it counts (appliesToOwnPosts: false)
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
         {
           type: "CREATE_COMMENT" as const,
           actor: "alice",
@@ -2592,12 +2660,14 @@ describe("fm-lite", () => {
       const baseTime = new Date("2024-01-01T12:00:00Z");
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
         {
           type: "UPDATE_USER" as const,
           actor: "god",
           params: { userId: "alice", changes: { modRateLimitHours: 2 } },
         },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        // Bob's post - alice comments here so it counts (appliesToOwnPosts: false)
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
         {
           type: "CREATE_COMMENT" as const,
           actor: "alice",
@@ -2620,6 +2690,69 @@ describe("fm-lite", () => {
       expect(result.allowed).toBe(true);
     });
 
+    it("P2: universal rate limit DOES apply to comments on own posts (appliesToOwnPosts: true)", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        // Alice's own post
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Comment on own post",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Universal rate limit still applies even on own posts
+      const fiveSecondsLater = new Date(baseTime.getTime() + 5000);
+      const result = checkCommentRateLimit("alice", state, post, fiveSecondsLater);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain("8 seconds");
+    });
+
+    it("P2: comments on own posts don't count toward non-universal rate limits (appliesToOwnPosts)", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { modRateLimitHours: 2 } },
+        },
+        // Alice's own post
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Comment on own post",
+            akismetWouldFlagAsSpam: false,
+            postedAt: baseTime,
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const post = state.posts.get("p1")!;
+
+      // Alice can post 1 minute later on her own post despite mod rate limit
+      // because comments on own posts don't count (appliesToOwnPosts: false)
+      const oneMinuteLater = new Date(baseTime.getTime() + 60000);
+      const result = checkCommentRateLimit("alice", state, post, oneMinuteLater);
+      expect(result.allowed).toBe(true);
+    });
+
     it("P2: automatic rate limit triggers for user with negative karma", () => {
       const baseTime = new Date("2024-01-01T12:00:00Z");
       const actions = [
@@ -2630,11 +2763,12 @@ describe("fm-lite", () => {
           actor: "god",
           params: { userId: "charlie" },
         },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        // Bob's post so alice's comments count (appliesToOwnPosts: false)
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
       ];
       let state = deriveState(actions);
 
-      // Alice creates 4 comments (exceeding 3 per day limit for karma=0 users)
+      // Alice creates 4 comments on bob's post (exceeding 3 per day limit for karma=0 users)
       for (let i = 1; i <= 4; i++) {
         const commentTime = new Date(baseTime.getTime() + i * 10000); // 10 seconds apart
         const result = createComment("alice", state, {
@@ -2686,7 +2820,8 @@ describe("fm-lite", () => {
         },
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "dan" } },
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "eve" } },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        // Bob's post so alice's comments count (appliesToOwnPosts: false)
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
       ];
       let state = deriveState(actions);
 

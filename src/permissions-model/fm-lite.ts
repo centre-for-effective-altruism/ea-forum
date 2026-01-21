@@ -963,12 +963,22 @@ export const checkCommentRateLimit = (
   const user = state.users.get(userId);
   if (!user) return { allowed: false, reason: "User not found" };
 
-  // Exemption check 1: User is exempt from all rate limits
+  // Exemption check 1: Admins exempt from rate limits
+  if (user.isAdmin) {
+    return { allowed: true };
+  }
+
+  // Exemption check 2: Mods exempt from rate limits
+  if (user.isMod) {
+    return { allowed: true };
+  }
+
+  // Exemption check 3: User explicitly exempt from all rate limits
   if (user.exemptFromRateLimits) {
     return { allowed: true };
   }
 
-  // Exemption check 2: Post ignores rate limits
+  // Exemption check 4: Post ignores rate limits
   if (post.ignoreRateLimits) {
     return { allowed: true };
   }
@@ -977,6 +987,12 @@ export const checkCommentRateLimit = (
   const userComments = Array.from(state.comments.values())
     .filter((c) => c.authorId === userId)
     .sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime());
+
+  // Comments on user's own posts (for appliesToOwnPosts filtering)
+  const userCommentsNotOnOwnPosts = userComments.filter((c) => {
+    const commentPost = state.posts.get(c.postId);
+    return commentPost && commentPost.authorId !== userId;
+  });
 
   // Check 1: Universal rate limit (8 seconds between comments)
   if (userComments.length > 0) {
@@ -995,11 +1011,14 @@ export const checkCommentRateLimit = (
     }
   }
 
-  // Check 2: Mod-applied rate limit
+  // Check 2: Mod-applied rate limit (appliesToOwnPosts: false)
   if (user.modRateLimitHours !== null && user.modRateLimitHours > 0) {
     const rateLimitMs = user.modRateLimitHours * 60 * 60 * 1000;
     const windowStart = new Date(now.getTime() - rateLimitMs);
-    const commentsInWindow = userComments.filter((c) => c.postedAt > windowStart);
+    // Use comments NOT on own posts for mod rate limits
+    const commentsInWindow = userCommentsNotOnOwnPosts.filter(
+      (c) => c.postedAt > windowStart,
+    );
 
     if (commentsInWindow.length >= 1) {
       // Find when the oldest comment in window will expire from the window
@@ -1015,7 +1034,7 @@ export const checkCommentRateLimit = (
     }
   }
 
-  // Check 3: Automatic karma-based rate limits
+  // Check 3: Automatic karma-based rate limits (appliesToOwnPosts: false)
   const recentKarmaInfo = computeRecentKarmaInfo(userId, state, now);
 
   for (const limit of AUTO_COMMENT_RATE_LIMITS) {
@@ -1038,7 +1057,10 @@ export const checkCommentRateLimit = (
     if (triggered) {
       const rateLimitMs = limit.timeframeHours * 60 * 60 * 1000;
       const windowStart = new Date(now.getTime() - rateLimitMs);
-      const commentsInWindow = userComments.filter((c) => c.postedAt > windowStart);
+      // Use comments NOT on own posts for automatic rate limits
+      const commentsInWindow = userCommentsNotOnOwnPosts.filter(
+        (c) => c.postedAt > windowStart,
+      );
 
       if (commentsInWindow.length >= limit.itemsPerTimeframe) {
         // Find oldest comment that needs to expire
