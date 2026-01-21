@@ -313,7 +313,6 @@ describe("fm-lite", () => {
       expect(result.reason).toContain("not found");
     });
   });
-
   describe("viewComment", () => {
     it("P1: non-author cannot see draft comment", () => {
       const actions = [
@@ -995,8 +994,7 @@ describe("fm-lite", () => {
       expect(result.reason).toContain("not found");
     });
   });
-
-  describe("[UNSTABLE] deriveState", () => {
+  describe("deriveState", () => {
     it("P3: throws on UPDATE_USER for non-existent user", () => {
       const actions = [
         {
@@ -1061,208 +1059,7 @@ describe("fm-lite", () => {
       expect(() => deriveState(actions)).toThrow("not found");
     });
   });
-
-  describe("[UNSTABLE] createUser", () => {
-    it("P3: adds a user with default fields", () => {
-      const state = initialState();
-      const result = createUser("god", state, { userId: "alice" });
-      expect(result.ok).toBe(true);
-      const user = result.state.users.get("alice");
-      expect(user).toBeDefined();
-      expect(user?.id).toBe("alice");
-      expect(user?.isAdmin).toBe(false);
-      expect(user?.isMod).toBe(false);
-      expect(user?.karma).toBe(0);
-      expect(user?.reviewedByUserId).toBeNull();
-      expect(user?.deleted).toBe(false);
-      expect(user?.allCommentingDisabled).toBe(false);
-      expect(user?.commentingOnOtherUsersDisabled).toBe(false);
-      expect(user?.bannedUserIds).toEqual([]);
-      expect(user?.bannedPersonalUserIds).toEqual([]);
-      expect(user?.canModerateOwnPost).toBe(false);
-      expect(user?.canModerateOwnPersonalPost).toBe(false);
-      expect(user?.createdAt).toBeInstanceOf(Date);
-    });
-
-    it("P3: fails if user already exists", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-      ];
-      const state = deriveState(actions);
-      const result = createUser("god", state, { userId: "alice" });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("already exists");
-    });
-  });
-
-  describe("[UNSTABLE] updateUser", () => {
-    it("P3: updates a user", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-      ];
-      const state = deriveState(actions);
-      const result = updateUser("god", state, {
-        userId: "alice",
-        changes: { isAdmin: true },
-      });
-      expect(result.ok).toBe(true);
-      expect(result.state.users.get("alice")?.isAdmin).toBe(true);
-    });
-
-    it("P3: fails if user not found", () => {
-      const state = initialState();
-      const result = updateUser("god", state, {
-        userId: "nonexistent",
-        changes: { isAdmin: true },
-      });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("not found");
-    });
-
-    it("P3: fails with empty changes", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-      ];
-      const state = deriveState(actions);
-      const result = updateUser("god", state, { userId: "alice", changes: {} });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("No changes");
-    });
-  });
-
-  describe("[UNSTABLE] createPost", () => {
-    it("P3: adds a post with defaults", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-      ];
-      const state = deriveState(actions);
-      const result = createPost("alice", state, { postId: "p1" });
-      expect(result.ok).toBe(true);
-      const post = result.state.posts.get("p1");
-      expect(post).toBeDefined();
-      expect(post?.authorId).toBe("alice");
-      expect(post?.draft).toBe(true);
-      expect(post?.status).toBe(PostStatus.APPROVED);
-    });
-
-    it("P3: sets authorIsUnreviewed=true for new user with karma < MINIMUM_APPROVAL_KARMA", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "newbie" } },
-      ];
-      const state = deriveState(actions);
-
-      // New user has karma=0, reviewedByUserId=null
-      const user = state.users.get("newbie");
-      expect(user?.karma).toBe(0);
-      expect(user?.reviewedByUserId).toBeNull();
-
-      // Post should be created with authorIsUnreviewed=true
-      const result = createPost("newbie", state, { postId: "p1" });
-      expect(result.ok).toBe(true);
-      expect(result.state.posts.get("p1")?.authorIsUnreviewed).toBe(true);
-    });
-
-    it("P3: sets authorIsUnreviewed=false for user with karma >= MINIMUM_APPROVAL_KARMA", () => {
-      const actions = [
-        {
-          type: "CREATE_USER" as const,
-          actor: "god",
-          params: { userId: "veteran" },
-        },
-        {
-          type: "UPDATE_USER" as const,
-          actor: "god",
-          params: { userId: "veteran", changes: { karma: MINIMUM_APPROVAL_KARMA } },
-        },
-      ];
-      const state = deriveState(actions);
-
-      const result = createPost("veteran", state, { postId: "p1" });
-      expect(result.ok).toBe(true);
-      expect(result.state.posts.get("p1")?.authorIsUnreviewed).toBe(false);
-    });
-
-    it("P3: sets authorIsUnreviewed=false for reviewed user even with low karma", () => {
-      const actions = [
-        {
-          type: "CREATE_USER" as const,
-          actor: "god",
-          params: { userId: "reviewed" },
-        },
-        {
-          type: "UPDATE_USER" as const,
-          actor: "god",
-          params: { userId: "reviewed", changes: { reviewedByUserId: "mod1" } },
-        },
-      ];
-      const state = deriveState(actions);
-
-      // User has karma=0 but is reviewed
-      expect(state.users.get("reviewed")?.karma).toBe(0);
-      expect(state.users.get("reviewed")?.reviewedByUserId).toBe("mod1");
-
-      const result = createPost("reviewed", state, { postId: "p1" });
-      expect(result.ok).toBe(true);
-      expect(result.state.posts.get("p1")?.authorIsUnreviewed).toBe(false);
-    });
-
-    it("P3: fails if author not found", () => {
-      const state = initialState();
-      const result = createPost("nonexistent", state, { postId: "p1" });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("not found");
-    });
-
-    it("P3: fails if post already exists", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-      ];
-      const state = deriveState(actions);
-      const result = createPost("alice", state, { postId: "p1" });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("already exists");
-    });
-  });
-
-  describe("[UNSTABLE] updatePost", () => {
-    it("P3: updates a post", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-      ];
-      const state = deriveState(actions);
-      const result = updatePost("god", state, {
-        postId: "p1",
-        changes: { draft: false, status: PostStatus.APPROVED },
-      });
-      expect(result.ok).toBe(true);
-      expect(result.state.posts.get("p1")?.draft).toBe(false);
-    });
-
-    it("P3: fails if post not found", () => {
-      const state = initialState();
-      const result = updatePost("god", state, {
-        postId: "nonexistent",
-        changes: { draft: false },
-      });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("not found");
-    });
-
-    it("P3: fails with empty changes", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-      ];
-      const state = deriveState(actions);
-      const result = updatePost("god", state, { postId: "p1", changes: {} });
-      expect(result.ok).toBe(false);
-      expect(result.reason).toContain("No changes");
-    });
-  });
-
-  describe("[UNSTABLE] createComment", () => {
+  describe("createComment", () => {
     // ==========================================================================
     // Permission check tests (P1 - access control)
     // ==========================================================================
@@ -1357,39 +1154,6 @@ describe("fm-lite", () => {
       expect(result.reason).toContain("own posts");
     });
 
-    it("P2: user with commentingOnOtherUsersDisabled CAN comment on their own posts", () => {
-      const actions = [
-        {
-          type: "CREATE_USER" as const,
-          actor: "god",
-          params: { userId: "restricted-user" },
-        },
-        {
-          type: "UPDATE_USER" as const,
-          actor: "god",
-          params: {
-            userId: "restricted-user",
-            changes: { commentingOnOtherUsersDisabled: true },
-          },
-        },
-        {
-          type: "CREATE_POST" as const,
-          actor: "restricted-user",
-          params: { postId: "p1" },
-        },
-      ];
-      const state = deriveState(actions);
-      const result = createComment("restricted-user", state, {
-        commentId: "c1",
-        postId: "p1",
-        parentCommentId: null,
-        contents: "Test",
-        akismetWouldFlagAsSpam: false,
-        postedAt: new Date(),
-      });
-      expect(result.ok).toBe(true);
-    });
-
     it("P1: non-author cannot make top-level comment on shortform post", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1412,63 +1176,6 @@ describe("fm-lite", () => {
       });
       expect(result.ok).toBe(false);
       expect(result.reason).toContain("shortform");
-    });
-
-    it("P2: author CAN make top-level comment on their own shortform post", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-        {
-          type: "UPDATE_POST" as const,
-          actor: "god",
-          params: { postId: "p1", changes: { shortform: true } },
-        },
-      ];
-      const state = deriveState(actions);
-      const result = createComment("alice", state, {
-        commentId: "c1",
-        postId: "p1",
-        parentCommentId: null,
-        contents: "Test",
-        akismetWouldFlagAsSpam: false,
-        postedAt: new Date(),
-      });
-      expect(result.ok).toBe(true);
-    });
-
-    it("P2: non-author CAN reply to comment on shortform post", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-        {
-          type: "UPDATE_POST" as const,
-          actor: "god",
-          params: { postId: "p1", changes: { shortform: true } },
-        },
-        {
-          type: "CREATE_COMMENT" as const,
-          actor: "alice",
-          params: {
-            commentId: "c1",
-            postId: "p1",
-            parentCommentId: null,
-            contents: "Original",
-            akismetWouldFlagAsSpam: false,
-            postedAt: new Date(),
-          },
-        },
-      ];
-      const state = deriveState(actions);
-      const result = createComment("bob", state, {
-        commentId: "c2",
-        postId: "p1",
-        parentCommentId: "c1", // Reply, not top-level
-        contents: "Reply",
-        akismetWouldFlagAsSpam: false,
-        postedAt: new Date(),
-      });
-      expect(result.ok).toBe(true);
     });
 
     it("P1: cannot comment on post with commentsLocked", () => {
@@ -1552,38 +1259,6 @@ describe("fm-lite", () => {
       expect(result.reason).toContain("new accounts");
     });
 
-    it("P2: account created before commentsLockedToAccountsCreatedAfter CAN comment", () => {
-      const lockDate = new Date("2024-06-01");
-      const oldUserCreatedAt = new Date("2024-01-01"); // Before lock date
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        {
-          type: "CREATE_USER" as const,
-          actor: "god",
-          params: { userId: "oldtimer", createdAt: oldUserCreatedAt },
-        },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-        {
-          type: "UPDATE_POST" as const,
-          actor: "god",
-          params: {
-            postId: "p1",
-            changes: { commentsLockedToAccountsCreatedAfter: lockDate },
-          },
-        },
-      ];
-      const state = deriveState(actions);
-      const result = createComment("oldtimer", state, {
-        commentId: "c1",
-        postId: "p1",
-        parentCommentId: null,
-        contents: "Test",
-        akismetWouldFlagAsSpam: false,
-        postedAt: new Date(),
-      });
-      expect(result.ok).toBe(true);
-    });
-
     it("P1: user in post.bannedUserIds cannot comment", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1643,33 +1318,6 @@ describe("fm-lite", () => {
       expect(result.reason).toContain("banned");
     });
 
-    it("P2: user in author.bannedUserIds CAN comment when author does NOT have canModerateOwnPost", () => {
-      const actions = [
-        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
-        {
-          type: "UPDATE_USER" as const,
-          actor: "god",
-          params: { userId: "alice", changes: { bannedUserIds: ["banned-bob"] } }, // No canModerateOwnPost
-        },
-        {
-          type: "CREATE_USER" as const,
-          actor: "god",
-          params: { userId: "banned-bob" },
-        },
-        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
-      ];
-      const state = deriveState(actions);
-      const result = createComment("banned-bob", state, {
-        commentId: "c1",
-        postId: "p1",
-        parentCommentId: null,
-        contents: "Test",
-        akismetWouldFlagAsSpam: false,
-        postedAt: new Date(),
-      });
-      expect(result.ok).toBe(true); // Ban not enforced without permission
-    });
-
     it("P1: user in author.bannedPersonalUserIds cannot comment on personal (non-frontpage) post", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1703,6 +1351,155 @@ describe("fm-lite", () => {
       });
       expect(result.ok).toBe(false);
       expect(result.reason).toContain("personal posts");
+    });
+
+    it("P2: user with commentingOnOtherUsersDisabled CAN comment on their own posts", () => {
+      const actions = [
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "restricted-user" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: {
+            userId: "restricted-user",
+            changes: { commentingOnOtherUsersDisabled: true },
+          },
+        },
+        {
+          type: "CREATE_POST" as const,
+          actor: "restricted-user",
+          params: { postId: "p1" },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("restricted-user", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P2: author CAN make top-level comment on their own shortform post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { shortform: true } },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P2: non-author CAN reply to comment on shortform post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: { postId: "p1", changes: { shortform: true } },
+        },
+        {
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            postId: "p1",
+            parentCommentId: null,
+            contents: "Original",
+            akismetWouldFlagAsSpam: false,
+            postedAt: new Date(),
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("bob", state, {
+        commentId: "c2",
+        postId: "p1",
+        parentCommentId: "c1", // Reply, not top-level
+        contents: "Reply",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P2: account created before commentsLockedToAccountsCreatedAfter CAN comment", () => {
+      const lockDate = new Date("2024-06-01");
+      const oldUserCreatedAt = new Date("2024-01-01"); // Before lock date
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "oldtimer", createdAt: oldUserCreatedAt },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+        {
+          type: "UPDATE_POST" as const,
+          actor: "god",
+          params: {
+            postId: "p1",
+            changes: { commentsLockedToAccountsCreatedAfter: lockDate },
+          },
+        },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("oldtimer", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it("P2: user in author.bannedUserIds CAN comment when author does NOT have canModerateOwnPost", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { bannedUserIds: ["banned-bob"] } }, // No canModerateOwnPost
+        },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "banned-bob" },
+        },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createComment("banned-bob", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Test",
+        akismetWouldFlagAsSpam: false,
+        postedAt: new Date(),
+      });
+      expect(result.ok).toBe(true); // Ban not enforced without permission
     });
 
     it("P2: user in author.bannedPersonalUserIds CAN comment on frontpage post", () => {
@@ -1760,10 +1557,6 @@ describe("fm-lite", () => {
       expect(result.ok).toBe(false);
       expect(result.reason).toContain("Parent comment");
     });
-
-    // ==========================================================================
-    // Existing tests (P3 - validation and defaults)
-    // ==========================================================================
 
     it("P3: adds a comment with defaults", () => {
       const actions = [
@@ -1956,7 +1749,202 @@ describe("fm-lite", () => {
       expect(result.state.comments.get("c1")?.spam).toBe(false);
     });
   });
+  describe("[UNSTABLE] createUser", () => {
+    it("P3: adds a user with default fields", () => {
+      const state = initialState();
+      const result = createUser("god", state, { userId: "alice" });
+      expect(result.ok).toBe(true);
+      const user = result.state.users.get("alice");
+      expect(user).toBeDefined();
+      expect(user?.id).toBe("alice");
+      expect(user?.isAdmin).toBe(false);
+      expect(user?.isMod).toBe(false);
+      expect(user?.karma).toBe(0);
+      expect(user?.reviewedByUserId).toBeNull();
+      expect(user?.deleted).toBe(false);
+      expect(user?.allCommentingDisabled).toBe(false);
+      expect(user?.commentingOnOtherUsersDisabled).toBe(false);
+      expect(user?.bannedUserIds).toEqual([]);
+      expect(user?.bannedPersonalUserIds).toEqual([]);
+      expect(user?.canModerateOwnPost).toBe(false);
+      expect(user?.canModerateOwnPersonalPost).toBe(false);
+      expect(user?.createdAt).toBeInstanceOf(Date);
+    });
 
+    it("P3: fails if user already exists", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const result = createUser("god", state, { userId: "alice" });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("already exists");
+    });
+  });
+  describe("[UNSTABLE] updateUser", () => {
+    it("P3: updates a user", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const result = updateUser("god", state, {
+        userId: "alice",
+        changes: { isAdmin: true },
+      });
+      expect(result.ok).toBe(true);
+      expect(result.state.users.get("alice")?.isAdmin).toBe(true);
+    });
+
+    it("P3: fails if user not found", () => {
+      const state = initialState();
+      const result = updateUser("god", state, {
+        userId: "nonexistent",
+        changes: { isAdmin: true },
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("not found");
+    });
+
+    it("P3: fails with empty changes", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const result = updateUser("god", state, { userId: "alice", changes: {} });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("No changes");
+    });
+  });
+  describe("[UNSTABLE] createPost", () => {
+    it("P3: adds a post with defaults", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+      ];
+      const state = deriveState(actions);
+      const result = createPost("alice", state, { postId: "p1" });
+      expect(result.ok).toBe(true);
+      const post = result.state.posts.get("p1");
+      expect(post).toBeDefined();
+      expect(post?.authorId).toBe("alice");
+      expect(post?.draft).toBe(true);
+      expect(post?.status).toBe(PostStatus.APPROVED);
+    });
+
+    it("P3: sets authorIsUnreviewed=true for new user with karma < MINIMUM_APPROVAL_KARMA", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "newbie" } },
+      ];
+      const state = deriveState(actions);
+
+      // New user has karma=0, reviewedByUserId=null
+      const user = state.users.get("newbie");
+      expect(user?.karma).toBe(0);
+      expect(user?.reviewedByUserId).toBeNull();
+
+      // Post should be created with authorIsUnreviewed=true
+      const result = createPost("newbie", state, { postId: "p1" });
+      expect(result.ok).toBe(true);
+      expect(result.state.posts.get("p1")?.authorIsUnreviewed).toBe(true);
+    });
+
+    it("P3: sets authorIsUnreviewed=false for user with karma >= MINIMUM_APPROVAL_KARMA", () => {
+      const actions = [
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "veteran" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "veteran", changes: { karma: MINIMUM_APPROVAL_KARMA } },
+        },
+      ];
+      const state = deriveState(actions);
+
+      const result = createPost("veteran", state, { postId: "p1" });
+      expect(result.ok).toBe(true);
+      expect(result.state.posts.get("p1")?.authorIsUnreviewed).toBe(false);
+    });
+
+    it("P3: sets authorIsUnreviewed=false for reviewed user even with low karma", () => {
+      const actions = [
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "reviewed" },
+        },
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "reviewed", changes: { reviewedByUserId: "mod1" } },
+        },
+      ];
+      const state = deriveState(actions);
+
+      // User has karma=0 but is reviewed
+      expect(state.users.get("reviewed")?.karma).toBe(0);
+      expect(state.users.get("reviewed")?.reviewedByUserId).toBe("mod1");
+
+      const result = createPost("reviewed", state, { postId: "p1" });
+      expect(result.ok).toBe(true);
+      expect(result.state.posts.get("p1")?.authorIsUnreviewed).toBe(false);
+    });
+
+    it("P3: fails if author not found", () => {
+      const state = initialState();
+      const result = createPost("nonexistent", state, { postId: "p1" });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("not found");
+    });
+
+    it("P3: fails if post already exists", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = createPost("alice", state, { postId: "p1" });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("already exists");
+    });
+  });
+  describe("[UNSTABLE] updatePost", () => {
+    it("P3: updates a post", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = updatePost("god", state, {
+        postId: "p1",
+        changes: { draft: false, status: PostStatus.APPROVED },
+      });
+      expect(result.ok).toBe(true);
+      expect(result.state.posts.get("p1")?.draft).toBe(false);
+    });
+
+    it("P3: fails if post not found", () => {
+      const state = initialState();
+      const result = updatePost("god", state, {
+        postId: "nonexistent",
+        changes: { draft: false },
+      });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("not found");
+    });
+
+    it("P3: fails with empty changes", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
+      ];
+      const state = deriveState(actions);
+      const result = updatePost("god", state, { postId: "p1", changes: {} });
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("No changes");
+    });
+  });
   describe("[UNSTABLE] updateComment", () => {
     it("P3: updates a comment", () => {
       const actions = [
@@ -2016,7 +2004,6 @@ describe("fm-lite", () => {
       if (!result.ok) expect(result.reason).toContain("No changes");
     });
   });
-
   describe("[UNSTABLE] vote", () => {
     it("P2: creates a vote on a post", () => {
       const actions = [
@@ -2163,7 +2150,6 @@ describe("fm-lite", () => {
       expect(result2.reason).toContain("already exists");
     });
   });
-
   describe("[UNSTABLE] computeRecentKarmaInfo", () => {
     it("P2: returns zeros for user with no votes", () => {
       const actions = [
@@ -2409,7 +2395,6 @@ describe("fm-lite", () => {
       expect(bobInfo.last20Karma).toBe(10);
     });
   });
-
   describe("[UNSTABLE] checkCommentRateLimit", () => {
     it("P2: returns not allowed when user doesn't exist", () => {
       const now = new Date();
@@ -3465,7 +3450,6 @@ describe("fm-lite", () => {
       expect(allowResult.allowed).toBe(true);
     });
   });
-
   describe("[UNSTABLE] createComment rate limits", () => {
     it("P2: blocks comment due to universal rate limit", () => {
       const baseTime = new Date("2024-01-01T12:00:00Z");
@@ -3569,7 +3553,6 @@ describe("fm-lite", () => {
       expect(result2.ok).toBe(true);
     });
   });
-
   describe("[UNSTABLE] parseAction", () => {
     it("P3: parses valid CREATE_USER action", () => {
       const result = parseAction("CREATE_USER", "god", { userId: "alice" });
