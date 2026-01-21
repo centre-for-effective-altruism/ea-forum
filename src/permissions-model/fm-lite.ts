@@ -107,7 +107,7 @@ export interface Comment {
   deleted: boolean;
   /** If deleted=true and deletedPublic=true, show deletion metadata (greyed out) */
   deletedPublic: boolean;
-  /** Comment marked as spam by Akismet. Visible but content hidden (like deletedPublic). */
+  /** Comment was flagged as spam by Akismet. In ForumMagnum, spam comments are deleted (deleted=true). */
   spam: boolean;
   /** Author is unreviewed (denormalized from author at creation time) */
   authorIsUnreviewed: boolean;
@@ -163,7 +163,6 @@ export type Event =
       type: "POST_CREATED";
       postId: string;
       authorId: string;
-      authorIsUnreviewed: boolean;
       timestamp: Date;
     }
   | {
@@ -230,9 +229,15 @@ export const applyEvent = (state: State, event: Event): State => {
     }
     case "POST_CREATED": {
       const posts = new Map(state.posts);
+      // Look up author state to compute authorIsUnreviewed
+      const author = state.users.get(event.authorId);
+      const authorKarma = author?.karma ?? 0;
+      const authorWasReviewed = !!author?.reviewedByUserId;
+      const authorIsUnreviewed =
+        !authorWasReviewed && authorKarma < MINIMUM_APPROVAL_KARMA;
       posts.set(
         event.postId,
-        defaultPost(event.postId, event.authorId, event.authorIsUnreviewed),
+        defaultPost(event.postId, event.authorId, authorIsUnreviewed),
       );
       return { ...state, posts };
     }
@@ -259,10 +264,15 @@ export const applyEvent = (state: State, event: Event): State => {
         !authorWasReviewed && authorKarma < MINIMUM_APPROVAL_KARMA;
       // Compute spam: true only if akismetWouldFlagAsSpam AND author wasn't reviewed
       // AND author karma was below SPAM_KARMA_THRESHOLD
-      comment.spam =
+      // In ForumMagnum, spam comments are DELETED, not just marked as spam
+      const isSpam =
         event.akismetWouldFlagAsSpam &&
         !authorWasReviewed &&
         authorKarma < SPAM_KARMA_THRESHOLD;
+      comment.spam = isSpam;
+      if (isSpam) {
+        comment.deleted = true;
+      }
       comments.set(event.commentId, comment);
       return { ...state, comments };
     }
@@ -327,10 +337,7 @@ export const createPost = (
   if (state.posts.has(postId))
     return { ok: false, reason: `Post '${postId}' already exists` };
 
-  // Compute authorIsUnreviewed based on author's current state
-  const authorIsUnreviewed =
-    !author.reviewedByUserId && author.karma < MINIMUM_APPROVAL_KARMA;
-
+  // authorIsUnreviewed is computed at apply time from author state
   return {
     ok: true,
     events: [
@@ -338,7 +345,6 @@ export const createPost = (
         type: "POST_CREATED",
         postId,
         authorId,
-        authorIsUnreviewed,
         timestamp: new Date(),
       },
     ],
@@ -544,7 +550,7 @@ export const viewPost = (
   return { canView: true, post };
 };
 
-export type CommentViewMode = "normal" | "deleted" | "spam";
+export type CommentViewMode = "normal" | "deleted";
 
 export interface ViewCommentResult {
   canView: boolean;
@@ -557,6 +563,7 @@ export interface ViewCommentResult {
    * For deletedPublic comments, this is false for regular users (they only see metadata).
    * Author and admin/mod can always read content.
    */
+  // TODO change this to just contents, more straightforward
   canReadContents?: boolean;
 }
 
@@ -566,6 +573,7 @@ export interface ViewCommentOptions {
    * Comments posted before this date by unreviewed authors remain visible.
    * Corresponds to `hideUnreviewedAuthorComments` DatabasePublicSetting in ForumMagnum.
    */
+  // TODO this can be hardcoded as '2023-02-08T17:00:00' now, doesn't need to be an editable setting
   hideUnreviewedAuthorComments?: Date | null;
 }
 
@@ -599,17 +607,13 @@ export const viewComment = (
   if (comment.rejected) return { canView: false, reason: "Comment is rejected" };
 
   // Deleted comments: if deletedPublic=true, show in deleted mode but NO contents
+  // Note: spam comments are also deleted (deleted=true) - they are NOT visible to public
   if (comment.deleted) {
     if (comment.deletedPublic) {
       // Can see the comment exists and metadata, but NOT the contents
       return { canView: true, comment, viewMode: "deleted", canReadContents: false };
     }
     return { canView: false, reason: "Comment is deleted" };
-  }
-
-  // Spam comments: visible but content hidden (similar to deletedPublic)
-  if (comment.spam) {
-    return { canView: true, comment, viewMode: "spam", canReadContents: false };
   }
 
   // authorIsUnreviewed with grandfather clause:

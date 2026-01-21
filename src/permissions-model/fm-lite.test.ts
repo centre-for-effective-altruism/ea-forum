@@ -22,7 +22,7 @@ import {
 } from "./fm-lite";
 
 describe("fm-lite", () => {
-  describe("createUser [UNSTABLE]", () => {
+  describe("[UNSTABLE] createUser", () => {
     it("adds a user with default fields", () => {
       const state = initialState();
       const result = createUser("alice", state);
@@ -56,7 +56,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("editUser [UNSTABLE]", () => {
+  describe("[UNSTABLE] editUser", () => {
     it("updates a user", () => {
       const state = deriveState([
         { type: "USER_CREATED", userId: "alice", timestamp: new Date() },
@@ -89,7 +89,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("createPost [UNSTABLE]", () => {
+  describe("[UNSTABLE] createPost", () => {
     it("adds a post with defaults", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
@@ -197,7 +197,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
       ];
@@ -208,7 +207,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("editPost [UNSTABLE]", () => {
+  describe("[UNSTABLE] editPost", () => {
     it("updates a post", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
@@ -216,7 +215,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
       ];
@@ -243,7 +241,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
       ];
@@ -258,7 +255,21 @@ describe("fm-lite", () => {
     const setupState = () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        // Make alice reviewed so her posts aren't flagged as authorIsUnreviewed
+        {
+          type: "USER_UPDATED" as const,
+          userId: "alice",
+          changes: { reviewedByUserId: "mod" },
+          timestamp: new Date(),
+        },
         { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        // Make bob reviewed too
+        {
+          type: "USER_UPDATED" as const,
+          userId: "bob",
+          changes: { reviewedByUserId: "mod" },
+          timestamp: new Date(),
+        },
         { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
         {
           type: "USER_UPDATED" as const,
@@ -273,18 +284,18 @@ describe("fm-lite", () => {
           changes: { isMod: true },
           timestamp: new Date(),
         },
+        // Create an unreviewed user for the "unreviewed" post test
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
         {
           type: "POST_CREATED" as const,
           postId: "draft",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
           type: "POST_CREATED" as const,
           postId: "public",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -294,11 +305,11 @@ describe("fm-lite", () => {
           timestamp: new Date(),
         },
         // Note: No test for STATUS_PENDING - it's unused in ForumMagnum (0 examples in production)
+        // Unreviewed post created by unreviewed user
         {
           type: "POST_CREATED" as const,
           postId: "unreviewed",
-          authorId: "alice",
-          authorIsUnreviewed: true,
+          authorId: "newbie",
           timestamp: new Date(),
         },
         {
@@ -311,7 +322,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "loggedInOnly",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -367,7 +377,7 @@ describe("fm-lite", () => {
 
     it("author can see their own authorIsUnreviewed post", () => {
       const state = setupState();
-      expect(viewPost("alice", "unreviewed", state).canView).toBe(true);
+      expect(viewPost("newbie", "unreviewed", state).canView).toBe(true);
     });
 
     it("non-author cannot see authorIsUnreviewed post", () => {
@@ -392,12 +402,18 @@ describe("fm-lite", () => {
     it("anyone can see unlisted post (via direct link)", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        // Make alice reviewed so post is viewable
+        {
+          type: "USER_UPDATED" as const,
+          userId: "alice",
+          changes: { reviewedByUserId: "mod" },
+          timestamp: new Date(),
+        },
         { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
         {
           type: "POST_CREATED" as const,
           postId: "unlisted",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -415,6 +431,13 @@ describe("fm-lite", () => {
     it("user banned from post cannot view it", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        // Make alice reviewed so post is viewable
+        {
+          type: "USER_UPDATED" as const,
+          userId: "alice",
+          changes: { reviewedByUserId: "mod" },
+          timestamp: new Date(),
+        },
         {
           type: "USER_CREATED" as const,
           userId: "banned-bob",
@@ -424,7 +447,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -461,7 +483,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -485,7 +506,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -509,7 +529,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -533,7 +552,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -550,7 +568,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("reviewUser [UNSTABLE]", () => {
+  describe("[UNSTABLE] reviewUser", () => {
     it("clears authorIsUnreviewed on existing posts", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
@@ -559,14 +577,12 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
           type: "POST_CREATED" as const,
           postId: "p2",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
       ];
@@ -622,35 +638,48 @@ describe("fm-lite", () => {
 
     it("does not update posts that are not authorIsUnreviewed", () => {
       const events = [
-        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        {
+          type: "USER_CREATED" as const,
+          userId: "highkarma",
+          timestamp: new Date(),
+        },
+        // Give highkarma user enough karma so their posts are NOT authorIsUnreviewed
+        {
+          type: "USER_UPDATED" as const,
+          userId: "highkarma",
+          changes: { karma: MINIMUM_APPROVAL_KARMA },
+          timestamp: new Date(),
+        },
         { type: "USER_CREATED" as const, userId: "mod1", timestamp: new Date() },
         {
           type: "POST_CREATED" as const,
           postId: "p1",
-          authorId: "newbie",
-          authorIsUnreviewed: true,
+          authorId: "highkarma",
           timestamp: new Date(),
         },
         {
           type: "POST_CREATED" as const,
           postId: "p2",
-          authorId: "newbie",
-          authorIsUnreviewed: false,
+          authorId: "highkarma",
           timestamp: new Date(),
-        }, // already false
+        },
       ];
       const state = deriveState(events);
 
-      const reviewResult = reviewUser("newbie", "mod1", state);
+      // Posts are NOT authorIsUnreviewed because author has high karma
+      expect(state.posts.get("p1")?.authorIsUnreviewed).toBe(false);
+      expect(state.posts.get("p2")?.authorIsUnreviewed).toBe(false);
+
+      const reviewResult = reviewUser("highkarma", "mod1", state);
       expect(reviewResult.ok).toBe(true);
       if (!reviewResult.ok) return;
 
-      // Should have 2 events: user update + 1 post update (only p1, not p2)
-      expect(reviewResult.events.length).toBe(2);
+      // Should have only 1 event: user update (no post updates needed)
+      expect(reviewResult.events.length).toBe(1);
     });
   });
 
-  describe("createComment [UNSTABLE]", () => {
+  describe("[UNSTABLE] createComment", () => {
     it("adds a comment with defaults", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
@@ -658,7 +687,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
       ];
@@ -720,7 +748,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -748,7 +775,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "spammer",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
       ];
@@ -780,7 +806,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "highkarma",
-          authorIsUnreviewed: false, // karma >= MINIMUM_APPROVAL_KARMA means not unreviewed
           timestamp: new Date(),
         },
       ];
@@ -809,7 +834,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "reviewed",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
       ];
@@ -836,7 +860,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
       ];
@@ -850,7 +873,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("editComment [UNSTABLE]", () => {
+  describe("[UNSTABLE] editComment", () => {
     it("updates a comment", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
@@ -858,7 +881,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -891,7 +913,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -920,7 +941,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -953,7 +973,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -986,7 +1005,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1025,7 +1043,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1064,7 +1081,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1097,7 +1113,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1131,7 +1146,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1166,7 +1180,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1206,7 +1219,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1239,7 +1251,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1273,7 +1284,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1314,7 +1324,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1355,7 +1364,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1382,7 +1390,7 @@ describe("fm-lite", () => {
       expect(result.canReadContents).toBe(true);
     });
 
-    it("spam comment: can see comment and metadata but not contents", () => {
+    it("spam comment is deleted (not visible to regular users)", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
         { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
@@ -1390,7 +1398,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "spammer",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1405,26 +1412,23 @@ describe("fm-lite", () => {
         },
       ];
       const state = deriveState(events);
+      // Verify the comment has both spam=true AND deleted=true
+      const comment = state.comments.get("c1");
+      expect(comment?.spam).toBe(true);
+      expect(comment?.deleted).toBe(true);
+      // Regular users cannot see deleted comments
       const result = viewComment("bob", "c1", state);
-      // Can see the comment exists
-      expect(result.canView).toBe(true);
-      expect(result.comment).toBeDefined();
-      // But cannot read contents
-      expect(result.canReadContents).toBe(false);
-      // Can see metadata like authorId and spam flag
-      expect(result.comment?.authorId).toBe("spammer");
-      expect(result.comment?.spam).toBe(true);
-      expect(result.viewMode).toBe("spam");
+      expect(result.canView).toBe(false);
+      expect(result.reason).toContain("deleted");
     });
 
-    it("author can see their own spam comment AND read contents", () => {
+    it("author can see their own spam (deleted) comment AND read contents", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
         {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "spammer",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1439,13 +1443,16 @@ describe("fm-lite", () => {
         },
       ];
       const state = deriveState(events);
+      // Verify it's both spam and deleted
+      expect(state.comments.get("c1")?.spam).toBe(true);
+      expect(state.comments.get("c1")?.deleted).toBe(true);
       const result = viewComment("spammer", "c1", state);
       expect(result.canView).toBe(true);
-      // Author CAN read contents even when spam
+      // Author CAN read contents even when deleted (spam)
       expect(result.canReadContents).toBe(true);
     });
 
-    it("admin can see spam comment AND read contents", () => {
+    it("admin can see spam (deleted) comment AND read contents", () => {
       const events = [
         { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
         { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
@@ -1459,7 +1466,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "spammer",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1474,9 +1480,12 @@ describe("fm-lite", () => {
         },
       ];
       const state = deriveState(events);
+      // Verify it's both spam and deleted
+      expect(state.comments.get("c1")?.spam).toBe(true);
+      expect(state.comments.get("c1")?.deleted).toBe(true);
       const result = viewComment("admin", "c1", state);
       expect(result.canView).toBe(true);
-      // Admin CAN read contents even when spam
+      // Admin CAN read contents even when deleted (spam)
       expect(result.canReadContents).toBe(true);
     });
 
@@ -1488,7 +1497,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1518,7 +1526,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1550,7 +1557,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1580,7 +1586,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1617,7 +1622,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1647,7 +1651,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "newbie",
-          authorIsUnreviewed: true,
           timestamp: new Date(),
         },
         {
@@ -1720,7 +1723,6 @@ describe("fm-lite", () => {
           type: "POST_CREATED" as const,
           postId: "p1",
           authorId: "alice",
-          authorIsUnreviewed: false,
           timestamp: new Date(),
         },
         {
@@ -1739,6 +1741,24 @@ describe("fm-lite", () => {
       expect(state.comments.has("c1")).toBe(true);
       // With no author, defaults to unreviewed (karma=0, not reviewed)
       expect(state.comments.get("c1")?.authorIsUnreviewed).toBe(true);
+    });
+
+    it("handles POST_CREATED with non-existent author gracefully", () => {
+      // This tests the edge case where a POST_CREATED event references
+      // an author that doesn't exist in state (malformed event)
+      const events = [
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "nonexistent",
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      // Should not crash, post is created with defaults for missing author
+      expect(state.posts.has("p1")).toBe(true);
+      // With no author, defaults to unreviewed (karma=0, not reviewed)
+      expect(state.posts.get("p1")?.authorIsUnreviewed).toBe(true);
     });
   });
 
