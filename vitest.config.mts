@@ -8,6 +8,19 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     // TODO flag in PR or revert
-    watch: false
+    watch: false,
+    coverage: {
+      enabled: true,
+      provider: "v8",
+      include: ["src/permissions-model/fm-lite.ts"],
+      thresholds: {
+        "src/permissions-model/fm-lite.ts": {
+          statements: 99,
+          branches: 99,
+          functions: 99,
+          lines: 99,
+        },
+      },
+    },
   },
 });
