@@ -89,6 +89,10 @@ const relations = defineRelations(
           isUnvote: { eq: false },
         },
       }),
+      topLevelComment: r.one.comments({
+        from: r.comments.topLevelCommentId,
+        to: r.comments._id,
+      }),
     },
     revisions: {
       user: r.one.users({

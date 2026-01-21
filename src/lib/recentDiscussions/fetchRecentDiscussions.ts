@@ -18,7 +18,7 @@ import type {
   RevisionFromProjection,
   RevisionRelationalProjection,
 } from "../revisions/revisionQueries";
-import { userDefaultProjection } from "../users/userQueries";
+import { userBaseProjection } from "../users/userQueries";
 import { isNotTrue } from "../utils/queryHelpers";
 import sortBy from "lodash/sortBy";
 import type { posts, Tag } from "../schema";
@@ -35,18 +35,23 @@ const getPostProjection = ({
   maxCommentsPerPost: number;
   excludeTopLevel: boolean;
 }) => {
-  const projection = postsListProjection(currentUserId, { highlightLength: 500 });
+  const postProj = postsListProjection(currentUserId, { highlightLength: 500 });
+  const commentProj = commentListProjection(currentUserId);
   return {
     columns: {
-      ...projection.columns,
+      ...postProj.columns,
       lastCommentReplyAt: true,
       draft: true,
     },
-    extras: projection.extras,
+    extras: postProj.extras,
     with: {
-      ...projection.with,
+      ...postProj.with,
       comments: {
-        ...commentListProjection(currentUserId),
+        ...commentProj,
+        with: {
+          ...commentProj.with,
+          topLevelComment: commentProj,
+        },
         where: {
           ...viewableCommentFilter,
           score: { gt: 0 },
@@ -112,7 +117,7 @@ const revisionProjection = {
     changeMetrics: true,
   },
   with: {
-    user: userDefaultProjection,
+    user: userBaseProjection,
     tag: {
       columns: tagColumns,
     },

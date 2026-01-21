@@ -8,6 +8,7 @@ import InfiniteLoadTrigger from "@/components/InfiniteLoadTrigger";
 import RecentDiscussionsItemSkeleton from "./RecentDiscussionsItemSkeleton";
 import RecentDiscussionsPostCommented from "./RecentDiscussionsPostCommented";
 import RecentDiscussionsNewQuickTake from "./RecentDiscussionsNewQuickTake";
+import RecentDiscussionsQuickTakeCommented from "./RecentDiscussionsQuickTakeCommented";
 import RecentDiscussionsTagRevised from "./RecentDiscussionsTagRevised";
 import RecentDiscussionsSubscribeReminder from "./RecentDiscussionsSubscribeReminder";
 
@@ -56,9 +57,7 @@ export default function RecentDiscussionsFeed({
           case "newQuickTake":
             return <RecentDiscussionsNewQuickTake quickTake={item} key={key} />;
           case "quickTakeCommented":
-            // TODO
-            console.warn("Recent discussions: quickTakeCommented");
-            break;
+            return <RecentDiscussionsQuickTakeCommented post={item} key={key} />;
           case "tagDiscussed":
             // TODO
             console.warn("Recent discussions: tagDiscussed");

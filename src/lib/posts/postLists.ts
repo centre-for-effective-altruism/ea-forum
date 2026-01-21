@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import type { PostsListView } from "./postsHelpers";
-import { userDefaultProjection } from "../users/userQueries";
+import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
   isNotTrue,
@@ -113,7 +113,7 @@ export const postsListProjection = (
       tags: postTagsProjection,
     },
     with: {
-      user: userDefaultProjection,
+      user: userBaseProjection,
       contents: {
         columns: {
           wordCount: true,

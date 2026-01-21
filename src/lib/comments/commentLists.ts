@@ -10,7 +10,7 @@ import {
 } from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
-import { userDefaultProjection } from "../users/userQueries";
+import { userBaseProjection } from "../users/userQueries";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -53,7 +53,7 @@ export const commentListProjection = (currentUserId: string | null) =>
     },
     with: {
       user: {
-        ...userDefaultProjection,
+        ...userBaseProjection,
         where: {
           deleted: isNotTrue,
         },

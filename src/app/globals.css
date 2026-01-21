@@ -86,9 +86,10 @@
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-headroom: 1300;
-  --zindex-popover: 1301;
-  --zindex-mobile-nav: 1302;
-  --zindex-tooltip: 1303;
+  --zindex-read-progress: 1302;
+  --zindex-popover: 1304;
+  --zindex-mobile-nav: 1306;
+  --zindex-tooltip: 1308;
 
   --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
 

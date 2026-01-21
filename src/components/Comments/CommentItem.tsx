@@ -20,6 +20,7 @@ import SproutIcon from "../Icons/SproutIcon";
 export default function CommentItem({
   node: { comment, depth, children },
   borderless,
+  className,
 }: Readonly<{
   node: CommentTreeNode<CommentsList>;
   /**
@@ -27,6 +28,7 @@ export default function CommentItem({
    * component.
    */
   borderless?: boolean;
+  className?: string;
 }>) {
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = useCallback(() => {
@@ -36,15 +38,15 @@ export default function CommentItem({
   return (
     <div
       data-component="CommentItem"
-      className={
-        borderless
-          ? undefined
-          : clsx(
-              "border border-(--color-comment-border) rounded-sm pl-3 pt-2 mb-1",
-              depth & 1 ? "bg-(--color-comment-odd)" : "bg-(--color-comment-even)",
-              depth === 0 ? "" : "border-r-0",
-            )
-      }
+      className={clsx(
+        !borderless &&
+          "border border-(--color-comment-border) rounded-sm pl-3 pt-2 mb-1",
+        !borderless && depth & 1
+          ? "bg-(--color-comment-odd)"
+          : "bg-(--color-comment-even)",
+        !borderless && depth === 0 ? "" : "border-r-0",
+        className,
+      )}
     >
       <article
         id={_id}
@@ -61,8 +63,7 @@ export default function CommentItem({
             role="button"
             onClick={toggleExpanded}
           />
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <UsersTooltip user={user as any /* TODO types */}>
+          <UsersTooltip user={user}>
             <Type className="font-[600]">
               {user && user.slug && (
                 <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>

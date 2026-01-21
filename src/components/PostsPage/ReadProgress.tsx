@@ -32,8 +32,8 @@ export default function ReadProgress({
       <div
         ref={readingProgressBarRef}
         className="
-          fixed top-0 left-0 h-[4px] w-(--scrollAmount) bg-primary z-100
-          pointer-events-none
+          fixed top-0 left-0 h-[4px] w-(--scrollAmount) bg-primary
+          z-(--zindex-read-progress) pointer-events-none
         "
       />
       {children}

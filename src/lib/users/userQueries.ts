@@ -3,7 +3,11 @@ import type { RelationalProjection } from "../utils/queryHelpers";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
 
-export const userDefaultProjection = {
+export type UserFromProjection<TConfig extends UserRelationalProjection> = Awaited<
+  ReturnType<typeof db.query.users.findMany<TConfig>>
+>[number];
+
+export const userBaseProjection = {
   columns: {
     _id: true,
     slug: true,
@@ -21,6 +25,8 @@ export const userDefaultProjection = {
     biographyHtml: (users, { sql }) => sql<string>`${users}.biography->>'html'`,
   },
 } as const satisfies UserRelationalProjection;
+
+export type UserBase = UserFromProjection<typeof userBaseProjection>;
 
 export const fetchUserForReview = (userId: string) =>
   db.query.users.findFirst({
