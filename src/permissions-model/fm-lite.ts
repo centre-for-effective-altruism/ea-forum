@@ -224,7 +224,7 @@ export interface ViewPostResult {
  * Check if a viewer can see a post.
  * Implements ForumMagnum display filters from /server/permissions/accessFilters.ts
  */
-export const canViewPost = (
+export const viewPost = (
   viewerId: string | null,
   postId: string,
   state: State
@@ -280,38 +280,37 @@ export const canViewPost = (
 }
 
 // =============================================================================
-// Session
+// WorldState
 // =============================================================================
 
-// TODO rename this to WorldState
-export interface Session {
+export interface WorldState {
   events: Event[]
   cursor: number
 }
 
-export const createSession = (): Session => ({ events: [], cursor: 0 })
+export const createWorld = (): WorldState => ({ events: [], cursor: 0 })
 
-export const currentState = (session: Session): State =>
-  deriveState(session.events.slice(0, session.cursor))
+export const currentState = (world: WorldState): State =>
+  deriveState(world.events.slice(0, world.cursor))
 
-export const execute = (session: Session, result: ActionResult): boolean => {
+export const execute = (world: WorldState, result: ActionResult): boolean => {
   if (!result.ok) return false
-  session.events = [...session.events.slice(0, session.cursor), ...result.events]
-  session.cursor = session.events.length
+  world.events = [...world.events.slice(0, world.cursor), ...result.events]
+  world.cursor = world.events.length
   return true
 }
 
-export const undo = (session: Session): boolean => {
-  if (session.cursor > 0) {
-    session.cursor--
+export const undo = (world: WorldState): boolean => {
+  if (world.cursor > 0) {
+    world.cursor--
     return true
   }
   return false
 }
 
-export const redo = (session: Session): boolean => {
-  if (session.cursor < session.events.length) {
-    session.cursor++
+export const redo = (world: WorldState): boolean => {
+  if (world.cursor < world.events.length) {
+    world.cursor++
     return true
   }
   return false

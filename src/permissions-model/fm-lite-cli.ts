@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 import * as readline from 'readline'
 import {
-  createSession,
+  createWorld,
   currentState,
   execute,
   createUser,
   editUser,
   createPost,
   editPost,
-  canViewPost,
+  viewPost,
   reviewUser,
   undo,
   redo,
@@ -37,7 +37,6 @@ const UNSTABLE: Record<string, string> = {
   'create post': 'No permission checks',
   'edit post': 'No permission checks',
   'review user': 'No permission checks (should be mod/admin only), rejection not implemented',
-  'view post': 'Believed correct',
 }
 
 const warnUnstable = (cmd: string): void => {
@@ -50,7 +49,7 @@ const warnUnstable = (cmd: string): void => {
 // Session
 // =============================================================================
 
-const session = createSession()
+const world = createWorld()
 
 // =============================================================================
 // Parsing
@@ -122,10 +121,10 @@ const run = (line: string): void => {
   if (!trimmed) return
 
   // Commands without actor
-  if (trimmed === 'undo') return void (undo(session) ? console.log('Undone') : console.log('Nothing to undo'))
-  if (trimmed === 'redo') return void (redo(session) ? console.log('Redone') : console.log('Nothing to redo'))
+  if (trimmed === 'undo') return void (undo(world) ? console.log('Undone') : console.log('Nothing to undo'))
+  if (trimmed === 'redo') return void (redo(world) ? console.log('Redone') : console.log('Nothing to redo'))
   if (trimmed === 'users') {
-    const state = currentState(session)
+    const state = currentState(world)
     if (state.users.size === 0) return void console.log('No users')
     for (const [id, u] of state.users) {
       const reviewed = u.reviewedByUserId ? `reviewed by ${u.reviewedByUserId}` : 'unreviewed'
@@ -134,7 +133,7 @@ const run = (line: string): void => {
     return
   }
   if (trimmed === 'posts') {
-    const state = currentState(session)
+    const state = currentState(world)
     if (state.posts.size === 0) return void console.log('No posts')
     for (const [id, p] of state.posts) {
       console.log(`  ${id}: author=${p.authorId}, status=${p.status}, draft=${p.draft}`)
@@ -159,7 +158,7 @@ Actors:
   admin      - isAdmin=true user
   mod        - isMod=true user (sunshineRegiment)
   member     - Regular logged-in user
-  logged-out - No user session
+  logged-out - No user world
   user <id>  - Specific user by ID
 
 User fields: ${USER_FIELDS.join(', ')}
@@ -175,7 +174,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
   const actor = parseActor(match[1])
   if (!actor) return void console.log(`Unknown actor: '${match[1]}'`)
 
-  const state = currentState(session)
+  const state = currentState(world)
   const args = match[2].split(/\s+/)
   const [cmd, target, id] = args
 
@@ -187,7 +186,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
     if (unused.length) console.log(`Warning: unused flags: ${unused.map((f) => '--' + f).join(', ')}`)
     const result = createUser(id, state)
     if (!result.ok) return void console.log(`FAILED: ${result.reason}`)
-    execute(session, result)
+    execute(world, result)
     console.log(`Created user '${id}'`)
   }
   // EDIT USER
@@ -198,7 +197,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
     if (unused.length) console.log(`Warning: unused flags: ${unused.map((f) => '--' + f).join(', ')}`)
     const result = editUser(id, changes as Partial<Omit<User, 'id'>>, state)
     if (!result.ok) return void console.log(`FAILED: ${result.reason}`)
-    execute(session, result)
+    execute(world, result)
     console.log(`Updated user '${id}'`)
   }
   // VIEW USER
@@ -221,7 +220,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
     const reviewerId = actor.type === 'user' ? actor.userId : `__${actor.type}__`
     const result = reviewUser(id, reviewerId, state)
     if (!result.ok) return void console.log(`FAILED: ${result.reason}`)
-    execute(session, result)
+    execute(world, result)
     console.log(`Approved user '${id}' (${result.events.length - 1} posts updated)`)
   }
   // CREATE POST
@@ -236,11 +235,11 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
     if (unused.length) console.log(`Warning: unused flags: ${unused.map((f) => '--' + f).join(', ')}`)
     const result = createPost(id, authorId, state)
     if (!result.ok) return void console.log(`FAILED: ${result.reason}`)
-    execute(session, result)
+    execute(world, result)
     // Apply any initial field changes
     if (Object.keys(changes).length > 0) {
-      const editResult = editPost(id, changes as Partial<Omit<Post, 'id' | 'authorId'>>, currentState(session))
-      if (editResult.ok) execute(session, editResult)
+      const editResult = editPost(id, changes as Partial<Omit<Post, 'id' | 'authorId'>>, currentState(world))
+      if (editResult.ok) execute(world, editResult)
     }
     console.log(`Created post '${id}' by '${authorId}'`)
   }
@@ -252,7 +251,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
     if (unused.length) console.log(`Warning: unused flags: ${unused.map((f) => '--' + f).join(', ')}`)
     const result = editPost(id, changes as Partial<Omit<Post, 'id' | 'authorId'>>, state)
     if (!result.ok) return void console.log(`FAILED: ${result.reason}`)
-    execute(session, result)
+    execute(world, result)
     console.log(`Updated post '${id}'`)
   }
   // VIEW POST
@@ -292,7 +291,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
             reviewedByUserId: '__system__', // Magic users are considered reviewed
           }),
         }
-        const result = canViewPost(viewerId, id, tempState)
+        const result = viewPost(viewerId, id, tempState)
         if (!result.canView) {
           console.log(`Cannot view: ${result.reason}`)
         } else {
@@ -303,7 +302,7 @@ Post status: 1=pending (unused), 2=approved, 3=rejected, 4=spam, 5=deleted`)
       }
     }
 
-    const result = canViewPost(viewerForCheck, id, state)
+    const result = viewPost(viewerForCheck, id, state)
     if (!result.canView) {
       console.log(`Cannot view: ${result.reason}`)
     } else {
