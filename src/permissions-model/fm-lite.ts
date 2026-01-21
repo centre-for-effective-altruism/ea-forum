@@ -781,35 +781,92 @@ export const vote = (
 export const UNIVERSAL_RATE_LIMIT_MS = 8000;
 
 /**
- * Automatic rate limit thresholds based on karma.
- * Simplified from ForumMagnum's autoCommentRateLimits in /lib/rateLimits/constants.ts
- *
- * These apply when a user has negative recent karma or multiple downvoters.
+ * Automatic rate limit rule matching EA Forum's autoCommentRateLimits.
+ * From ForumMagnum /lib/rateLimits/constants.ts
  */
 export interface AutoRateLimit {
-  /** Minimum karma threshold to trigger this rate limit (user must be at or below this) */
-  karmaThreshold?: number;
-  /** Minimum downvoter count to trigger this rate limit */
-  downvoterThreshold?: number;
+  /** Rate limit name for identification */
+  name: string;
   /** Time window in hours */
   timeframeHours: number;
   /** Max items allowed in the time window */
   itemsPerTimeframe: number;
+  /**
+   * Function to check if this rate limit is active for a user.
+   * Takes the user and their recent karma info.
+   */
+  isActive: (user: User, features: RecentKarmaInfo) => boolean;
 }
 
 /**
- * Simplified automatic rate limits for comments.
- * Based on ForumMagnum but condensed to key thresholds.
+ * EA Forum automatic comment rate limits.
+ * Exact match of ForumMagnum /lib/rateLimits/constants.ts (EA section)
  */
 export const AUTO_COMMENT_RATE_LIMITS: AutoRateLimit[] = [
-  // Very negative recent karma: 1 comment per 24 hours
-  { karmaThreshold: -10, timeframeHours: 24, itemsPerTimeframe: 1 },
-  // Moderately negative recent karma: 1 comment per 6 hours
-  { karmaThreshold: -5, timeframeHours: 6, itemsPerTimeframe: 1 },
-  // Slightly negative recent karma: 3 comments per day
-  { karmaThreshold: 0, timeframeHours: 24, itemsPerTimeframe: 3 },
-  // Multiple downvoters: 3 comments per day
-  { downvoterThreshold: 3, timeframeHours: 24, itemsPerTimeframe: 3 },
+  // 1 comment per hour - negative recent karma with multiple downvoters
+  {
+    name: "oneCommentPerHourNegativeKarma",
+    timeframeHours: 1,
+    itemsPerTimeframe: 1,
+    isActive: (_user, features) =>
+      features.last20Karma < 0 && features.downvoterCount >= 3,
+  },
+  // 3 comments per day - new users with low karma
+  {
+    name: "threeCommentsPerDayNewUsers",
+    timeframeHours: 24,
+    itemsPerTimeframe: 3,
+    isActive: (user, _features) => user.karma < 5,
+  },
+  // 3 comments per day - established users with no recent upvotes
+  {
+    name: "threeCommentsPerDayNoUpvotes",
+    timeframeHours: 24,
+    itemsPerTimeframe: 3,
+    isActive: (user, features) => user.karma < 1000 && features.last20Karma < 1,
+  },
+  // 1 comment per day - very low overall karma
+  {
+    name: "oneCommentPerDayLowKarma",
+    timeframeHours: 24,
+    itemsPerTimeframe: 1,
+    isActive: (user, _features) => user.karma < -2,
+  },
+  // 1 comment per day - negative recent karma with downvoters
+  {
+    name: "oneCommentPerDayNegativeKarma5",
+    timeframeHours: 24,
+    itemsPerTimeframe: 1,
+    isActive: (user, features) =>
+      user.karma < 1000 && features.last20Karma < -5 && features.downvoterCount >= 4,
+  },
+  // 1 comment per day - very negative recent karma with many downvoters
+  {
+    name: "oneCommentPerDayNegativeKarma25",
+    timeframeHours: 24,
+    itemsPerTimeframe: 1,
+    isActive: (_user, features) =>
+      features.last20Karma < -25 && features.downvoterCount >= 7,
+  },
+  // 1 comment per 3 days - severely negative recent karma
+  {
+    name: "oneCommentPerThreeDaysNegativeKarma15",
+    timeframeHours: 72,
+    itemsPerTimeframe: 1,
+    isActive: (user, features) =>
+      user.karma < 500 && features.last20Karma < -15 && features.downvoterCount >= 5,
+  },
+  // 1 comment per week - negative monthly karma
+  {
+    name: "oneCommentPerWeekNegativeMonthlyKarma30",
+    timeframeHours: 168,
+    itemsPerTimeframe: 1,
+    isActive: (user, features) =>
+      user.karma < 0 &&
+      features.last20Karma < -1 &&
+      features.lastMonthDownvoterCount >= 5 &&
+      features.lastMonthKarma <= -30,
+  },
 ];
 
 interface VoteWithDocumentInfo {
@@ -1038,42 +1095,29 @@ export const checkCommentRateLimit = (
   const recentKarmaInfo = computeRecentKarmaInfo(userId, state, now);
 
   for (const limit of AUTO_COMMENT_RATE_LIMITS) {
-    let triggered = false;
-
-    // Check karma threshold
-    if (limit.karmaThreshold !== undefined) {
-      if (recentKarmaInfo.last20Karma <= limit.karmaThreshold) {
-        triggered = true;
-      }
+    // Check if this rate limit is active for this user
+    if (!limit.isActive(user, recentKarmaInfo)) {
+      continue;
     }
 
-    // Check downvoter threshold
-    if (limit.downvoterThreshold !== undefined) {
-      if (recentKarmaInfo.downvoterCount >= limit.downvoterThreshold) {
-        triggered = true;
-      }
-    }
+    const rateLimitMs = limit.timeframeHours * 60 * 60 * 1000;
+    const windowStart = new Date(now.getTime() - rateLimitMs);
+    // Use comments NOT on own posts for automatic rate limits
+    const commentsInWindow = userCommentsNotOnOwnPosts.filter(
+      (c) => c.postedAt > windowStart,
+    );
 
-    if (triggered) {
-      const rateLimitMs = limit.timeframeHours * 60 * 60 * 1000;
-      const windowStart = new Date(now.getTime() - rateLimitMs);
-      // Use comments NOT on own posts for automatic rate limits
-      const commentsInWindow = userCommentsNotOnOwnPosts.filter(
-        (c) => c.postedAt > windowStart,
+    if (commentsInWindow.length >= limit.itemsPerTimeframe) {
+      // Find oldest comment that needs to expire
+      const oldestInWindow = commentsInWindow[limit.itemsPerTimeframe - 1];
+      const nextAllowedAt = new Date(
+        oldestInWindow.postedAt.getTime() + rateLimitMs,
       );
-
-      if (commentsInWindow.length >= limit.itemsPerTimeframe) {
-        // Find oldest comment that needs to expire
-        const oldestInWindow = commentsInWindow[limit.itemsPerTimeframe - 1];
-        const nextAllowedAt = new Date(
-          oldestInWindow.postedAt.getTime() + rateLimitMs,
-        );
-        return {
-          allowed: false,
-          reason: `Automatic rate limit: ${limit.itemsPerTimeframe} comment(s) per ${limit.timeframeHours} hours`,
-          nextAllowedAt,
-        };
-      }
+      return {
+        allowed: false,
+        reason: `Automatic rate limit (${limit.name}): ${limit.itemsPerTimeframe} comment(s) per ${limit.timeframeHours} hours`,
+        nextAllowedAt,
+      };
     }
   }
 

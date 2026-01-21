@@ -2899,6 +2899,571 @@ describe("fm-lite", () => {
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain("Automatic rate limit");
     });
+
+    // ========================================================================
+    // Individual EA Forum Rate Limit Tests
+    // Each test verifies one specific rate limit rule from AUTO_COMMENT_RATE_LIMITS
+    // ========================================================================
+
+    it("P2: oneCommentPerHourNegativeKarma - triggers when last20Karma < 0 and downvoterCount >= 3", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "dan" } },
+        // Give alice high karma so threeCommentsPerDayNewUsers doesn't apply
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: 100 } },
+        },
+        // Bob's post so alice's comments count
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates one comment
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Comment 1",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      state = result.state;
+
+      // 3 users downvote to get downvoterCount >= 3 and negative karma on the document
+      state = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+      state = vote("charlie", state, {
+        voteId: "v2",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+      state = vote("dan", state, {
+        voteId: "v3",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+
+      // Verify preconditions
+      const info = computeRecentKarmaInfo("alice", state, baseTime);
+      expect(info.last20Karma).toBeLessThan(0);
+      expect(info.downvoterCount).toBeGreaterThanOrEqual(3);
+
+      // Try to post 30 min later (within 1 hour window) - should be blocked
+      const post = state.posts.get("p1")!;
+      const thirtyMinLater = new Date(baseTime.getTime() + 30 * 60 * 1000);
+      const blockResult = checkCommentRateLimit(
+        "alice",
+        state,
+        post,
+        thirtyMinLater,
+      );
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("oneCommentPerHourNegativeKarma");
+
+      // Try to post 61 min later (outside 1 hour window) - should be allowed
+      const sixtyOneMinLater = new Date(baseTime.getTime() + 61 * 60 * 1000);
+      const allowResult = checkCommentRateLimit(
+        "alice",
+        state,
+        post,
+        sixtyOneMinLater,
+      );
+      expect(allowResult.allowed).toBe(true);
+    });
+
+    it("P2: threeCommentsPerDayNewUsers - triggers when user.karma < 5", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        // Alice has karma=0, which is < 5
+        // Bob's post so alice's comments count
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates 3 comments (max allowed per day for karma < 5)
+      for (let i = 1; i <= 3; i++) {
+        const commentTime = new Date(baseTime.getTime() + i * 10000);
+        const result = createComment("alice", state, {
+          commentId: `c${i}`,
+          postId: "p1",
+          parentCommentId: null,
+          contents: `Comment ${i}`,
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentTime,
+        });
+        state = result.state;
+      }
+
+      // 4th comment should be blocked (within 24 hours)
+      const post = state.posts.get("p1")!;
+      const hourLater = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, hourLater);
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("threeCommentsPerDayNewUsers");
+
+      // After 24 hours, should be allowed
+      const dayLater = new Date(baseTime.getTime() + 25 * 60 * 60 * 1000);
+      const allowResult = checkCommentRateLimit("alice", state, post, dayLater);
+      expect(allowResult.allowed).toBe(true);
+    });
+
+    it("P2: threeCommentsPerDayNoUpvotes - triggers when karma < 1000 and last20Karma < 1", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        // Give alice karma=100, so threeCommentsPerDayNewUsers doesn't apply (karma >= 5)
+        // but still < 1000 so threeCommentsPerDayNoUpvotes can apply
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: 100 } },
+        },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates 3 comments with no upvotes (last20Karma = 0, which is < 1)
+      for (let i = 1; i <= 3; i++) {
+        const commentTime = new Date(baseTime.getTime() + i * 10000);
+        const result = createComment("alice", state, {
+          commentId: `c${i}`,
+          postId: "p1",
+          parentCommentId: null,
+          contents: `Comment ${i}`,
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentTime,
+        });
+        state = result.state;
+      }
+
+      // Verify preconditions: last20Karma should be 0 (no votes)
+      const info = computeRecentKarmaInfo("alice", state, baseTime);
+      expect(info.last20Karma).toBeLessThan(1);
+
+      // 4th comment should be blocked
+      const post = state.posts.get("p1")!;
+      const hourLater = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, hourLater);
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("threeCommentsPerDayNoUpvotes");
+
+      // Give alice an upvote so last20Karma >= 1
+      state = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: 1,
+        votedAt: baseTime,
+      }).state;
+
+      // Now last20Karma = 1, which is NOT < 1, so rate limit doesn't apply
+      const info2 = computeRecentKarmaInfo("alice", state, hourLater);
+      expect(info2.last20Karma).toBeGreaterThanOrEqual(1);
+
+      // Should be allowed now
+      const allowResult = checkCommentRateLimit("alice", state, post, hourLater);
+      expect(allowResult.allowed).toBe(true);
+    });
+
+    it("P2: oneCommentPerDayLowKarma - triggers when user.karma < -2", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        // Set alice's karma to -3, which is < -2
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: -3 } },
+        },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates 1 comment
+      const commentTime = new Date(baseTime.getTime() + 10000);
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Comment 1",
+        akismetWouldFlagAsSpam: false,
+        postedAt: commentTime,
+      });
+      state = result.state;
+
+      // 2nd comment should be blocked (1 per day limit)
+      const post = state.posts.get("p1")!;
+      const hourLater = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, hourLater);
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("oneCommentPerDayLowKarma");
+
+      // After 24 hours, should be allowed
+      const dayLater = new Date(commentTime.getTime() + 25 * 60 * 60 * 1000);
+      const allowResult = checkCommentRateLimit("alice", state, post, dayLater);
+      expect(allowResult.allowed).toBe(true);
+    });
+
+    it("P2: oneCommentPerDayNegativeKarma5 - triggers when karma < 1000, last20Karma < -5, downvoterCount >= 4", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "charlie" },
+        },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "dan" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "eve" } },
+        // Give alice karma=100 so threeCommentsPerDayNewUsers doesn't apply
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: 100 } },
+        },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates one comment
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Comment 1",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      state = result.state;
+
+      // 4 users downvote to get downvoterCount >= 4 and last20Karma < -5
+      state = vote("bob", state, {
+        voteId: "v1",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+      state = vote("charlie", state, {
+        voteId: "v2",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+      state = vote("dan", state, {
+        voteId: "v3",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+      state = vote("eve", state, {
+        voteId: "v4",
+        documentId: "c1",
+        collectionName: "Comments",
+        power: -2,
+        votedAt: baseTime,
+      }).state;
+
+      // Verify preconditions
+      const info = computeRecentKarmaInfo("alice", state, baseTime);
+      expect(info.last20Karma).toBeLessThan(-5);
+      expect(info.downvoterCount).toBeGreaterThanOrEqual(4);
+
+      const post = state.posts.get("p1")!;
+      const hourLater = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, hourLater);
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("oneCommentPerDayNegativeKarma5");
+    });
+
+    it("P2: oneCommentPerDayNegativeKarma25 - triggers when last20Karma < -25 and downvoterCount >= 7", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      // Create 8 users: alice + 7 downvoters
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u1" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u2" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u3" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u4" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u5" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u6" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u7" } },
+        // Give alice high karma so other rate limits don't apply
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: 5000 } },
+        },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates one comment
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Comment 1",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      state = result.state;
+
+      // 7 users downvote heavily to get downvoterCount >= 7 and last20Karma < -25
+      const downvoters = ["u1", "u2", "u3", "u4", "u5", "u6", "u7"];
+      downvoters.forEach((userId, i) => {
+        state = vote(userId, state, {
+          voteId: `v${i}`,
+          documentId: "c1",
+          collectionName: "Comments",
+          power: -4, // Total: 7 * -4 = -28
+          votedAt: baseTime,
+        }).state;
+      });
+
+      // Verify preconditions
+      const info = computeRecentKarmaInfo("alice", state, baseTime);
+      expect(info.last20Karma).toBeLessThan(-25);
+      expect(info.downvoterCount).toBeGreaterThanOrEqual(7);
+
+      const post = state.posts.get("p1")!;
+      const hourLater = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, hourLater);
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("oneCommentPerDayNegativeKarma25");
+    });
+
+    it("P2: oneCommentPerThreeDaysNegativeKarma15 - triggers when karma < 500, last20Karma < -15, downvoterCount >= 5", () => {
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u1" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u2" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u3" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u4" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u5" } },
+        // Give alice karma=100, which is < 500 but >= 5
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: 100 } },
+        },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Alice creates one comment
+      const result = createComment("alice", state, {
+        commentId: "c1",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Comment 1",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      state = result.state;
+
+      // 5 users downvote to get downvoterCount >= 5 and last20Karma < -15
+      const downvoters = ["u1", "u2", "u3", "u4", "u5"];
+      downvoters.forEach((userId, i) => {
+        state = vote(userId, state, {
+          voteId: `v${i}`,
+          documentId: "c1",
+          collectionName: "Comments",
+          power: -4, // Total: 5 * -4 = -20
+          votedAt: baseTime,
+        }).state;
+      });
+
+      // Verify preconditions
+      const info = computeRecentKarmaInfo("alice", state, baseTime);
+      expect(info.last20Karma).toBeLessThan(-15);
+      expect(info.downvoterCount).toBeGreaterThanOrEqual(5);
+
+      const post = state.posts.get("p1")!;
+      // Within 72 hours - should be blocked
+      const dayLater = new Date(baseTime.getTime() + 48 * 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, dayLater);
+      expect(blockResult.allowed).toBe(false);
+      expect(blockResult.reason).toContain("oneCommentPerThreeDaysNegativeKarma15");
+
+      // After 72 hours - should be allowed
+      const threeDaysLater = new Date(baseTime.getTime() + 73 * 60 * 60 * 1000);
+      const allowResult = checkCommentRateLimit(
+        "alice",
+        state,
+        post,
+        threeDaysLater,
+      );
+      expect(allowResult.allowed).toBe(true);
+    });
+
+    it("P2: oneCommentPerWeekNegativeMonthlyKarma30 - triggers when karma < 0, last20Karma < -1, lastMonthDownvoterCount >= 5, lastMonthKarma <= -30", () => {
+      // This is the most complex rate limit - requires negative monthly karma with multiple downvoters
+      // To trigger ONLY this limit (not the stricter 3-day limit), we need:
+      // - last20Karma >= -15 (to avoid oneCommentPerThreeDaysNegativeKarma15 which requires < -15)
+      // - But last20Karma < -1 (for this limit)
+      // - And lastMonthKarma <= -30
+      //
+      // We achieve this by having old positive content (> 1 month old) that boosts last20Karma,
+      // while recent content has heavy downvotes that only affect lastMonthKarma.
+      const baseTime = new Date("2024-01-01T12:00:00Z");
+      const sixWeeksAgo = new Date(baseTime.getTime() - 42 * 24 * 60 * 60 * 1000);
+
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        {
+          type: "CREATE_USER" as const,
+          actor: "god",
+          params: { userId: "upvoter" },
+        },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u1" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u2" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u3" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u4" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "u5" } },
+        // Set alice's karma to -1 (negative, < 0)
+        {
+          type: "UPDATE_USER" as const,
+          actor: "god",
+          params: { userId: "alice", changes: { karma: -1 } },
+        },
+        { type: "CREATE_POST" as const, actor: "bob", params: { postId: "p1" } },
+      ];
+      let state = deriveState(actions);
+
+      // Create an OLD comment (6 weeks ago) that gets upvoted
+      // This contributes to last20Karma but NOT to lastMonthKarma
+      const oldResult = createComment("alice", state, {
+        commentId: "c_old",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Old comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: sixWeeksAgo,
+      });
+      state = oldResult.state;
+
+      // Give the old comment +25 karma (positive, to offset recent negative)
+      state = vote("upvoter", state, {
+        voteId: "v_up",
+        documentId: "c_old",
+        collectionName: "Comments",
+        power: 25,
+        votedAt: sixWeeksAgo,
+      }).state;
+
+      // Create a RECENT comment that gets heavily downvoted
+      const recentResult = createComment("alice", state, {
+        commentId: "c_recent",
+        postId: "p1",
+        parentCommentId: null,
+        contents: "Recent comment",
+        akismetWouldFlagAsSpam: false,
+        postedAt: baseTime,
+      });
+      state = recentResult.state;
+
+      // 5 users downvote the recent comment heavily
+      // Total: 5 * -8 = -40, so lastMonthKarma = -40 (< -30)
+      // But last20Karma = +25 - 40 = -15 (NOT < -15, exactly at boundary for 3-day limit)
+      const downvoters = ["u1", "u2", "u3", "u4", "u5"];
+      downvoters.forEach((userId, i) => {
+        state = vote(userId, state, {
+          voteId: `v${i}`,
+          documentId: "c_recent",
+          collectionName: "Comments",
+          power: -8,
+          votedAt: baseTime,
+        }).state;
+      });
+
+      // Check at a time within the month of the recent comment
+      const checkTime = new Date(baseTime.getTime() + 60 * 60 * 1000);
+      const info = computeRecentKarmaInfo("alice", state, checkTime);
+
+      // Verify our setup is correct:
+      // last20Karma = +25 (old) + (-40) (recent) = -15 (NOT < -15 for 3-day limit)
+      // lastMonthKarma = -40 (only recent counts, old is > 1 month ago) (< -30)
+      expect(info.last20Karma).toBe(-15); // Exactly -15, not < -15 (avoids 3-day limit)
+      expect(info.last20Karma).toBeLessThan(-1); // But < -1 (triggers weekly)
+      expect(info.lastMonthKarma).toBeLessThanOrEqual(-30);
+      expect(info.lastMonthDownvoterCount).toBeGreaterThanOrEqual(5);
+
+      // Also verify downvoterCount - only recent comment has negative karma,
+      // old comment has positive karma so its voters don't count as downvoters
+      expect(info.downvoterCount).toBe(5); // Only 5 downvoters on negative-karma content
+
+      const post = state.posts.get("p1")!;
+
+      // Within 1 week - should be blocked by the weekly limit
+      // Note: oneCommentPerHourNegativeKarma also applies (last20Karma < 0 and downvoterCount >= 3)
+      // but it's checked first and is a shorter timeframe (1 hour), so if we're past 1 hour
+      // but within the timeframe for the weekly limit, the weekly should trigger.
+      // Actually, the hourly limit only blocks for 1 hour, so after 1 hour it passes.
+      // But with 2 comments already, we need to check the itemsPerTimeframe logic.
+      //
+      // Actually, looking at the rate limit logic: it checks comments in the window.
+      // Alice has 2 comments total (old and recent), but only the recent one is in the last week.
+      // The hourly limit (1 per hour) - recent comment was at baseTime, checking at checkTime (1 hour later)
+      // is exactly at the boundary.
+      //
+      // Let's check at 2 days later to be well past the hourly limit.
+      const twoDaysLater = new Date(baseTime.getTime() + 48 * 60 * 60 * 1000);
+      const blockResult = checkCommentRateLimit("alice", state, post, twoDaysLater);
+
+      expect(blockResult.allowed).toBe(false);
+      // The oneCommentPerHourNegativeKarma should pass (48 hours > 1 hour)
+      // The threeCommentsPerDayNewUsers will apply since karma=-1 < 5, but alice has 1 recent comment
+      // which is < 3, so it passes. Wait, alice has 2 comments total but only 1 in the last 24 hours?
+      // No wait, comments on own posts don't count, and both are on bob's post, so they count.
+      //
+      // Let me reconsider: the 3-per-day limit for new users (karma < 5) would allow 3 comments.
+      // Alice has made 2 comments total. Within 24 hours of twoDaysLater, how many?
+      // - c_old was 6 weeks ago (not in window)
+      // - c_recent was at baseTime, which is 2 days before twoDaysLater (not in 24-hour window)
+      //
+      // So alice has 0 comments in the 24-hour window, which is < 3, so the 3-per-day passes.
+      // The weekly limit window is 168 hours. c_recent at baseTime is 48 hours ago from twoDaysLater,
+      // which is within 168 hours. So alice has 1 comment in the weekly window.
+      // The weekly limit is 1 per week, and she has 1, so she's blocked.
+      expect(blockResult.reason).toContain(
+        "oneCommentPerWeekNegativeMonthlyKarma30",
+      );
+
+      // After 1 week (168 hours) from the recent comment - should be allowed
+      const weekLater = new Date(baseTime.getTime() + 169 * 60 * 60 * 1000);
+      const allowResult = checkCommentRateLimit("alice", state, post, weekLater);
+      expect(allowResult.allowed).toBe(true);
+    });
   });
 
   describe("[UNSTABLE] createComment rate limits", () => {
