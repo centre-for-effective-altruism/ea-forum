@@ -340,35 +340,27 @@ describe("fm-lite", () => {
   });
 
   describe("viewComment", () => {
-    it("P1: non-author cannot see draft comment", () => {
-      const events = [
-        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
-        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+    it("[P1] non-author cannot see draft comment", () => {
+      const actions = [
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
+        { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
+        { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
         {
-          type: "POST_CREATED" as const,
-          postId: "p1",
-          authorId: "alice",
-          timestamp: new Date(),
+          type: "CREATE_COMMENT" as const,
+          actor: "alice",
+          params: {
+            commentId: "c1",
+            authorId: "alice",
+            postId: "p1",
+            contents: "Test comment",
+            akismetWouldFlagAsSpam: false,
+            postedAt: new Date(),
+          },
         },
-        {
-          type: "COMMENT_CREATED" as const,
-          commentId: "c1",
-          authorId: "alice",
-          postId: "p1",
-          contents: "Test comment",
-          akismetWouldFlagAsSpam: false,
-          postedAt: new Date(),
-          timestamp: new Date(),
-        },
-        {
-          type: "COMMENT_UPDATED" as const,
-          commentId: "c1",
-          changes: { draft: true },
-          timestamp: new Date(),
-        },
+        { type: "UPDATE_COMMENT" as const, actor: "god", params: { commentId: "c1", changes: { draft: true } } },
       ];
-      const state = deriveState(events);
-      const result = viewComment("bob", "c1", state);
+      const state = deriveState(actions);
+      const result = viewComment("bob", state, { commentId: "c1" });
       expect(result.canView).toBe(false);
       expect(result.reason).toContain("draft");
     });
