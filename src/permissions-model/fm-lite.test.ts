@@ -9,12 +9,16 @@ import {
   editPost,
   viewPost,
   reviewUser,
+  createComment,
+  editComment,
+  viewComment,
   undo,
   redo,
   initialState,
   deriveState,
   PostStatus,
   MINIMUM_APPROVAL_KARMA,
+  SPAM_KARMA_THRESHOLD,
 } from "./fm-lite";
 
 describe("fm-lite", () => {
@@ -646,6 +650,1024 @@ describe("fm-lite", () => {
     });
   });
 
+  describe("createComment [UNSTABLE]", () => {
+    it("adds a comment with defaults", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = createComment("c1", "alice", "p1", "Test comment", state);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const newState = deriveState([...events, ...result.events]);
+        const comment = newState.comments.get("c1");
+        expect(comment).toBeDefined();
+        expect(comment?.authorId).toBe("alice");
+        expect(comment?.postId).toBe("p1");
+        expect(comment?.draft).toBe(false);
+      }
+    });
+
+    it("fails with empty commentId", () => {
+      const state = initialState();
+      const result = createComment("", "alice", "p1", "Test", state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("Comment ID");
+    });
+
+    it("fails with empty authorId", () => {
+      const state = initialState();
+      const result = createComment("c1", "", "p1", "Test", state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("Author ID");
+    });
+
+    it("fails with empty postId", () => {
+      const state = initialState();
+      const result = createComment("c1", "alice", "", "Test", state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("Post ID");
+    });
+
+    it("fails if author not found", () => {
+      const state = initialState();
+      const result = createComment("c1", "nonexistent", "p1", "Test", state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("Author");
+    });
+
+    it("fails if post not found", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+      ];
+      const state = deriveState(events);
+      const result = createComment("c1", "alice", "nonexistent", "Test", state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("Post");
+    });
+
+    it("fails if comment already exists", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = createComment("c1", "alice", "p1", "Test comment", state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("already exists");
+    });
+
+    it("marks comment as spam when akismetWouldFlagAsSpam=true for unreviewed user with low karma", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
+        // New user has karma=0 and no reviewedByUserId
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "spammer",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = createComment("c1", "spammer", "p1", "Buy now!", state, {
+        akismetWouldFlagAsSpam: true,
+      });
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const newState = deriveState([...events, ...result.events]);
+        expect(newState.comments.get("c1")?.spam).toBe(true);
+      }
+    });
+
+    it("does NOT mark comment as spam when user karma >= SPAM_KARMA_THRESHOLD even with akismetWouldFlagAsSpam", () => {
+      const events = [
+        {
+          type: "USER_CREATED" as const,
+          userId: "highkarma",
+          timestamp: new Date(),
+        },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "highkarma",
+          changes: { karma: SPAM_KARMA_THRESHOLD }, // karma = 10
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "highkarma",
+          authorIsUnreviewed: false, // karma >= MINIMUM_APPROVAL_KARMA means not unreviewed
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = createComment("c1", "highkarma", "p1", "Content", state, {
+        akismetWouldFlagAsSpam: true,
+      });
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const newState = deriveState([...events, ...result.events]);
+        // User has karma >= 10, so spam detection doesn't apply
+        expect(newState.comments.get("c1")?.spam).toBe(false);
+      }
+    });
+
+    it("does NOT mark comment as spam when user is reviewed even with akismetWouldFlagAsSpam", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "reviewed", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "reviewed",
+          changes: { reviewedByUserId: "mod1" },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "reviewed",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      // User has karma=0 but is reviewed
+      expect(state.users.get("reviewed")?.karma).toBe(0);
+      expect(state.users.get("reviewed")?.reviewedByUserId).toBe("mod1");
+
+      const result = createComment("c1", "reviewed", "p1", "Content", state, {
+        akismetWouldFlagAsSpam: true,
+      });
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const newState = deriveState([...events, ...result.events]);
+        // Reviewed users skip Akismet entirely
+        expect(newState.comments.get("c1")?.spam).toBe(false);
+      }
+    });
+
+    it("does NOT mark comment as spam when akismetWouldFlagAsSpam is not set", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "newbie",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = createComment("c1", "newbie", "p1", "Content", state);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const newState = deriveState([...events, ...result.events]);
+        expect(newState.comments.get("c1")?.spam).toBe(false);
+      }
+    });
+  });
+
+  describe("editComment [UNSTABLE]", () => {
+    it("updates a comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = editComment("c1", { draft: true }, state);
+      expect(result.ok).toBe(true);
+    });
+
+    it("fails if comment not found", () => {
+      const state = initialState();
+      const result = editComment("nonexistent", { draft: true }, state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("not found");
+    });
+
+    it("fails with empty changes", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = editComment("c1", {}, state);
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain("No changes");
+    });
+  });
+
+  describe("viewComment", () => {
+    it("author can see their own draft comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { draft: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("alice", "c1", state);
+      expect(result.canView).toBe(true);
+    });
+
+    it("non-author cannot see draft comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { draft: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state);
+      expect(result.canView).toBe(false);
+      expect(result.reason).toContain("draft");
+    });
+
+    it("logged-out cannot see draft comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { draft: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment(null, "c1", state);
+      expect(result.canView).toBe(false);
+    });
+
+    it("admin can see draft comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "admin",
+          changes: { isAdmin: true },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { draft: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("admin", "c1", state);
+      expect(result.canView).toBe(true);
+    });
+
+    it("mod can see draft comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "mod", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "mod",
+          changes: { isMod: true },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { draft: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("mod", "c1", state);
+      expect(result.canView).toBe(true);
+    });
+
+    it("anyone can see non-draft comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      // Comment is non-draft by default
+      expect(viewComment(null, "c1", state).canView).toBe(true);
+      expect(viewComment("bob", "c1", state).canView).toBe(true);
+    });
+
+    it("returns not found for nonexistent comment", () => {
+      const state = initialState();
+      const result = viewComment(null, "nonexistent", state);
+      expect(result.canView).toBe(false);
+      expect(result.reason).toContain("not found");
+    });
+
+    it("author can see their own rejected comment: can read contents and see rejected flag", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { rejected: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("alice", "c1", state);
+      expect(result.canView).toBe(true);
+      expect(result.canReadContents).toBe(true);
+      expect(result.comment?.rejected).toBe(true);
+    });
+
+    it("non-author cannot see rejected comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { rejected: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state);
+      expect(result.canView).toBe(false);
+      expect(result.reason).toContain("rejected");
+    });
+
+    it("admin can see rejected comment", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "admin",
+          changes: { isAdmin: true },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { rejected: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("admin", "c1", state);
+      expect(result.canView).toBe(true);
+    });
+
+    it("non-author cannot see deleted comment (deletedPublic=false)", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { deleted: true, deletedPublic: false },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state);
+      expect(result.canView).toBe(false);
+      expect(result.reason).toContain("deleted");
+    });
+
+    it("deletedPublic comment: can see comment and metadata but not contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Secret content that should be hidden",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { deleted: true, deletedPublic: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state);
+      // Can see the comment exists
+      expect(result.canView).toBe(true);
+      expect(result.comment).toBeDefined();
+      // But cannot read contents
+      expect(result.canReadContents).toBe(false);
+      // Can see metadata like authorId and deletion flags
+      expect(result.comment?.authorId).toBe("alice");
+      expect(result.comment?.deleted).toBe(true);
+      expect(result.comment?.deletedPublic).toBe(true);
+      expect(result.viewMode).toBe("deleted");
+    });
+
+    it("author can see their own deleted comment AND read contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "My deleted comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { deleted: true, deletedPublic: false },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("alice", "c1", state);
+      expect(result.canView).toBe(true);
+      // Author CAN read contents even when deleted
+      expect(result.canReadContents).toBe(true);
+    });
+
+    it("admin can see deleted comment AND read contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "admin",
+          changes: { isAdmin: true },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Deleted content",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "c1",
+          changes: { deleted: true, deletedPublic: false },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("admin", "c1", state);
+      expect(result.canView).toBe(true);
+      // Admin CAN read contents even when deleted
+      expect(result.canReadContents).toBe(true);
+    });
+
+    it("spam comment: can see comment and metadata but not contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "spammer",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "spammer",
+          postId: "p1",
+          contents: "Buy cheap products now!",
+          akismetWouldFlagAsSpam: true,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state);
+      // Can see the comment exists
+      expect(result.canView).toBe(true);
+      expect(result.comment).toBeDefined();
+      // But cannot read contents
+      expect(result.canReadContents).toBe(false);
+      // Can see metadata like authorId and spam flag
+      expect(result.comment?.authorId).toBe("spammer");
+      expect(result.comment?.spam).toBe(true);
+      expect(result.viewMode).toBe("spam");
+    });
+
+    it("author can see their own spam comment AND read contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "spammer",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "spammer",
+          postId: "p1",
+          contents: "My spam comment",
+          akismetWouldFlagAsSpam: true,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("spammer", "c1", state);
+      expect(result.canView).toBe(true);
+      // Author CAN read contents even when spam
+      expect(result.canReadContents).toBe(true);
+    });
+
+    it("admin can see spam comment AND read contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "spammer", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "admin",
+          changes: { isAdmin: true },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "spammer",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "spammer",
+          postId: "p1",
+          contents: "Spam content",
+          akismetWouldFlagAsSpam: true,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("admin", "c1", state);
+      expect(result.canView).toBe(true);
+      // Admin CAN read contents even when spam
+      expect(result.canReadContents).toBe(true);
+    });
+
+    it("normal comment: can read contents", () => {
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "alice",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state);
+      expect(result.canView).toBe(true);
+      expect(result.canReadContents).toBe(true);
+    });
+
+    it("unreviewed author comment hidden when postedAt >= hideUnreviewedAuthorComments date", () => {
+      const hideUnreviewedAuthorCommentsDate = new Date("2024-01-01");
+      const commentDate = new Date("2024-06-01"); // After the setting date
+      const events = [
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "newbie",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "newbie",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentDate,
+          timestamp: commentDate,
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state, {
+        hideUnreviewedAuthorComments: hideUnreviewedAuthorCommentsDate,
+      });
+      expect(result.canView).toBe(false);
+      expect(result.reason).toContain("unreviewed");
+    });
+
+    it("unreviewed author comment visible when postedAt < hideUnreviewedAuthorComments date (grandfather clause)", () => {
+      const hideUnreviewedAuthorCommentsDate = new Date("2024-06-01");
+      const commentDate = new Date("2024-01-01"); // Before the setting date - grandfathered in
+      const events = [
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "newbie",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "newbie",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentDate,
+          timestamp: commentDate,
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("bob", "c1", state, {
+        hideUnreviewedAuthorComments: hideUnreviewedAuthorCommentsDate,
+      });
+      expect(result.canView).toBe(true);
+    });
+
+    it("author can see their own unreviewed comment even after hideUnreviewedAuthorComments date", () => {
+      const hideUnreviewedAuthorCommentsDate = new Date("2024-01-01");
+      const commentDate = new Date("2024-06-01");
+      const events = [
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "newbie",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "newbie",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentDate,
+          timestamp: commentDate,
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("newbie", "c1", state, {
+        hideUnreviewedAuthorComments: hideUnreviewedAuthorCommentsDate,
+      });
+      expect(result.canView).toBe(true);
+    });
+
+    it("admin can see unreviewed author comment even after hideUnreviewedAuthorComments date", () => {
+      const hideUnreviewedAuthorCommentsDate = new Date("2024-01-01");
+      const commentDate = new Date("2024-06-01");
+      const events = [
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "admin", timestamp: new Date() },
+        {
+          type: "USER_UPDATED" as const,
+          userId: "admin",
+          changes: { isAdmin: true },
+          timestamp: new Date(),
+        },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "newbie",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "newbie",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentDate,
+          timestamp: commentDate,
+        },
+      ];
+      const state = deriveState(events);
+      const result = viewComment("admin", "c1", state, {
+        hideUnreviewedAuthorComments: hideUnreviewedAuthorCommentsDate,
+      });
+      expect(result.canView).toBe(true);
+    });
+
+    it("unreviewed comment visible when hideUnreviewedAuthorComments option is not set", () => {
+      const commentDate = new Date("2024-06-01");
+      const events = [
+        { type: "USER_CREATED" as const, userId: "newbie", timestamp: new Date() },
+        { type: "USER_CREATED" as const, userId: "bob", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "newbie",
+          authorIsUnreviewed: true,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "newbie",
+          postId: "p1",
+          contents: "Test comment",
+          akismetWouldFlagAsSpam: false,
+          postedAt: commentDate,
+          timestamp: commentDate,
+        },
+      ];
+      const state = deriveState(events);
+      // No hideUnreviewedAuthorComments option - comment should be visible
+      const result = viewComment("bob", "c1", state);
+      expect(result.canView).toBe(true);
+    });
+  });
+
   describe("deriveState", () => {
     it("handles USER_UPDATED for non-existent user gracefully", () => {
       const events = [
@@ -673,6 +1695,50 @@ describe("fm-lite", () => {
       const state = deriveState(events);
       // Should not crash, post just doesn't exist
       expect(state.posts.has("nonexistent")).toBe(false);
+    });
+
+    it("handles COMMENT_UPDATED for non-existent comment gracefully", () => {
+      const events = [
+        {
+          type: "COMMENT_UPDATED" as const,
+          commentId: "nonexistent",
+          changes: { draft: true },
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      // Should not crash, comment just doesn't exist
+      expect(state.comments.has("nonexistent")).toBe(false);
+    });
+
+    it("handles COMMENT_CREATED with non-existent author gracefully", () => {
+      // This tests the edge case where a COMMENT_CREATED event references
+      // an author that doesn't exist in state (malformed event)
+      const events = [
+        { type: "USER_CREATED" as const, userId: "alice", timestamp: new Date() },
+        {
+          type: "POST_CREATED" as const,
+          postId: "p1",
+          authorId: "alice",
+          authorIsUnreviewed: false,
+          timestamp: new Date(),
+        },
+        {
+          type: "COMMENT_CREATED" as const,
+          commentId: "c1",
+          authorId: "nonexistent", // Author doesn't exist
+          postId: "p1",
+          contents: "Test",
+          akismetWouldFlagAsSpam: false,
+          postedAt: new Date(),
+          timestamp: new Date(),
+        },
+      ];
+      const state = deriveState(events);
+      // Should not crash, comment is created with defaults for missing author
+      expect(state.comments.has("c1")).toBe(true);
+      // With no author, defaults to unreviewed (karma=0, not reviewed)
+      expect(state.comments.get("c1")?.authorIsUnreviewed).toBe(true);
     });
   });
 
