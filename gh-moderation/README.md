@@ -414,6 +414,141 @@ WHERE ("deleted" = false OR "deletedPublic" = true)
 
 ---
 
+## Detailed Rate Limit Implementation Notes
+
+This section contains detailed notes on how to implement the full rate limit system from ForumMagnum.
+
+### Overview
+
+Rate limiting has three layers that are checked, with the **strictest** one winning:
+
+1. **Mod-applied rate limits** (from `ModeratorActions`)
+2. **Manual/custom rate limits** (from `UserRateLimits`)
+3. **Automatic rate limits** (karma-based rules from `rateLimits/constants.ts`)
+
+### Key Files in ForumMagnum
+
+- `/server/rateLimitUtils.ts` - Main rate limit checking logic
+- `/lib/rateLimits/constants.ts` - Automatic rate limit rules
+- `/lib/rateLimits/types.ts` - TypeScript types
+- `/lib/rateLimits/utils.ts` - Helper functions for calculating karma features
+
+### Rate Limit Checking Flow
+
+From `rateLimitDateWhenUserNextAbleToComment()`:
+
+```typescript
+// 1. Check exemptions first
+if (userIsAdmin(user) || userIsMemberOf(user, "sunshineRegiment")) return null;
+if (post?.ignoreRateLimits) return null;
+if (user has active exemptFromRateLimits ModeratorAction) return null;
+
+// 2. Get all applicable rate limits
+const rateLimitInfos = [
+  getModRateLimitInfo(...),           // Mod-applied general limit
+  getModPostSpecificRateLimitInfo(...), // Mod-applied post-specific limit
+  getManualRateLimitInfo(...),        // Custom UserRateLimits
+  ...autoRateLimitInfos               // Karma-based automatic limits
+];
+
+// 3. Return the strictest (earliest nextEligible date)
+return getStrictestRateLimitInfo(rateLimitInfos);
+```
+
+### Automatic Rate Limits (EA Forum)
+
+From `/lib/rateLimits/constants.ts`:
+
+#### Universal (applies to all users)
+- `1 Comments per 8 seconds` - prevents double-posting, `appliesToOwnPosts: true`
+
+#### Comment Rate Limits
+Each has `appliesToOwnPosts: false` (doesn't count comments on your own posts):
+
+| Condition | Limit | Name |
+|-----------|-------|------|
+| `last20Karma < 0 && downvoterCount >= 3` | 1/hour | oneCommentPerHourNegativeKarma |
+| `karma < 5` | 3/day | threeCommentsPerDayNewUsers |
+| `karma < 1000 && last20Karma < 1` | 3/day | threeCommentsPerDayNoUpvotes |
+| `karma < -2` | 1/day | oneCommentPerDayLowKarma |
+| `karma < 1000 && last20Karma < -5 && downvoterCount >= 4` | 1/day | oneCommentPerDayNegativeKarma5 |
+| `last20Karma < -25 && downvoterCount >= 7` | 1/day | oneCommentPerDayNegativeKarma25 |
+| `karma < 500 && last20Karma < -15 && downvoterCount >= 5` | 1/3 days | oneCommentPerThreeDaysNegativeKarma15 |
+| `karma < 0 && last20Karma < -1 && lastMonthDownvoterCount >= 5 && lastMonthKarma <= -30` | 1/week | oneCommentPerWeekNegativeMonthlyKarma30 |
+
+### RecentKarmaInfo Features
+
+To determine which automatic rate limits apply, compute these features:
+
+```typescript
+interface RecentKarmaInfo {
+  last20Karma: number;          // karma from last 20 posts/comments
+  lastMonthKarma: number;       // karma from last 30 days
+  last20PostKarma: number;      // karma from last 20 posts only
+  last20CommentKarma: number;   // karma from last 20 comments only
+  downvoterCount: number;       // unique downvoters on recent (last 20) content
+  postDownvoterCount: number;   // unique downvoters on recent posts
+  commentDownvoterCount: number;// unique downvoters on recent comments
+  lastMonthDownvoterCount: number; // unique downvoters from last month
+}
+```
+
+Computed from votes via `calculateRecentKarmaInfo()` in `/lib/rateLimits/utils.ts`.
+
+### Rate Limit Info Structure
+
+Each rate limit returns:
+
+```typescript
+interface RateLimitInfo {
+  nextEligible: Date;           // When user can next post
+  rateLimitType?: RateLimitType;// "moderator", "lowKarma", "universal", etc.
+  rateLimitName: string;        // e.g., "threeCommentsPerDayNewUsers"
+  rateLimitMessage: string;     // User-facing message
+}
+```
+
+### Important Details
+
+1. **appliesToOwnPosts**: Most comment rate limits have `appliesToOwnPosts: false`, meaning comments on your own posts don't count against the limit. Post authors are effectively exempt from rate limits on their posts.
+
+2. **Post author exemption**: `getUserIsAuthor()` checks if user is the post author or a coauthor. If so, many rate limits don't apply.
+
+3. **Counting logic**: Rate limits count documents posted within the timeframe (e.g., 3 comments in last 24 hours). If count >= limit, user must wait until oldest document in window expires.
+
+4. **downvoterCount calculation**: Only counts unique downvoters on documents where the net karma is negative. From `calculateRecentKarmaInfo()`:
+   ```typescript
+   // Only count downvoters on documents with net-negative karma
+   if (documentTotalKarma < 0 && vote.power < 0) {
+     downvoterIds.add(vote.oderId);
+   }
+   ```
+
+### Implementation for fm-lite
+
+To implement in the permissions model:
+
+1. **Add Vote entity** with: voterId, documentId, documentType, power, votedAt
+
+2. **Add baseScore to Post and Comment** - sum of vote powers
+
+3. **Add postedAt to Post** - needed for timeframe calculations
+
+4. **Implement `computeRecentKarmaInfo()`** function that:
+   - Gets user's last 20 posts and comments
+   - Gets all votes on those documents
+   - Computes the karma features
+
+5. **Implement rate limit rules** as a list of conditions + limits
+
+6. **Add rate limit check to createComment** that:
+   - Checks exemptions (admin/mod, post.ignoreRateLimits)
+   - Computes RecentKarmaInfo
+   - Checks each rate limit rule
+   - Returns the strictest violation (if any)
+
+---
+
 ## Database Settings
 
 ForumMagnum uses `DatabasePublicSetting` and `DatabaseServerSetting` classes that read values from the `DatabaseMetadata` collection (key `"publicSettings"` and `"serverSettings"`).
@@ -626,3 +761,230 @@ The hello world is complete when:
 2. Add `User` and `Post` to state
 3. Implement `canSeePost` query
 4. Add the visibility rules from the ForumMagnum analysis above
+
+---
+
+## Current Implementation Status
+
+**Location:** `src/permissions-model/fm-lite.ts` and `src/permissions-model/fm-lite.test.ts`
+
+### Stable Functions (fully matching ForumMagnum)
+
+- `viewPost` - Post visibility rules
+- `viewComment` - Comment visibility rules
+
+### Unstable Functions (work in progress)
+
+- `createUser`, `updateUser` - User management
+- `createPost`, `updatePost` - Post management
+- `createComment`, `updateComment` - Comment management (permissions partially implemented)
+
+---
+
+## createComment - Complete Specification
+
+This section documents **every case** that must be implemented for `createComment` to be marked STABLE.
+
+### ForumMagnum Code References
+
+- Permission checks: `/lib/collections/users/helpers.ts` → `userIsAllowedToComment()` (lines 239-277)
+- Ban helpers: `/lib/collections/users/helpers.ts` → `userIsBannedFromPost()`, `userIsBannedFromAllPosts()`, `userIsBannedFromAllPersonalPosts()`
+- Rate limit entry: `/server/collections/comments/mutations.ts` → `newCheck()` (lines 21-39)
+- Rate limit logic: `/server/rateLimitUtils.ts` → `rateLimitDateWhenUserNextAbleToComment()`
+- Rate limit rules: `/lib/rateLimits/constants.ts` → `autoCommentRateLimits`
+- Spam detection: `/server/callbacks/commentCallbackFunctions.tsx` → `checkCommentForSpamWithAkismet()`
+- Author review: `/server/callbacks/commentCallbackFunctions.tsx` → `commentsNewUserApprovedStatus()`
+
+### Part 1: Basic Permission Checks (from `userIsAllowedToComment`)
+
+These checks happen **before** rate limits are evaluated.
+
+#### User Fields Required
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `deleted` | `boolean` | `false` | Account deleted, blocks all posting |
+| `allCommentingDisabled` | `boolean` | `false` | Blocks all commenting |
+| `commentingOnOtherUsersDisabled` | `boolean` | `false` | Can only comment on own posts |
+| `bannedUserIds` | `string[]` | `[]` | Users banned from all this user's posts (requires `canModerateOwnPost`) |
+| `bannedPersonalUserIds` | `string[]` | `[]` | Users banned from this user's personal posts (requires `canModerateOwnPersonalPost`) |
+| `createdAt` | `Date` | (required) | Account creation date |
+| `canModerateOwnPost` | `boolean` | `false` | Can use `bannedUserIds` (corresponds to `posts.moderate.own` permission) |
+| `canModerateOwnPersonalPost` | `boolean` | `false` | Can use `bannedPersonalUserIds` (corresponds to `posts.moderate.own.personal` permission) |
+
+#### Post Fields Required
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `commentsLocked` | `boolean` | `false` | Blocks all new comments |
+| `commentsLockedToAccountsCreatedAfter` | `Date \| null` | `null` | Accounts created after this date can't comment |
+| `shortform` | `boolean` | `false` | Only author can make top-level comments |
+| `frontpageDate` | `Date \| null` | `null` | If set, post is on frontpage (exempts from `bannedPersonalUserIds`) |
+
+#### Comment Fields Required
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `parentCommentId` | `string \| null` | Parent comment ID (determines if reply on shortform posts) |
+
+#### Permission Checks (in order)
+
+From `userIsAllowedToComment()` in ForumMagnum:
+
+| # | Check | Reject If |
+|---|-------|-----------|
+| 1 | User logged in | `!user` |
+| 2 | User not deleted | `user.deleted` |
+| 3 | Commenting not disabled | `user.allCommentingDisabled` |
+| 4 | Can comment on others' posts | `user.commentingOnOtherUsersDisabled && post.authorId !== user.id` |
+| 5 | Shortform top-level | `post.shortform && post.authorId !== user.id && !parentCommentId` |
+| 6 | Comments not locked | `post.commentsLocked` |
+| 7 | Post not rejected | `post.rejected` |
+| 8 | Account age check | `post.commentsLockedToAccountsCreatedAfter && user.createdAt > post.commentsLockedToAccountsCreatedAfter` |
+| 9 | Post-level ban | `post.bannedUserIds.includes(user.id)` |
+| 10 | Author-level ban | `postAuthor.bannedUserIds.includes(user.id) && postAuthor.canModerateOwnPost` |
+| 11 | Personal post ban | `postAuthor.bannedPersonalUserIds.includes(user.id) && postAuthor.canModerateOwnPersonalPost && !post.frontpageDate` |
+
+**Note on ban checks:** In ForumMagnum, the ban checks also verify `userOwns(postAuthor, post)` which is always true when `postAuthor` is the post's author. The `canModerateOwnPost` and `canModerateOwnPersonalPost` flags correspond to group permissions (`trustLevel1` and `canModeratePersonal` groups respectively).
+
+### Part 2: Rate Limits
+
+Rate limits are checked **after** basic permission checks pass.
+
+#### Rate Limit Exemptions
+
+Users exempt from rate limits (checked first):
+1. Admins (`user.isAdmin`)
+2. Mods (`user.isMod` / sunshineRegiment)
+3. Post has `ignoreRateLimits: true`
+4. User has active `exemptFromRateLimits` ModeratorAction
+
+#### Post Field for Rate Limits
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `ignoreRateLimits` | `boolean` | `false` | Skip rate limit checks for comments on this post |
+
+#### User Fields for Rate Limits
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `exemptFromRateLimits` | `boolean` | `false` | Denormalized from active ModeratorAction |
+
+#### Rate Limit Sources (strictest wins)
+
+1. **Universal rate limit** - 1 comment per 8 seconds (`appliesToOwnPosts: true`)
+2. **Mod-applied rate limits** - From ModeratorActions collection:
+   - `rateLimitOnePerDay` (24 hours)
+   - `rateLimitOnePerThreeDays` (72 hours)
+   - `rateLimitOnePerWeek` (168 hours)
+   - `rateLimitOnePerFortnight` (336 hours)
+   - `rateLimitOnePerMonth` (720 hours)
+   - `rateLimitThreeCommentsPerPost` (3 per post per week)
+3. **Custom rate limits** - From UserRateLimits collection (flexible intervals)
+4. **Automatic karma-based rate limits** - See table below
+
+#### Automatic Comment Rate Limits (EA Forum)
+
+All have `appliesToOwnPosts: false` (comments on your own posts don't count).
+
+| Name | Limit | Condition |
+|------|-------|-----------|
+| `oneCommentPerHourNegativeKarma` | 1/hour | `last20Karma < 0 && downvoterCount >= 3` |
+| `threeCommentsPerDayNewUsers` | 3/day | `karma < 5` |
+| `threeCommentsPerDayNoUpvotes` | 3/day | `karma < 1000 && last20Karma < 1` |
+| `oneCommentPerDayLowKarma` | 1/day | `karma < -2` |
+| `oneCommentPerDayNegativeKarma5` | 1/day | `karma < 1000 && last20Karma < -5 && downvoterCount >= 4` |
+| `oneCommentPerDayNegativeKarma25` | 1/day | `last20Karma < -25 && downvoterCount >= 7` |
+| `oneCommentPerThreeDaysNegativeKarma15` | 1/3 days | `karma < 500 && last20Karma < -15 && downvoterCount >= 5` |
+| `oneCommentPerWeekNegativeMonthlyKarma30` | 1/week | `karma < 0 && last20Karma < -1 && lastMonthDownvoterCount >= 5 && lastMonthKarma <= -30` |
+| `oneCommentPerEightSeconds` | 1/8 sec | Always active (`appliesToOwnPosts: true`) |
+
+#### RecentKarmaInfo Features
+
+To evaluate automatic rate limits, compute from votes:
+
+```typescript
+interface RecentKarmaInfo {
+  last20Karma: number;          // karma from last 20 posts/comments (excluding self-votes)
+  lastMonthKarma: number;       // karma from last 30 days
+  downvoterCount: number;       // unique downvoters on last 20 content where net karma <= 0
+  lastMonthDownvoterCount: number; // unique downvoters from last month
+}
+```
+
+**Downvoter counting rule:** Only count unique downvoters on documents where the **total document karma is negative or zero**. This is from `getDownvoterCount()` in `/lib/rateLimits/utils.ts`.
+
+### Part 3: Post-Creation Effects
+
+After the comment is successfully created:
+
+#### authorIsUnreviewed Flag
+
+Set `comment.authorIsUnreviewed = true` if:
+- `!user.reviewedByUserId && user.karma < MINIMUM_APPROVAL_KARMA (5)`
+
+#### Spam Detection
+
+If `akismetWouldFlagAsSpam` is true:
+- Set `comment.spam = true` AND `comment.deleted = true` if:
+  - `!user.reviewedByUserId && user.karma < SPAM_KARMA_THRESHOLD (10)`
+
+### Simplifications for fm-lite
+
+The model can use these valid simplifications:
+
+1. **Denormalize mod actions to user fields:**
+   - `user.exemptFromRateLimits` instead of querying ModeratorActions
+   - `user.modRateLimitHours` instead of querying ModeratorActions rate limit types
+   - `user.customRateLimitHours` instead of querying UserRateLimits
+
+2. **Denormalize permissions to user fields:**
+   - `user.canModerateOwnPost` instead of checking `userCanDo(user, 'posts.moderate.own')`
+   - `user.canModerateOwnPersonalPost` instead of checking `userCanDo(user, 'posts.moderate.own.personal')`
+
+3. **Coauthor support deferred:** ForumMagnum's `getUserIsAuthor()` checks coauthors, but fm-lite can ignore this initially.
+
+### Implementation Phases
+
+#### Phase 1: Basic Permission Checks (no rate limits)
+
+1. Add user fields: `deleted`, `allCommentingDisabled`, `commentingOnOtherUsersDisabled`, `bannedUserIds`, `bannedPersonalUserIds`, `createdAt`, `canModerateOwnPost`, `canModerateOwnPersonalPost`
+2. Add post fields: `commentsLocked`, `commentsLockedToAccountsCreatedAfter`, `shortform`, `frontpageDate`
+3. Add comment field: `parentCommentId`
+4. Implement all 11 permission checks in `createComment`
+5. Write tests for each check
+
+#### Phase 2: Rate Limits
+
+1. Add `post.ignoreRateLimits` and `user.exemptFromRateLimits`
+2. Implement exemption checks
+3. Implement universal 8-second rate limit
+4. Implement automatic karma-based rate limits
+5. Implement `computeRecentKarmaInfo()` using Vote data
+6. Add simplified mod-applied rate limits (`user.modRateLimitHours`)
+7. Write tests for rate limit scenarios
+
+#### Phase 3: Stabilization
+
+1. Review all edge cases
+2. Add property-based tests for invariants
+3. Remove [UNSTABLE] prefix from describe block
+
+---
+
+## Conventions
+
+### [UNSTABLE] Prefix
+
+All `describe()` blocks for functions not yet matching ForumMagnum must have `[UNSTABLE]` prefix. Only `viewPost` and `viewComment` are currently stable.
+
+### Test Priority Labels
+
+- **P1**: Data exposure or access control violations (e.g., banned user can comment)
+- **P2**: Core features that should work correctly (e.g., valid comment creation)
+- **P3**: Error handling, edge cases, coverage tests
+
+### Commit Before Refactoring
+
+Always commit working code before attempting structural changes.
