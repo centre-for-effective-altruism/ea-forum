@@ -310,7 +310,7 @@ describe("fm-lite", () => {
   });
 
   describe("viewComment", () => {
-    it("[P1] non-author cannot see draft comment", () => {
+    it("P1: non-author cannot see draft comment", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "bob" } },
@@ -969,7 +969,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("deriveState", () => {
+  describe("[UNSTABLE] deriveState", () => {
     it("P3: throws on UPDATE_USER for non-existent user", () => {
       const actions = [
         {
@@ -1034,7 +1034,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("createUser", () => {
+  describe("[UNSTABLE] createUser", () => {
     it("P3: adds a user with default fields", () => {
       const state = initialState();
       const result = createUser("god", state, { userId: "alice" });
@@ -1059,7 +1059,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("updateUser", () => {
+  describe("[UNSTABLE] updateUser", () => {
     it("P3: updates a user", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1094,7 +1094,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("createPost", () => {
+  describe("[UNSTABLE] createPost", () => {
     it("P3: adds a post with defaults", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1189,7 +1189,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("updatePost", () => {
+  describe("[UNSTABLE] updatePost", () => {
     it("P3: updates a post", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1226,7 +1226,7 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("createComment", () => {
+  describe("[UNSTABLE] createComment", () => {
     it("P3: adds a comment with defaults", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
@@ -1410,8 +1410,8 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("updateComment", () => {
-    it("[P3] updates a comment", () => {
+  describe("[UNSTABLE] updateComment", () => {
+    it("P3: updates a comment", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
         { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
@@ -1435,7 +1435,7 @@ describe("fm-lite", () => {
       expect(result.ok).toBe(true);
     });
 
-    it("[P3] fails if comment not found", () => {
+    it("P3: fails if comment not found", () => {
       const state = initialState();
       const result = updateComment("god", state, {
         commentId: "nonexistent",
@@ -1445,7 +1445,7 @@ describe("fm-lite", () => {
       if (!result.ok) expect(result.reason).toContain("not found");
     });
 
-    it("[P3] fails with empty changes", () => {
+    it("P3: fails with empty changes", () => {
       const actions = [
         { type: "CREATE_USER" as const, actor: "god", params: { userId: "alice" } },
         { type: "CREATE_POST" as const, actor: "alice", params: { postId: "p1" } },
@@ -1468,8 +1468,8 @@ describe("fm-lite", () => {
     });
   });
 
-  describe("parseAction", () => {
-    it("[P3] parses valid CREATE_USER action", () => {
+  describe("[UNSTABLE] parseAction", () => {
+    it("P3: parses valid CREATE_USER action", () => {
       const result = parseAction("CREATE_USER", "god", { userId: "alice" });
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -1479,7 +1479,7 @@ describe("fm-lite", () => {
       }
     });
 
-    it("[P3] converts lowercase action type", () => {
+    it("P3: converts lowercase action type", () => {
       const result = parseAction("create_user", "god", { userId: "alice" });
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -1487,7 +1487,7 @@ describe("fm-lite", () => {
       }
     });
 
-    it("[P3] returns error for unknown action type", () => {
+    it("P3: returns error for unknown action type", () => {
       const result = parseAction("BOGUS_ACTION", "god", {});
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -1495,7 +1495,7 @@ describe("fm-lite", () => {
       }
     });
 
-    it("[P3] returns error for missing required params", () => {
+    it("P3: returns error for missing required params", () => {
       const result = parseAction("CREATE_USER", "god", {});
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -1503,7 +1503,7 @@ describe("fm-lite", () => {
       }
     });
 
-    it("[P3] returns error for extra params (strict mode)", () => {
+    it("P3: returns error for extra params (strict mode)", () => {
       const result = parseAction("CREATE_USER", "god", {
         userId: "alice",
         extraField: "bad",
