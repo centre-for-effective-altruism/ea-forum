@@ -7,5 +7,7 @@ export default defineConfig({
   test: {
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
+    // TODO flag in PR or revert
+    watch: false
   },
 });
