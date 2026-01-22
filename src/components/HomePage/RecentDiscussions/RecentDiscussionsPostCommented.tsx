@@ -1,7 +1,7 @@
 "use client";
 
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { useRecentDiscussionThread } from "./useRecentDiscussionThread";
+import type { CommentsList } from "@/lib/comments/commentLists";
 import RecentDiscussionsItem, {
   RecentDiscussionItemProps,
 } from "./RecentDiscussionsItem";
@@ -10,6 +10,7 @@ import {
   postGetCommentsUrl,
   postGetPageUrl,
 } from "@/lib/posts/postsHelpers";
+import { commentsToCommentTree } from "@/lib/comments/CommentTree";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
@@ -62,17 +63,12 @@ export default function RecentDiscussionsPostCommented({
 }: {
   post: RecentDiscussionPost;
 }) {
-  const {
-    isSkippable,
-    // expandAllThreads,
-    nestedComments,
-  } = useRecentDiscussionThread({
-    post,
-    comments: post.comments,
-  });
-  if (isSkippable) {
+  const comments = post.comments;
+  if (!comments || !comments.length) {
+    // If we get here it usually means a spam comment was deleted
     return null;
   }
+  const nestedComments = commentsToCommentTree<CommentsList>(comments ?? []);
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
   const commentsLink = postGetCommentsUrl({ post });
