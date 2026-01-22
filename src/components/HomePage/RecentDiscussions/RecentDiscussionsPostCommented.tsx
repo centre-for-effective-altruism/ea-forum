@@ -121,7 +121,7 @@ export default function RecentDiscussionsPostCommented({
           )}
         </div>
         <LinkPostMessage post={post} />
-        <PostBody html={post.contents?.htmlHighlight} />
+        <PostBody html={post.contents?.htmlHighlight ?? ""} isExcerpt />
         <Type style="bodyMedium">
           <Link href={postLink} className="text-primary hover:opacity-70">
             Continue reading

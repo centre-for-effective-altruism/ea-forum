@@ -65,7 +65,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
       </div>
       <PostTags post={post} className="mt-6" />
       <LinkPostMessage post={post} className="mt-10" />
-      <PostBody html={post.contents?.html ?? null} className="mt-10" />
+      <PostBody html={post.contents?.html ?? ""} className="mt-10" />
     </ReadProgress>
   );
 }

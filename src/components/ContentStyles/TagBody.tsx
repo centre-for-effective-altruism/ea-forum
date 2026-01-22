@@ -1,16 +1,18 @@
-import type { ReactNode } from "react";
+import { isServer } from "@/lib/environment";
+import { load as cheerioLoad } from "cheerio";
 
 export default function TagBody({
   html,
-  children,
+  isExcerpt,
   className,
 }: Readonly<{
-  html?: string | null;
-  children?: ReactNode;
+  html: string;
+  isExcerpt?: boolean;
   className?: string;
 }>) {
-  if (!html) {
-    return null;
+  if (isServer && isExcerpt) {
+    // Fix hydration errors from malformed HTML in excerpts created with substring
+    html = cheerioLoad(html, null, false).html();
   }
   // TODO: This needs styles
   return (
@@ -18,8 +20,6 @@ export default function TagBody({
       dangerouslySetInnerHTML={{ __html: html }}
       className={className}
       data-component="TagBody"
-    >
-      {children}
-    </div>
+    />
   );
 }
