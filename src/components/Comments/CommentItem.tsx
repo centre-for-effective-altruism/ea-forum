@@ -54,15 +54,17 @@ export default function CommentItem({
         className={borderless ? undefined : "pr-3 mb-2"}
       >
         <div className="mb-2 flex items-center gap-2">
-          <ChevronDownIcon
-            className={clsx(
-              "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
-              "transition-transform",
-              !expanded && "-rotate-90",
-            )}
-            role="button"
-            onClick={toggleExpanded}
-          />
+          {!borderless && (
+            <ChevronDownIcon
+              className={clsx(
+                "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
+                "transition-transform",
+                !expanded && "-rotate-90",
+              )}
+              role="button"
+              onClick={toggleExpanded}
+            />
+          )}
           <UsersTooltip user={user}>
             <Type className="font-[600]">
               {user && user.slug && (
