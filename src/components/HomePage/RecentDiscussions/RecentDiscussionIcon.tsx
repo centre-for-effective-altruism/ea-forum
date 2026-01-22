@@ -1,14 +1,16 @@
 import DocumentIcon from "@heroicons/react/24/solid/DocumentIcon";
 import CalendarIcon from "@heroicons/react/24/solid/CalendarIcon";
-import CommentFilledIcon from "@heroicons/react/24/solid/ChatBubbleLeftIcon";
+import CommentIcon from "@heroicons/react/24/solid/ChatBubbleLeftIcon";
+import TagIcon from "@heroicons/react/24/solid/TagIcon";
 import QIcon from "@/components/Icons/QIcon";
 import clsx from "clsx";
 
 const recentDiscussionIcons = {
   Post: DocumentIcon,
-  Question: QIcon,
   Event: CalendarIcon,
-  Comment: CommentFilledIcon,
+  Comment: CommentIcon,
+  Tag: TagIcon,
+  Question: QIcon,
 } as const;
 
 export type RecentDiscussionIconName = keyof typeof recentDiscussionIcons;

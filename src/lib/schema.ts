@@ -1,6 +1,7 @@
 import "server-only";
 import type { Json } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
+import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -16,7 +17,6 @@ import {
   pgMaterializedView,
   customType,
 } from "drizzle-orm/pg-core";
-import { DenormalizedRevision } from "./revisions/revisionHelpers";
 
 /**
  * This file contains the postgres schemas for all tables.
@@ -126,7 +126,7 @@ export const users = pgTable(
     needsReview: boolean().notNull().default(false),
     snoozedUntilContentCount: doublePrecision(),
     mapLocation: jsonb(),
-    mongoLocation: jsonb(),
+    mongoLocation: jsonb<{ type: "Point"; coordinates: [number, number] }>(),
     googleLocation: jsonb(),
     location: text(),
     mapLocationSet: boolean(),
@@ -140,6 +140,9 @@ export const users = pgTable(
     profileTagIds: varchar({ length: 27 }).array().notNull().default([]),
     organizerOfGroupIds: varchar({ length: 27 }).array().notNull().default([]),
     programParticipation: text().array(),
+    subscribedToDigest: boolean().notNull().default(false),
+    hideSubscribePoke: boolean().notNull().default(false),
+    unsubscribeFromAll: boolean(),
 
     /*
   "profile" JSONB,
@@ -235,12 +238,9 @@ export const users = pgTable(
   "karmaChangeLastOpened" TIMESTAMPTZ,
   "karmaChangeBatchStart" TIMESTAMPTZ,
   "emailSubscribedToCurated" BOOL,
-  "subscribedToDigest" BOOL NOT NULL DEFAULT FALSE,
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
   "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
-  "unsubscribeFromAll" BOOL,
-  "hideSubscribePoke" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
   "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -477,7 +477,10 @@ export const comments = pgTable(
     author: text(),
     postId: varchar({ length: 27 }),
     tagId: varchar({ length: 27 }),
-    tagCommentType: text().default("DISCUSSION").notNull(),
+    tagCommentType: text()
+      .default("DISCUSSION")
+      .notNull()
+      .$type<"SUBFORUM" | "DISCUSSION">(),
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
     userIP: text(),
@@ -2926,7 +2929,7 @@ export const revisions = pgTable(
     originalContents: jsonb<EditorContents>(),
     html: text(),
     wordCount: doublePrecision().notNull(),
-    changeMetrics: jsonb().notNull(),
+    changeMetrics: jsonb<{ added: number; removed: number }>().notNull(),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
     extendedScore: jsonb(),

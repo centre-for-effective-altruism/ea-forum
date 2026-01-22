@@ -30,7 +30,8 @@ body:
     attributes:
       label: ✅ Definition of done
       description: What should be true or visible to consider this bug fixed?
-      placeholder: A clear description of what you expect to see when the bug is fixed.
+      placeholder:
+        A clear description of what you expect to see when the bug is fixed.
     validations:
       required: true
 
@@ -38,4 +39,3 @@ body:
     attributes:
       value: |
         ## Thanks for taking the time to submit this!
-

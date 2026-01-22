@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { userDefaultProjection } from "../users/userQueries";
+import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 
 export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
@@ -7,6 +7,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
   return db.query.posts.findFirst({
     columns: {
       title: true,
+      url: true,
       baseScore: true,
       commentCount: true,
       readTimeMinutesOverride: true,
@@ -26,7 +27,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       _id: postId,
     },
     with: {
-      user: userDefaultProjection,
+      user: userBaseProjection,
       contents: {
         columns: {
           html: true,

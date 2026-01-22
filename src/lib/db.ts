@@ -68,6 +68,14 @@ const relations = defineRelations(
       }),
     },
     comments: {
+      post: r.one.posts({
+        from: r.comments.postId,
+        to: r.posts._id,
+      }),
+      tag: r.one.tags({
+        from: r.comments.tagId,
+        to: r.tags._id,
+      }),
       user: r.one.users({
         from: r.comments.userId,
         to: r.users._id,
@@ -80,6 +88,30 @@ const relations = defineRelations(
           cancelled: { eq: false },
           isUnvote: { eq: false },
         },
+      }),
+      topLevelComment: r.one.comments({
+        from: r.comments.topLevelCommentId,
+        to: r.comments._id,
+      }),
+    },
+    tags: {
+      comments: r.many.comments({
+        from: r.tags._id,
+        to: r.comments.tagId,
+      }),
+    },
+    revisions: {
+      user: r.one.users({
+        from: r.revisions.userId,
+        to: r.users._id,
+      }),
+      tag: r.one.tags({
+        from: r.revisions.documentId,
+        to: r.tags._id,
+      }),
+      post: r.one.posts({
+        from: r.revisions.documentId,
+        to: r.posts._id,
       }),
     },
     userLoginTokens: {

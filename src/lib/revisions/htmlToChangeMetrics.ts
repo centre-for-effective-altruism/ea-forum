@@ -1,5 +1,7 @@
 import { diff } from "@/vendor/node-htmldiff/htmldiff";
-import { CheerioAPI, load as cheerioLoad } from "cheerio";
+import { Cheerio, CheerioAPI, load as cheerioLoad } from "cheerio";
+import { Element } from "domhandler";
+import { sanitizeHtml } from "../conversionUtils/sanitizeHtml";
 // @ts-expect-error This library doesn't have types
 import { Lexer } from "html-lexer";
 
@@ -56,6 +58,60 @@ const normalizeHtmlForDiff = (html: string): string => {
       }
     })
     .join("");
+};
+
+/**
+ * Given an HTML diff (with <ins> and <del> tags), remove sections that don't
+ * have changes to make an abridged view.
+ */
+const trimHtmlDiff = (html: string): string => {
+  const $ = cheerioLoad(html, null, false);
+
+  // Does HTML contain a <body> tag? If so, look at children of the body tag.
+  // Otherwise look at the root.
+  const bodyTags = $("body");
+  const hasBodyTag = bodyTags.length > 0;
+  const rootElement = hasBodyTag
+    ? bodyTags
+    : ($.root() as unknown as Cheerio<Element>);
+
+  rootElement.children().each((_i, elem) => {
+    const e = $(elem);
+    let isInsDel = false;
+    for (const node of e) {
+      if (node.type === "tag") {
+        if (node.tagName === "ins" || node.tagName === "del") {
+          isInsDel = true;
+        }
+      }
+    }
+    if (!isInsDel && !e.find("ins").length && !e.find("del").length) {
+      e.remove();
+    }
+  });
+
+  return $.html();
+};
+
+/**
+ * Given two HTML string `before` and `after`, returns a new HTML string comparing
+ * `before` and `after`. Insertions are wrapped in an `<ins>` tag, and deletions
+ * are wrapped in a `<del>` tag. If `trim` is true, also removes sections that
+ * don't have changes to make an abridged view.
+ */
+export const diffHtml = (before: string, after: string, trim: boolean): string => {
+  // Normalize unicode and &entities; so that smart quotes changing form won't
+  // produce spurious differences
+  const normalizedBefore = normalizeHtmlForDiff(before);
+  const normalizedAfter = normalizeHtmlForDiff(after);
+
+  // Diff the revisions
+  const diffHtmlUnsafe = diff(normalizedBefore, normalizedAfter);
+  const trimmed = trim ? trimHtmlDiff(diffHtmlUnsafe) : diffHtmlUnsafe;
+
+  // Sanitize (in case node-htmldiff has any parsing glitches that would
+  // otherwise lead to XSS)
+  return sanitizeHtml(trimmed);
 };
 
 const countCharsInTag = (parsedHtml: CheerioAPI, tagName: string): number => {

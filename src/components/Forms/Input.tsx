@@ -43,7 +43,7 @@ export default function Input({
         onClick={onClick}
         className={clsx(
           "clock w-full px-1 py-2 text-sm bg-gray-0 text-gray-900 outline-none",
-          "border-b-2 border-primary active:bg-gray-100 cursor-pointer",
+          "border-b-2 border-gray-400 focus:border-primary cursor-text transition-all",
           "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
           inputClassName,
         )}

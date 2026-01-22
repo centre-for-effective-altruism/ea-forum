@@ -51,6 +51,8 @@
   --color-popover-dim: rgba(0, 0, 0, 0.4);
   --color-curated-star: #ffc500;
   --color-new-user-sprout: #5eb25c;
+  --color-diff-added: #d4ead4;
+  --color-diff-removed: #f0d3d3;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -84,9 +86,10 @@
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-headroom: 1300;
-  --zindex-popover: 1301;
-  --zindex-mobile-nav: 1302;
-  --zindex-tooltip: 1303;
+  --zindex-read-progress: 1302;
+  --zindex-popover: 1304;
+  --zindex-mobile-nav: 1306;
+  --zindex-tooltip: 1308;
 
   --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
 

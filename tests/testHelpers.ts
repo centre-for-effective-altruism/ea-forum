@@ -51,7 +51,7 @@ export const createTestRevision = async (
     editedAt: new Date().toISOString(),
     version: "1.0.0",
     wordCount: 0,
-    changeMetrics: {},
+    changeMetrics: { added: 0, removed: 0 },
     draft: false,
     ...data,
   };

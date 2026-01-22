@@ -15,8 +15,9 @@ import clsx from "clsx";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostsTooltip from "../PostsTooltip";
-import UsersTooltip from "../UsersTooltip";
+import UsersName from "../UsersName";
 import PostIcons from "./PostIcons";
+import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
@@ -87,9 +88,14 @@ export default function PostsItem({
               </Type>
             </div>
             <Type style="bodySmall">
-              <UsersTooltip As="span" user={user}>
-                {user?.displayName ?? "[Anonymous]"}
-              </UsersTooltip>
+              <UsersName user={user} />
+              {" · "}
+              <TimeAgo
+                As="span"
+                textStyle="bodySmall"
+                time={post.postedAt}
+                includeAgo
+              />
               {" · "}
               {readTime}m read
             </Type>
