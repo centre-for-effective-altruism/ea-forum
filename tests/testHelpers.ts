@@ -1,20 +1,29 @@
 import { db } from "@/lib/db";
+import { randomId } from "@/lib/utils/random";
+import { slugify } from "@/lib/utils/slugify";
 import {
   Comment,
   comments,
+  ForumEvent,
+  forumEvents,
   InsertComment,
+  InsertForumEvent,
   InsertPost,
   InsertRevision,
+  InsertTag,
   InsertUser,
+  InsertVote,
   Post,
   posts,
   Revision,
   revisions,
+  Tag,
+  tags,
   User,
   users,
+  Vote,
+  votes,
 } from "@/lib/schema";
-import { randomId } from "@/lib/utils/random";
-import { slugify } from "@/lib/utils/slugify";
 
 export const createTestUser = async (data?: Partial<InsertUser>): Promise<User> => {
   const testUsername = data?.username || data?.displayName || randomId();
@@ -49,6 +58,16 @@ export const createTestRevision = async (
   const result = await db.insert(revisions).values(insertValues).returning();
   return result[0];
 };
+
+export const createTestRevisionFromHtml = async (html: string, version = "1.0.0") =>
+  createTestRevision({
+    originalContents: {
+      type: "ckEditorMarkup",
+      data: html,
+    },
+    html,
+    version,
+  });
 
 export const createTestPost = async (data?: Partial<InsertPost>): Promise<Post> => {
   const userId = data?.userId ?? (await createTestUser())._id;
@@ -103,5 +122,61 @@ export const createTestComment = async (
     ...data,
   };
   const result = await db.insert(comments).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestTag = async (data: Partial<InsertTag>): Promise<Tag> => {
+  const userId = data?.userId ?? (await createTestUser())._id;
+  const tagId = data?._id ?? randomId();
+  const createdAt = data.createdAt || new Date().toISOString();
+  const revision = await createTestRevision({
+    collectionName: "Comments",
+    documentId: tagId,
+    fieldName: "contents",
+    userId,
+    createdAt,
+  });
+  const insertValues: InsertTag = {
+    _id: tagId,
+    name: data.name ?? randomId(),
+    slug: data.slug ?? randomId(),
+    userId,
+    descriptionLatest: revision._id,
+    description: "",
+    createdAt,
+    ...data,
+  };
+  const result = await db.insert(tags).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestForumEvent = async (
+  data: Partial<InsertForumEvent>,
+): Promise<ForumEvent> => {
+  const eventId = data?._id ?? randomId();
+  const createdAt = data.createdAt || new Date().toISOString();
+  const insertValues: InsertForumEvent = {
+    _id: eventId,
+    createdAt,
+    title: data.title ?? randomId(),
+    startDate: data.startDate ?? new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(forumEvents).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestVote = async (data: Partial<InsertVote>): Promise<Vote> => {
+  const insertValues: InsertVote = {
+    _id: randomId(),
+    documentId: randomId(),
+    userId: randomId(),
+    collectionName: "Posts",
+    voteType: "smallUpvote",
+    power: 1,
+    votedAt: new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(votes).values(insertValues).returning();
   return result[0];
 };

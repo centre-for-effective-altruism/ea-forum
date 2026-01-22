@@ -1,6 +1,7 @@
 "use server";
 
 import type { VoteType } from "../votes/voteHelpers";
+import { db } from "../db";
 import { getCurrentUser } from "../users/currentUser";
 import { performVote } from "../votes/voteMutations";
 import {
@@ -24,11 +25,14 @@ export const onVoteAction = async (
   if (!document) {
     throw new Error("Document not found");
   }
-  return await performVote({
-    collectionName,
-    document,
-    user,
-    voteType,
-    extendedVote,
-  });
+  return await db.transaction((txn) =>
+    performVote({
+      txn,
+      collectionName,
+      document,
+      user,
+      voteType,
+      extendedVote,
+    }),
+  );
 };

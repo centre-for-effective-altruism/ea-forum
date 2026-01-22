@@ -38,12 +38,15 @@ suite("Voting", () => {
 
       // Do the vote
       {
-        const voteResult = await performVote({
-          collectionName: "Comments",
-          document: comment,
-          user: voter,
-          voteType: "smallUpvote",
-        });
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "Comments",
+            document: comment,
+            user: voter,
+            voteType: "smallUpvote",
+          }),
+        );
         expect(voteResult.baseScore).toBe(power);
         expect(voteResult.voteCount).toBe(1);
         expect(voteResult.voteType).toBe("smallUpvote");
@@ -91,12 +94,15 @@ suite("Voting", () => {
 
       // Undo the vote
       {
-        const voteResult = await performVote({
-          collectionName: "Comments",
-          document: comment,
-          user: voter,
-          voteType: "smallUpvote",
-        });
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "Comments",
+            document: comment,
+            user: voter,
+            voteType: "smallUpvote",
+          }),
+        );
         expect(voteResult.baseScore).toBe(0);
         expect(voteResult.voteCount).toBe(0);
         expect(voteResult.voteType).toBe("neutral");
@@ -181,12 +187,15 @@ suite("Voting", () => {
 
       // Do the initial vote
       {
-        const voteResult = await performVote({
-          collectionName: "Comments",
-          document: comment,
-          user: voter,
-          voteType: "smallUpvote",
-        });
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "Comments",
+            document: comment,
+            user: voter,
+            voteType: "smallUpvote",
+          }),
+        );
         expect(voteResult.baseScore).toBe(power);
         expect(voteResult.voteCount).toBe(1);
         expect(voteResult.voteType).toBe("smallUpvote");
@@ -235,12 +244,15 @@ suite("Voting", () => {
 
       // Overwrite it with a vote of a different type
       {
-        const voteResult = await performVote({
-          collectionName: "Comments",
-          document: comment,
-          user: voter,
-          voteType: "smallDownvote",
-        });
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "Comments",
+            document: comment,
+            user: voter,
+            voteType: "smallDownvote",
+          }),
+        );
         expect(voteResult.baseScore).toBe(-power);
         expect(voteResult.voteCount).toBe(1);
         expect(voteResult.voteType).toBe("smallDownvote");

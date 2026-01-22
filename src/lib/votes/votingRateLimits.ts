@@ -1,5 +1,5 @@
 import { sql, and, eq, ne, gt } from "drizzle-orm";
-import { db } from "../db";
+import { DbOrTransaction } from "../db";
 import { comments, Vote, votes } from "../schema";
 import { userIsAdmin } from "../users/userHelpers";
 import { nDaysAgo } from "../timeUtils";
@@ -129,6 +129,7 @@ const getRelevantVotes = <
 };
 
 export const checkVotingRateLimits = async (
+  txn: DbOrTransaction,
   document: VoteableDocument,
   user: CurrentUser,
   voteType: VoteType,
@@ -153,7 +154,7 @@ export const checkVotingRateLimits = async (
   const [votesInLastDay, votesOnCommentsOnThisPost, postWithCommentCount] =
     await Promise.all([
       // Votes on any document by this user in the last day
-      db
+      txn
         .select({
           voteType: votes.voteType,
           votedAt: votes.votedAt,
@@ -170,7 +171,7 @@ export const checkVotingRateLimits = async (
         ),
       // Votes on comments on this post by this user at any time in the past
       postId
-        ? db
+        ? txn
             .select({
               voteType: votes.voteType,
               votedAt: votes.votedAt,
@@ -192,7 +193,7 @@ export const checkVotingRateLimits = async (
         : [],
       // The comment count of the post, if the voted document is a comment
       postId
-        ? db.query.posts.findFirst({
+        ? txn.query.posts.findFirst({
             columns: { commentCount: true },
             where: { _id: postId },
           })
@@ -260,10 +261,11 @@ export const checkVotingRateLimits = async (
 };
 
 export const wasVotingPatternWarningDeliveredRecently = async (
+  txn: DbOrTransaction,
   user: CurrentUser,
   moderatorActionType: ModeratorActionType,
 ): Promise<boolean> => {
-  const mostRecentWarning = await db.query.moderatorActions.findFirst({
+  const mostRecentWarning = await txn.query.moderatorActions.findFirst({
     columns: {
       createdAt: true,
     },

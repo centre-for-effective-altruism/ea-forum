@@ -1,7 +1,7 @@
 import maxBy from "lodash/maxBy";
 import { and, eq } from "drizzle-orm";
 import { randomId } from "@/lib/utils/random";
-import { db, Transaction } from "../db";
+import { DbOrTransaction } from "../db";
 import { votes, Comment, Revision } from "../schema";
 import { collectionIsSearchIndexed } from "../search/elastic/elasticIndexes";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
@@ -54,7 +54,7 @@ const clearVotes = async ({
    * be true except for votes being nullified by mods.
    */
   silenceNotification?: boolean;
-  txn: Transaction;
+  txn: DbOrTransaction;
 }): Promise<VoteableDocument> => {
   const allVotes = await txn.query.votes.findMany({
     columns: {
@@ -117,7 +117,7 @@ const clearVotes = async ({
     ]);
   }
 
-  const updatedScores = await recalculateDocumentScores(document, txn);
+  const updatedScores = await recalculateDocumentScores(txn, document);
   await txn
     .update(schema)
     .set({
@@ -129,6 +129,7 @@ const clearVotes = async ({
 };
 
 export const performVote = async ({
+  txn,
   collectionName,
   document,
   user,
@@ -137,6 +138,7 @@ export const performVote = async ({
   skipRateLimits,
   toggleIfAlreadyVoted = true,
 }: {
+  txn: DbOrTransaction;
   collectionName: VoteableCollectionName;
   document: VoteableDocument;
   user: CurrentUser;
@@ -156,9 +158,18 @@ export const performVote = async ({
   }
 
   const power = calculateVotePower(user.karma, voteType);
-  const authors = await fetchVoteableDocumentAuthors(document);
+  const authors = await fetchVoteableDocumentAuthors(txn, document);
   const authorIds = authors.map(({ _id }) => _id);
   const isSelfVote = authorIds.includes(user._id);
+
+  // Prevent strong votes on own comments (but posts allow strong self-votes)
+  if (
+    isSelfVote &&
+    collectionName === "Comments" &&
+    (voteType === "bigUpvote" || voteType === "bigDownvote")
+  ) {
+    throw new Error("You cannot cast strong votes on your own comments");
+  }
 
   if (
     !isSelfVote &&
@@ -166,7 +177,7 @@ export const performVote = async ({
     (document as Comment).debateResponse &&
     (document as Comment).postId
   ) {
-    const post = await db.query.posts.findFirst({
+    const post = await txn.query.posts.findFirst({
       columns: {
         userId: true,
         coauthorUserIds: true,
@@ -188,7 +199,7 @@ export const performVote = async ({
     throw new Error("Revisions are only voteable if they're revisions of tags");
   }
 
-  const existingVote = await db.query.votes.findFirst({
+  const existingVote = await txn.query.votes.findFirst({
     where: {
       documentId: document._id,
       userId: user._id,
@@ -201,16 +212,14 @@ export const performVote = async ({
   let showVotingPatternWarning = false;
   if (existingVote && existingVote.voteType === voteType && !extendedVote) {
     if (toggleIfAlreadyVoted) {
-      document = await db.transaction((txn) =>
-        clearVotes({
-          collectionName,
-          schema,
-          document,
-          authors,
-          user,
-          txn,
-        }),
-      );
+      document = await clearVotes({
+        collectionName,
+        schema,
+        document,
+        authors,
+        user,
+        txn,
+      });
     }
     return {
       baseScore: document.baseScore,
@@ -222,13 +231,18 @@ export const performVote = async ({
 
   if (!skipRateLimits) {
     const { moderatorActionType } = await checkVotingRateLimits(
+      txn,
       document,
       user,
       voteType,
     );
     if (
       moderatorActionType &&
-      !(await wasVotingPatternWarningDeliveredRecently(user, moderatorActionType))
+      !(await wasVotingPatternWarningDeliveredRecently(
+        txn,
+        user,
+        moderatorActionType,
+      ))
     ) {
       if (moderatorActionType === "votingPatternWarningDelivered") {
         showVotingPatternWarning = true;
@@ -239,62 +253,58 @@ export const performVote = async ({
 
   // TODO: Here check the validity of the extended vote
 
-  const { baseScore, voteCount } = await db.transaction(async (txn) => {
-    // Create the new vote
-    await txn.insert(votes).values({
-      _id: randomId(),
-      collectionName,
-      documentId: document._id,
-      userId: user._id,
-      authorIds,
-      voteType,
-      power,
-      votedAt: new Date().toISOString(),
-    });
-
-    // Invalidate any old votes
-    await clearVotes({
-      collectionName,
-      schema,
-      document,
-      authors,
-      user,
-      excludeLatest: true,
-      txn,
-    });
-
-    // Update scores on the voted document
-    const updatedScores = await recalculateDocumentScores(document, txn);
-    const newDocument: VoteableDocument = { ...document, ...updatedScores };
-    await txn
-      .update(schema)
-      .set({
-        ...("inactive" in schema ? { inactive: false } : null),
-        ...updatedScores,
-      })
-      .where(eq(schema._id, document._id));
-
-    // Run callbacks
-    await Promise.all([
-      updateUserKarma(txn, collectionName, authors, user._id, power),
-      updateUserVoteCounts(txn, authors, user._id, voteType, 1),
-      increasePostMaxBaseScore(txn, collectionName, newDocument),
-      triggerCommentAutomod(txn, collectionName, newDocument),
-      // TODO: We still need the following ForumMagnum vote callbacks
-      // voteUpdatePostDenormalizedTags
-      // recomputeContributorScoresFor
-    ]);
-
-    return updatedScores;
+  // Create the new vote
+  await txn.insert(votes).values({
+    _id: randomId(),
+    collectionName,
+    documentId: document._id,
+    userId: user._id,
+    authorIds,
+    voteType,
+    power,
+    votedAt: new Date().toISOString(),
   });
+
+  // Invalidate any old votes
+  await clearVotes({
+    collectionName,
+    schema,
+    document,
+    authors,
+    user,
+    excludeLatest: true,
+    txn,
+  });
+
+  // Update scores on the voted document
+  const updatedScores = await recalculateDocumentScores(txn, document);
+  const newDocument: VoteableDocument = { ...document, ...updatedScores };
+  await txn
+    .update(schema)
+    .set({
+      ...("inactive" in schema ? { inactive: false } : null),
+      ...updatedScores,
+    })
+    .where(eq(schema._id, document._id));
+
+  // Run callbacks
+  await Promise.all([
+    updateUserKarma(txn, collectionName, authors, user._id, power),
+    updateUserVoteCounts(txn, authors, user._id, voteType, 1),
+    increasePostMaxBaseScore(txn, collectionName, newDocument),
+    triggerCommentAutomod(txn, collectionName, newDocument),
+    // TODO: We still need the following ForumMagnum vote callbacks
+    // voteUpdatePostDenormalizedTags
+    // recomputeContributorScoresFor
+  ]);
 
   if (collectionIsSearchIndexed(collectionName)) {
     void elasticSyncDocument(collectionName, document._id);
   }
 
   return {
-    baseScore,
-    voteCount,
+    baseScore: updatedScores.baseScore,
+    voteCount: updatedScores.voteCount,
     voteType,
     showVotingPatternWarning,
   };

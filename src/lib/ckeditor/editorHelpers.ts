@@ -33,7 +33,8 @@ export type EditorData = {
 
 export type EditorAPI = {
   focus: () => void;
-  submitData: () => Promise<EditorData>;
+  getSubmitData: () => Promise<EditorData>;
+  clear: () => void;
 };
 
 export const autosaveIntervalMs = 3000;

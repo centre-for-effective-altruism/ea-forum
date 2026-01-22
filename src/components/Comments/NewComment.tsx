@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  FormEvent,
+  KeyboardEvent,
+  startTransition,
+} from "react";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
-import { createPostComment } from "@/lib/comments/commentMutations";
+import { createPostCommentAction } from "@/lib/comments/commentActions";
+import { useCommentsList } from "./useCommentsList";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import Editor, { EditorOnChangeProps } from "../Editor/Editor";
@@ -15,6 +23,7 @@ export default function NewComment({
   postId: string;
   className?: string;
 }>) {
+  const { addTopLevelComment } = useCommentsList();
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
   const [contents, setContents] = useState<EditorContents>({
@@ -28,30 +37,54 @@ export default function NewComment({
     void autosave;
   }, []);
 
-  const onSubmit = useCallback(async () => {
-    try {
+  const onSubmit = useCallback(
+    async (ev?: FormEvent) => {
+      ev?.preventDefault();
       const editorApi = editorRef.current;
       if (!editorApi) {
-        throw new Error("Editor API not found");
+        console.error("Editor API not found");
+        return;
       }
       setLoading(true);
-      const data = await editorApi.submitData();
-      await createPostComment(postId, null, data);
-    } catch (e) {
-      console.error("Editor submit error:", e);
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }, [postId]);
+      const data = await editorApi.getSubmitData();
+      startTransition(async () => {
+        try {
+          const comment = await createPostCommentAction({
+            postId,
+            parentCommentId: null,
+            editorData: data,
+          });
+          addTopLevelComment(comment);
+          editorRef.current?.clear();
+        } catch (e) {
+          console.error("Editor submit error:", e);
+          toast.error(e instanceof Error ? e.message : "Something went wrong");
+        } finally {
+          setLoading(false);
+        }
+      });
+    },
+    [postId, addTopLevelComment],
+  );
+
+  const onKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLFormElement>) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        void onSubmit();
+      }
+    },
+    [onSubmit],
+  );
 
   return (
-    <div
+    <form
       data-component="NewComment"
+      onSubmit={onSubmit}
+      onKeyDown={onKeyDown}
       className={clsx(
         "border border-comment-border rounded p-2 [&_.ck.ck-content]:min-h-[100px]",
         "flex flex-col items-end gap-1",
-        "",
         className,
       )}
     >
@@ -68,9 +101,9 @@ export default function NewComment({
         ref={editorRef}
         className="w-full grow"
       />
-      <Button onClick={onSubmit} loading={loading}>
+      <Button type="submit" loading={loading}>
         Comment
       </Button>
-    </div>
+    </form>
   );
 }

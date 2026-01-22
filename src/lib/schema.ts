@@ -16,6 +16,7 @@ import {
   pgMaterializedView,
   customType,
 } from "drizzle-orm/pg-core";
+import { DenormalizedRevision } from "./revisions/revisionHelpers";
 
 /**
  * This file contains the postgres schemas for all tables.
@@ -50,17 +51,7 @@ const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
 const jsonb = <T = Json>() => jsonbRaw().$type<T>();
 
-const denormalizedRevision = () =>
-  jsonb<{
-    html: string | null;
-    userId: string | null;
-    version: string;
-    editedAt: string | null;
-    wordCount: number;
-    updateType: string | null;
-    commitMessage: string | null;
-    originalContents: EditorContents | null;
-  }>();
+const denormalizedRevision = () => jsonb<DenormalizedRevision>();
 
 const universalFields = {
   _id: varchar({ length: 27 }).primaryKey().notNull(),
@@ -132,6 +123,23 @@ export const users = pgTable(
     reviewedByUserId: varchar({ length: 27 }),
     hideCommunitySection: boolean().notNull().default(false),
     showCommunityInRecentDiscussion: boolean().notNull().default(false),
+    needsReview: boolean().notNull().default(false),
+    snoozedUntilContentCount: doublePrecision(),
+    mapLocation: jsonb(),
+    mongoLocation: jsonb(),
+    googleLocation: jsonb(),
+    location: text(),
+    mapLocationSet: boolean(),
+    usersContactedBeforeReview: text().array(),
+    linkedinProfileURL: text(),
+    facebookProfileURL: text(),
+    blueskyProfileURL: text(),
+    twitterProfileURL: text(),
+    twitterProfileURLAdmin: text(),
+    githubProfileURL: text(),
+    profileTagIds: varchar({ length: 27 }).array().notNull().default([]),
+    organizerOfGroupIds: varchar({ length: 27 }).array().notNull().default([]),
+    programParticipation: text().array(),
 
     /*
   "profile" JSONB,
@@ -237,11 +245,6 @@ export const users = pgTable(
   "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "mongoLocation" JSONB,
-  "googleLocation" JSONB,
-  "location" TEXT,
-  "mapLocation" JSONB,
-  "mapLocationSet" BOOL,
   "mapMarkerText" TEXT,
   "htmlMapMarkerText" TEXT,
   "nearbyEventsNotifications" BOOL NOT NULL DEFAULT FALSE,
@@ -256,13 +259,10 @@ export const users = pgTable(
   "hideFrontpageBook2020Ad" BOOL,
   "sunshineNotes" TEXT NOT NULL DEFAULT '',
   "sunshineFlagged" BOOL NOT NULL DEFAULT FALSE,
-  "needsReview" BOOL NOT NULL DEFAULT FALSE,
   "sunshineSnoozed" BOOL NOT NULL DEFAULT FALSE,
-  "snoozedUntilContentCount" DOUBLE PRECISION,
   "reviewedByUserId" VARCHAR(27),
   "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "usersContactedBeforeReview" TEXT[],
   "fullName" TEXT,
   "shortformFeedId" VARCHAR(27),
   "viewUnreviewedComments" BOOL,
@@ -288,15 +288,6 @@ export const users = pgTable(
   "paymentInfo" TEXT,
   "profileUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',
   "fmCrosspostUserId" TEXT,
-  "linkedinProfileURL" TEXT,
-  "facebookProfileURL" TEXT,
-  "blueskyProfileURL" TEXT,
-  "twitterProfileURL" TEXT,
-  "twitterProfileURLAdmin" TEXT,
-  "githubProfileURL" TEXT,
-  "profileTagIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
-  "organizerOfGroupIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
-  "programParticipation" TEXT[],
   "postingDisabled" BOOL,
   "allCommentingDisabled" BOOL,
   "commentingOnOtherUsersDisabled" BOOL,
@@ -490,8 +481,8 @@ export const comments = pgTable(
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
     userIP: text(),
-    userAgent: text(),
-    referrer: text(),
+    // userAgent: text(), // Unused
+    // referrer: text(), // Unused
     authorIsUnreviewed: boolean().default(false).notNull(),
     answer: boolean().default(false).notNull(),
     parentAnswerId: varchar({ length: 27 }),
@@ -1038,6 +1029,8 @@ export const commentModeratorActions = pgTable(
     ),
   ],
 );
+
+export type ModeratorAction = typeof moderatorActions.$inferSelect;
 
 export const databaseMetadata = pgTable(
   "DatabaseMetadata",
@@ -1670,6 +1663,9 @@ export const forumEvents = pgTable(
   ],
 );
 
+export type ForumEvent = typeof forumEvents.$inferSelect;
+export type InsertForumEvent = typeof forumEvents.$inferInsert;
+
 export const postViews = pgTable(
   "PostViews",
   {
@@ -1816,6 +1812,7 @@ export const posts = pgTable(
     slug: text().notNull(),
     viewCount: doublePrecision().default(0).notNull(),
     lastCommentedAt: timestamp(),
+    lastCommentReplyAt: timestamp(),
     clickCount: doublePrecision().default(0).notNull(),
     deletedDraft: boolean().default(false).notNull(),
     status: doublePrecision().notNull(),
@@ -3191,6 +3188,8 @@ export const userRateLimits = pgTable(
   ],
 );
 
+export type UserRateLimit = typeof userRateLimits.$inferSelect;
+
 export const userTagRels = pgTable(
   "UserTagRels",
   {
@@ -3412,6 +3411,7 @@ export const tags = pgTable(
 );
 
 export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
 
 export const votes = pgTable(
   "Votes",
@@ -3536,6 +3536,7 @@ export const votes = pgTable(
 );
 
 export type Vote = typeof votes.$inferSelect;
+export type InsertVote = typeof votes.$inferInsert;
 
 export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
   qb
