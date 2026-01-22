@@ -172,7 +172,7 @@ type UserVotesReceived = NonNullable<
   Awaited<ReturnType<typeof getUserVotesReceived>>
 >;
 
-const getDownvoteRatio = (user?: UserVotesReceived): number => {
+export const getDownvoteRatio = (user?: UserVotesReceived): number => {
   // First check if the sum of the individual vote count fields
   // add up to something close (with 5%) to the voteReceivedCount field.
   // (They should be equal, but we know there are bugs around counting votes,

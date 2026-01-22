@@ -37,7 +37,7 @@ const getDownvoterCount = (votes: RecentVoteInfo[]) => {
   return uniq(downvoters).length;
 };
 
-const calculateRecentKarmaInfo = (
+export const calculateRecentKarmaInfo = (
   userId: string,
   allVotes: RecentVoteInfo[],
 ): RecentKarmaInfo => {

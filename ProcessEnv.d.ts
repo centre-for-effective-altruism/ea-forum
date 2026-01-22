@@ -49,6 +49,9 @@ declare namespace NodeJS {
     RECAPTCHA_PRIVATE_KEY: string;
     SENTRY_DSN: string;
 
+    // Site access protection (optional)
+    SITE_ACCESS_PASSWORD?: string;
+
     // Site config
     START_HERE_POST_ID: string;
     INTRO_POST_ID: string;

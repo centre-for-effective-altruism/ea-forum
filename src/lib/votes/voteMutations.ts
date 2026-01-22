@@ -162,6 +162,15 @@ export const performVote = async ({
   const authorIds = authors.map(({ _id }) => _id);
   const isSelfVote = authorIds.includes(user._id);
 
+  // Prevent strong votes on own comments (but posts allow strong self-votes)
+  if (
+    isSelfVote &&
+    collectionName === "Comments" &&
+    (voteType === "bigUpvote" || voteType === "bigDownvote")
+  ) {
+    throw new Error("You cannot cast strong votes on your own comments");
+  }
+
   if (
     !isSelfVote &&
     collectionName === "Comments" &&
