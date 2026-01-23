@@ -37,10 +37,11 @@ export const useRecordPostView = (post: ViewablePost) => {
           throw new Error("Tried to record view of null post");
         }
 
-        // A post id has been found & it's has not been seen yet on this client session
+        // A post id has been found & it's has not been seen yet on this client
+        // session - update the client-side cache and notify the server
         if (!postsRead[post._id]) {
-          setPostRead(post._id, true); // Update client-side cache
-          void increasePostViewCountAction(post._id); // And notify the server
+          setPostRead(post._id, true);
+          void increasePostViewCountAction({ postId: post._id });
         }
 
         // Register page-visit event
@@ -75,7 +76,7 @@ export const useRecordPostView = (post: ViewablePost) => {
           // likely that someone else posts a comment after the first time we
           // send this but then we send it again because e.g. the user clicked on
           // another comment (from the initial render).
-          void markPostCommentsReadAction(postId);
+          void markPostCommentsReadAction({ postId });
         }
       }
     },

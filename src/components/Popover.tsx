@@ -101,7 +101,7 @@ export default function Popover({
         {children}
       </div>
       {/* Ensure toasts are position above the backdrop */}
-      <Toaster position="bottom-center" />
+      {open && <Toaster position="bottom-center" />}
     </dialog>,
     document.body,
   );
