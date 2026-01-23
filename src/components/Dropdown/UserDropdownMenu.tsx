@@ -1,5 +1,4 @@
-import { ReactNode, useCallback, useRef } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { ReactNode, useCallback } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
 import { logoutAction } from "@/lib/users/authActions";
@@ -17,16 +16,14 @@ export default function UserDropdownMenu({
   children: ReactNode;
 }>) {
   const { currentUser } = useCurrentUser();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const logoutForm = useRef<HTMLFormElement>(null);
 
   const ProfileImageIcon = useCallback(() => {
     return <UserProfileImage user={currentUser} size={24} />;
   }, [currentUser]);
 
   const onLogout = useCallback(async () => {
-    logoutForm.current?.requestSubmit();
+    await logoutAction();
+    window.location.reload();
   }, []);
 
   if (!currentUser?.displayName) {
@@ -75,13 +72,6 @@ export default function UserDropdownMenu({
       ]}
     >
       <div data-component="UserDropdownMenu">{children}</div>
-      <form ref={logoutForm} action={logoutAction} className="hidden" aria-hidden>
-        <input
-          type="hidden"
-          name="returnTo"
-          value={pathname + (searchParams.toString() ? `?${searchParams}` : "")}
-        />
-      </form>
     </DropdownMenu>
   );
 }
