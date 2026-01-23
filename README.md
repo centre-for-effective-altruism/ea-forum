@@ -20,6 +20,7 @@ development `.env` file in 1password.
    [server components](https://react.dev/reference/rsc/server-components),
    when not possible use a
    [server function](https://react.dev/reference/rsc/server-functions)
+ - Server functions should be wrapped with `actionClient`
  - Combine multiple class names using [clsx](https://www.npmjs.com/package/clsx)
  - Where possible prefer Drizzle's
    [relational API](https://orm.drizzle.team/docs/rqb-v2) for querying

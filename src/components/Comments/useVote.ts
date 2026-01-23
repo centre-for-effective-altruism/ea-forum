@@ -78,8 +78,12 @@ export const useVote = (comment: CommentsList) => {
       const requestId = requestIdRef.current;
       startTransition(async () => {
         try {
-          const result = await onVoteAction(collectionName, _id, voteType);
-          if (requestId === requestIdRef.current) {
+          const { data: result } = await onVoteAction({
+            collectionName,
+            documentId: _id,
+            voteType,
+          });
+          if (requestId === requestIdRef.current && result) {
             setVote({
               baseScore: result.baseScore,
               voteCount: result.voteCount,
