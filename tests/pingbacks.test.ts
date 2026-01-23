@@ -34,7 +34,7 @@ suite("htmlToPingbacks", () => {
     const result = await htmlToPingbacks(html);
     expect(result.Posts).toContain(post!._id);
   });
-  test.only("extracts onsite post links by slug route", async () => {
+  test("extracts onsite post links by slug route", async () => {
     const html = `<a href="/posts/slug/${post!.slug}">Post link</a>`;
     const result = await htmlToPingbacks(html);
     expect(result.Posts).toContain(post!._id);
