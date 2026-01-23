@@ -42,20 +42,16 @@ export const fetchQuickTakesAction = actionClient
   .inputSchema(
     z.object({
       includeCommunity: z.boolean().optional(),
-      relevantTagId: z.string().optional(),
       offset: z.number().min(0).optional(),
       limit: z.number().min(0).max(50).optional(),
     }),
   )
-  .action(
-    async ({ parsedInput: { includeCommunity, relevantTagId, offset, limit } }) => {
-      const currentUser = await getCurrentUser();
-      return await fetchFrontpageQuickTakes({
-        currentUserId: currentUser?._id ?? null,
-        includeCommunity,
-        relevantTagId,
-        offset,
-        limit,
-      });
-    },
-  );
+  .action(async ({ parsedInput: { includeCommunity, offset, limit } }) => {
+    const currentUser = await getCurrentUser();
+    return await fetchFrontpageQuickTakes({
+      currentUserId: currentUser?._id ?? null,
+      includeCommunity,
+      offset,
+      limit,
+    });
+  });

@@ -1,7 +1,7 @@
-import { arrayContains, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { comments } from "@/lib/schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
+import { userBaseProjection } from "../users/userQueries";
 import { postStatuses } from "../posts/postLists";
 import {
   isAnyInArray,
@@ -10,7 +10,6 @@ import {
 } from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
-import { userBaseProjection } from "../users/userQueries";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -132,25 +131,16 @@ export const fetchCommmentsForPost = ({
 export const fetchFrontpageQuickTakes = ({
   currentUserId,
   includeCommunity,
-  relevantTagId,
   offset,
   limit = 5,
 }: {
   currentUserId: string | null;
   includeCommunity?: boolean;
-  relevantTagId?: string;
   offset?: number;
   limit?: number;
 }) => {
   const fiveDaysAgo = nDaysAgo(5).toISOString();
   const twoHoursAgo = nHoursAgo(2).toISOString();
-  const communityFilter =
-    includeCommunity && process.env.COMMUNITY_TAG_ID
-      ? arrayContains(comments.relevantTagIds, [process.env.COMMUNITY_TAG_ID])
-      : undefined;
-  const tagFilter = relevantTagId
-    ? arrayContains(comments.relevantTagIds, [relevantTagId])
-    : undefined;
   return fetchCommentsList({
     currentUserId,
     where: {
@@ -159,8 +149,13 @@ export const fetchFrontpageQuickTakes = ({
       deleted: isNotTrue,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
-      ...communityFilter,
-      ...tagFilter,
+      ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
+        ? {
+            NOT: {
+              relevantTagIds: { arrayContains: [process.env.COMMUNITY_TAG_ID] },
+            },
+          }
+        : null),
       AND: [
         {
           OR: [

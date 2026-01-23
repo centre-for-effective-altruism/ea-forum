@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useEffect } from "react";
+import { useLoadMore } from "@/lib/hooks/useLoadMore";
 import { fetchQuickTakesAction } from "@/lib/comments/commentActions";
+import { useQuickTakesCommunityContext } from "./QuickTakesCommunityContext";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import QuickTakesListSkeleton from "./QuickTakesListSkeleton";
 import QuickTakeItem from "./QuickTakeItem";
@@ -14,33 +16,44 @@ export default function QuickTakesList({
   quickTakes: CommentsList[];
   className?: string;
 }>) {
-  const [loading, setLoading] = useState(false);
-  const [offset, setOffset] = useState(quickTakes.length);
-  const [canLoadMore, setCanLoadMore] = useState(true);
-  const [displayedQuickTakes, setDisplayedQuickTakes] = useState(quickTakes);
-  const limit = quickTakes.length;
+  const { showCommunity } = useQuickTakesCommunityContext();
+  const withoutCommunityProps = useLoadMore({
+    initialItems: quickTakes,
+    fetchMore: async (limit, offset) => {
+      const { data = [] } = await fetchQuickTakesAction({
+        limit,
+        offset,
+        includeCommunity: false,
+      });
+      return data;
+    },
+  });
+  const withCommunityProps = useLoadMore({
+    initialItems: [],
+    limit: quickTakes.length,
+    fetchMore: async (limit, offset) => {
+      const { data = [] } = await fetchQuickTakesAction({
+        limit,
+        offset,
+        includeCommunity: true,
+      });
+      return data;
+    },
+  });
 
-  const onLoadMore = useCallback(async () => {
-    const offset_ = offset;
-    setOffset((offset) => offset + limit);
-    setLoading(true);
+  const { items, loading, limit, canLoadMore, onLoadMore } = showCommunity
+    ? withCommunityProps
+    : withoutCommunityProps;
 
-    try {
-      const { data = [] } = await fetchQuickTakesAction({ limit, offset: offset_ });
-      setDisplayedQuickTakes((quickTakes) => [...quickTakes, ...data]);
-      if (data.length < limit) {
-        setCanLoadMore(false);
-      }
-    } catch (e) {
-      console.error("Error fetching quick takes:", e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (items.length === 0 && !loading && canLoadMore) {
+      void onLoadMore();
     }
-  }, [offset, limit]);
+  }, [items, loading, canLoadMore, onLoadMore]);
 
   return (
     <div data-component="QuickTakesList" className={className}>
-      {displayedQuickTakes.map((quickTake) => (
+      {items.map((quickTake) => (
         <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
       ))}
       {loading && <QuickTakesListSkeleton count={limit} />}
