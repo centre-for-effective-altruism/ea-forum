@@ -1,23 +1,22 @@
 "use server";
 
-import clamp from "lodash/fp/clamp";
+import { z } from "zod/v4";
+import { actionClient } from "../actionClient";
 import { getCurrentUser } from "../users/currentUser";
 import { fetchRecentDiscussions } from "./fetchRecentDiscussions";
 
-export const getRecentDiscussionsAction = async ({
-  limit,
-  ...args
-}: {
-  maxCommentAgeHours?: number;
-  maxCommentsPerPost?: number;
-  limit: number;
-  cutoff?: Date;
-  offset?: number;
-}) => {
-  const currentUser = await getCurrentUser();
-  return fetchRecentDiscussions({
-    currentUser,
-    limit: clamp(limit, 0, 50),
-    ...args,
+export const fetchRecentDiscussionsAction = actionClient
+  .inputSchema(
+    z.object({
+      limit: z.number().min(1).max(50),
+      cutoff: z.date().optional(),
+      offset: z.number().min(0).optional(),
+    }),
+  )
+  .action(async ({ parsedInput }) => {
+    const currentUser = await getCurrentUser();
+    return fetchRecentDiscussions({
+      currentUser,
+      ...parsedInput,
+    });
   });
-};

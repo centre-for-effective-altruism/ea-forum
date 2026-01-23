@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import type { RecentDiscussionsData } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { getRecentDiscussionsAction } from "@/lib/recentDiscussions/recentDiscussionsActions";
+import { fetchRecentDiscussionsAction } from "@/lib/recentDiscussions/recentDiscussionsActions";
 import InfiniteLoadTrigger from "@/components/InfiniteLoadTrigger";
 import RecentDiscussionsItemSkeleton from "./RecentDiscussionsItemSkeleton";
 import RecentDiscussionsPostCommented from "./RecentDiscussionsPostCommented";
@@ -31,15 +31,17 @@ export default function RecentDiscussionsFeed({
       const cutoff = displayedData.cutoff
         ? new Date(displayedData.cutoff)
         : undefined;
-      const response = await getRecentDiscussionsAction({
+      const { data: response } = await fetchRecentDiscussionsAction({
         limit,
         cutoff,
         offset: displayedData.endOffset,
       });
-      setDisplayedData({
-        ...response,
-        results: [...displayedData.results, ...response.results],
-      });
+      if (response) {
+        setDisplayedData({
+          ...response,
+          results: [...displayedData.results, ...response.results],
+        });
+      }
     } catch (error) {
       console.error("Error loading recent discussions:", error);
       captureException(error);
