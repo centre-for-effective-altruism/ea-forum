@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import type { InsertLWEvent } from "../schema";
 import type { JsonRecord } from "../typeHelpers";
 import { v4 as uuid } from "uuid";
-import { type CreateLWEvent, createLWEventAction } from "../lwEvents/lwEventActions";
+import { createLWEventAction } from "../lwEvents/lwEventActions";
+import type { CreateLWEvent } from "../lwEvents/lwEventHelpers";
 import omit from "lodash/omit";
 
 type EventProperties = JsonRecord &

@@ -38,7 +38,7 @@ export const createPostComment = async ({
   postId: string;
   parentCommentId: string | null;
   editorData: EditorData;
-  draft?: false;
+  draft?: boolean;
 }) => {
   const { originalContents } = editorData;
   if (originalContents.type !== "ckEditorMarkup") {

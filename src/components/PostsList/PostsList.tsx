@@ -1,6 +1,8 @@
 "use client";
 
 import { ReactNode, useCallback, useState } from "react";
+import { captureException } from "@sentry/nextjs";
+import toast from "react-hot-toast";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
 import { fetchPostsListAction } from "@/lib/posts/postActions";
@@ -48,16 +50,18 @@ export default function PostsList({
     setLoading(true);
 
     try {
-      const results = await fetchPostsListAction({
+      const { data = [] } = await fetchPostsListAction({
         ...loadMoreView,
         offset: offset_,
       });
-      setDisplayedPosts((posts) => [...posts, ...results]);
-      if (results.length < loadMoreView.limit) {
+      setDisplayedPosts((posts) => [...posts, ...data]);
+      if (data.length < loadMoreView.limit) {
         setCanLoadMore(false);
       }
     } catch (e) {
-      console.error("Error fetching posts:", e);
+      console.error("Error loading posts:", e);
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+      captureException(e);
     } finally {
       setLoading(false);
     }

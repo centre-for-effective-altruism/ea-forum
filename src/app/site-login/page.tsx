@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { captureException } from "@sentry/nextjs";
+import toast from "react-hot-toast";
 import { siteLoginAction, SiteLoginResult } from "@/lib/siteAuthActions";
 import Type from "@/components/Type";
 
@@ -18,12 +20,18 @@ export default function SiteLoginPage() {
     async (formData: FormData) => {
       setLoading(true);
       setState({});
-      const result = await siteLoginAction(formData);
-      if (result.authenticated) {
-        router.push(returnTo);
-      } else {
-        setState(result);
-        setLoading(false);
+      try {
+        const { data } = await siteLoginAction(formData);
+        if (data?.authenticated) {
+          router.push(returnTo);
+        } else {
+          setState(data ?? {});
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error(e instanceof Error ? e.message : "Something went wrong");
+        captureException(e);
       }
     },
     [router, returnTo],

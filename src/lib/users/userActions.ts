@@ -1,39 +1,42 @@
 "use server";
 
-import { CurrentUser, getCurrentUser } from "@/lib/users/currentUser";
+import { eq } from "drizzle-orm";
+import { z } from "zod/v4";
+import { actionClient } from "../actionClient";
+import { getCurrentUser } from "@/lib/users/currentUser";
 import { db } from "../db";
 import { users } from "../schema";
 import {
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
 } from "../mailchimp";
-import { eq } from "drizzle-orm";
 
-export const fetchCurrentUserAction = async (): Promise<CurrentUser | null> =>
-  getCurrentUser();
+export const fetchCurrentUserAction = actionClient.action(getCurrentUser);
 
-export const subscribeToDigestAction = async ({ email }: { email?: string }) => {
-  const list = "digest";
-  const status = "subscribed";
-  const currentUser = await getCurrentUser();
-  if (currentUser) {
-    await updateUserMailchimpSubscription({
-      list,
-      status,
-      user: currentUser,
-    });
-  } else if (email) {
-    await updateMailchimpSubscription({
-      list,
-      status,
-      email,
-    });
-  } else {
-    throw new Error("No email provided");
-  }
-};
+export const subscribeToDigestAction = actionClient
+  .inputSchema(z.object({ email: z.string().optional() }))
+  .action(async ({ parsedInput: { email } }) => {
+    const list = "digest";
+    const status = "subscribed";
+    const currentUser = await getCurrentUser();
+    if (currentUser) {
+      await updateUserMailchimpSubscription({
+        list,
+        status,
+        user: currentUser,
+      });
+    } else if (email) {
+      await updateMailchimpSubscription({
+        list,
+        status,
+        email,
+      });
+    } else {
+      throw new Error("No email provided");
+    }
+  });
 
-export const hideSubscribePokeAction = async () => {
+export const hideSubscribePokeAction = actionClient.action(async () => {
   const currentUser = await getCurrentUser();
   if (currentUser) {
     await db
@@ -41,4 +44,4 @@ export const hideSubscribePokeAction = async () => {
       .set({ hideSubscribePoke: true })
       .where(eq(users._id, currentUser._id));
   }
-};
+});

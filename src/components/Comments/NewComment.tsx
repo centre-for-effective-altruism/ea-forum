@@ -49,12 +49,15 @@ export default function NewComment({
       const data = await editorApi.getSubmitData();
       startTransition(async () => {
         try {
-          const comment = await createPostCommentAction({
+          const { data: newComment } = await createPostCommentAction({
             postId,
             parentCommentId: null,
             editorData: data,
           });
-          addTopLevelComment(comment);
+          if (!newComment) {
+            throw new Error("Something went wrong");
+          }
+          addTopLevelComment(newComment);
           editorRef.current?.clear();
         } catch (e) {
           console.error("Editor submit error:", e);

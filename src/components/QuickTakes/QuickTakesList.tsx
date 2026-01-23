@@ -26,9 +26,9 @@ export default function QuickTakesList({
     setLoading(true);
 
     try {
-      const results = await fetchQuickTakesAction({ limit, offset: offset_ });
-      setDisplayedQuickTakes((quickTakes) => [...quickTakes, ...results]);
-      if (results.length < limit) {
+      const { data = [] } = await fetchQuickTakesAction({ limit, offset: offset_ });
+      setDisplayedQuickTakes((quickTakes) => [...quickTakes, ...data]);
+      if (data.length < limit) {
         setCanLoadMore(false);
       }
     } catch (e) {
