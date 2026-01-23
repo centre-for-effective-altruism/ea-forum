@@ -13,7 +13,6 @@ const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
   prettier,
-  globalIgnores(["**/*.queries.ts"]),
   {
     languageOptions: {
       parserOptions: {
