@@ -10,7 +10,8 @@ import { editorDataSchema } from "../ckeditor/editorHelpers";
 export const createPostCommentAction = actionClient
   .inputSchema(
     z.object({
-      postId: z.string(),
+      postId: z.string().optional(),
+      shortform: z.boolean().optional(),
       parentCommentId: z.string().nullable().optional(),
       editorData: editorDataSchema,
       draft: z.boolean().optional(),
@@ -18,7 +19,13 @@ export const createPostCommentAction = actionClient
   )
   .action(
     async ({
-      parsedInput: { postId, parentCommentId = null, editorData, draft = false },
+      parsedInput: {
+        postId,
+        shortform,
+        parentCommentId = null,
+        editorData,
+        draft = false,
+      },
     }) => {
       const user = await getCurrentUser();
       if (!user) {
@@ -27,6 +34,7 @@ export const createPostCommentAction = actionClient
       const commentId = await createPostComment({
         user,
         postId,
+        shortform,
         parentCommentId,
         editorData,
         draft,

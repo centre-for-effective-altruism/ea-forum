@@ -30,12 +30,14 @@ const MINIMUM_APPROVAL_KARMA = 5;
 export const createPostComment = async ({
   user,
   postId,
+  shortform,
   parentCommentId,
   editorData,
   draft,
 }: {
   user: CurrentUser;
-  postId: string;
+  postId?: string;
+  shortform?: boolean;
   parentCommentId: string | null;
   editorData: EditorData;
   draft?: boolean;
@@ -45,11 +47,11 @@ export const createPostComment = async ({
     throw new Error("Invalid editor type");
   }
   if (!originalContents.data) {
-    throw new Error("Comment is empty");
+    throw new Error(shortform ? "Quick take is empty" : "Comment is empty");
   }
 
   const [post, parentComment] = await Promise.all([
-    getPostForCommentCreation(db, postId),
+    postId ? getPostForCommentCreation(db, postId) : null,
     parentCommentId
       ? db.query.comments.findFirst({
           columns: {
