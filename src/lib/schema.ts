@@ -1,5 +1,5 @@
 import "server-only";
-import type { Json } from "./typeHelpers";
+import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
@@ -1484,7 +1484,7 @@ export const lwEvents = pgTable(
     name: text(),
     documentId: text(),
     important: boolean(),
-    properties: jsonb(),
+    properties: jsonb<JsonRecord>(),
     intercom: boolean(),
   },
   (table) => [
