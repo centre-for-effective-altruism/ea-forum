@@ -15,7 +15,13 @@ const eslintConfig = [
   prettier,
   globalIgnores(["**/*.queries.ts"]),
   {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
+    },
     rules: {
+      "@typescript-eslint/no-floating-promises": "error",
       "react-hooks/set-state-in-effect": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
@@ -68,6 +74,7 @@ const eslintConfig = [
       "next-env.d.ts",
       "ckEditor/**",
       "src/vendor/**",
+      "*.mjs",
     ],
   },
 ];
