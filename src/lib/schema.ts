@@ -86,6 +86,7 @@ export const users = pgTable(
     karma: doublePrecision().notNull().default(0),
     postCount: doublePrecision().notNull().default(0),
     maxPostCount: doublePrecision().notNull().default(0),
+    frontpagePostCount: doublePrecision().notNull().default(0),
     commentCount: doublePrecision().notNull().default(0),
     maxCommentCount: doublePrecision().notNull().default(0),
     banned: timestamp(),
@@ -143,6 +144,7 @@ export const users = pgTable(
     subscribedToDigest: boolean().notNull().default(false),
     hideSubscribePoke: boolean().notNull().default(false),
     unsubscribeFromAll: boolean(),
+    shortformFeedId: varchar({ length: 27 }),
 
     /*
   "profile" JSONB,
@@ -242,7 +244,6 @@ export const users = pgTable(
   "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
-  "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "mapMarkerText" TEXT,
@@ -264,7 +265,6 @@ export const users = pgTable(
   "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "fullName" TEXT,
-  "shortformFeedId" VARCHAR(27),
   "viewUnreviewedComments" BOOL,
   "partiallyReadSequences" JSONB[],
   "beta" BOOL,

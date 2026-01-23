@@ -6,6 +6,8 @@ import uniq from "lodash/uniq";
 import flatten from "lodash/flatten";
 import intersection from "lodash/intersection";
 
+export const MINIMUM_APPROVAL_KARMA = 5;
+
 export const userGetProfileUrl = ({
   user,
   from,

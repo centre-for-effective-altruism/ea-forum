@@ -32,14 +32,14 @@ suite("Comments", () => {
           type: "ckEditorMarkup",
           data: "<p>Hello world</p>",
         },
-        updateType: "minor",
+        updateType: "initial",
         commitMessage: "",
       } as const;
       const commentId = await createPostComment({
         user: commenter,
         postId: post._id,
         parentCommentId: null,
-        editorData: editorData,
+        editorData,
       });
 
       const power = userSmallVotePower(commenter.karma, 1);
@@ -92,14 +92,14 @@ suite("Comments", () => {
           type: "ckEditorMarkup",
           data: "<p>Hello world</p>",
         },
-        updateType: "minor",
+        updateType: "initial",
         commitMessage: "",
       } as const;
       const commentId1 = await createPostComment({
         user: commenter1,
         postId: post._id,
         parentCommentId: null,
-        editorData: editorData,
+        editorData,
       });
 
       const commenter2 = await createTestUser();
@@ -107,7 +107,7 @@ suite("Comments", () => {
         user: commenter2,
         postId: post._id,
         parentCommentId: commentId1,
-        editorData: editorData,
+        editorData,
       });
 
       const [childComment, parentComment, updatedPost, author] = await Promise.all([
@@ -156,14 +156,14 @@ suite("Comments", () => {
           type: "ckEditorMarkup",
           data: "<p>Hello world</p>",
         },
-        updateType: "minor",
+        updateType: "initial",
         commitMessage: "",
       } as const;
       const commentId = await createPostComment({
         user: commenter,
         postId: post._id,
         parentCommentId: null,
-        editorData: editorData,
+        editorData,
       });
       const comment = await db.query.comments.findFirst({
         where: {
@@ -174,5 +174,82 @@ suite("Comments", () => {
       expect(comment!.deletedDate).toBeTruthy();
       expect(comment!.deletedReason).toContain("marked as spam");
     });
+  });
+  test("New quick takes", async () => {
+    const user = await createTestUser();
+    const editorData = {
+      originalContents: {
+        type: "ckEditorMarkup",
+        data: "<p>Hello world</p>",
+      },
+      updateType: "initial",
+      commitMessage: "",
+    } as const;
+    const quickTakeId = await createPostComment({
+      user: user,
+      shortform: true,
+      parentCommentId: null,
+      editorData,
+    });
+
+    const [quickTake, post, author] = await Promise.all([
+      db.query.comments.findFirst({
+        where: {
+          _id: quickTakeId,
+        },
+      }),
+      db.query.posts.findFirst({
+        where: {
+          userId: user._id,
+          shortform: true,
+        },
+      }),
+      db.query.users.findFirst({
+        where: {
+          _id: user._id,
+        },
+      }),
+    ]);
+    expect(quickTake!.userId).toBe(user._id);
+    expect(quickTake!.shortform).toBe(true);
+    expect(quickTake!.postId).toBe(post!._id);
+    expect(post!.shortform).toBe(true);
+    expect(post!.commentCount).toBe(1);
+    expect(author!.postCount).toBe(1);
+    expect(author!.maxPostCount).toBe(1);
+    expect(author!.frontpagePostCount).toBe(1);
+    expect(author!.shortformFeedId).toBe(post!._id);
+
+    const quickTakeId2 = await createPostComment({
+      user: user,
+      shortform: true,
+      parentCommentId: null,
+      editorData,
+    });
+
+    const [quickTake2, post2, author2] = await Promise.all([
+      db.query.comments.findFirst({
+        where: {
+          _id: quickTakeId2,
+        },
+      }),
+      db.query.posts.findFirst({
+        where: {
+          userId: user._id,
+          shortform: true,
+        },
+      }),
+      db.query.users.findFirst({
+        where: {
+          _id: user._id,
+        },
+      }),
+    ]);
+    expect(quickTake2!.userId).toBe(user._id);
+    expect(quickTake2!.shortform).toBe(true);
+    expect(quickTake2!.postId).toBe(post2!._id);
+    expect(post2!._id).toBe(post!._id);
+    expect(post2!.commentCount).toBe(2);
+    expect(author2!.postCount).toBe(1);
   });
 });

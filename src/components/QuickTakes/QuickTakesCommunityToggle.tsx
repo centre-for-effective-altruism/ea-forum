@@ -7,7 +7,11 @@ import clsx from "clsx";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-export default function QuickTakesCommunityToggle() {
+export default function QuickTakesCommunityToggle({
+  className,
+}: Readonly<{
+  className?: string;
+}>) {
   const { showCommunity, setShowCommunity } = useQuickTakesCommunityContext();
   const onToggle = useCallback(() => {
     setShowCommunity((checked) => !checked);
@@ -17,6 +21,7 @@ export default function QuickTakesCommunityToggle() {
       title={
         <Type style="bodySmall">Show quick takes tagged &quot;Community&quot;</Type>
       }
+      className={className}
     >
       <Type
         style="loadMore"

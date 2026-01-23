@@ -139,7 +139,7 @@ export default async function HomePageFeed({
                 Quick takes
               </Type>
               <div className="flex items-center gap-3">
-                <QuickTakesCommunityToggle />
+                <QuickTakesCommunityToggle className="hidden sm:block" />
                 <Type style="loadMore">
                   <Link
                     href="/quicktakes"
