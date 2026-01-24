@@ -17,6 +17,8 @@ import {
   localgroups,
   lwEvents,
   moderatorActions,
+  podcastEpisodes,
+  podcasts,
   posts,
   readStatuses,
   revisions,
@@ -40,6 +42,8 @@ const relations = defineRelations(
     images,
     lwEvents,
     forumEvents,
+    podcastEpisodes,
+    podcasts,
     moderatorActions,
     userRateLimits,
     userLoginTokens,
@@ -58,6 +62,10 @@ const relations = defineRelations(
         from: r.posts.groupId,
         to: r.localgroups._id,
       }),
+      podcastEpisode: r.one.podcastEpisodes({
+        from: r.posts.podcastEpisodeId,
+        to: r.podcastEpisodes._id,
+      }),
       readStatus: r.many.readStatuses({
         from: r.posts._id,
         to: r.readStatuses.postId,
@@ -74,6 +82,12 @@ const relations = defineRelations(
           cancelled: { eq: false },
           isUnvote: { eq: false },
         },
+      }),
+    },
+    podcastEpisodes: {
+      podcast: r.one.podcasts({
+        from: r.podcastEpisodes.podcastId,
+        to: r.podcasts._id,
       }),
     },
     comments: {

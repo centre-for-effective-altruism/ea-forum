@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
-import type { PostsListView } from "./postsHelpers";
+import { postStatuses, type PostsListView } from "./postsHelpers";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
@@ -16,14 +16,6 @@ const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
 const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
-
-export const postStatuses = {
-  STATUS_PENDING: 1, // Unused
-  STATUS_APPROVED: 2,
-  STATUS_REJECTED: 3,
-  STATUS_SPAM: 4,
-  STATUS_DELETED: 5,
-};
 
 // TODO: This should be a function that takes the current user and does permission
 // checks

@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
-import { postStatuses } from "../posts/postLists";
+import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";

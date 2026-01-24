@@ -1,7 +1,7 @@
 import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { TupleSet, UnionOf } from "../typeHelpers";
-import { postStatuses } from "../posts/postLists";
+import { postStatuses } from "../posts/postsHelpers";
 import type { Post } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
 

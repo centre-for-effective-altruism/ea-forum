@@ -92,6 +92,8 @@
   --zindex-mobile-nav: 1306;
   --zindex-tooltip: 1308;
 
+  --buzzsprout-opacity: 1;
+
   --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
 
   @keyframes bounce-delay {

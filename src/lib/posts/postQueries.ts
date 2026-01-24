@@ -20,6 +20,11 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       question: true,
       debate: true,
       shortform: true,
+      draft: true,
+      status: true,
+      rejected: true,
+      authorIsUnreviewed: true,
+      forceAllowType3Audio: true,
     },
     extras: {
       tags: postTagsProjection,
@@ -33,6 +38,20 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
         columns: {
           html: true,
           wordCount: true,
+        },
+      },
+      podcastEpisode: {
+        columns: {
+          episodeLink: true,
+          externalEpisodeId: true,
+        },
+        with: {
+          podcast: {
+            columns: {
+              applePodcastLink: true,
+              spotifyPodcastLink: true,
+            },
+          },
         },
       },
       ...(currentUserId

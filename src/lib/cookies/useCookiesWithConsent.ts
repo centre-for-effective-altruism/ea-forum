@@ -20,6 +20,7 @@ export const useCookiesWithConsent = <
 
   const [cookies, setCookieBase, removeCookieBase] = useCookies<T, Cookies>(
     dependencies,
+    { doNotParse: true },
   );
 
   const setCookie = useCallback(
