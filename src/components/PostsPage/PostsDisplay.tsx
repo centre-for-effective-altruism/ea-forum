@@ -4,8 +4,8 @@ import { fetchPostDisplay } from "@/lib/posts/postQueries";
 import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
 import { formatShortDate } from "@/lib/timeUtils";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
-import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
-import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
+import PostVoteButtons from "../Voting/PostVoteButtons";
+import LinkPostMessage from "./LinkPostMessage";
 import UserProfileImage from "../UserProfileImage";
 import PostBody from "../ContentStyles/PostBody";
 import PostTags from "../Tags/PostTags";
@@ -13,7 +13,6 @@ import ReadProgress from "./ReadProgress";
 import UsersName from "../UsersName";
 import Type from "../Type";
 import Link from "../Link";
-import LinkPostMessage from "./LinkPostMessage";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
@@ -29,7 +28,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
 
   return (
     <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
-      <Type style="postsPageTitle" className="mb-10">
+      <Type style="postsPageTitle" As="h1" className="mb-10">
         {post.title}
       </Type>
       <div className="flex gap-3 mb-6">
@@ -47,14 +46,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
       </div>
       <div className="py-4 border-y border-(--color-posts-page-hr) text-gray-600 flex">
         <div className="flex items-center gap-4 grow">
-          <div className="flex items-center gap-1">
-            <ChevronDownIcon className="w-[20px]" />
-            <Type style="bodyMedium" className="text-[16px]">
-              {post.baseScore}
-            </Type>
-            <ChevronUpIcon className="w-[20px]" />
-          </div>
-          <Link href="#comments">
+          <PostVoteButtons post={post} />
+          <Link href="#comments" className="hover:text-gray-1000">
             <Type style="bodyMedium" className="flex items-center gap-1">
               <ChatBubbleLeftIcon className="w-[22px]" />
               {post.commentCount}

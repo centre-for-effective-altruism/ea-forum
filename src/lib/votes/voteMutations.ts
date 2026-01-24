@@ -202,6 +202,7 @@ export const performVote = async ({
   const existingVote = await txn.query.votes.findFirst({
     where: {
       documentId: document._id,
+      collectionName,
       userId: user._id,
       cancelled: false,
     },
