@@ -43,6 +43,15 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       podcastEpisode: {
         columns: {
           episodeLink: true,
+          externalEpisodeId: true,
+        },
+        with: {
+          podcast: {
+            columns: {
+              applePodcastLink: true,
+              spotifyPodcastLink: true,
+            },
+          },
         },
       },
       ...(currentUserId

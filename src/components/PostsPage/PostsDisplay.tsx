@@ -65,8 +65,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <div className="flex gap-5">TODO: Buttons</div>
         </div>
         <PostTags post={post} className="mt-6" />
-        <LinkPostMessage post={post} className="mt-10" />
         <PostAudioPlayer className="mt-10" />
+        <LinkPostMessage post={post} className="mt-10" />
         <PostBody html={post.contents?.html ?? ""} className="mt-10" />
       </ReadProgress>
     </PostDisplayProvider>

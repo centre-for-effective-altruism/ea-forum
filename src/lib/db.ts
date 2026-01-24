@@ -18,6 +18,7 @@ import {
   lwEvents,
   moderatorActions,
   podcastEpisodes,
+  podcasts,
   posts,
   readStatuses,
   revisions,
@@ -42,6 +43,7 @@ const relations = defineRelations(
     lwEvents,
     forumEvents,
     podcastEpisodes,
+    podcasts,
     moderatorActions,
     userRateLimits,
     userLoginTokens,
@@ -80,6 +82,12 @@ const relations = defineRelations(
           cancelled: { eq: false },
           isUnvote: { eq: false },
         },
+      }),
+    },
+    podcastEpisodes: {
+      podcast: r.one.podcasts({
+        from: r.podcastEpisodes.podcastId,
+        to: r.podcasts._id,
       }),
     },
     comments: {
