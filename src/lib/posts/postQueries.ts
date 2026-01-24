@@ -3,12 +3,13 @@ import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 
 export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
-  void currentUserId; // TODO currentUserVote
   return db.query.posts.findFirst({
     columns: {
+      _id: true,
       title: true,
       url: true,
       baseScore: true,
+      voteCount: true,
       commentCount: true,
       readTimeMinutesOverride: true,
       postedAt: true,
@@ -34,6 +35,24 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
           wordCount: true,
         },
       },
+      ...(currentUserId
+        ? {
+            votes: {
+              columns: {
+                voteType: true,
+                extendedVoteType: true,
+                power: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
+              orderBy: {
+                votedAt: "desc",
+              },
+              limit: 1,
+            },
+          }
+        : {}),
     },
   });
 };

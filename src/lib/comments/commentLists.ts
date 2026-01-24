@@ -67,7 +67,9 @@ export const commentListProjection = (currentUserId: string | null) =>
               },
               where: {
                 userId: currentUserId,
-                cancelled: false,
+              },
+              orderBy: {
+                votedAt: "desc",
               },
               limit: 1,
             },

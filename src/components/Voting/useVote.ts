@@ -1,11 +1,16 @@
+"use client";
+
 import { useCallback, useRef, useState, useTransition } from "react";
 import toast from "react-hot-toast";
+import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import { calculateVotePower, VoteType } from "@/lib/votes/voteHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useTracking } from "@/lib/analyticsEvents";
 import { onVoteAction } from "@/lib/votes/voteActions";
+
+type TargetDocument = PostDisplay | CommentsList;
 
 type VoteState = {
   baseScore: number;
@@ -19,10 +24,10 @@ type VoteStateUpdate = {
   userKarma: number;
 };
 
-const getInitialVoteState = (comment: CommentsList): VoteState => ({
-  baseScore: comment.baseScore,
-  voteCount: comment.voteCount,
-  currentUserVoteType: (comment.votes?.[0]?.voteType as VoteType) ?? "neutral",
+const getInitialVoteState = (document: TargetDocument): VoteState => ({
+  baseScore: document.baseScore,
+  voteCount: document.voteCount,
+  currentUserVoteType: (document.votes?.[0]?.voteType as VoteType) ?? "neutral",
   showVotingPatternWarning: false,
 });
 
@@ -46,17 +51,26 @@ const doOptimisticVote = (
   return newState;
 };
 
+type UseVoteProps =
+  | {
+      collectionName: "Posts";
+      document: PostDisplay;
+    }
+  | {
+      collectionName: "Comments";
+      document: CommentsList;
+    };
+
 /**
  * Frontend logic for voting on documents including optimistic client-side updates.
- * TODO: This currently only support comments.
  */
-export const useVote = (comment: CommentsList) => {
-  const { _id } = comment;
+export const useVote = ({ collectionName, document }: UseVoteProps) => {
+  const { _id } = document;
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const { captureEvent } = useTracking();
   const [_isPending, startTransition] = useTransition();
-  const [vote, setVote] = useState(() => getInitialVoteState(comment));
+  const [vote, setVote] = useState(() => getInitialVoteState(document));
   const requestIdRef = useRef(0);
 
   const onVote = useCallback(
@@ -73,7 +87,6 @@ export const useVote = (comment: CommentsList) => {
         return doOptimisticVote(prev, { voteType, userKarma: currentUser.karma });
       });
 
-      const collectionName = "Comments";
       requestIdRef.current++;
       const requestId = requestIdRef.current;
       startTransition(async () => {
@@ -102,7 +115,7 @@ export const useVote = (comment: CommentsList) => {
 
       captureEvent("vote", { collectionName });
     },
-    [currentUser, onSignup, captureEvent, startTransition, _id],
+    [currentUser, onSignup, captureEvent, startTransition, _id, collectionName],
   );
 
   return {
