@@ -17,6 +17,7 @@ import {
   localgroups,
   lwEvents,
   moderatorActions,
+  podcastEpisodes,
   posts,
   readStatuses,
   revisions,
@@ -40,6 +41,7 @@ const relations = defineRelations(
     images,
     lwEvents,
     forumEvents,
+    podcastEpisodes,
     moderatorActions,
     userRateLimits,
     userLoginTokens,
@@ -57,6 +59,10 @@ const relations = defineRelations(
       group: r.one.localgroups({
         from: r.posts.groupId,
         to: r.localgroups._id,
+      }),
+      podcastEpisode: r.one.podcastEpisodes({
+        from: r.posts.podcastEpisodeId,
+        to: r.podcastEpisodes._id,
       }),
       readStatus: r.many.readStatuses({
         from: r.posts._id,

@@ -25,7 +25,6 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       rejected: true,
       authorIsUnreviewed: true,
       forceAllowType3Audio: true,
-      podcastEpisodeId: true,
     },
     extras: {
       tags: postTagsProjection,
@@ -39,6 +38,11 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
         columns: {
           html: true,
           wordCount: true,
+        },
+      },
+      podcastEpisode: {
+        columns: {
+          episodeLink: true,
         },
       },
       ...(currentUserId

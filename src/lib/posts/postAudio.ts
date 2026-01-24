@@ -81,7 +81,7 @@ export const isPostAllowedType3Audio = (post: PostDisplay): boolean => {
       !post.draft &&
       !post.authorIsUnreviewed &&
       !post.rejected &&
-      !post.podcastEpisodeId &&
+      !post.podcastEpisode &&
       !post.isEvent &&
       !post.question &&
       !post.debate &&
@@ -95,4 +95,4 @@ export const isPostAllowedType3Audio = (post: PostDisplay): boolean => {
 };
 
 export const postHasAudio = (post: PostDisplay) =>
-  !!post.podcastEpisodeId || isPostAllowedType3Audio(post);
+  !!post.podcastEpisode || isPostAllowedType3Audio(post);

@@ -9,6 +9,7 @@ import PostVoteButtons from "../Voting/PostVoteButtons";
 import LinkPostMessage from "./LinkPostMessage";
 import UserProfileImage from "../UserProfileImage";
 import PostAudioToggle from "./PostAudioToggle";
+import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
 import PostTags from "../Tags/PostTags";
 import ReadProgress from "./ReadProgress";
@@ -65,6 +66,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
         </div>
         <PostTags post={post} className="mt-6" />
         <LinkPostMessage post={post} className="mt-10" />
+        <PostAudioPlayer className="mt-10" />
         <PostBody html={post.contents?.html ?? ""} className="mt-10" />
       </ReadProgress>
     </PostDisplayProvider>
