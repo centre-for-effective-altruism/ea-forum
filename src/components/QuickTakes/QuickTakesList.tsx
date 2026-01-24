@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useLoadMore } from "@/lib/hooks/useLoadMore";
 import { fetchQuickTakesAction } from "@/lib/comments/commentActions";
-import { useQuickTakesCommunityContext } from "./QuickTakesCommunityContext";
+import { useQuickTakesListContext } from "./QuickTakesListContext";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import QuickTakesListSkeleton from "./QuickTakesListSkeleton";
 import QuickTakeItem from "./QuickTakeItem";
@@ -16,7 +16,7 @@ export default function QuickTakesList({
   quickTakes: CommentsList[];
   className?: string;
 }>) {
-  const { showCommunity } = useQuickTakesCommunityContext();
+  const { showCommunity, localQuickTakes } = useQuickTakesListContext();
   const withoutCommunityProps = useLoadMore({
     initialItems: quickTakes,
     fetchMore: async (limit, offset) => {
@@ -51,9 +51,11 @@ export default function QuickTakesList({
     }
   }, [items, loading, canLoadMore, onLoadMore]);
 
+  const quickTakesToDisplay = [...localQuickTakes, ...items];
+
   return (
     <div data-component="QuickTakesList" className={className}>
-      {items.map((quickTake) => (
+      {quickTakesToDisplay.map((quickTake) => (
         <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
       ))}
       {loading && <QuickTakesListSkeleton count={limit} />}

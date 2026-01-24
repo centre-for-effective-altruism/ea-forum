@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
-import { QuickTakesCommunityProvider } from "../QuickTakes/QuickTakesCommunityContext";
+import { QuickTakesListProvider } from "../QuickTakes/QuickTakesListContext";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
@@ -133,7 +133,7 @@ export default async function HomePageFeed({
               </div>
             </>
           )}
-          <QuickTakesCommunityProvider>
+          <QuickTakesListProvider>
             <div className="flex justify-between item-center">
               <Type className="mb-2" style="sectionTitleLarge">
                 Quick takes
@@ -156,7 +156,7 @@ export default async function HomePageFeed({
                 <FrontpageQuickTakesList initialLimit={5} />
               </Suspense>
             </div>
-          </QuickTakesCommunityProvider>
+          </QuickTakesListProvider>
           <Type className="mb-2" style="sectionTitleLarge">
             Popular comments
           </Type>
