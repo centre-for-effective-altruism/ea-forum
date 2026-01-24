@@ -23,7 +23,7 @@ export default function PostVoteButtons({
         direction="Downvote"
         orientation="down"
         onVote={onVote}
-        size={20}
+        large
         className="text-gray-600"
       />
       <Tooltip
@@ -44,7 +44,7 @@ export default function PostVoteButtons({
         direction="Upvote"
         orientation="up"
         onVote={onVote}
-        size={20}
+        large
         className="text-gray-600"
       />
     </div>

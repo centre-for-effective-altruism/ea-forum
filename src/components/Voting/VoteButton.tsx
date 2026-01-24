@@ -29,7 +29,7 @@ export default function VoteButton({
   orientation,
   onVote,
   dimWhenNotVoted,
-  size = 16,
+  large,
   className,
 }: Readonly<{
   currentVoteStrength: VoteStrength;
@@ -37,7 +37,7 @@ export default function VoteButton({
   orientation: Orientation;
   onVote: (voteType: VoteType) => void;
   dimWhenNotVoted?: boolean;
-  size?: number;
+  large?: boolean;
   className?: string;
 }>) {
   const [votingTransition, setVotingTransition] = useState<NodeJS.Timeout | null>(
@@ -49,6 +49,7 @@ export default function VoteButton({
 
   const voted = currentVoteStrength !== "neutral";
   const bigVoted = currentVoteStrength === "big";
+  const upvote = direction === "Upvote";
 
   const wrappedVote = useCallback(
     (voteStrength: VoteStrength) => {
@@ -131,10 +132,11 @@ export default function VoteButton({
         )}
       >
         <ChevronUpIcon
-          width={size}
-          height={size}
+          width={large ? 20 : 16}
+          height={large ? 20 : 16}
           className={clsx(
-            voted ? "text-primary" : dimWhenNotVoted ? "opacity-70" : null,
+            voted && (upvote ? "text-primary" : "text-error"),
+            !voted && dimWhenNotVoted && "opacity-70",
           )}
         />
         <Transition
@@ -145,11 +147,13 @@ export default function VoteButton({
           {(state) => (
             <ChevronUpIcon
               ref={ref}
-              width={size + size / 2}
-              height={size + size / 2}
+              width={large ? 30 : 24}
+              height={large ? 30 : 24}
               className={clsx(
-                "pointer-events-none absolute -top-[7px] -left-[4px]",
-                (bigVoteCompleted || bigVoted) && "text-primary-light",
+                "pointer-events-none absolute",
+                large ? "-top-[9px] -left-[5px]" : "-top-[7px] -left-[4px]",
+                (bigVoteCompleted || bigVoted) &&
+                  (upvote ? "text-primary-light" : "text-error-light"),
                 state === "entering" || state === "entered"
                   ? "opacity-100"
                   : "opacity-0",
