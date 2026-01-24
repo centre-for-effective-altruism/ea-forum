@@ -16,6 +16,7 @@ export default function PostAudioToggle() {
     <Tooltip title={<Type style="bodySmall">Listen to this post</Type>}>
       <button
         data-component="PostAudioToggle"
+        aria-label="Listen to this post"
         onClick={toggleShowAudio}
         className={clsx(
           "flex items-center justify-center cursor-pointer rounded-[2px]",
