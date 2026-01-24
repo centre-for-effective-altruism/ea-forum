@@ -1,13 +1,17 @@
 "use client";
 
 import { usePostDisplay } from "./usePostDisplay";
+import { postHasAudio } from "@/lib/posts/postAudio";
 import SpeakerWaveIcon from "@heroicons/react/24/outline/SpeakerWaveIcon";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import clsx from "clsx";
 
 export default function PostAudioToggle() {
-  const { showAudio, toggleShowAudio } = usePostDisplay();
+  const { post, showAudio, toggleShowAudio } = usePostDisplay();
+  if (!postHasAudio(post)) {
+    return null;
+  }
   return (
     <Tooltip title={<Type style="bodySmall">Listen to this post</Type>}>
       <button

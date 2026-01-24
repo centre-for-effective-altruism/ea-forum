@@ -2,7 +2,7 @@ import type { CurrentUser } from "../users/currentUser";
 import { db } from "../db";
 import { posts } from "../schema";
 import { randomId } from "../utils/random";
-import { postStatuses } from "./postLists";
+import { postStatuses } from "./postsHelpers";
 import { createRevision } from "../revisions/revisionMutations";
 import { MINIMUM_APPROVAL_KARMA } from "../users/userHelpers";
 import { updatePostUser } from "./postCallbacks";

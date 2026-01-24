@@ -20,6 +20,12 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       question: true,
       debate: true,
       shortform: true,
+      draft: true,
+      status: true,
+      rejected: true,
+      authorIsUnreviewed: true,
+      forceAllowType3Audio: true,
+      podcastEpisodeId: true,
     },
     extras: {
       tags: postTagsProjection,
