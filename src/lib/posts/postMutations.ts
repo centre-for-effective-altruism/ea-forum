@@ -7,6 +7,7 @@ import { createRevision } from "../revisions/revisionMutations";
 import { MINIMUM_APPROVAL_KARMA } from "../users/userHelpers";
 import { updatePostUser } from "./postCallbacks";
 import { getUniqueSlug } from "../slugs/uniqueSlug";
+import { performVote } from "../votes/voteMutations";
 
 export const createShortformPost = async (user: CurrentUser) => {
   const _id = randomId();
@@ -62,13 +63,22 @@ export const createShortformPost = async (user: CurrentUser) => {
       })
       .returning();
 
-    await Promise.all([updatePostUser(txn, post)]);
+    await Promise.all([
+      updatePostUser(txn, post),
+      performVote({
+        txn,
+        collectionName: "Posts",
+        document: post,
+        user,
+        voteType: "smallUpvote",
+        skipRateLimits: true,
+      }),
+    ]);
   });
 
   // TODO:
   // Posts rate limit
   // triggerReviewIfNeeded
-  // Add self vote
   // New post notifications
 
   return _id;

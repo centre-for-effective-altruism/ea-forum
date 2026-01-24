@@ -192,6 +192,9 @@ suite("Comments", () => {
       editorData,
     });
 
+    const power = userSmallVotePower(user.karma, 1);
+    expect(power).toBeGreaterThan(0);
+
     const [quickTake, post, author] = await Promise.all([
       db.query.comments.findFirst({
         where: {
@@ -215,6 +218,8 @@ suite("Comments", () => {
     expect(quickTake!.postId).toBe(post!._id);
     expect(post!.shortform).toBe(true);
     expect(post!.commentCount).toBe(1);
+    expect(post!.voteCount).toBe(1);
+    expect(post!.baseScore).toBe(power);
     expect(author!.postCount).toBe(1);
     expect(author!.maxPostCount).toBe(1);
     expect(author!.frontpagePostCount).toBe(1);
