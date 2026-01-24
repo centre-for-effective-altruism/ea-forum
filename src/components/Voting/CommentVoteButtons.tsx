@@ -5,13 +5,16 @@ import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-export default function VoteButtons({
+export default function CommentVoteButtons({
   comment,
 }: Readonly<{ comment: CommentsList }>) {
-  const { onVote, baseScore, voteCount, currentUserVoteType } = useVote(comment);
+  const { onVote, baseScore, voteCount, currentUserVoteType } = useVote({
+    collectionName: "Comments",
+    document: comment,
+  });
   return (
     <div
-      data-component="VoteButtons"
+      data-component="CommentVoteButtons"
       className="
         inline-flex items-center h-[22px] px-2
         rounded-sm border-1 border-comment-border
@@ -22,12 +25,14 @@ export default function VoteButtons({
         direction="Downvote"
         orientation="left"
         onVote={onVote}
+        dimWhenNotVoted
+        className="text-gray-400"
       />
       <Tooltip
         title={
           <Type>
-            This comment has {baseScore} <strong>overall</strong> karma ({voteCount}{" "}
-            vote{voteCount === 1 ? "" : "s"})
+            This comment has {baseScore} karma ({voteCount} vote
+            {voteCount === 1 ? "" : "s"})
           </Type>
         }
         className="text-[14px] font-500 text-gray-600"
@@ -39,6 +44,8 @@ export default function VoteButtons({
         direction="Upvote"
         orientation="right"
         onVote={onVote}
+        dimWhenNotVoted
+        className="text-gray-400"
       />
     </div>
   );

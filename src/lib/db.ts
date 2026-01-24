@@ -66,6 +66,15 @@ const relations = defineRelations(
         from: r.posts._id,
         to: r.comments.postId,
       }),
+      votes: r.many.votes({
+        from: r.posts._id,
+        to: r.votes.documentId,
+        where: {
+          collectionName: { eq: "Posts" },
+          cancelled: { eq: false },
+          isUnvote: { eq: false },
+        },
+      }),
     },
     comments: {
       post: r.one.posts({

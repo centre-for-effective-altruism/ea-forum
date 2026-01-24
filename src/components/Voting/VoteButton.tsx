@@ -28,11 +28,17 @@ export default function VoteButton({
   direction,
   orientation,
   onVote,
+  dimWhenNotVoted,
+  size = 16,
+  className,
 }: Readonly<{
   currentVoteStrength: VoteStrength;
   direction: VoteDirection;
   orientation: Orientation;
   onVote: (voteType: VoteType) => void;
+  dimWhenNotVoted?: boolean;
+  size?: number;
+  className?: string;
 }>) {
   const [votingTransition, setVotingTransition] = useState<NodeJS.Timeout | null>(
     null,
@@ -119,14 +125,17 @@ export default function VoteButton({
         onMouseUp={onMouseUp}
         onClick={onPress}
         className={clsx(
-          "relative cursor-pointer text-gray-400",
+          "relative cursor-pointer",
           orientations[orientation],
+          className,
         )}
       >
         <ChevronUpIcon
-          width={16}
-          height={16}
-          className={clsx("opacity-70", voted && "text-primary")}
+          width={size}
+          height={size}
+          className={clsx(
+            voted ? "text-primary" : dimWhenNotVoted ? "opacity-70" : null,
+          )}
         />
         <Transition
           in={!!(bigVotingTransition || bigVoted)}
@@ -136,8 +145,8 @@ export default function VoteButton({
           {(state) => (
             <ChevronUpIcon
               ref={ref}
-              width={24}
-              height={24}
+              width={size + size / 2}
+              height={size + size / 2}
               className={clsx(
                 "pointer-events-none absolute -top-[7px] -left-[4px]",
                 (bigVoteCompleted || bigVoted) && "text-primary-light",
