@@ -1,14 +1,18 @@
 "use client";
 
 import { useCallback } from "react";
-import { useQuickTakesCommunityContext } from "./QuickTakesCommunityContext";
+import { useQuickTakesListContext } from "./QuickTakesListContext";
 import CheckIcon from "@heroicons/react/16/solid/CheckIcon";
 import clsx from "clsx";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-export default function QuickTakesCommunityToggle() {
-  const { showCommunity, setShowCommunity } = useQuickTakesCommunityContext();
+export default function QuickTakesCommunityToggle({
+  className,
+}: Readonly<{
+  className?: string;
+}>) {
+  const { showCommunity, setShowCommunity } = useQuickTakesListContext();
   const onToggle = useCallback(() => {
     setShowCommunity((checked) => !checked);
   }, [setShowCommunity]);
@@ -17,6 +21,7 @@ export default function QuickTakesCommunityToggle() {
       title={
         <Type style="bodySmall">Show quick takes tagged &quot;Community&quot;</Type>
       }
+      className={className}
     >
       <Type
         style="loadMore"

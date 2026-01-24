@@ -1,25 +1,73 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
+import { useQuickTakesListContext } from "./QuickTakesListContext";
+import type { CommentsList } from "@/lib/comments/commentLists";
+import toast from "react-hot-toast";
 import clsx from "clsx";
+import Editor from "../Editor/Editor";
+import Button from "../Button";
 
 export default function NewQuickTake({
   className,
 }: Readonly<{
   className?: string;
 }>) {
+  const { addLocalQuickTake } = useQuickTakesListContext();
+  const [open, setOpen] = useState(false);
+  const onFocus = useCallback(() => setOpen(true), []);
+  const onCancel = useCallback(() => setOpen(false), []);
+  const onSuccess = useCallback(
+    (quickTake: CommentsList) => {
+      addLocalQuickTake(quickTake);
+      toast.success("Quick take published");
+    },
+    [addLocalQuickTake],
+  );
+  const { loading, editorRef, contents, onSubmit, onKeyDown, onChange } =
+    useCommentEditor({
+      shortform: true,
+      onSuccess,
+    });
   return (
-    <section
+    <form
       data-component="NewQuickTake"
-      className={clsx("bg-gray-50 border border-gray-100 p-2", className)}
+      onSubmit={onSubmit}
+      onKeyDown={onKeyDown}
+      className={clsx("bg-gray-50 border border-gray-100 p-3 rounded", className)}
     >
-      {/* TODO: This should wrap the new comment form instead
-      <Editor
-        formType="new"
-        collectionName="Comments"
-        fieldName="contents"
-        placeholder="Share exploratory, draft-stage, rough thoughts..."
-        value={{ type: "ckEditorMarkup", value: "" }}
-        quickTakesStyles
-      />
-        */}
-    </section>
+      <div
+        className={clsx(
+          "flex flex-col gap-1 bg-gray-100 rounded p-2",
+          open ? "[&_.ck.ck-content]:min-h-[100px]" : "[&_p]:mb-0!",
+        )}
+      >
+        <Editor
+          formType="new"
+          collectionName="Comments"
+          fieldName="contents"
+          placeholder="Share exploratory, draft-stage, rough thoughts..."
+          value={contents}
+          onChange={onChange}
+          onFocus={onFocus}
+          commentStyles
+          commentEditor
+          hideControls
+          ref={editorRef}
+          className="w-full grow"
+        />
+        <div
+          className={clsx("flex items-center justify-end gap-2", !open && "hidden")}
+        >
+          <Button variant="greyFilled" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={loading}>
+            Publish
+          </Button>
+        </div>
+      </div>
+    </form>
   );
 }

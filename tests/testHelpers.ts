@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
-import { slugify } from "@/lib/utils/slugify";
+import { slugify } from "@/lib/slugs/slugify";
 import {
   Comment,
   comments,

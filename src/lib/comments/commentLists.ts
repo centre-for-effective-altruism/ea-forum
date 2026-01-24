@@ -3,11 +3,7 @@ import { db } from "@/lib/db";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
 import { postStatuses } from "../posts/postLists";
-import {
-  isAnyInArray,
-  isNotTrue,
-  RelationalProjection,
-} from "@/lib/utils/queryHelpers";
+import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
 
@@ -217,7 +213,7 @@ const fetchPopularCommentsUncached = async ({
   recencyBias = 60 * 60 * 2,
 }: PopularCommentsConfig): Promise<CommentsList[]> => {
   const communityTopicId = process.env.COMMUNITY_TAG_ID;
-  const popularComments = await db.execute(sql`
+  const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id
     FROM (
       SELECT DISTINCT ON ("postId") "_id"
@@ -238,14 +234,14 @@ const fetchPopularCommentsUncached = async ({
       p."hideFromPopularComments" IS NOT TRUE
       AND p."frontpageDate" IS NOT NULL
       AND p."status" = ${postStatuses.STATUS_APPROVED}
-      AND p."draft" IS FALSE
-      AND p."deletedDraft" IS FALSE
-      AND p."isFuture" IS FALSE
-      AND p."unlisted" IS FALSE
-      AND p."shortform" IS FALSE
-      AND p."authorIsUnreviewed" IS FALSE
-      AND p."hiddenRelatedQuestion" IS FALSE
-      AND p."isEvent" IS FALSE
+      AND p."draft" IS NOT TRUE
+      AND p."deletedDraft" IS NOT TRUE
+      AND p."isFuture" IS NOT TRUE
+      AND p."unlisted" IS NOT TRUE
+      AND p."shortform" IS NOT TRUE
+      AND p."authorIsUnreviewed" IS NOT TRUE
+      AND p."hiddenRelatedQuestion" IS NOT TRUE
+      AND p."isEvent" IS NOT TRUE
       AND p."postedAt" IS NOT NULL
       AND COALESCE((p."tagRelevance"->${communityTopicId})::INTEGER, 0) < 1
     ORDER BY
@@ -261,7 +257,7 @@ const fetchPopularCommentsUncached = async ({
   const result = await fetchCommentsList({
     currentUserId,
     where: {
-      RAW: (commentsTable) => isAnyInArray(commentsTable._id, popularCommentIds),
+      _id: { in: popularCommentIds },
     },
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
