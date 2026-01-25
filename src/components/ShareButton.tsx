@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { useTracking } from "@/lib/analyticsEvents";
+import { isMobile } from "@/lib/environment";
 import { appendQueryParams } from "@/lib/routeHelpers";
 import toast from "react-hot-toast";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
@@ -16,16 +17,31 @@ import Type from "./Type";
 export default function ShareButton({
   title,
   url,
-  eventName = "share",
+  clickEventName = "shareButtonClicked",
+  shareEventName = "share",
   campaign = "share",
 }: Readonly<{
   title: string;
   url: string;
-  eventName?: string;
+  clickEventName?: string;
+  shareEventName?: string;
   campaign?: string;
 }>) {
   const { captureEvent } = useTracking();
   const dismissRef = useRef<() => void>(null);
+
+  // Try to open the native mobile sharing interface, otherwise open the desktop menu
+  const onClick = useCallback(() => {
+    captureEvent(clickEventName);
+    if (isMobile() && !!navigator.canShare) {
+      const sharingOptions = { title, text: title, url };
+      if (navigator.canShare(sharingOptions)) {
+        // Prevent the desktop dropdown from opening
+        setTimeout(() => dismissRef.current?.(), 0);
+        void navigator.share(sharingOptions);
+      }
+    }
+  }, [captureEvent, clickEventName, title, url]);
 
   const urlWithSource = useCallback(
     (source: string) => {
@@ -36,38 +52,38 @@ export default function ShareButton({
 
   const onCopyLink = useCallback(() => {
     dismissRef.current?.();
-    captureEvent(eventName, { option: "copyLink" });
+    captureEvent(shareEventName, { option: "copyLink" });
     void navigator.clipboard.writeText(urlWithSource("link"));
     toast.success("Link copied to clipboard");
-  }, [captureEvent, eventName, urlWithSource]);
+  }, [captureEvent, shareEventName, urlWithSource]);
 
   const shareOnTwitter = useCallback(() => {
     dismissRef.current?.();
-    captureEvent(eventName, { option: "twitter" });
+    captureEvent(shareEventName, { option: "twitter" });
     const text = encodeURIComponent(`${title} ${urlWithSource("twitter")}`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
-  }, [captureEvent, eventName, title, urlWithSource]);
+  }, [captureEvent, shareEventName, title, urlWithSource]);
 
   const shareOnFacebook = useCallback(() => {
     dismissRef.current?.();
-    captureEvent(eventName, { option: "facebook" });
+    captureEvent(shareEventName, { option: "facebook" });
     const u = encodeURIComponent(urlWithSource("facebook"));
     const t = encodeURIComponent(title);
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${u}&t=${t}`,
       "_blank",
     );
-  }, [captureEvent, eventName, title, urlWithSource]);
+  }, [captureEvent, shareEventName, title, urlWithSource]);
 
   const shareOnLinkedIn = useCallback(() => {
     dismissRef.current?.();
-    captureEvent(eventName, { option: "linkedIn" });
+    captureEvent(shareEventName, { option: "linkedIn" });
     const url = encodeURIComponent(urlWithSource("linkedin"));
     window.open(
       `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
       "_blank",
     );
-  }, [captureEvent, eventName, urlWithSource]);
+  }, [captureEvent, shareEventName, urlWithSource]);
 
   return (
     <DropdownMenu
@@ -99,7 +115,10 @@ export default function ShareButton({
       ]}
     >
       <Tooltip title={<Type style="bodySmall">Share</Type>}>
-        <button className="cursor-pointer text-gray-600 flex items-center">
+        <button
+          onClick={onClick}
+          className="cursor-pointer text-gray-600 flex items-center"
+        >
           <ArrowUpTrayIcon className="w-4" />
         </button>
       </Tooltip>

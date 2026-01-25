@@ -70,7 +70,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             <ShareButton
               title={post.title}
               url={postGetPageUrl({ post, isAbsolute: true })}
-              eventName="sharePost"
+              clickEventName="sharePostButtonClicked"
+              shareEventName="sharePost"
               campaign="post_share"
             />
             <EllipsisHorizontalIcon className="w-5 text-gray-600 cursor-pointer" />
