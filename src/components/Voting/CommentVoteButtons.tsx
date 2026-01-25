@@ -8,7 +8,7 @@ import Type from "../Type";
 export default function CommentVoteButtons({
   comment,
 }: Readonly<{ comment: CommentsList }>) {
-  const { onVote, baseScore, voteCount, currentUserVoteType } = useVote({
+  const { onVote, baseScore, voteCount, voteType } = useVote({
     collectionName: "Comments",
     document: comment,
   });
@@ -21,7 +21,7 @@ export default function CommentVoteButtons({
       "
     >
       <VoteButton
-        currentVoteStrength={getVoteDownStrength(currentUserVoteType)}
+        currentVoteStrength={getVoteDownStrength(voteType)}
         direction="Downvote"
         orientation="left"
         onVote={onVote}
@@ -40,7 +40,7 @@ export default function CommentVoteButtons({
         {baseScore}
       </Tooltip>
       <VoteButton
-        currentVoteStrength={getVoteUpStrength(currentUserVoteType)}
+        currentVoteStrength={getVoteUpStrength(voteType)}
         direction="Upvote"
         orientation="right"
         onVote={onVote}

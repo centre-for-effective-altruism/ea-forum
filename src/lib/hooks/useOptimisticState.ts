@@ -29,6 +29,7 @@ export const useOptimisticState = <Value, Args>(
         } catch (e) {
           if (requestId === requestIdRef.current) {
             setValue(previous);
+            console.error(e);
             onError(e instanceof Error ? e : new Error("Something went wrong"));
           }
         }

@@ -1,6 +1,7 @@
 import "server-only";
 import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
+import type { VoteType } from "./votes/voteHelpers";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
 import {
@@ -3427,7 +3428,7 @@ export const votes = pgTable(
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     authorIds: varchar({ length: 27 }).array(),
-    voteType: text().notNull(),
+    voteType: text().$type<VoteType>().notNull(),
     extendedVoteType: jsonb(),
     power: doublePrecision().notNull(),
     afPower: doublePrecision(),

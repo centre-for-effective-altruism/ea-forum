@@ -110,7 +110,7 @@ const clearVotes = async ({
     });
     await Promise.all([
       updateUserKarma(txn, collectionName, authors, user._id, -vote.power),
-      updateUserVoteCounts(txn, authors, user._id, vote.voteType as VoteType, -1),
+      updateUserVoteCounts(txn, authors, user._id, vote.voteType, -1),
       // TODO: We still need the following ForumMagnum vote callbacks
       // voteUpdatePostDenormalizedTags
       // recomputeContributorScoresFor
