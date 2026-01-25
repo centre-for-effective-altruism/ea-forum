@@ -11,6 +11,7 @@ import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { cube } from "@electric-sql/pglite/contrib/cube";
 import { defineRelations } from "drizzle-orm";
 import {
+  bookmarks,
   comments,
   forumEvents,
   images,
@@ -34,6 +35,7 @@ const relations = defineRelations(
     users,
     posts,
     readStatuses,
+    bookmarks,
     comments,
     revisions,
     votes,
@@ -78,9 +80,16 @@ const relations = defineRelations(
         from: r.posts._id,
         to: r.votes.documentId,
         where: {
-          collectionName: { eq: "Posts" },
-          cancelled: { eq: false },
-          isUnvote: { eq: false },
+          collectionName: "Posts",
+          cancelled: false,
+          isUnvote: false,
+        },
+      }),
+      bookmarks: r.many.bookmarks({
+        from: r.posts._id,
+        to: r.bookmarks.documentId,
+        where: {
+          collectionName: "Posts",
         },
       }),
     },
@@ -107,9 +116,9 @@ const relations = defineRelations(
         from: r.comments._id,
         to: r.votes.documentId,
         where: {
-          collectionName: { eq: "Comments" },
-          cancelled: { eq: false },
-          isUnvote: { eq: false },
+          collectionName: "Comments",
+          cancelled: false,
+          isUnvote: false,
         },
       }),
       topLevelComment: r.one.comments({

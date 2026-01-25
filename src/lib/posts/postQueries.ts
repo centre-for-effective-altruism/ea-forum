@@ -70,6 +70,14 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
               },
               limit: 1,
             },
+            bookmarks: {
+              columns: {
+                active: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
+            },
           }
         : {}),
     },

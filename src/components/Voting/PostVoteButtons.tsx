@@ -12,14 +12,14 @@ export default function PostVoteButtons({
 }: Readonly<{
   post: PostDisplay;
 }>) {
-  const { onVote, baseScore, voteCount, currentUserVoteType } = useVote({
+  const { onVote, baseScore, voteCount, voteType } = useVote({
     collectionName: "Posts",
     document: post,
   });
   return (
     <div data-component="PostVoteButtons" className="flex items-center gap-1">
       <VoteButton
-        currentVoteStrength={getVoteDownStrength(currentUserVoteType)}
+        currentVoteStrength={getVoteDownStrength(voteType)}
         direction="Downvote"
         orientation="down"
         onVote={onVote}
@@ -40,7 +40,7 @@ export default function PostVoteButtons({
         </Type>
       </Tooltip>
       <VoteButton
-        currentVoteStrength={getVoteUpStrength(currentUserVoteType)}
+        currentVoteStrength={getVoteUpStrength(voteType)}
         direction="Upvote"
         orientation="up"
         onVote={onVote}

@@ -1,6 +1,7 @@
 import "server-only";
 import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
+import type { VoteType } from "./votes/voteHelpers";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
 import {
@@ -344,7 +345,10 @@ export const bans = pgTable(
 export const bookmarks = pgTable(
   "Bookmarks",
   {
-    ...universalFields,
+    // For some reason bookmarks doesn't have legacyData and schemaVersion
+    // universal fields...
+    _id: varchar({ length: 27 }).primaryKey().notNull(),
+    createdAt: timestampDefaultNow().notNull(),
     documentId: text().notNull(),
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
@@ -3424,7 +3428,7 @@ export const votes = pgTable(
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     authorIds: varchar({ length: 27 }).array(),
-    voteType: text().notNull(),
+    voteType: text().$type<VoteType>().notNull(),
     extendedVoteType: jsonb(),
     power: doublePrecision().notNull(),
     afPower: doublePrecision(),
