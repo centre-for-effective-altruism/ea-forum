@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
-import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
+import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { formatShortDate } from "@/lib/timeUtils";
 import { PostDisplayProvider } from "./usePostDisplay";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import LinkPostMessage from "./LinkPostMessage";
 import UserProfileImage from "../UserProfileImage";
@@ -12,8 +13,9 @@ import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
 import PostBookmark from "./PostBookmark";
-import PostTags from "../Tags/PostTags";
 import ReadProgress from "./ReadProgress";
+import ShareButton from "../ShareButton";
+import PostTags from "../Tags/PostTags";
 import UsersName from "../UsersName";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
@@ -61,10 +63,17 @@ export default async function PostDisplay({ postId }: { postId: string }) {
                 </Type>
               </Link>
             </Tooltip>
-            <PostAudioToggle />
           </div>
           <div className="flex items-center gap-5">
+            <PostAudioToggle />
             <PostBookmark />
+            <ShareButton
+              title={post.title}
+              url={postGetPageUrl({ post, isAbsolute: true })}
+              eventName="sharePost"
+              campaign="post_share"
+            />
+            <EllipsisHorizontalIcon className="w-5 text-gray-600 cursor-pointer" />
           </div>
         </div>
         <PostTags post={post} className="mt-6" />

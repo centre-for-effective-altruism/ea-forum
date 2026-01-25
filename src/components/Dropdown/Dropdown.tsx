@@ -1,3 +1,5 @@
+"use client";
+
 import { ReactNode, RefObject, useImperativeHandle, useState } from "react";
 import {
   autoUpdate,
