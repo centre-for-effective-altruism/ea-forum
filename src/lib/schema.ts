@@ -344,7 +344,10 @@ export const bans = pgTable(
 export const bookmarks = pgTable(
   "Bookmarks",
   {
-    ...universalFields,
+    // For some reason bookmarks doesn't have legacyData and schemaVersion
+    // universal fields...
+    _id: varchar({ length: 27 }).primaryKey().notNull(),
+    createdAt: timestampDefaultNow().notNull(),
     documentId: text().notNull(),
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
