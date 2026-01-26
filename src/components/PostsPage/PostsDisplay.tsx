@@ -2,13 +2,15 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
 import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";
+import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatShortDate } from "@/lib/timeUtils";
 import { PostDisplayProvider } from "./usePostDisplay";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import PostVoteButtons from "../Voting/PostVoteButtons";
-import LinkPostMessage from "./LinkPostMessage";
+import PostTableOfContents from "./PostTableOfContents";
 import UserProfileImage from "../UserProfileImage";
+import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
@@ -28,6 +30,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
     notFound();
   }
 
+  const tableOfContents = htmlToTableOfContents(post.contents?.html);
+  const bodyHtml = tableOfContents?.html || post.contents?.html || "";
   const readTimeMinutes = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
     post.contents?.wordCount ?? null,
@@ -35,8 +39,14 @@ export default async function PostDisplay({ postId }: { postId: string }) {
 
   return (
     <PostDisplayProvider post={post}>
+      <PostTableOfContents
+        title={post.title}
+        contents={tableOfContents}
+        commentCount={post.commentCount}
+        className="absolute left-0 top-0"
+      />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
-        <Type style="postsPageTitle" As="h1" className="mb-10">
+        <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
           {post.title}
         </Type>
         <div className="flex gap-3 mb-6">
@@ -80,7 +90,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
         <PostTags post={post} className="mt-6" />
         <PostAudioPlayer className="mt-10" />
         <LinkPostMessage post={post} className="mt-10" />
-        <PostBody html={post.contents?.html ?? ""} className="mt-10" />
+        <PostBody html={bodyHtml} className="mt-10" />
       </ReadProgress>
     </PostDisplayProvider>
   );

@@ -18,12 +18,11 @@ suite("htmlToTableOfContents", () => {
     `;
     const toc = htmlToTableOfContents(html);
     expect(toc).not.toBeNull();
-    expect(toc?.sections.length).toBe(3); // 2 headings + divider
+    expect(toc?.sections.length).toBe(2);
     expect(toc?.sections[0].title).toBe("Main Heading");
     expect(toc?.sections[0].anchor).toBe("Main_Heading");
     expect(toc?.sections[1].title).toBe("Sub Heading");
     expect(toc?.sections[1].anchor).toBe("Sub_Heading");
-    expect(toc?.sections[2].divider).toBe(true);
   });
   test("<b> and <strong> are included only if they are the whole paragraph", () => {
     const html = `
@@ -52,7 +51,7 @@ suite("htmlToTableOfContents", () => {
       <h3>Heading</h3>
     `;
     const toc = htmlToTableOfContents(html);
-    const anchors = toc?.sections.filter((s) => !s.divider).map((s) => s.anchor);
+    const anchors = toc?.sections.map((s) => s.anchor);
     expect(anchors).toEqual(["Heading", "Heading1", "Heading2"]);
   });
   test("ignores headings inside .footnotes", () => {
@@ -63,7 +62,7 @@ suite("htmlToTableOfContents", () => {
       </div>
     `;
     const toc = htmlToTableOfContents(html);
-    const titles = toc?.sections.filter((s) => !s.divider).map((s) => s.title);
+    const titles = toc?.sections.map((s) => s.title);
     expect(titles).toEqual(["Visible Heading"]);
   });
   test("maps heading levels to consecutive numbers starting at 1", () => {
@@ -74,17 +73,9 @@ suite("htmlToTableOfContents", () => {
       <p><b>Bold Heading</b></p>
     `;
     const toc = htmlToTableOfContents(html);
-    const levels = toc?.sections.filter((s) => !s.divider).map((s) => s.level);
+    const levels = toc?.sections.map((s) => s.level);
     // Original levels (h1=1, h2=2, h4=4, b=7) should map to consecutive numbers
     expect(levels).toEqual([1, 2, 3, 4]);
-  });
-  test("adds divider at the end of sections", () => {
-    const html = "<h1>Heading</h1>";
-    const toc = htmlToTableOfContents(html);
-    expect(toc?.sections[toc.sections.length - 1].divider).toBe(true);
-    expect(toc?.sections[toc.sections.length - 1].anchor).toBe(
-      "postHeadingsDivider",
-    );
   });
   test("handles complex HTML with multiple headings and nested elements", () => {
     const html = `
@@ -94,7 +85,7 @@ suite("htmlToTableOfContents", () => {
       <h3>H3</h3>
     `;
     const toc = htmlToTableOfContents(html);
-    const titles = toc?.sections.filter((s) => !s.divider).map((s) => s.title);
+    const titles = toc?.sections.map((s) => s.title);
     expect(titles).toContain("Bold Heading");
     expect(titles).toContain("Normal H2");
     expect(titles).toContain("H3");
@@ -104,7 +95,7 @@ suite("htmlToTableOfContents", () => {
   test("handles reserved anchor names by suffixing numbers", () => {
     const html = `<h1>top</h1><h2>top</h2>`;
     const toc = htmlToTableOfContents(html);
-    const anchors = toc?.sections.filter((s) => !s.divider).map((s) => s.anchor);
+    const anchors = toc?.sections.map((s) => s.anchor);
     expect(anchors).toEqual(["top1", "top2"]); // "top" is reserved
   });
 });

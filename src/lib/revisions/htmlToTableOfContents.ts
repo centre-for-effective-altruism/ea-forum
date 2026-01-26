@@ -27,13 +27,12 @@ const anchorChars =
 const reservedAnchorNames = new Set(["top", "comments"]);
 
 type TableOfContentsSection = {
-  title?: string;
+  title: string;
   anchor: string;
   level: number;
-  divider?: boolean;
 };
 
-type TableOfContents = {
+export type TableOfContents = {
   html: string;
   sections: TableOfContentsSection[];
 };
@@ -191,10 +190,6 @@ export const htmlToTableOfContents = (
 
   for (const heading of sections) {
     heading.level = headingLevelMap[heading.level];
-  }
-
-  if (sections.length) {
-    sections.push({ divider: true, level: 0, anchor: "postHeadingsDivider" });
   }
 
   return { html: $.html(), sections };
