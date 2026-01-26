@@ -56,7 +56,10 @@ export default function PostTableOfContents({
       componentName="PostTableOfContents"
     >
       <aside data-component="PostTableOfContents" className={className}>
-        <nav aria-label="Table of Contents" className="flex flex-col gap-2">
+        <nav
+          aria-label="Table of Contents"
+          className="flex flex-col gap-2 max-h-[calc(100vh-120px)] overflow-y-auto"
+        >
           <Type>
             <Link href="#top" className="text-gray-1000">
               {title}
