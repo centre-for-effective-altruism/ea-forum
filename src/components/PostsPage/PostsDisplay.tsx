@@ -74,7 +74,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               shareEventName="sharePost"
               campaign="post_share"
             />
-            <EllipsisHorizontalIcon className="w-5 text-gray-600 cursor-pointer" />
+            <EllipsisHorizontalIcon className="w-5 text-gray-600 hover:text-gray-900 cursor-pointer" />
           </div>
         </div>
         <PostTags post={post} className="mt-6" />
