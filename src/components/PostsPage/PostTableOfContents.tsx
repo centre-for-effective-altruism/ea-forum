@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { TableOfContents } from "@/lib/revisions/htmlToTableOfContents";
+import clsx from "clsx";
 import Link from "../Link";
 import Type from "../Type";
 
@@ -18,8 +19,11 @@ export default function PostTableOfContents({
     return null;
   }
   return (
-    <aside data-component="PostTableOfContents" className={className}>
-      <nav aria-label="Table of Contents" className="flex flex-col gap-2 w-[260px]">
+    <aside
+      data-component="PostTableOfContents"
+      className={clsx("w-[260px]", className)}
+    >
+      <nav aria-label="Table of Contents" className="flex flex-col gap-2">
         <Type>
           <Link href="#top" className="text-gray-1000">
             {title}
