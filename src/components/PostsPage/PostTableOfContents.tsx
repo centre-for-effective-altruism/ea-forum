@@ -70,7 +70,7 @@ export default function PostTableOfContents({
             <Type
               key={anchor}
               cssStyle={{ "--anchor-level": String(level - 1) } as CSSProperties}
-              className="pl-[calc(var(--spacing)*var(--anchor-level))]"
+              className="pl-[calc(16px*var(--anchor-level))]"
             >
               <Link
                 href={`#${anchor}`}

@@ -75,7 +75,7 @@ suite("htmlToTableOfContents", () => {
     const toc = htmlToTableOfContents(html);
     const levels = toc?.sections.map((s) => s.level);
     // Original levels (h1=1, h2=2, h4=4, b=7) should map to consecutive numbers
-    expect(levels).toEqual([1, 2, 3, 4]);
+    expect(levels).toEqual([0, 1, 2, 3]);
   });
   test("handles complex HTML with multiple headings and nested elements", () => {
     const html = `

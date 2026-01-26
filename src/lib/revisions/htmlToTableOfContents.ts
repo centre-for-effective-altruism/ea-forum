@@ -176,16 +176,16 @@ export const htmlToTableOfContents = (
   }
 
   // Filter out unused heading levels
-  const headingLevelsUsed: number[] = [];
+  const headingLevelsUsedSet = new Set<number>();
   for (const heading of sections) {
-    headingLevelsUsed.push(heading.level);
+    headingLevelsUsedSet.add(heading.level);
   }
-  headingLevelsUsed.sort();
+  const headingLevelsUsed = Array.from(headingLevelsUsedSet).sort();
 
-  // Map the heading levels to consecutive numbers starting from 1
+  // Map the heading levels to consecutive numbers starting from 0
   const headingLevelMap: Record<number, number> = {};
-  for (const [i, level] of headingLevelsUsed.entries()) {
-    headingLevelMap[level] = i + 1;
+  for (let i = 0; i < headingLevelsUsed.length; i++) {
+    headingLevelMap[headingLevelsUsed[i]] = i;
   }
 
   for (const heading of sections) {
