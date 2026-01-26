@@ -7,6 +7,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
     columns: {
       _id: true,
       title: true,
+      slug: true,
       url: true,
       baseScore: true,
       voteCount: true,
