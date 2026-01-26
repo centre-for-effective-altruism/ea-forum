@@ -37,7 +37,7 @@ export default function MobileNav() {
     <div
       data-component="MobileNav"
       className={clsx(
-        "fixed inset-0 z-(--zindex-mobile-nav) w-full h-screen mobile-nav:hidden",
+        "fixed inset-0 z-(--zindex-mobile-nav) w-full h-screen",
         isMobileNavOpen ? "pointer-events-auto" : "pointer-events-none",
       )}
     >
