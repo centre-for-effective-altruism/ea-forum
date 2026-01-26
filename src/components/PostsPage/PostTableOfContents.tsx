@@ -3,7 +3,6 @@
 import { useEffect, CSSProperties, useState } from "react";
 import type { TableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import clsx from "clsx";
 import Link from "../Link";
 import Type from "../Type";
 
@@ -56,10 +55,7 @@ export default function PostTableOfContents({
       pageSectionContext="tableOfContents"
       componentName="PostTableOfContents"
     >
-      <aside
-        data-component="PostTableOfContents"
-        className={clsx("w-[260px]", className)}
-      >
+      <aside data-component="PostTableOfContents" className={className}>
         <nav aria-label="Table of Contents" className="flex flex-col gap-2">
           <Type>
             <Link href="#top" className="text-gray-1000">
