@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useEffect, CSSProperties, useState } from "react";
 import type { TableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import clsx from "clsx";
@@ -16,9 +18,39 @@ export default function PostTableOfContents({
   commentCount: number;
   className?: string;
 }>) {
+  const [currentAnchor, setCurrentAnchor] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!contents?.sections.length) {
+      return;
+    }
+
+    const onScroll = () => {
+      const cutoffPoint = window.innerHeight / 4;
+      const sectionsReversed = [...contents.sections].reverse();
+      for (const section of sectionsReversed) {
+        const element = document.getElementById(section.anchor);
+        if (!element) {
+          continue;
+        }
+        const bounds = element.getBoundingClientRect();
+        const position = bounds.bottom;
+        if (position && position < cutoffPoint) {
+          setCurrentAnchor(section.anchor);
+          return;
+        }
+      }
+      setCurrentAnchor(null);
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [contents?.sections]);
+
   if (!contents?.sections.length) {
     return null;
   }
+
   return (
     <AnalyticsContext
       pageSectionContext="tableOfContents"
@@ -43,7 +75,11 @@ export default function PostTableOfContents({
             >
               <Link
                 href={`#${anchor}`}
-                className="text-gray-600 hover:text-gray-900"
+                className={
+                  anchor === currentAnchor
+                    ? "text-gray-900 after:content-['•'] after:ml-1"
+                    : "text-gray-600 hover:text-gray-900"
+                }
               >
                 {title}
               </Link>
