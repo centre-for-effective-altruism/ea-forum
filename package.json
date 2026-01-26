@@ -8,7 +8,7 @@
     "dev": "next dev --turbopack",
     "dev:standalone": "DISABLE_PROXY=true next dev --turbopack",
     "format": "prettier . --write --log-level warn",
-    "lint": "eslint --max-warnings 0",
+    "lint": "eslint --max-warnings 0 --cache",
     "prepare": "husky",
     "pull-schema": "drizzle-kit pull",
     "start": "next start",
