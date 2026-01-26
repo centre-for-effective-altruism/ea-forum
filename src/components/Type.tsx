@@ -1,4 +1,4 @@
-import type { ElementType, MouseEvent, ReactNode } from "react";
+import type { CSSProperties, ElementType, MouseEvent, ReactNode } from "react";
 
 const styles = {
   body: "font-sans text-[14px] font-[450]",
@@ -23,6 +23,7 @@ export default function Type({
   style = "body",
   As = "div",
   className = "",
+  cssStyle,
   children,
   ...rest
 }: Readonly<{
@@ -31,11 +32,17 @@ export default function Type({
   id?: string;
   role?: string;
   onClick?: (ev: MouseEvent) => void;
+  cssStyle?: CSSProperties;
   className?: string;
   children: ReactNode;
 }>) {
   return (
-    <As {...rest} className={`${styles[style]} ${className}`} data-component="Type">
+    <As
+      {...rest}
+      style={cssStyle}
+      className={`${styles[style]} ${className}`}
+      data-component="Type"
+    >
       {children}
     </As>
   );

@@ -51,4 +51,10 @@ export const isAnyInArray = <C, T>(column: C, array: T[], cast?: string) =>
  * is added to the end as well.
  */
 export const htmlSubstring = (field: SQL, length = 350) =>
-  sql<string>`(REGEXP_REPLACE(SUBSTRING(${field}, 1, ${length}), '<[^>]*$', '') || '...')`;
+  sql<string>`(
+    CASE
+      WHEN TRIM(REGEXP_REPLACE(SUBSTRING(${field},1,${length}),'<[^>]*$','')) <> ''
+      THEN TRIM(REGEXP_REPLACE(SUBSTRING(${field},1,${length}),'<[^>]*$','')) || '...'
+      ELSE ''
+    END
+  )`;
