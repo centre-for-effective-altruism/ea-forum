@@ -52,7 +52,11 @@ export default function PostsItem({
   const isRead = !!(post._id in postsRead
     ? postsRead[post._id]
     : readStatus?.[0]?.isRead);
-  const { onClick } = useClickableCell({ href: postLink, openInNewTab });
+  const { onClick } = useClickableCell({
+    href: postLink,
+    openInNewTab,
+    ignoreLinks: true,
+  });
   const description = cardView ? getPostPlaintextDescription(post) : null;
   const imageUrl = getPostSocialImageUrl(post);
   return (

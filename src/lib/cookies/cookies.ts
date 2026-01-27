@@ -157,6 +157,19 @@ const allCookies = [
     description: "Don't show any EAG(x) banners",
   },
 
+  // Strangler fig migration cookies
+  {
+    name: "prefer_ea_forum_v3",
+    type: "necessary",
+    description: "Opt-in to use the new EA Forum site where available",
+  },
+  {
+    name: "ea_forum_v3_owned_routes",
+    type: "necessary",
+    description:
+      "JSON blob indicating which routes are handled by the new EA Forum site",
+  },
+
   // Third party cookies
   {
     name: "intercom-session-[*]",
