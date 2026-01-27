@@ -1,20 +1,35 @@
+import { z } from "zod/v4";
 import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
+import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
-import { getCloudinaryCloudName } from "../cloudinaryHelpers";
+import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
+
+export const postStatuses = {
+  STATUS_PENDING: 1, // Unused
+  STATUS_APPROVED: 2,
+  STATUS_REJECTED: 3,
+  STATUS_SPAM: 4,
+  STATUS_DELETED: 5,
+};
+
+export const postsListViewSchema = z.object({
+  view: z.enum(["frontpage", "sticky"]),
+  offset: z.int().gte(0).optional(),
+  limit: z.int().gt(0),
+  excludeTagId: z.string().optional(),
+  onlyTagId: z.string().optional(),
+});
+
+export type PostsListView = z.infer<typeof postsListViewSchema>;
 
 export const postGetPageUrl = ({
   post,
   sequenceId,
   isAbsolute,
 }: {
-  post: {
-    _id: string;
-    slug: string;
-    isEvent?: boolean;
-    groupId?: string | null;
-  };
+  post: Pick<Post, "_id" | "slug"> & Partial<Pick<Post, "isEvent" | "groupId">>;
   isAbsolute?: boolean;
   sequenceId?: string;
 }) => {
@@ -28,6 +43,9 @@ export const postGetPageUrl = ({
   }
   return `${prefix}/posts/${post._id}/${post.slug}`;
 };
+
+export const postGetCommentsUrl: typeof postGetPageUrl = (...args) =>
+  postGetPageUrl(...args) + "#comments";
 
 export type GoogleLocation = {
   address_components: {

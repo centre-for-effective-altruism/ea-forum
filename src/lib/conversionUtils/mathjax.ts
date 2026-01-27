@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import type { LiteElement } from "mathjax-full/js/adaptors/lite/Element";
 import { mathjax } from "mathjax-full/js/mathjax";
 import { TeX } from "mathjax-full/js/input/tex";
@@ -7,6 +6,7 @@ import { CHTML } from "mathjax-full/js/output/chtml";
 import { LiteAdaptor, liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor";
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html";
 import { AllPackages } from "mathjax-full/js/input/tex/AllPackages";
+import { captureException } from "@sentry/nextjs";
 
 const trimLatexAndAddCss = (
   body: LiteElement,
@@ -50,8 +50,7 @@ export const processMathjax = (html: string): Promise<string> => {
     setTimeout(() => {
       if (!finished) {
         const errorMessage = `Timed out in mjpage when processing html: ${html}`;
-        // TODO Sentry
-        // captureException(new Error(errorMessage));
+        captureException(new Error(errorMessage));
         console.error(errorMessage);
         finished = true;
         resolve(html);
@@ -92,7 +91,7 @@ export const processMathjax = (html: string): Promise<string> => {
       finished = true;
       resolve(result);
     } catch (error) {
-      // TODO Sentry
+      captureException(error);
       console.error("Error in MathJax processing:", error);
       finished = true;
       resolve(html); // Return original HTML on error

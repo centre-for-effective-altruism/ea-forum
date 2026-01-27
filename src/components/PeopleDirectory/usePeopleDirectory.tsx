@@ -10,8 +10,8 @@ import {
   useState,
 } from "react";
 import { useSearchParams } from "next/navigation";
+import { captureException } from "@sentry/nextjs";
 import type { SearchUser } from "@/lib/search/searchDocuments";
-import { captureException } from "@/lib/errorHandling";
 import { getSearchClient } from "@/lib/search/searchClient";
 import { useSearchAnalytics } from "@/lib/search/useSearchAnalytics";
 import { userCareerStages } from "@/lib/users/userHelpers";

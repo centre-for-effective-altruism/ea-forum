@@ -4,7 +4,6 @@ declare namespace NodeJS {
     LOG_DRIZZLE_QUERIES?: "true" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_SITE_URL: string;
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
     CONTACT_EMAIL: string;
 
     // Auth0 settings
@@ -33,12 +32,30 @@ declare namespace NodeJS {
     NEXT_PUBLIC_CK_WEBSOCKET_URL: string;
     NEXT_PUBLIC_CK_UPLOAD_URL: string;
 
+    // Cloudinary
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
+    CLOUDINARY_API_KEY: string;
+    CLOUDINARY_API_SECRET: string;
+
+    // Mailchimp
+    MAILCHIMP_API_KEY?: string;
+    MAILCHIMP_DIGEST_LIST_ID?: string;
+
     // Other services
     NEXT_PUBLIC_IPAPI_KEY?: string;
     NEXT_PUBLIC_INTERCOM_APP_ID: string;
+    AKISMET_API_KEY: string;
+    NEXT_PUBLIC_RECAPTCHA_KEY: string;
+    RECAPTCHA_PRIVATE_KEY: string;
+    SENTRY_DSN: string;
+
+    // Site access protection (optional)
+    SITE_ACCESS_PASSWORD?: string;
 
     // Site config
     START_HERE_POST_ID: string;
+    INTRO_POST_ID: string;
+    CONTACT_POST_ID: string;
     COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
     TRANSLATION_TAG_ID: string;

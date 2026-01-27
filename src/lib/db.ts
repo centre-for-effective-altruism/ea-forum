@@ -11,14 +11,21 @@ import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { cube } from "@electric-sql/pglite/contrib/cube";
 import { defineRelations } from "drizzle-orm";
 import {
+  bookmarks,
   comments,
+  forumEvents,
+  images,
   localgroups,
+  lwEvents,
   moderatorActions,
+  podcastEpisodes,
+  podcasts,
   posts,
   readStatuses,
   revisions,
   tags,
   userLoginTokens,
+  userRateLimits,
   users,
   votes,
 } from "./schema";
@@ -28,12 +35,19 @@ const relations = defineRelations(
     users,
     posts,
     readStatuses,
+    bookmarks,
     comments,
     revisions,
     votes,
     localgroups,
     tags,
+    images,
+    lwEvents,
+    forumEvents,
+    podcastEpisodes,
+    podcasts,
     moderatorActions,
+    userRateLimits,
     userLoginTokens,
   },
   (r) => ({
@@ -50,6 +64,10 @@ const relations = defineRelations(
         from: r.posts.groupId,
         to: r.localgroups._id,
       }),
+      podcastEpisode: r.one.podcastEpisodes({
+        from: r.posts.podcastEpisodeId,
+        to: r.podcastEpisodes._id,
+      }),
       readStatus: r.many.readStatuses({
         from: r.posts._id,
         to: r.readStatuses.postId,
@@ -58,8 +76,38 @@ const relations = defineRelations(
         from: r.posts._id,
         to: r.comments.postId,
       }),
+      votes: r.many.votes({
+        from: r.posts._id,
+        to: r.votes.documentId,
+        where: {
+          collectionName: "Posts",
+          cancelled: false,
+          isUnvote: false,
+        },
+      }),
+      bookmarks: r.many.bookmarks({
+        from: r.posts._id,
+        to: r.bookmarks.documentId,
+        where: {
+          collectionName: "Posts",
+        },
+      }),
+    },
+    podcastEpisodes: {
+      podcast: r.one.podcasts({
+        from: r.podcastEpisodes.podcastId,
+        to: r.podcasts._id,
+      }),
     },
     comments: {
+      post: r.one.posts({
+        from: r.comments.postId,
+        to: r.posts._id,
+      }),
+      tag: r.one.tags({
+        from: r.comments.tagId,
+        to: r.tags._id,
+      }),
       user: r.one.users({
         from: r.comments.userId,
         to: r.users._id,
@@ -68,10 +116,34 @@ const relations = defineRelations(
         from: r.comments._id,
         to: r.votes.documentId,
         where: {
-          collectionName: { eq: "Comments" },
-          cancelled: { eq: false },
-          isUnvote: { eq: false },
+          collectionName: "Comments",
+          cancelled: false,
+          isUnvote: false,
         },
+      }),
+      topLevelComment: r.one.comments({
+        from: r.comments.topLevelCommentId,
+        to: r.comments._id,
+      }),
+    },
+    tags: {
+      comments: r.many.comments({
+        from: r.tags._id,
+        to: r.comments.tagId,
+      }),
+    },
+    revisions: {
+      user: r.one.users({
+        from: r.revisions.userId,
+        to: r.users._id,
+      }),
+      tag: r.one.tags({
+        from: r.revisions.documentId,
+        to: r.tags._id,
+      }),
+      post: r.one.posts({
+        from: r.revisions.documentId,
+        to: r.posts._id,
       }),
     },
     userLoginTokens: {

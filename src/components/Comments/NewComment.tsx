@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
-import { createPostComment } from "@/lib/comments/commentMutations";
-import toast from "react-hot-toast";
+import { useCommentsList } from "./useCommentsList";
+import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import clsx from "clsx";
-import Editor, { EditorOnChangeProps } from "../Editor/Editor";
+import Editor from "../Editor/Editor";
 import Button from "../Button";
 
 export default function NewComment({
@@ -15,43 +13,20 @@ export default function NewComment({
   postId: string;
   className?: string;
 }>) {
-  const [loading, setLoading] = useState(false);
-  const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState<EditorContents>({
-    type: "ckEditorMarkup",
-    data: "",
-  });
-
-  const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
-    setContents(contents);
-    // TODO Handle autosave
-    void autosave;
-  }, []);
-
-  const onSubmit = useCallback(async () => {
-    try {
-      const editorApi = editorRef.current;
-      if (!editorApi) {
-        throw new Error("Editor API not found");
-      }
-      setLoading(true);
-      const data = await editorApi.submitData();
-      await createPostComment(postId, null, data);
-    } catch (e) {
-      console.error("Editor submit error:", e);
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }, [postId]);
-
+  const { addTopLevelComment } = useCommentsList();
+  const { loading, editorRef, contents, onSubmit, onKeyDown, onChange } =
+    useCommentEditor({
+      postId,
+      onSuccess: addTopLevelComment,
+    });
   return (
-    <div
+    <form
       data-component="NewComment"
+      onSubmit={onSubmit}
+      onKeyDown={onKeyDown}
       className={clsx(
         "border border-comment-border rounded p-2 [&_.ck.ck-content]:min-h-[100px]",
         "flex flex-col items-end gap-1",
-        "",
         className,
       )}
     >
@@ -68,9 +43,9 @@ export default function NewComment({
         ref={editorRef}
         className="w-full grow"
       />
-      <Button onClick={onSubmit} loading={loading}>
+      <Button type="submit" loading={loading}>
         Comment
       </Button>
-    </div>
+    </form>
   );
 }

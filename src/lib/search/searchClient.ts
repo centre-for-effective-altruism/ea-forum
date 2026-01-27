@@ -1,6 +1,6 @@
 import stringify from "json-stringify-deterministic";
 import { LRUCache } from "lru-cache";
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { SearchBase } from "./searchDocuments";
 
 const searchQuerySchema = z.object({

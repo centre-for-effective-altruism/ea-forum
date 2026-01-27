@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+
 export const filterNonNull = <T>(arr: (T | null | undefined)[]): T[] =>
   arr.filter((x) => x !== null && x !== undefined) as T[];
 
@@ -38,3 +40,18 @@ export type Json = boolean | number | string | null | JsonArray | JsonRecord;
 export type NextSearchParams = {
   [key: string]: string | string[] | undefined;
 };
+
+export const jsonSchema: z.ZodType<Json> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(jsonSchema),
+    z.record(z.string(), jsonSchema),
+  ]),
+);
+
+export const jsonArraySchema = z.array(jsonSchema);
+
+export const jsonRecordSchema = z.record(z.string(), jsonSchema);

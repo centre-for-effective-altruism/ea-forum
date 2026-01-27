@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { captureException } from "@sentry/nextjs";
 import {
   getAuth0Client,
   loginUserFromIdToken,
@@ -73,7 +74,7 @@ export const GET = async (req: NextRequest) => {
         new URL("/ban-notice", process.env.NEXT_PUBLIC_SITE_URL),
       );
     }
-    // TODO: Capture in sentry
+    captureException(e);
     console.error("Auth0 callback error", e);
     return NextResponse.json({ error: "Auth0 callback error" }, { status: 400 });
   }

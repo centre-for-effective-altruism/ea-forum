@@ -1,5 +1,4 @@
-"server-only";
-
+import "server-only";
 import { sanitizeHtml } from "./sanitizeHtml";
 import { getTurndown } from "./turndown";
 

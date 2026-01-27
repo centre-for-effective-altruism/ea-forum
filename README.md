@@ -1,4 +1,4 @@
-# EAForum3
+# EA Forum
 
 ### [Effective Altruism Forum](https://forum.effectivealtruism.org)
 
@@ -14,7 +14,19 @@ The forum reads environment variables from a `.env` file. For a full list of
 expected environment variables see `ProcessEnv.d.ts`. CEA devs can find a
 development `.env` file in 1password.
 
+## Coding conventions
+
+ - Where possible fetch data from within
+   [server components](https://react.dev/reference/rsc/server-components),
+   when not possible use a
+   [server function](https://react.dev/reference/rsc/server-functions)
+ - Server functions should be wrapped with `actionClient`
+ - Combine multiple class names using [clsx](https://www.npmjs.com/package/clsx)
+ - Where possible prefer Drizzle's
+   [relational API](https://orm.drizzle.team/docs/rqb-v2) for querying
+
 ## License
 
 The forum is free software under the GNU Affero GPL v3. See the included
-`LICENSE.txt` file for details.
+`LICENSE.txt` file for details. Several libraries are also included as source
+in `src/vendor` as these have their own licenses.

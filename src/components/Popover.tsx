@@ -1,14 +1,20 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { isClient } from "@/lib/environment";
+import { Toaster } from "react-hot-toast";
 import clsx from "clsx";
 
+/**
+ * Managed React wrapper around HTML dialog. Dialogs are designed to be used
+ * impreatively, so adding a functional wrapper requires careful state
+ * management. Be careful when changing the effects here - it's very easy
+ * to break the onClose callback.
+ */
 export default function Popover({
   open,
   onClose,
-  background,
+  background = "dim",
   className,
   children,
 }: Readonly<{
@@ -18,23 +24,15 @@ export default function Popover({
   className?: string;
   children: ReactNode;
 }>) {
+  // Track if we're mounted to avoid trying to create a portal during SSR
+  const [mounted, setMounted] = useState(false);
+  // We're ready when event listeners are attached and we're ready to open
+  const [ready, setReady] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) {
-      return;
-    }
-    if (open) {
-      if (!dialog.open) {
-        dialog.showModal();
-      }
-    } else {
-      if (dialog.open) {
-        dialog.close();
-      }
-    }
-  }, [open]);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -42,32 +40,43 @@ export default function Popover({
       return;
     }
 
-    // Handle native dialog close events (like ESC key)
-    const handleClose = () => onClose();
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
 
-    // Handle click on the ::backdrop pseudo-element
-    const handleClick = (e: MouseEvent) => {
-      const rect = dialog.getBoundingClientRect();
-      const isInDialog =
-        rect.top <= e.clientY &&
-        e.clientY <= rect.top + rect.height &&
-        rect.left <= e.clientX &&
-        e.clientX <= rect.left + rect.width;
-      if (!isInDialog) {
-        handleClose();
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.target === dialog) {
+        // Backdrop click
+        onClose();
       }
     };
 
-    dialog.addEventListener("close", handleClose);
-    dialog.addEventListener("click", handleClick);
+    dialog.addEventListener("cancel", handleCancel);
+    dialog.addEventListener("pointerdown", handlePointerDown);
+    setReady(true);
 
     return () => {
-      dialog.removeEventListener("close", handleClose);
-      dialog.removeEventListener("click", handleClick);
+      dialog.removeEventListener("cancel", handleCancel);
+      dialog.removeEventListener("pointerdown", handlePointerDown);
+      setReady(false);
     };
-  }, [onClose]);
+  }, [mounted, onClose]);
 
-  if (!isClient || !open) {
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+    if (open && !dialog.open) {
+      dialog.showModal();
+    }
+    if (!open && dialog.open) {
+      dialog.close();
+    }
+  }, [ready, open]);
+
+  if (!mounted) {
     return null;
   }
 
@@ -76,22 +85,23 @@ export default function Popover({
       ref={dialogRef}
       data-component="Popover"
       className={clsx(
-        "backdrop:bg-(--color-modal-backdrop)",
         background === "blurred" && "backdrop:backdrop-blur-xs",
         background === "dim" && "backdrop:bg-popover-dim",
-        "p-0 border-0 bg-transparent max-w-none max-h-none",
+        "p-0 border-0 bg-transparent max-w-full max-h-screen",
         "fixed inset-0 m-auto w-fit h-fit",
       )}
     >
       <div
         className={clsx(
-          "max-h-[90vh] max-w-full overflow-auto bg-white p-8 rounded",
+          "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
           "border-1 border-gray-200",
           className,
         )}
       >
         {children}
       </div>
+      {/* Ensure toasts are position above the backdrop */}
+      {open && <Toaster position="bottom-center" />}
     </dialog>,
     document.body,
   );

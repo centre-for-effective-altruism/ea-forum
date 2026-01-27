@@ -1,4 +1,5 @@
 import { LRUCache } from "lru-cache";
+import { captureException } from "@sentry/nextjs";
 import type { EditorCollectionName } from "./editorSettings";
 
 // This cache helps avoid multiple network load times when requesting
@@ -48,7 +49,7 @@ export const generateCkEditorTokenRequest = (
         headers,
       });
     } catch (err) {
-      // TODO Sentry
+      captureException(err);
       console.error("CkEditor token network error:", err);
       throw new Error("CkEditor token network error");
     }

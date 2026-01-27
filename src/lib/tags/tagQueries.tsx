@@ -1,6 +1,14 @@
 import { cache } from "react";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import type { posts, Tag } from "../schema";
+import type { RelationalProjection } from "../utils/queryHelpers";
+
+export type TagRelationalProjection = RelationalProjection<typeof db.query.tags>;
+
+export type TagFromProjection<TConfig extends TagRelationalProjection> = Awaited<
+  ReturnType<typeof db.query.tags.findMany<TConfig>>
+>[number];
 
 export const fetchCoreTags = cache(() => {
   return db.query.tags.findMany({
@@ -24,26 +32,25 @@ export const fetchCoreTags = cache(() => {
 
 export type CoreTag = Awaited<ReturnType<typeof fetchCoreTags>>[0];
 
-export const fetchPostTags = async (tagRelevance: Record<string, number>) => {
-  const tagIds = Object.keys(tagRelevance).filter((_id) => tagRelevance[_id] >= 1);
-  const tags = await db.query.tags.findMany({
-    columns: {
-      _id: true,
-      name: true,
-      slug: true,
-      core: true,
-    },
-    extras: {
-      baseScore: sql<number>`0`,
-    },
-    where: {
-      _id: { in: tagIds },
-    },
-  });
-  for (const tag of tags) {
-    tag.baseScore = tagRelevance[tag._id];
-  }
-  return tags;
+export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core"> & {
+  baseScore: number;
 };
 
-export type PostTag = Awaited<ReturnType<typeof fetchPostTags>>[0];
+export const postTagsProjection = (postsTable: typeof posts) =>
+  sql<PostTag[] | null>`
+    SELECT ARRAY_AGG(JSONB_BUILD_OBJECT(
+      '_id', post_tags."_id",
+      'name', post_tags."name",
+      'shortName', post_tags."shortName",
+      'slug', post_tags."slug",
+      'core', post_tags."core",
+      'baseScore', rel."baseScore"::INTEGER
+    ))
+    FROM "Posts" post_for_tags
+    JOIN LATERAL JSONB_EACH(post_for_tags."tagRelevance")
+      AS rel("tagId", "baseScore") ON TRUE
+    INNER JOIN "Tags" post_tags ON post_tags."_id" = rel."tagId"
+    WHERE
+      post_for_tags."_id" = ${postsTable}."_id"
+      AND rel."baseScore"::INTEGER > 0
+  `;

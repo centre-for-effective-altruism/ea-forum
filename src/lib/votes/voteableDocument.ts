@@ -1,4 +1,6 @@
 import sumBy from "lodash/sumBy";
+import { z } from "zod/v4";
+import type { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { filterNonNull } from "../typeHelpers";
 import { db, DbOrTransaction } from "../db";
 import {
@@ -15,14 +17,22 @@ import {
 
 export type VoteableDocument = Post | Comment | Revision | Tag;
 
+export const voteableCollectionNameSchema = z.enum([
+  "Posts",
+  "Comments",
+  "Revisions",
+  "Tags",
+]);
+
+export type VoteableCollectionName = z.infer<typeof voteableCollectionNameSchema>;
+
 export const voteableSchemas = {
   Posts: posts,
   Comments: comments,
   Revisions: revisions,
   Tags: tags,
-} as const;
-
-export type VoteableCollectionName = keyof typeof voteableSchemas;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as const satisfies Record<VoteableCollectionName, PgTableWithColumns<any>>;
 
 export type VoteableSchema = (typeof voteableSchemas)[keyof typeof voteableSchemas];
 
@@ -60,12 +70,15 @@ export const getVoteableDocument = async (
   }
 };
 
-export const fetchVoteableDocumentAuthors = (document: VoteableDocument) => {
+export const fetchVoteableDocumentAuthors = (
+  txn: DbOrTransaction,
+  document: VoteableDocument,
+) => {
   const authorIds = [document.userId];
   if ("coauthorUserIds" in document) {
     authorIds.push(...document.coauthorUserIds);
   }
-  return db.query.users.findMany({
+  return txn.query.users.findMany({
     columns: {
       _id: true,
       karma: true,
@@ -125,10 +138,10 @@ const recalculateScore = (document: VoteableDocument) => {
 };
 
 export const recalculateDocumentScores = async (
+  txn: DbOrTransaction,
   document: VoteableDocument,
-  txn?: DbOrTransaction,
 ) => {
-  const votes = await (txn ?? db).query.votes.findMany({
+  const votes = await txn.query.votes.findMany({
     columns: {
       power: true,
       voteType: true,

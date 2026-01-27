@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from "react";
+// eslint-disable-next-line no-restricted-imports
 import NextLink from "next/link";
 
 export default function Link({

@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { getSocialImagePreviewPrefix } from "../cloudinaryHelpers";
 import type { NotificationDisplay } from "./notificationDisplayTypes";
 
 // This should return an object of type `NotificationDisplayUser`
@@ -27,29 +26,17 @@ const buildNotificationLocalgroup = (prefix: string) =>
 
 const buildNotificationRevision = (prefix: string) =>
   `JSONB_BUILD_OBJECT(
-    'html', ${prefix}."html",
-    'wordCount', ${prefix}."wordCount",
+    'htmlHighlight', COALESCE(SUBSTRING(${prefix}."html", 1, 350), ''),
+    'wordCount', COALESCE(${prefix}."wordCount", 0),
     'originalContents', ${prefix}."originalContents",
     'editedAt', ${prefix}."editedAt",
     'userId', ${prefix}."userId",
     'version', ${prefix}."version"
   )`;
 
-const getSocialPreviewSql = (prefix: string) =>
-  `JSON_BUILD_OBJECT(
-    'imageUrl',
-    CASE
-      WHEN ${prefix}."isEvent" AND ${prefix}."eventImageId" IS NOT NULL
-        THEN '${getSocialImagePreviewPrefix()}' ||
-          ${prefix}."eventImageId"
-      WHEN ${prefix}."socialPreview"->>'imageId' IS NOT NULL
-        THEN '${getSocialImagePreviewPrefix()}' ||
-          (${prefix}."socialPreview"->>'imageId')
-      ELSE COALESCE(${prefix}."socialPreviewImageAutoUrl", '')
-    END
-  )`;
-
 // This should return an object of type `NotificationDisplayPost`
+// TODO: Fetch the tags here - this might be easier to do after converting to
+// drizzle. Not having the tags just means they're not shown in the tooltip.
 const buildNotificationPost = (
   prefix: string,
   revisionPrefix: string,
@@ -63,15 +50,18 @@ const buildNotificationPost = (
     'draft', ${prefix}."draft",
     'url', ${prefix}."url",
     'isEvent', ${prefix}."isEvent",
+    'eventImageId', ${prefix}."eventImageId",
     'startTime', ${prefix}."startTime",
     'curatedDate', ${prefix}."curatedDate",
     'postedAt', ${prefix}."postedAt",
+    'tags', '{}'::TEXT[],
     'groupId', ${prefix}."groupId",
     'fmCrosspost', ${prefix}."fmCrosspost",
     'collabEditorDialogue', ${prefix}."collabEditorDialogue",
     'readTimeMinutesOverride', ${prefix}."readTimeMinutesOverride",
-    'wordCount', ${revisionPrefix}."wordCount",
-    'socialPreviewData', ${getSocialPreviewSql(prefix)},
+    'wordCount', COALESCE(${revisionPrefix}."wordCount", 0),
+    'socialPreview', ${prefix}."socialPreview",
+    'socialPreviewImageAutoUrl', ${prefix}."socialPreviewImageAutoUrl",
     'customHighlight', ${prefix}."customHighlight",
     'contents', ${buildNotificationRevision(revisionPrefix)},
     'rsvps', ${prefix}."rsvps",
@@ -122,6 +112,8 @@ export const fetchNotificationDisplays = async ({
   limit?: number;
   offset?: number;
 }): Promise<NotificationDisplay[]> => {
+  // TODO: We should be able to convert this to drizzle, but we should probably
+  // add tests first
   const result = await db.execute<NotificationDisplay>(sql`
     -- getNotificationDisplays
     SELECT

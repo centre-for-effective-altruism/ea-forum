@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useMobileNav } from "@/lib/hooks/useMobileNav";
+import clsx from "clsx";
 import Bars3Icon from "@heroicons/react/24/solid/Bars3Icon";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
@@ -34,7 +35,7 @@ export default function Header({
   const setUnfixed = useCallback(() => setIsUnfixed(true), []);
   const setFixed = useCallback(() => setIsUnfixed(false), []);
   const { onLogin, onSignup } = useLoginPopoverContext();
-  const { openMobileNav } = useMobileNav();
+  const { openMobileNav, showMobileNavOnDesktop } = useMobileNav();
   const { currentUser } = useCurrentUser();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -57,10 +58,10 @@ export default function Header({
             <button
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
-              className="
-                mobile-nav:hidden hover:bg-gray-200 p-2 rounded-full
-                cursor-pointer
-              "
+              className={clsx(
+                "cursor-pointer hover:bg-gray-200 p-2 rounded-full",
+                !showMobileNavOnDesktop && "mobile-nav:hidden",
+              )}
             >
               <Bars3Icon className="w-6" />
             </button>

@@ -1,4 +1,8 @@
 import "server-only";
+import type { Json, JsonRecord } from "./typeHelpers";
+import type { EditorContents } from "./ckeditor/editorHelpers";
+import type { VoteType } from "./votes/voteHelpers";
+import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -7,7 +11,7 @@ import {
   unique,
   varchar,
   text,
-  jsonb,
+  jsonb as jsonbRaw,
   integer,
   doublePrecision,
   boolean,
@@ -46,6 +50,10 @@ const timestamp = customType<{
  */
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
+const jsonb = <T = Json>() => jsonbRaw().$type<T>();
+
+const denormalizedRevision = () => jsonb<DenormalizedRevision>();
+
 const universalFields = {
   _id: varchar({ length: 27 }).primaryKey().notNull(),
   schemaVersion: doublePrecision().default(1),
@@ -68,23 +76,26 @@ export const users = pgTable(
     organization: text(),
     careerStage: text().array(),
     website: text(),
-    biography: jsonb(),
+    biography: denormalizedRevision(),
     biography_latest: text(),
-    moderationGuidelines: jsonb(),
+    moderationGuidelines: denormalizedRevision(),
     moderationGuidelines_latest: text(),
-    howOthersCanHelpMe: jsonb(),
+    howOthersCanHelpMe: denormalizedRevision(),
     howOthersCanHelpMe_latest: text(),
-    howICanHelpOthers: jsonb(),
+    howICanHelpOthers: denormalizedRevision(),
     howICanHelpOthers_latest: text(),
     karma: doublePrecision().notNull().default(0),
     postCount: doublePrecision().notNull().default(0),
     maxPostCount: doublePrecision().notNull().default(0),
+    frontpagePostCount: doublePrecision().notNull().default(0),
     commentCount: doublePrecision().notNull().default(0),
     maxCommentCount: doublePrecision().notNull().default(0),
     banned: timestamp(),
-    services: jsonb(),
+    services: jsonb<Record<string, Json>>(),
     isAdmin: boolean().notNull().default(false),
-    theme: jsonb().notNull().default(`'{"name":"default"}'::JSONB`),
+    theme: jsonb<{ name: "default" | "auto" | "dark" }>()
+      .notNull()
+      .default({ name: "default" }),
     hideIntercom: boolean().notNull().default(false),
     acceptedTos: boolean().notNull().default(false),
     hideNavigationSidebar: boolean(),
@@ -94,7 +105,7 @@ export const users = pgTable(
     lastNotificationsCheck: timestamp(),
     expandedFrontpageSections: jsonb(),
     email: text(),
-    emails: jsonb().array(),
+    emails: jsonb<{ address: string; verified: boolean }[]>().array(),
     noindex: boolean().notNull().default(false),
     markDownPostEditor: boolean().notNull().default(false),
     groups: text().array(),
@@ -114,6 +125,27 @@ export const users = pgTable(
     reviewedByUserId: varchar({ length: 27 }),
     hideCommunitySection: boolean().notNull().default(false),
     showCommunityInRecentDiscussion: boolean().notNull().default(false),
+    needsReview: boolean().notNull().default(false),
+    snoozedUntilContentCount: doublePrecision(),
+    mapLocation: jsonb(),
+    mongoLocation: jsonb<{ type: "Point"; coordinates: [number, number] }>(),
+    googleLocation: jsonb(),
+    location: text(),
+    mapLocationSet: boolean(),
+    usersContactedBeforeReview: text().array(),
+    linkedinProfileURL: text(),
+    facebookProfileURL: text(),
+    blueskyProfileURL: text(),
+    twitterProfileURL: text(),
+    twitterProfileURLAdmin: text(),
+    githubProfileURL: text(),
+    profileTagIds: varchar({ length: 27 }).array().notNull().default([]),
+    organizerOfGroupIds: varchar({ length: 27 }).array().notNull().default([]),
+    programParticipation: text().array(),
+    subscribedToDigest: boolean().notNull().default(false),
+    hideSubscribePoke: boolean().notNull().default(false),
+    unsubscribeFromAll: boolean(),
+    shortformFeedId: varchar({ length: 27 }),
 
     /*
   "profile" JSONB,
@@ -209,21 +241,12 @@ export const users = pgTable(
   "karmaChangeLastOpened" TIMESTAMPTZ,
   "karmaChangeBatchStart" TIMESTAMPTZ,
   "emailSubscribedToCurated" BOOL,
-  "subscribedToDigest" BOOL NOT NULL DEFAULT FALSE,
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
   "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
-  "unsubscribeFromAll" BOOL,
-  "hideSubscribePoke" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
-  "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "mongoLocation" JSONB,
-  "googleLocation" JSONB,
-  "location" TEXT,
-  "mapLocation" JSONB,
-  "mapLocationSet" BOOL,
   "mapMarkerText" TEXT,
   "htmlMapMarkerText" TEXT,
   "nearbyEventsNotifications" BOOL NOT NULL DEFAULT FALSE,
@@ -238,15 +261,11 @@ export const users = pgTable(
   "hideFrontpageBook2020Ad" BOOL,
   "sunshineNotes" TEXT NOT NULL DEFAULT '',
   "sunshineFlagged" BOOL NOT NULL DEFAULT FALSE,
-  "needsReview" BOOL NOT NULL DEFAULT FALSE,
   "sunshineSnoozed" BOOL NOT NULL DEFAULT FALSE,
-  "snoozedUntilContentCount" DOUBLE PRECISION,
   "reviewedByUserId" VARCHAR(27),
   "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "usersContactedBeforeReview" TEXT[],
   "fullName" TEXT,
-  "shortformFeedId" VARCHAR(27),
   "viewUnreviewedComments" BOOL,
   "partiallyReadSequences" JSONB[],
   "beta" BOOL,
@@ -270,15 +289,6 @@ export const users = pgTable(
   "paymentInfo" TEXT,
   "profileUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',
   "fmCrosspostUserId" TEXT,
-  "linkedinProfileURL" TEXT,
-  "facebookProfileURL" TEXT,
-  "blueskyProfileURL" TEXT,
-  "twitterProfileURL" TEXT,
-  "twitterProfileURLAdmin" TEXT,
-  "githubProfileURL" TEXT,
-  "profileTagIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
-  "organizerOfGroupIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
-  "programParticipation" TEXT[],
   "postingDisabled" BOOL,
   "allCommentingDisabled" BOOL,
   "commentingOnOtherUsersDisabled" BOOL,
@@ -335,7 +345,10 @@ export const bans = pgTable(
 export const bookmarks = pgTable(
   "Bookmarks",
   {
-    ...universalFields,
+    // For some reason bookmarks doesn't have legacyData and schemaVersion
+    // universal fields...
+    _id: varchar({ length: 27 }).primaryKey().notNull(),
+    createdAt: timestampDefaultNow().notNull(),
     documentId: text().notNull(),
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
@@ -367,7 +380,7 @@ export const chapters = pgTable(
     number: doublePrecision(),
     sequenceId: varchar({ length: 27 }),
     postIds: varchar({ length: 27 }).array().default([""]).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
   },
   (table) => [
@@ -397,7 +410,7 @@ export const books = pgTable(
     displaySequencesAsGrid: boolean(),
     hideProgressBar: boolean(),
     showChapters: boolean(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     tocTitle: text(),
   },
@@ -445,7 +458,7 @@ export const collections = pgTable(
     gridImageId: text(),
     firstPageLink: text().notNull(),
     hideStartReadingButton: boolean(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     noindex: boolean().default(false).notNull(),
   },
@@ -468,12 +481,15 @@ export const comments = pgTable(
     author: text(),
     postId: varchar({ length: 27 }),
     tagId: varchar({ length: 27 }),
-    tagCommentType: text().default("DISCUSSION").notNull(),
+    tagCommentType: text()
+      .default("DISCUSSION")
+      .notNull()
+      .$type<"SUBFORUM" | "DISCUSSION">(),
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
     userIP: text(),
-    userAgent: text(),
-    referrer: text(),
+    // userAgent: text(), // Unused
+    // referrer: text(), // Unused
     authorIsUnreviewed: boolean().default(false).notNull(),
     answer: boolean().default(false).notNull(),
     parentAnswerId: varchar({ length: 27 }),
@@ -516,7 +532,7 @@ export const comments = pgTable(
     schemaVersion: doublePrecision().default(1),
     createdAt: timestampDefaultNow(),
     legacyData: jsonb(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
@@ -1021,6 +1037,8 @@ export const commentModeratorActions = pgTable(
   ],
 );
 
+export type ModeratorAction = typeof moderatorActions.$inferSelect;
+
 export const databaseMetadata = pgTable(
   "DatabaseMetadata",
   {
@@ -1069,7 +1087,7 @@ export const curationNotices = pgTable(
     commentId: varchar({ length: 27 }),
     postId: varchar({ length: 27 }),
     deleted: boolean().default(false).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
   },
   (table) => [
@@ -1308,8 +1326,10 @@ export const localgroups = pgTable(
     types: text().array().default(["{LW}"]).notNull(),
     categories: text().array(),
     isOnline: boolean().default(false).notNull(),
-    mongoLocation: jsonb(),
-    googleLocation: jsonb(),
+    mongoLocation: jsonb<{ type: "Point"; coordinates: [number, number] }>(),
+    googleLocation: jsonb<{
+      geometry: { location: { lat: number; lng: number } };
+    }>(),
     location: text(),
     contactInfo: text(),
     facebookLink: text(),
@@ -1320,7 +1340,7 @@ export const localgroups = pgTable(
     bannerImageId: text(),
     inactive: boolean().default(false).notNull(),
     deleted: boolean().default(false).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
     nameInAnotherLanguage: text(),
     salesforceId: text(),
@@ -1381,7 +1401,7 @@ export const messages = pgTable(
     userId: varchar({ length: 27 }).notNull(),
     conversationId: varchar({ length: 27 }).notNull(),
     noEmail: boolean().default(false).notNull(),
-    contents: jsonb(),
+    contents: denormalizedRevision(),
     contentsLatest: text("contents_latest"),
   },
   (table) => [
@@ -1468,7 +1488,7 @@ export const lwEvents = pgTable(
     name: text(),
     documentId: text(),
     important: boolean(),
-    properties: jsonb(),
+    properties: jsonb<JsonRecord>(),
     intercom: boolean(),
   },
   (table) => [
@@ -1617,14 +1637,14 @@ export const forumEvents = pgTable(
     lightColor: text().default("#ffffff").notNull(),
     tagId: varchar({ length: 27 }),
     bannerImageId: text(),
-    frontpageDescription: jsonb(),
+    frontpageDescription: denormalizedRevision(),
     frontpageDescriptionLatest: text("frontpageDescription_latest"),
-    postPageDescription: jsonb(),
+    postPageDescription: denormalizedRevision(),
     postPageDescriptionLatest: text("postPageDescription_latest"),
     contrastColor: text(),
     includesPoll: boolean().default(false).notNull(),
     publicData: jsonb(),
-    frontpageDescriptionMobile: jsonb(),
+    frontpageDescriptionMobile: denormalizedRevision(),
     frontpageDescriptionMobileLatest: text("frontpageDescriptionMobile_latest"),
     postId: varchar({ length: 27 }),
     customComponent: text(),
@@ -1649,6 +1669,9 @@ export const forumEvents = pgTable(
     ),
   ],
 );
+
+export type ForumEvent = typeof forumEvents.$inferSelect;
+export type InsertForumEvent = typeof forumEvents.$inferInsert;
 
 export const postViews = pgTable(
   "PostViews",
@@ -1796,6 +1819,7 @@ export const posts = pgTable(
     slug: text().notNull(),
     viewCount: doublePrecision().default(0).notNull(),
     lastCommentedAt: timestamp(),
+    lastCommentReplyAt: timestamp(),
     clickCount: doublePrecision().default(0).notNull(),
     deletedDraft: boolean().default(false).notNull(),
     status: doublePrecision().notNull(),
@@ -1835,7 +1859,7 @@ export const posts = pgTable(
     finalReviewVoteScoreAF: doublePrecision().default(0).notNull(),
     finalReviewVotesAF: doublePrecision().array().default([]).notNull(),
     lastCommentPromotedAt: timestamp(),
-    tagRelevance: jsonb(),
+    tagRelevance: jsonb<Record<string, number>>(),
     noIndex: boolean().default(false).notNull(),
     rsvps: jsonb().array(),
     activateRSVPs: boolean(),
@@ -2906,10 +2930,10 @@ export const revisions = pgTable(
     commitMessage: text(),
     userId: varchar({ length: 27 }),
     draft: boolean(),
-    originalContents: jsonb(),
+    originalContents: jsonb<EditorContents>(),
     html: text(),
     wordCount: doublePrecision().notNull(),
-    changeMetrics: jsonb().notNull(),
+    changeMetrics: jsonb<{ added: number; removed: number }>().notNull(),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
     extendedScore: jsonb(),
@@ -3171,6 +3195,8 @@ export const userRateLimits = pgTable(
   ],
 );
 
+export type UserRateLimit = typeof userRateLimits.$inferSelect;
+
 export const userTagRels = pgTable(
   "UserTagRels",
   {
@@ -3392,6 +3418,7 @@ export const tags = pgTable(
 );
 
 export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
 
 export const votes = pgTable(
   "Votes",
@@ -3401,7 +3428,7 @@ export const votes = pgTable(
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     authorIds: varchar({ length: 27 }).array(),
-    voteType: text().notNull(),
+    voteType: text().$type<VoteType>().notNull(),
     extendedVoteType: jsonb(),
     power: doublePrecision().notNull(),
     afPower: doublePrecision(),
@@ -3516,6 +3543,7 @@ export const votes = pgTable(
 );
 
 export type Vote = typeof votes.$inferSelect;
+export type InsertVote = typeof votes.$inferInsert;
 
 export const userLoginTokens = pgMaterializedView("UserLoginTokens").as((qb) =>
   qb

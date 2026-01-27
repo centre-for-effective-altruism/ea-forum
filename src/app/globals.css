@@ -25,11 +25,11 @@
   --color-primary-dark: #085d6c;
 
   --color-error: #e04e4b;
+  --color-error-light: #cb5e3c;
   --color-warning: #832013;
   --color-warning-translucent: "rgba(255,152,0,0.1)";
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
-  --color-modal-backdrop: rgba(217, 217, 217, 0.5);
   --color-login-input: #efefef;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
@@ -51,6 +51,9 @@
   --color-recent-discussions-green: #72b065;
   --color-popover-dim: rgba(0, 0, 0, 0.4);
   --color-curated-star: #ffc500;
+  --color-new-user-sprout: #5eb25c;
+  --color-diff-added: #d4ead4;
+  --color-diff-removed: #f0d3d3;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -84,9 +87,13 @@
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-headroom: 1300;
-  --zindex-popover: 1301;
-  --zindex-mobile-nav: 1302;
-  --zindex-tooltip: 1303;
+  --zindex-read-progress: 1302;
+  --zindex-popover: 1304;
+  --zindex-dropdown: 1305;
+  --zindex-mobile-nav: 1306;
+  --zindex-tooltip: 1308;
+
+  --buzzsprout-opacity: 1;
 
   --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
 
@@ -203,4 +210,11 @@ body {
 .ck-powered-by,
 .ck-powered-by-balloon {
   display: none !important;
+}
+
+/**
+ * Hide ReCaptcha (see https://developers.google.com/recaptcha/docs/faq)
+ */
+.grecaptcha-badge {
+  visibility: hidden;
 }

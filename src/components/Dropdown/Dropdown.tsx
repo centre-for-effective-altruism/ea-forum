@@ -1,3 +1,5 @@
+"use client";
+
 import { ReactNode, RefObject, useImperativeHandle, useState } from "react";
 import {
   autoUpdate,
@@ -63,7 +65,8 @@ export default function Dropdown({
             ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            data-component="Dropdown"
+            className="z-(--zindex-dropdown)"
+            data-component="Dropdown-inner"
           >
             {menu}
           </div>

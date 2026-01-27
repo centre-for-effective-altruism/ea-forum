@@ -6,6 +6,8 @@ import uniq from "lodash/uniq";
 import flatten from "lodash/flatten";
 import intersection from "lodash/intersection";
 
+export const MINIMUM_APPROVAL_KARMA = 5;
+
 export const userGetProfileUrl = ({
   user,
   from,
@@ -296,6 +298,50 @@ export const userIsPostGroupOrganizer = async (
  * True if the user is a coauthor of this post (returns false for the main author).
  */
 export const userIsPostCoauthor = (
-  user: CurrentUser | null,
-  post: Post | null,
+  user: Pick<User, "_id"> | null,
+  post: Pick<Post, "coauthorUserIds"> | null,
 ): boolean => !!user && !!post && post.coauthorUserIds.indexOf(user._id) >= 0;
+
+/**
+ * True if the user is either the main author or a coauthor of the post.
+ */
+export const userIsPostAuthor = (
+  user: Pick<User, "_id"> | null,
+  post: Pick<Post, "userId" | "coauthorUserIds"> | null,
+): boolean =>
+  !!user && !!post && (user._id === post.userId || userIsPostCoauthor(user, post));
+
+/**
+ * Count a user as "new" if they have low karma or joined less than a week ago
+ */
+export const userIsNew = (user: Pick<User, "createdAt" | "karma">): boolean => {
+  const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
+  const karmaThreshold = 50;
+  const userCreatedAt = new Date(user.createdAt);
+  const userKarma = user.karma;
+  const userBelowKarmaThreshold = karmaThreshold && userKarma < karmaThreshold;
+  return (
+    userBelowKarmaThreshold ||
+    userCreatedAt.getTime() > new Date().getTime() - oneWeekInMs
+  );
+};
+
+/**
+ * Return the current user's location, as a latitude-longitude pair, plus the
+ * boolean field `known`. If `known` is false, the lat/lng are invalid placeholders.
+ * If the user is logged in, we try to return the location specified in their
+ * account settings.
+ */
+export const userGetLocation = (
+  user: Pick<User, "mongoLocation"> | null,
+): {
+  lat: number;
+  lng: number;
+  known: boolean;
+} => {
+  const currentUserLat = user?.mongoLocation?.coordinates[1];
+  const currentUserLng = user?.mongoLocation?.coordinates[0];
+  return currentUserLat && currentUserLng
+    ? { lat: currentUserLat, lng: currentUserLng, known: true }
+    : { lat: 37.871853, lng: -122.258423, known: false };
+};

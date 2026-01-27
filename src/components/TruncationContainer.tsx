@@ -54,7 +54,7 @@ export default function TruncationContainer({
     let width = itemNodeWidths[0] + gap + afterNodeWidth;
     while (total < itemNodeWidths.length) {
       const nextItemWidth = itemNodeWidths[total];
-      const nextWidth = width + nextItemWidth;
+      const nextWidth = width + gap + nextItemWidth;
       if (nextWidth > containerWidth) {
         break;
       }
@@ -101,6 +101,7 @@ export default function TruncationContainer({
         ref={measureRef}
         className="absolute flex invisible h-0 overflow-hidden pointer-events-none"
         aria-hidden="true"
+        inert
       >
         {items.map((item, i) => (
           <Fragment key={i}>{item}</Fragment>

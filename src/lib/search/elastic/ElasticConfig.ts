@@ -1,6 +1,6 @@
 import type { estypes } from "@elastic/elasticsearch";
 import type { SearchIndexCollectionName } from "./elasticIndexes";
-import { postStatuses } from "@/lib/posts/postLists";
+import { postStatuses } from "@/lib/posts/postsHelpers";
 
 type MappingProperty = estypes.MappingProperty;
 type QueryDslQueryContainer = estypes.QueryDslQueryContainer;

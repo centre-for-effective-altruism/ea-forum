@@ -5,6 +5,7 @@ import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import {
   getPostPlaintextDescription,
   getPostReadTimeMinutes,
@@ -12,11 +13,12 @@ import {
   postGetPageUrl,
 } from "@/lib/posts/postsHelpers";
 import clsx from "clsx";
-import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
 import PostsTooltip from "../PostsTooltip";
-import UsersTooltip from "../UsersTooltip";
+import UsersName from "../UsersName";
 import PostIcons from "./PostIcons";
+import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
@@ -31,12 +33,25 @@ export default function PostsItem({
   openInNewTab?: boolean;
 }>) {
   const cardView = viewType === "card";
-  const { _id, title, baseScore, commentCount, voteCount, sticky, user } = post;
+  const {
+    _id,
+    title,
+    baseScore,
+    commentCount,
+    voteCount,
+    sticky,
+    user,
+    readStatus,
+  } = post;
   const postLink = postGetPageUrl({ post });
   const readTime = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
     post.contents?.wordCount ?? null,
   );
+  const { postsRead } = useItemsRead();
+  const isRead = !!(post._id in postsRead
+    ? postsRead[post._id]
+    : readStatus?.[0]?.isRead);
   const { onClick } = useClickableCell({
     href: postLink,
     openInNewTab,
@@ -83,7 +98,10 @@ export default function PostsItem({
                 <PostsTooltip As="span" post={post}>
                   <Link
                     href={postLink}
-                    className="visited:text-gray-700 hover:opacity-60"
+                    className={clsx(
+                      "hover:opacity-60",
+                      isRead && "visited:text-gray-700",
+                    )}
                   >
                     {title}
                   </Link>
@@ -91,25 +109,34 @@ export default function PostsItem({
               </Type>
             </div>
             <Type style="bodySmall">
-              <UsersTooltip As="span" user={user}>
-                {user?.displayName ?? "[Anonymous]"}
-              </UsersTooltip>
+              <InteractionWrapper className="inline">
+                <UsersName user={user} />
+              </InteractionWrapper>
+              {" · "}
+              <TimeAgo
+                As="span"
+                textStyle="bodySmall"
+                time={post.postedAt}
+                includeAgo
+              />
               {" · "}
               {readTime}m read
             </Type>
           </div>
-          <div
-            className={clsx(
-              "flex items-center gap-1 hover:text-black",
-              cardView && "mt-1 mr-2",
-            )}
-          >
-            <ChatBubbleLeftIcon className="w-[18px]" />
-            <Type>{commentCount}</Type>
-          </div>
-          <EllipsisVerticalIcon
-            className={clsx("w-[20px] hover:text-black", cardView && "mt-1")}
-          />
+          <InteractionWrapper>
+            <button
+              className={clsx(
+                "flex items-center gap-1 hover:text-black cursor-pointer",
+                cardView && "mt-1 mr-2",
+              )}
+            >
+              <ChatBubbleLeftIcon className="w-[18px]" />
+              <Type>{commentCount}</Type>
+            </button>
+          </InteractionWrapper>
+          <InteractionWrapper className="flex items-center">
+            <PostTripleDotMenu post={post} orientation="vertical" />
+          </InteractionWrapper>
         </div>
         {cardView && (
           <div className="flex gap-8 items-end pl-[56px] pr-5 pb-4 -mt-4">
