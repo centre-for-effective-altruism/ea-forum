@@ -12,17 +12,17 @@ type ReadStatusDocument =
       tagId: string;
     };
 
-type ReadStatusData = ReadStatusDocument & {
-  userId: string;
-  updateIsReadIfAlreadyExists: boolean;
-};
-
 export const upsertReadStatus = async ({
   postId,
   tagId,
   userId,
   updateIsReadIfAlreadyExists,
-}: ReadStatusData) => {
+  isRead = true,
+}: ReadStatusDocument & {
+  userId: string;
+  updateIsReadIfAlreadyExists: boolean;
+  isRead?: boolean;
+}) => {
   // Warning: this query is subtle and fragile - we must have a unique index
   // that matches the _exact_ ON CONFLICT expression (including coalesces).
   await db.execute(sql`
@@ -38,7 +38,7 @@ export const upsertReadStatus = async ({
       ${postId ?? null},
       ${tagId ?? null},
       ${userId},
-      TRUE,
+      ${isRead},
       CURRENT_TIMESTAMP
     ) ON CONFLICT (
       COALESCE("postId", ''),
@@ -46,7 +46,7 @@ export const upsertReadStatus = async ({
       COALESCE("tagId", '')
     )
     DO UPDATE SET
-      ${sql.raw(updateIsReadIfAlreadyExists ? `"isRead" = TRUE,` : "")}
+      ${sql.raw(updateIsReadIfAlreadyExists ? `"isRead" = ${isRead},` : "")}
       "lastUpdated" = CURRENT_TIMESTAMP
   `);
 };

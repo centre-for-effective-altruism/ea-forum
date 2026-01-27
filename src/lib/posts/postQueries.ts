@@ -79,6 +79,15 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
                 userId: currentUserId,
               },
             },
+            readStatus: {
+              columns: {
+                isRead: true,
+                lastUpdated: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
+            },
           }
         : {}),
     },

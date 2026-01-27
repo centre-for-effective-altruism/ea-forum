@@ -80,7 +80,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
                 shareEventName="sharePost"
                 campaign="post_share"
               />
-              <PostTripleDotMenu />
+              <PostTripleDotMenu post={post} orientation="horizontal" />
             </div>
           </div>
         </PostColumn>
