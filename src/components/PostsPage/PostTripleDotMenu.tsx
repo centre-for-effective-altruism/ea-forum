@@ -2,8 +2,10 @@
 
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
+import { useEditPostLink } from "@/lib/hooks/usePostEditLink";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
@@ -22,6 +24,7 @@ export default function PostTripleDotMenu({
   orientation: "vertical" | "horizontal";
   className?: string;
 }>) {
+  const editLink = useEditPostLink(post);
   const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
     "Posts",
     post._id,
@@ -31,13 +34,22 @@ export default function PostTripleDotMenu({
     post._id,
     !!post.readStatus?.[0]?.isRead,
   );
-  const Icon =
+
+  const TripleDotIcon =
     orientation === "horizontal" ? EllipsisHorizontalIcon : EllipsisVerticalIcon;
+
   return (
     <DropdownMenu
       placement="bottom-end"
       className="text-gray-900 min-w-[200px]"
       items={[
+        editLink
+          ? {
+              title: "Edit",
+              Icon: PencilIcon,
+              href: editLink,
+            }
+          : null,
         {
           title: isBookmarked ? "Saved" : "Save",
           Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
@@ -54,7 +66,7 @@ export default function PostTripleDotMenu({
         aria-label="Post options"
         className="text-gray-600 hover:text-gray-900 cursor-pointer flex items-center"
       >
-        <Icon className={clsx("w-5", className)} />
+        <TripleDotIcon className={clsx("w-5", className)} />
       </button>
     </DropdownMenu>
   );

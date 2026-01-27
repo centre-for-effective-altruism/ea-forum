@@ -1,6 +1,16 @@
+import { sql } from "drizzle-orm";
 import { db } from "../db";
+import { posts } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
+
+export const currentUserIsSharedSelector =
+  (currentUserId: string) => (postsTable: typeof posts) =>
+    sql<boolean>`${postsTable}."shareWithUsers" @> ARRAY[${currentUserId}::VARCHAR]`;
+
+export const currentUserUsedLinkKeySelector =
+  (currentUserId: string) => (postsTable: typeof posts) =>
+    sql<boolean>`${postsTable}."linkSharingKeyUsedBy" @> ARRAY[${currentUserId}::VARCHAR]`;
 
 export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
   return db.query.posts.findFirst({
@@ -26,9 +36,16 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       rejected: true,
       authorIsUnreviewed: true,
       forceAllowType3Audio: true,
+      sharingSettings: true,
     },
     extras: {
       tags: postTagsProjection,
+      ...(currentUserId
+        ? {
+            currentUserIsShared: currentUserIsSharedSelector(currentUserId),
+            currentUserUsedLinkKey: currentUserUsedLinkKeySelector(currentUserId),
+          }
+        : null),
     },
     where: {
       _id: postId,
@@ -39,6 +56,12 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
         columns: {
           html: true,
           wordCount: true,
+        },
+      },
+      group: {
+        columns: {
+          _id: true,
+          organizerIds: true,
         },
       },
       podcastEpisode: {

@@ -345,3 +345,6 @@ export const userGetLocation = (
     ? { lat: currentUserLat, lng: currentUserLng, known: true }
     : { lat: 37.871853, lng: -122.258423, known: false };
 };
+
+export const userIsPodcaster = (user: UserPermissions | null): boolean =>
+  userIsInGroup(user, "podcasters");

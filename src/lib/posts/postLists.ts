@@ -11,6 +11,10 @@ import {
   RelationalOrderBy,
   RelationalProjection,
 } from "@/lib/utils/queryHelpers";
+import {
+  currentUserIsSharedSelector,
+  currentUserUsedLinkKeySelector,
+} from "./postQueries";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -99,6 +103,7 @@ export const postsListProjection = (
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
       lastCommentedAt: true,
+      sharingSettings: true,
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>
@@ -107,6 +112,12 @@ export const postsListProjection = (
           options?.highlightLength || 350,
         ),
       tags: postTagsProjection,
+      ...(currentUserId
+        ? {
+            currentUserIsShared: currentUserIsSharedSelector(currentUserId),
+            currentUserUsedLinkKey: currentUserUsedLinkKeySelector(currentUserId),
+          }
+        : null),
     },
     with: {
       user: userBaseProjection,
@@ -117,6 +128,12 @@ export const postsListProjection = (
         extras: {
           htmlHighlight: (revisions, { sql }) =>
             htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
+        },
+      },
+      group: {
+        columns: {
+          _id: true,
+          organizerIds: true,
         },
       },
       ...(currentUserId
