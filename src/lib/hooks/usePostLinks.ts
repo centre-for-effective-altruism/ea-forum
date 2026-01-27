@@ -5,7 +5,7 @@ import { useCurrentUser } from "./useCurrentUser";
 import { userIsPodcaster } from "../users/userHelpers";
 import { canUserEditPostMetadata, userIsSharedOnPost } from "../posts/postsHelpers";
 
-export const useEditPostLink = (post: PostDisplay | PostListItem): string | null => {
+export const usePostEditLink = (post: PostDisplay | PostListItem): string | null => {
   const { currentUser } = useCurrentUser();
   const isEditor = canUserEditPostMetadata(currentUser, post);
   const isPodcaster = userIsPodcaster(currentUser);
@@ -16,4 +16,13 @@ export const useEditPostLink = (post: PostDisplay | PostListItem): string | null
   return isEditor || isPodcaster
     ? `/editPost?${qs.stringify({ postId: post._id, eventForm: post.isEvent })}`
     : `/collaborateOnPost?${qs.stringify({ postId: post._id })}`;
+};
+
+export const usePostAnalyticsLink = (
+  post: PostDisplay | PostListItem,
+): string | null => {
+  const { currentUser } = useCurrentUser();
+  return canUserEditPostMetadata(currentUser, post)
+    ? `/postAnalytics?${qs.stringify({ postId: post._id })}`
+    : null;
 };

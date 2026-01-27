@@ -2,10 +2,11 @@
 
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
-import { useEditPostLink } from "@/lib/hooks/usePostEditLink";
+import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
 import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
@@ -24,7 +25,8 @@ export default function PostTripleDotMenu({
   orientation: "vertical" | "horizontal";
   className?: string;
 }>) {
-  const editLink = useEditPostLink(post);
+  const editLink = usePostEditLink(post);
+  const analyticsLink = usePostAnalyticsLink(post);
   const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
     "Posts",
     post._id,
@@ -48,6 +50,13 @@ export default function PostTripleDotMenu({
               title: "Edit",
               Icon: PencilIcon,
               href: editLink,
+            }
+          : null,
+        analyticsLink
+          ? {
+              title: "Analytics",
+              Icon: ChartBarIcon,
+              href: analyticsLink,
             }
           : null,
         {
