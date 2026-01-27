@@ -10,6 +10,7 @@ import {
   useClick,
   useDismiss,
   useFloating,
+  useFloatingNodeId,
   useInteractions,
   useRole,
 } from "@floating-ui/react";
@@ -27,11 +28,13 @@ export default function Dropdown({
 }>) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const nodeId = useFloatingNodeId();
   const {
     refs: { setReference, setFloating },
     floatingStyles,
     context,
   } = useFloating({
+    nodeId,
     open: isOpen,
     onOpenChange: setIsOpen,
     middleware: [flip(), shift()],

@@ -1,17 +1,18 @@
 "use client";
 
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { FocusTrap } from "focus-trap-react";
-import { Toaster } from "react-hot-toast";
+import type { ReactNode } from "react";
 import clsx from "clsx";
+import {
+  FloatingPortal,
+  FloatingOverlay,
+  FloatingFocusManager,
+  useFloating,
+  useDismiss,
+  useRole,
+  useInteractions,
+  useFloatingNodeId,
+} from "@floating-ui/react";
 
-/**
- * Managed React wrapper around HTML dialog. Dialogs are designed to be used
- * impreatively, so adding a functional wrapper requires careful state
- * management. Be careful when changing the effects here - it's very easy
- * to break the onClose callback.
- */
 export default function Popover({
   open,
   onClose,
@@ -25,88 +26,57 @@ export default function Popover({
   className?: string;
   children: ReactNode;
 }>) {
-  // Track if we're mounted to avoid trying to create a portal during SSR
-  const [mounted, setMounted] = useState(false);
-  // We're ready when event listeners are attached and we're ready to open
-  const [ready, setReady] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) {
-      return;
-    }
-
-    const handleCancel = (e: Event) => {
-      e.preventDefault();
-      onClose();
-    };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      if (e.target === dialog) {
-        // Backdrop click
+  const nodeId = useFloatingNodeId();
+  const { refs, context } = useFloating({
+    nodeId,
+    open,
+    onOpenChange(open) {
+      if (!open) {
         onClose();
       }
-    };
+    },
+  });
+  const dismiss = useDismiss(context, {
+    outsidePress: true,
+    escapeKey: true,
+  });
+  const role = useRole(context, { role: "dialog" });
+  const { getFloatingProps } = useInteractions([dismiss, role]);
 
-    dialog.addEventListener("cancel", handleCancel);
-    dialog.addEventListener("pointerdown", handlePointerDown);
-    setReady(true);
-
-    return () => {
-      dialog.removeEventListener("cancel", handleCancel);
-      dialog.removeEventListener("pointerdown", handlePointerDown);
-      setReady(false);
-    };
-  }, [mounted, onClose]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) {
-      return;
-    }
-    if (open && !dialog.open) {
-      dialog.showModal();
-    }
-    if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [ready, open]);
-
-  if (!mounted) {
+  if (!open) {
     return null;
   }
 
-  return createPortal(
-    <FocusTrap active={open} focusTrapOptions={{ fallbackFocus: "dialog" }}>
-      <dialog
-        ref={dialogRef}
-        tabIndex={-1}
-        data-component="Popover"
+  return (
+    <FloatingPortal>
+      <FloatingOverlay
+        lockScroll
         className={clsx(
-          background === "blurred" && "backdrop:backdrop-blur-xs",
-          background === "dim" && "backdrop:bg-popover-dim",
-          "p-0 border-0 bg-transparent max-w-full max-h-screen",
-          "fixed inset-0 m-auto w-fit h-fit",
+          "fixed inset-0 flex items-center justify-center z-(--zindex-popover)",
+          background === "blurred" && "backdrop-blur-xs",
+          background === "dim" && "bg-popover-dim",
         )}
       >
-        <div
-          className={clsx(
-            "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
-            "border-1 border-gray-200",
-            className,
-          )}
-        >
-          {children}
-        </div>
-        {/* Ensure toasts are position above the backdrop */}
-        {open && <Toaster position="bottom-center" />}
-      </dialog>
-    </FocusTrap>,
-    document.body,
+        <FloatingFocusManager context={context} modal>
+          <div
+            // eslint-disable-next-line react-hooks/refs
+            ref={refs.setFloating}
+            {...getFloatingProps()}
+            data-component="Popover"
+            className={clsx("p-0 border-0 bg-transparent max-w-full max-h-screen")}
+          >
+            <div
+              className={clsx(
+                "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
+                "border-1 border-gray-200",
+                className,
+              )}
+            >
+              {children}
+            </div>
+          </div>
+        </FloatingFocusManager>
+      </FloatingOverlay>
+    </FloatingPortal>
   );
 }

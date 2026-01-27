@@ -10,6 +10,7 @@ import {
   shift,
   useDismiss,
   useFloating,
+  useFloatingNodeId,
   useFocus,
   useHover,
   useInteractions,
@@ -32,11 +33,13 @@ export default function Tooltip({
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
+  const nodeId = useFloatingNodeId();
   const {
     refs: { setReference, setFloating },
     floatingStyles,
     context,
   } = useFloating({
+    nodeId,
     placement,
     open: isOpen,
     onOpenChange: setIsOpen,
