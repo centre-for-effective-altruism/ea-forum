@@ -22,10 +22,12 @@ import ReportPopover from "./ReportPopover";
 export default function PostTripleDotMenu({
   post,
   orientation,
+  hideBookmark,
   className,
 }: Readonly<{
   post: PostDisplay | PostListItem;
   orientation: "vertical" | "horizontal";
+  hideBookmark?: boolean;
   className?: string;
 }>) {
   const [reportOpen, setReportOpen] = useState(false);
@@ -82,11 +84,13 @@ export default function PostTripleDotMenu({
                 href: analyticsLink,
               }
             : null,
-          {
-            title: isBookmarked ? "Saved" : "Save",
-            Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
-            onClick: toggleIsBookmarked,
-          },
+          hideBookmark
+            ? null
+            : {
+                title: isBookmarked ? "Saved" : "Save",
+                Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
+                onClick: toggleIsBookmarked,
+              },
           {
             title: "Report",
             Icon: ExclamationCircleIcon,
