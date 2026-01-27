@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
-import { NotificationsProvider } from "./Notifications/NotificationsProvider";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import { ItemsReadProvider } from "@/lib/hooks/useItemsRead";
 import { MobileNavProvider } from "@/lib/hooks/useMobileNav";
@@ -19,11 +18,9 @@ export default async function Providers({
       <CookieClientProvider>
         <CurrentUserProvider user={currentUser}>
           <IntercomClientProvider>
-            <NotificationsProvider>
-              <ItemsReadProvider>
-                <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
-              </ItemsReadProvider>
-            </NotificationsProvider>
+            <ItemsReadProvider>
+              <LoginPopoverContextProvider>{children}</LoginPopoverContextProvider>
+            </ItemsReadProvider>
           </IntercomClientProvider>
         </CurrentUserProvider>
       </CookieClientProvider>
