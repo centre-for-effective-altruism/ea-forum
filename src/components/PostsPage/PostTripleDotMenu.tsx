@@ -2,10 +2,14 @@
 
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
+import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
+import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
+import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
+import EnvelopeOpenIcon from "@heroicons/react/24/outline/EnvelopeOpenIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import clsx from "clsx";
 
@@ -18,6 +22,11 @@ export default function PostTripleDotMenu({
   orientation: "vertical" | "horizontal";
   className?: string;
 }>) {
+  const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
+    "Posts",
+    post._id,
+    post.bookmarks?.[0]?.active ?? false,
+  );
   const { isRead, toggleIsRead } = useUpdateReadStatus(
     post._id,
     !!post.readStatus?.[0]?.isRead,
@@ -27,11 +36,16 @@ export default function PostTripleDotMenu({
   return (
     <DropdownMenu
       placement="bottom-end"
-      className="text-gray-900"
+      className="text-gray-900 min-w-[200px]"
       items={[
         {
+          title: isBookmarked ? "Saved" : "Save",
+          Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
+          onClick: toggleIsBookmarked,
+        },
+        {
           title: isRead ? "Mark as unread" : "Mark as read",
-          Icon: EnvelopeIcon,
+          Icon: isRead ? EnvelopeIcon : EnvelopeOpenIcon,
           onClick: toggleIsRead,
         },
       ]}
