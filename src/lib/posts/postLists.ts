@@ -119,17 +119,27 @@ export const postsListProjection = (
             htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
         },
       },
-      readStatus: currentUserId
+      ...(currentUserId
         ? {
-            columns: {
-              isRead: true,
-              lastUpdated: true,
+            bookmarks: {
+              columns: {
+                active: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
             },
-            where: {
-              userId: currentUserId,
+            readStatus: {
+              columns: {
+                isRead: true,
+                lastUpdated: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
             },
           }
-        : undefined,
+        : null),
     },
   }) as const satisfies PostRelationalProjection;
 
