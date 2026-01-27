@@ -6,10 +6,12 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
+import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
 import { useTracking } from "@/lib/analyticsEvents";
 
 type PostDisplayContext = {
@@ -27,8 +29,10 @@ export const PostDisplayProvider: FC<{
   children: ReactNode;
 }> = ({ post, children }) => {
   const { captureEvent } = useTracking();
+  const { recordPostView } = useRecordPostView(post);
   const [cookies, setCookie] = useCookiesWithConsent([audioCookie]);
   const [showAudio, setShowAudio] = useState(cookies[audioCookie] === "true");
+
   const toggleShowAudio = useCallback(() => {
     setShowAudio((value) => {
       const newValue = !value;
@@ -37,6 +41,18 @@ export const PostDisplayProvider: FC<{
       return newValue;
     });
   }, [setCookie, captureEvent]);
+
+  useEffect(() => {
+    void recordPostView({
+      post: post,
+      extraEventProperties: {
+        // TODO: Set sequence ID if viewing from the sequences UI
+        sequenceId: null,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <postDisplayContext.Provider value={{ post, showAudio, toggleShowAudio }}>
       {children}
