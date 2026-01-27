@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { FocusTrap } from "focus-trap-react";
 import { Toaster } from "react-hot-toast";
 import clsx from "clsx";
 
@@ -81,28 +82,31 @@ export default function Popover({
   }
 
   return createPortal(
-    <dialog
-      ref={dialogRef}
-      data-component="Popover"
-      className={clsx(
-        background === "blurred" && "backdrop:backdrop-blur-xs",
-        background === "dim" && "backdrop:bg-popover-dim",
-        "p-0 border-0 bg-transparent max-w-full max-h-screen",
-        "fixed inset-0 m-auto w-fit h-fit",
-      )}
-    >
-      <div
+    <FocusTrap active={open} focusTrapOptions={{ fallbackFocus: "dialog" }}>
+      <dialog
+        ref={dialogRef}
+        tabIndex={-1}
+        data-component="Popover"
         className={clsx(
-          "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
-          "border-1 border-gray-200",
-          className,
+          background === "blurred" && "backdrop:backdrop-blur-xs",
+          background === "dim" && "backdrop:bg-popover-dim",
+          "p-0 border-0 bg-transparent max-w-full max-h-screen",
+          "fixed inset-0 m-auto w-fit h-fit",
         )}
       >
-        {children}
-      </div>
-      {/* Ensure toasts are position above the backdrop */}
-      {open && <Toaster position="bottom-center" />}
-    </dialog>,
+        <div
+          className={clsx(
+            "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
+            "border-1 border-gray-200",
+            className,
+          )}
+        >
+          {children}
+        </div>
+        {/* Ensure toasts are position above the backdrop */}
+        {open && <Toaster position="bottom-center" />}
+      </dialog>
+    </FocusTrap>,
     document.body,
   );
 }
