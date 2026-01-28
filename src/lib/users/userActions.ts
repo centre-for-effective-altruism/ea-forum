@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import { userIsInGroup } from "./userHelpers";
 import { db } from "../db";
 import { users } from "../schema";
+import { updateWithFieldChanges } from "../fieldChanges";
 import {
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
@@ -40,10 +41,9 @@ export const subscribeToDigestAction = actionClient
 export const hideSubscribePokeAction = actionClient.action(async () => {
   const currentUser = await getCurrentUser();
   if (currentUser) {
-    await db
-      .update(users)
-      .set({ hideSubscribePoke: true })
-      .where(eq(users._id, currentUser._id));
+    await updateWithFieldChanges(db, currentUser, users, currentUser._id, {
+      hideSubscribePoke: true,
+    });
   }
 });
 
