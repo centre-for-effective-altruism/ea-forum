@@ -104,6 +104,7 @@ export const postsListProjection = (
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
       disableRecommendation: true,
+      authorIsUnreviewed: true,
       lastCommentedAt: true,
       sharingSettings: true,
       shortform: true,

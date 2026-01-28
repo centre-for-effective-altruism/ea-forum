@@ -7,6 +7,7 @@ import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks"
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import {
+  useApproveNewUser,
   useExcludeFromRecommendations,
   useSetAsQuickTakesPost,
   useSuggestForCurated,
@@ -25,6 +26,7 @@ import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import ReportPopover from "./ReportPopover";
 
@@ -56,6 +58,7 @@ export default function PostTripleDotMenu({
   const { excludedFromRecommendations, toggleExcludeFromRecommendations } =
     useExcludeFromRecommendations(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
+  const approveNewUser = useApproveNewUser(post);
 
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
@@ -68,8 +71,6 @@ export default function PostTripleDotMenu({
   // move to draft
   // delete draft
   // move to frontpage
-  // exclude from recommendations
-  // approve new user
 
   const TripleDotIcon =
     orientation === "horizontal" ? EllipsisHorizontalIcon : EllipsisVerticalIcon;
@@ -126,6 +127,13 @@ export default function PostTripleDotMenu({
                   : "Disable recommendation",
                 Icon: excludedFromRecommendations ? CheckCircleIcon : XCircleIcon,
                 onClick: toggleExcludeFromRecommendations,
+              }
+            : null,
+          approveNewUser
+            ? {
+                title: "Approve new user",
+                Icon: CheckIcon,
+                onClick: approveNewUser,
               }
             : null,
           setAsQuickTakesPost

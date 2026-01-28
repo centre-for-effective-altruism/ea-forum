@@ -10,6 +10,7 @@ import {
 } from "../posts/postActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
+import { approveNewUserAction } from "../users/userActions";
 
 export const useSuggestForCurated = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
@@ -60,4 +61,22 @@ export const useExcludeFromRecommendations = (post: PostDisplay | PostListItem) 
       ? toggleExcludeFromRecommendations
       : null,
   };
+};
+
+export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const [unapproved, setUnapproved] = useState(post.authorIsUnreviewed);
+  const userId = post.user?._id;
+  const approveNewUser = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    toast.promise(approveNewUserAction({ userId: userId! }), {
+      loading: "Loading...",
+      success: "Approved new user",
+      error: "Something went wrong",
+    });
+    setUnapproved(false);
+  }, [userId]);
+  const canApprove =
+    unapproved && !!userId && userCanDo(currentUser, "posts.edit.all");
+  return canApprove ? approveNewUser : null;
 };

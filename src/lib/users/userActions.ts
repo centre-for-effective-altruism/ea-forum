@@ -8,6 +8,7 @@ import { userIsInGroup } from "./userHelpers";
 import { db } from "../db";
 import { users } from "../schema";
 import { updateWithFieldChanges } from "../fieldChanges";
+import { approveNewUser } from "./userMutations";
 import {
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
@@ -62,3 +63,13 @@ export const toggleAdminAction = actionClient.action(async () => {
     })
     .where(eq(users._id, currentUser._id));
 });
+
+export const approveNewUserAction = actionClient
+  .inputSchema(z.object({ userId: z.string() }))
+  .action(async ({ parsedInput: { userId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Permission denied");
+    }
+    await approveNewUser(currentUser, userId);
+  });
