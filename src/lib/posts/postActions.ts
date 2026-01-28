@@ -9,7 +9,11 @@ import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
 import { fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
-import { setAsQuickTakesPost, toggleSuggestedForCuration } from "./postQueries";
+import {
+  setAsQuickTakesPost,
+  toggleEnableRecommendation,
+  toggleSuggestedForCuration,
+} from "./postQueries";
 
 export const fetchPostsListAction = actionClient
   .inputSchema(postsListViewSchema)
@@ -67,4 +71,14 @@ export const setAsQuickTakesPostAction = actionClient
       throw new Error("Not logged in");
     }
     await setAsQuickTakesPost(currentUser, postId);
+  });
+
+export const toggleEnableRecommendationAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Not logged in");
+    }
+    await toggleEnableRecommendation(currentUser, postId);
   });

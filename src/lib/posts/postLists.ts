@@ -103,6 +103,7 @@ export const postsListProjection = (
       socialPreviewImageAutoUrl: true,
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
+      disableRecommendation: true,
       lastCommentedAt: true,
       sharingSettings: true,
       shortform: true,

@@ -7,6 +7,7 @@ import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks"
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import {
+  useExcludeFromRecommendations,
   useSetAsQuickTakesPost,
   useSuggestForCurated,
 } from "@/lib/hooks/usePostModerationActions";
@@ -20,6 +21,8 @@ import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
 import EnvelopeOpenIcon from "@heroicons/react/24/outline/EnvelopeOpenIcon";
+import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
+import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
@@ -50,13 +53,14 @@ export default function PostTripleDotMenu({
   );
   const { hasSuggestedForCuration, toggleSuggestedForCuration } =
     useSuggestForCurated(post);
+  const { excludedFromRecommendations, toggleExcludeFromRecommendations } =
+    useExcludeFromRecommendations(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
 
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
 
   // TODO: See PostActions.tsx
-  // resync RSS
   // duplicate event
   // subscriptions
   // hide from frontpage
@@ -113,6 +117,15 @@ export default function PostTripleDotMenu({
                   : "Suggest curation",
                 Icon: hasSuggestedForCuration ? StarSolidIcon : StarIcon,
                 onClick: toggleSuggestedForCuration,
+              }
+            : null,
+          toggleExcludeFromRecommendations
+            ? {
+                title: excludedFromRecommendations
+                  ? "Enable recommendation"
+                  : "Disable recommendation",
+                Icon: excludedFromRecommendations ? CheckCircleIcon : XCircleIcon,
+                onClick: toggleExcludeFromRecommendations,
               }
             : null,
           setAsQuickTakesPost

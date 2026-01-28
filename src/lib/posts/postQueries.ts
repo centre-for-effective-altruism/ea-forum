@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, not, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts, users } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
@@ -34,6 +34,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       curatedDate: true,
       frontpageDate: true,
       reviewedByUserId: true,
+      disableRecommendation: true,
       isEvent: true,
       question: true,
       debate: true,
@@ -193,4 +194,17 @@ export const setAsQuickTakesPost = async (
         .where(eq(posts._id, postId)),
     ]);
   });
+};
+
+export const toggleEnableRecommendation = async (
+  currentUser: CurrentUser,
+  postId: string,
+) => {
+  if (!userCanDo(currentUser, "posts.edit.all")) {
+    throw new Error("Permission denied");
+  }
+  await db
+    .update(posts)
+    .set({ disableRecommendation: not(posts.disableRecommendation) })
+    .where(eq(posts._id, postId));
 };

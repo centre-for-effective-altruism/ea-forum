@@ -5,6 +5,7 @@ import { userCanSuggestPostForCurated } from "../posts/postsHelpers";
 import { userCanDo } from "../users/userHelpers";
 import {
   setAsQuickTakesPostAction,
+  toggleEnableRecommendationAction,
   toggleSuggestedForCurationAction,
 } from "../posts/postActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
@@ -40,4 +41,23 @@ export const useSetAsQuickTakesPost = (post: PostDisplay | PostListItem) => {
   return !post.shortform && userCanDo(currentUser, "posts.edit.all")
     ? setAsQuickTakesPost
     : null;
+};
+
+export const useExcludeFromRecommendations = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const [excludedFromRecommendations, setExcludedFromRecommendations] = useState(
+    post.disableRecommendation,
+  );
+  const toggleExcludeFromRecommendations = useCallback(() => {
+    const newExcluded = !excludedFromRecommendations;
+    setExcludedFromRecommendations(newExcluded);
+    void toggleEnableRecommendationAction({ postId: post._id });
+  }, [excludedFromRecommendations, post._id]);
+  const canExclude = userCanDo(currentUser, "posts.edit.all");
+  return {
+    excludedFromRecommendations,
+    toggleExcludeFromRecommendations: canExclude
+      ? toggleExcludeFromRecommendations
+      : null,
+  };
 };
