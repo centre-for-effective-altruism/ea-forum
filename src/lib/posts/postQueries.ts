@@ -1,10 +1,11 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { posts } from "../schema";
+import { posts, users } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
-import type { CurrentUser } from "../users/currentUser";
 import { userCanSuggestPostForCurated } from "./postsHelpers";
+import { userCanDo } from "../users/userHelpers";
+import type { CurrentUser } from "../users/currentUser";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -156,4 +157,40 @@ export const toggleSuggestedForCuration = async (
       END
     WHERE ${posts._id} = ${postId}
   `);
+};
+
+export const setAsQuickTakesPost = async (
+  currentUser: CurrentUser,
+  postId: string,
+) => {
+  if (!userCanDo(currentUser, "posts.edit.all")) {
+    throw new Error("Permission denied");
+  }
+  await db.transaction(async (txn) => {
+    const post = await txn.query.posts.findFirst({
+      columns: {
+        userId: true,
+      },
+      where: {
+        _id: postId,
+      },
+    });
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    await Promise.all([
+      txn
+        .update(users)
+        .set({
+          shortformFeedId: postId,
+        })
+        .where(eq(users._id, post.userId)),
+      txn
+        .update(posts)
+        .set({
+          shortform: true,
+        })
+        .where(eq(posts._id, postId)),
+    ]);
+  });
 };

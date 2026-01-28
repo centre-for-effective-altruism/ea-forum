@@ -105,6 +105,7 @@ export const postsListProjection = (
       collabEditorDialogue: true,
       lastCommentedAt: true,
       sharingSettings: true,
+      shortform: true,
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>

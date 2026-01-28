@@ -6,6 +6,10 @@ import type { PostListItem } from "@/lib/posts/postLists";
 import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
+import {
+  useSetAsQuickTakesPost,
+  useSuggestForCurated,
+} from "@/lib/hooks/usePostModerationActions";
 import clsx from "clsx";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
@@ -20,7 +24,6 @@ import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import ReportPopover from "./ReportPopover";
-import { useSuggestForCurated } from "@/lib/hooks/usePostModerationActions";
 
 export default function PostTripleDotMenu({
   post,
@@ -47,6 +50,7 @@ export default function PostTripleDotMenu({
   );
   const { hasSuggestedForCuration, toggleSuggestedForCuration } =
     useSuggestForCurated(post);
+  const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
 
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
@@ -57,11 +61,9 @@ export default function PostTripleDotMenu({
   // subscriptions
   // hide from frontpage
   // edit tags
-  // suggest curated
   // move to draft
   // delete draft
   // move to frontpage
-  // set as shortform
   // exclude from recommendations
   // approve new user
 
@@ -111,6 +113,12 @@ export default function PostTripleDotMenu({
                   : "Suggest curation",
                 Icon: hasSuggestedForCuration ? StarSolidIcon : StarIcon,
                 onClick: toggleSuggestedForCuration,
+              }
+            : null,
+          setAsQuickTakesPost
+            ? {
+                title: "Set as user's quick takes post",
+                onClick: setAsQuickTakesPost,
               }
             : null,
         ]}
