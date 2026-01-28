@@ -2,13 +2,13 @@ import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { useCurrentUser } from "./useCurrentUser";
 import { userCanSuggestPostForCurated } from "../posts/postsHelpers";
+import { userCanDo } from "../users/userHelpers";
 import {
   setAsQuickTakesPostAction,
   toggleSuggestedForCurationAction,
 } from "../posts/postActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
-import { userCanDo } from "../users/userHelpers";
 
 export const useSuggestForCurated = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();

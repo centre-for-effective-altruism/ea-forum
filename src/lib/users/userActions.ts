@@ -1,9 +1,10 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
+import { eq } from "drizzle-orm";
 import { actionClient } from "../actionClient";
 import { getCurrentUser } from "@/lib/users/currentUser";
+import { userIsInGroup } from "./userHelpers";
 import { db } from "../db";
 import { users } from "../schema";
 import {
@@ -44,4 +45,20 @@ export const hideSubscribePokeAction = actionClient.action(async () => {
       .set({ hideSubscribePoke: true })
       .where(eq(users._id, currentUser._id));
   }
+});
+
+export const toggleAdminAction = actionClient.action(async () => {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !userIsInGroup(currentUser, "realAdmins")) {
+    throw new Error("Permission denied");
+  }
+  await db
+    .update(users)
+    .set({
+      isAdmin: !currentUser.isAdmin,
+      groups: currentUser.isAdmin
+        ? currentUser.groups?.filter((group) => group !== "sunshineRegiment")
+        : [...(currentUser.groups ?? []), "sunshineRegiment"],
+    })
+    .where(eq(users._id, currentUser._id));
 });
