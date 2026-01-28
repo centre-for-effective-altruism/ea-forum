@@ -72,6 +72,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       group: {
         columns: {
           _id: true,
+          name: true,
           organizerIds: true,
         },
       },

@@ -6,6 +6,7 @@ import type { PostListItem } from "@/lib/posts/postLists";
 import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
+import { useSubscriptions } from "@/lib/hooks/useSubscriptions";
 import {
   useApproveNewUser,
   useExcludeFromRecommendations,
@@ -43,6 +44,7 @@ export default function PostTripleDotMenu({
   className?: string;
 }>) {
   const [reportOpen, setReportOpen] = useState(false);
+  const { subscriptions } = useSubscriptions(post);
   const editLink = usePostEditLink(post);
   const analyticsLink = usePostAnalyticsLink(post);
   const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
@@ -66,7 +68,6 @@ export default function PostTripleDotMenu({
 
   // TODO: See PostActions.tsx
   // duplicate event
-  // subscriptions
   // hide from frontpage
   // edit tags
   // move to draft
@@ -98,11 +99,10 @@ export default function PostTripleDotMenu({
           {
             title: "Get notified",
             Icon: BellIcon,
-            submenu: [
-              {
-                title: "Test",
-              },
-            ],
+            submenu: subscriptions.map(({ title }) => ({
+              title,
+              toggled: true,
+            })),
           },
           hideBookmark
             ? null

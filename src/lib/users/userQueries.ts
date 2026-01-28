@@ -12,6 +12,7 @@ export const userBaseProjection = {
     _id: true,
     slug: true,
     displayName: true,
+    username: true,
     createdAt: true,
     profileImageId: true,
     karma: true,

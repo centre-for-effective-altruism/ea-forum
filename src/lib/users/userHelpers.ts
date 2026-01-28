@@ -180,7 +180,7 @@ export const getUserName = (
  * Get a user's display name (not unique, can take special characters and spaces)
  */
 export const userGetDisplayName = (user: UserDisplayNameInfo | null): string =>
-  user ? ((user.displayName || getUserName(user)) ?? "") : "";
+  user ? ((user.displayName || user.username) ?? "") : "";
 
 /**
  * Check if a user is an admin

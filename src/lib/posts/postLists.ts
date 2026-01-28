@@ -139,6 +139,7 @@ export const postsListProjection = (
       group: {
         columns: {
           _id: true,
+          name: true,
           organizerIds: true,
         },
       },

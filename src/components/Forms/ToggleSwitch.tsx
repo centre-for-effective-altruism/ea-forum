@@ -8,16 +8,20 @@ export default function ToggleSwitch({
   onChange,
 }: Readonly<{
   value: boolean;
-  onChange: (value: boolean) => void;
+  onChange?: (value: boolean) => void;
 }>) {
   const onClick = useCallback(() => {
-    onChange(!value);
+    onChange?.(!value);
   }, [value, onChange]);
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={value}
       onClick={onClick}
       className={clsx(
-        "relative w-[28px] h-[16px] rounded-full cursor-pointer transition-colors",
+        "relative w-[28px] min-w-[28px] h-[16px] rounded-full",
+        "cursor-pointer transition-colors",
         value ? "bg-primary" : "bg-gray-400",
       )}
     >

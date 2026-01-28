@@ -6,6 +6,7 @@ import {
   flip,
   FloatingFocusManager,
   FloatingNode,
+  limitShift,
   offset,
   safePolygon,
   shift,
@@ -17,6 +18,7 @@ import {
 import CheckIcon from "@heroicons/react/24/solid/CheckIcon";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import DropdownMenuItems from "./DropdownMenuItems";
+import ToggleSwitch from "../Forms/ToggleSwitch";
 import Type from "../Type";
 import Link from "../Link";
 
@@ -27,6 +29,7 @@ export type DropdownItemProps = {
   Icon?: ComponentType<{ className: string }>;
   href?: string;
   checked?: boolean;
+  toggled?: boolean;
   onClick?: () => void | Promise<void>;
   submenu?: DropdownMenuItem[];
 };
@@ -43,7 +46,11 @@ const SubmenuItemWrapper: FC<{
     open,
     onOpenChange: setOpen,
     placement: "right-start",
-    middleware: [flip(), shift(), offset({ mainAxis: 12, crossAxis: -9 })],
+    middleware: [
+      flip(),
+      shift({ padding: 0, limiter: limitShift() }),
+      offset({ mainAxis: 12, crossAxis: -9 }),
+    ],
     whileElementsMounted: autoUpdate,
   });
   const hover = useHover(context, {
@@ -106,6 +113,7 @@ export default function DropdownItem({
   Icon,
   href,
   checked,
+  toggled,
   onClick,
   submenu,
 }: Readonly<DropdownItemProps>) {
@@ -122,6 +130,7 @@ export default function DropdownItem({
       {Icon && <Icon className="w-[20px] h-[20px] text-gray-600" />}
       <Type className="grow">{title}</Type>
       {checked && <CheckIcon className="w-4 text-primary" />}
+      {typeof toggled === "boolean" && <ToggleSwitch value={toggled} />}
     </DropdownItemWrapper>
   );
 }
