@@ -9,6 +9,20 @@ import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
 import { fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
+import { toggleSuggestedForCuration } from "./postQueries";
+
+export const fetchPostsListAction = actionClient
+  .inputSchema(postsListViewSchema)
+  .action(async ({ parsedInput: view }) => {
+    const currentUser = await getCurrentUser();
+    if (typeof view.limit === "number" && (view.limit < 1 || view.limit > 50)) {
+      throw new Error("Invalid limit");
+    }
+    if (typeof view.offset === "number" && view.offset < 0) {
+      throw new Error("Invalid offset");
+    }
+    return fetchPostsListFromView(currentUser?._id ?? null, view);
+  });
 
 export const increasePostViewCountAction = actionClient
   .inputSchema(z.object({ postId: z.string() }))
@@ -35,15 +49,12 @@ export const markPostCommentsReadAction = actionClient
     });
   });
 
-export const fetchPostsListAction = actionClient
-  .inputSchema(postsListViewSchema)
-  .action(async ({ parsedInput: view }) => {
+export const toggleSuggestedForCurationAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
     const currentUser = await getCurrentUser();
-    if (typeof view.limit === "number" && (view.limit < 1 || view.limit > 50)) {
-      throw new Error("Invalid limit");
+    if (!currentUser) {
+      throw new Error("Not logged in");
     }
-    if (typeof view.offset === "number" && view.offset < 0) {
-      throw new Error("Invalid offset");
-    }
-    return fetchPostsListFromView(currentUser?._id ?? null, view);
+    await toggleSuggestedForCuration(currentUser, postId);
   });

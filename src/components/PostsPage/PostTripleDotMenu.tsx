@@ -16,8 +16,11 @@ import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
 import EnvelopeOpenIcon from "@heroicons/react/24/outline/EnvelopeOpenIcon";
+import StarIcon from "@heroicons/react/24/outline/StarIcon";
+import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import ReportPopover from "./ReportPopover";
+import { useSuggestForCurated } from "@/lib/hooks/usePostModerationActions";
 
 export default function PostTripleDotMenu({
   post,
@@ -42,10 +45,10 @@ export default function PostTripleDotMenu({
     post._id,
     !!post.readStatus?.[0]?.isRead,
   );
+  const { hasSuggestedForCuration, toggleSuggestedForCuration } =
+    useSuggestForCurated(post);
 
-  const openReport = useCallback(() => {
-    setReportOpen(true);
-  }, []);
+  const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
 
   // TODO: See PostActions.tsx
@@ -101,6 +104,15 @@ export default function PostTripleDotMenu({
             Icon: isRead ? EnvelopeIcon : EnvelopeOpenIcon,
             onClick: toggleIsRead,
           },
+          toggleSuggestedForCuration
+            ? {
+                title: hasSuggestedForCuration
+                  ? "Unsuggest curation"
+                  : "Suggest curation",
+                Icon: hasSuggestedForCuration ? StarSolidIcon : StarIcon,
+                onClick: toggleSuggestedForCuration,
+              }
+            : null,
         ]}
       >
         <button

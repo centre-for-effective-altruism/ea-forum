@@ -7,7 +7,7 @@ import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
-import { userCanDo } from "../users/userHelpers";
+import { userCanDo, userIsInGroup } from "../users/userHelpers";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -205,4 +205,17 @@ export const canUserEditPostMetadata = (
   }
 
   return false;
+};
+
+export const userCanSuggestPostForCurated = (
+  user: CurrentUser | null,
+  post: Pick<Post, "frontpageDate" | "curatedDate">,
+) => {
+  if (!post.frontpageDate || post.curatedDate) {
+    return false;
+  }
+  return (
+    userCanDo(user, "posts.moderate.all") ||
+    userIsInGroup(user, "canSuggestCuration")
+  );
 };

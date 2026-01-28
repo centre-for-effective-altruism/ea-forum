@@ -3,6 +3,8 @@ import { db } from "../db";
 import { posts } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
+import type { CurrentUser } from "../users/currentUser";
+import { userCanSuggestPostForCurated } from "./postsHelpers";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -11,6 +13,10 @@ export const currentUserIsSharedSelector =
 export const currentUserUsedLinkKeySelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
     sql<boolean>`${postsTable}."linkSharingKeyUsedBy" @> ARRAY[${currentUserId}::VARCHAR]`;
+
+export const currentUserSuggestedCurationSelector =
+  (currentUserId: string) => (postsTable: typeof posts) =>
+    sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
 export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
   return db.query.posts.findFirst({
@@ -44,6 +50,8 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
         ? {
             currentUserIsShared: currentUserIsSharedSelector(currentUserId),
             currentUserUsedLinkKey: currentUserUsedLinkKeySelector(currentUserId),
+            currentUserSuggestedCuration:
+              currentUserSuggestedCurationSelector(currentUserId),
           }
         : null),
     },
@@ -118,3 +126,34 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
+
+export const toggleSuggestedForCuration = async (
+  currentUser: CurrentUser,
+  postId: string,
+) => {
+  const post = await db.query.posts.findFirst({
+    columns: {
+      frontpageDate: true,
+      curatedDate: true,
+    },
+    where: {
+      _id: postId,
+    },
+  });
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  if (!userCanSuggestPostForCurated(currentUser, post)) {
+    throw new Error("You do not have permission to suggest this post for curation");
+  }
+  const userId = currentUser._id;
+  await db.execute(sql`
+    UPDATE ${posts}
+    SET "suggestForCuratedUserIds" =
+      CASE WHEN ${userId} = ANY(COALESCE("suggestForCuratedUserIds", '{}'))
+        THEN ARRAY_REMOVE(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
+        ELSE ARRAY_APPEND(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
+      END
+    WHERE ${posts._id} = ${postId}
+  `);
+};

@@ -14,6 +14,7 @@ import {
 import {
   currentUserIsSharedSelector,
   currentUserUsedLinkKeySelector,
+  currentUserSuggestedCurationSelector,
 } from "./postQueries";
 
 const SCORE_BIAS = 2;
@@ -116,6 +117,8 @@ export const postsListProjection = (
         ? {
             currentUserIsShared: currentUserIsSharedSelector(currentUserId),
             currentUserUsedLinkKey: currentUserUsedLinkKeySelector(currentUserId),
+            currentUserSuggestedCuration:
+              currentUserSuggestedCurationSelector(currentUserId),
           }
         : null),
     },
