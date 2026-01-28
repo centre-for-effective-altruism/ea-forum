@@ -5,6 +5,7 @@ import {
   autoUpdate,
   flip,
   FloatingFocusManager,
+  FloatingTree,
   Placement,
   shift,
   useClick,
@@ -53,7 +54,7 @@ export default function Dropdown({
   useImperativeHandle(dismissRef, () => () => setIsOpen(false));
 
   return (
-    <>
+    <FloatingTree>
       <div
         className="inline-block"
         ref={setReference}
@@ -75,6 +76,6 @@ export default function Dropdown({
           </div>
         </FloatingFocusManager>
       )}
-    </>
+    </FloatingTree>
   );
 }

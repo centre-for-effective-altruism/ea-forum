@@ -79,7 +79,7 @@ export default function PostTripleDotMenu({
     <>
       <DropdownMenu
         placement="bottom-end"
-        className="text-gray-900 min-w-[200px]"
+        className="text-gray-900"
         items={[
           editLink
             ? {
@@ -98,7 +98,11 @@ export default function PostTripleDotMenu({
           {
             title: "Get notified",
             Icon: BellIcon,
-            submenu: ["divider"],
+            submenu: [
+              {
+                title: "Test",
+              },
+            ],
           },
           hideBookmark
             ? null
