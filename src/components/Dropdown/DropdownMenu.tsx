@@ -1,8 +1,8 @@
-import { ComponentProps, ReactNode, RefObject } from "react";
+import { ReactNode, RefObject } from "react";
 import type { Placement } from "@floating-ui/react";
 import { filterNonNull } from "@/lib/typeHelpers";
+import DropdownItem, { DropdownItemProps } from "./DropdownItem";
 import Dropdown from "./Dropdown";
-import DropdownItem from "./DropdownItem";
 
 export default function DropdownMenu({
   placement,
@@ -12,7 +12,7 @@ export default function DropdownMenu({
   children,
 }: Readonly<{
   placement?: Placement;
-  items: (ComponentProps<typeof DropdownItem> | "divider" | null)[];
+  items: (DropdownItemProps | "divider" | null)[];
   dismissRef?: RefObject<(() => void) | null>;
   className?: string;
   children: ReactNode;
@@ -24,7 +24,7 @@ export default function DropdownMenu({
       menu={
         <div
           data-component="DropdownMenu"
-          className={`bg-white rounded shadow p-2 border border-gray-100 ${className}`}
+          className={`bg-gray-0 rounded shadow p-2 border border-gray-100 ${className}`}
         >
           {filterNonNull(items).map((item, i) =>
             item === "divider" ? (

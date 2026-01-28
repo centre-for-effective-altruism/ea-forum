@@ -15,6 +15,7 @@ import {
 import clsx from "clsx";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
+import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
@@ -94,6 +95,11 @@ export default function PostTripleDotMenu({
                 href: analyticsLink,
               }
             : null,
+          {
+            title: "Get notified",
+            Icon: BellIcon,
+            submenu: ["divider"],
+          },
           hideBookmark
             ? null
             : {
