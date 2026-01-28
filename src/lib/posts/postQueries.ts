@@ -1,9 +1,10 @@
-import { eq, not, sql } from "drizzle-orm";
+import { not, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts, users } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { userCanSuggestPostForCurated } from "./postsHelpers";
+import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
 import { userCanDo } from "../users/userHelpers";
 import type { CurrentUser } from "../users/currentUser";
 
@@ -133,31 +134,43 @@ export const toggleSuggestedForCuration = async (
   currentUser: CurrentUser,
   postId: string,
 ) => {
-  const post = await db.query.posts.findFirst({
-    columns: {
-      frontpageDate: true,
-      curatedDate: true,
-    },
-    where: {
-      _id: postId,
-    },
+  await db.transaction(async (txn) => {
+    const post = await db.query.posts.findFirst({
+      columns: {
+        frontpageDate: true,
+        curatedDate: true,
+        suggestForCuratedUserIds: true,
+      },
+      where: {
+        _id: postId,
+      },
+    });
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    if (!userCanSuggestPostForCurated(currentUser, post)) {
+      throw new Error(
+        "You do not have permission to suggest this post for curation",
+      );
+    }
+    const userId = currentUser._id;
+    const result = await db.execute<{ suggestForCuratedUserIds: string[] }>(sql`
+      UPDATE ${posts}
+      SET "suggestForCuratedUserIds" =
+        CASE WHEN ${userId} = ANY(COALESCE("suggestForCuratedUserIds", '{}'))
+          THEN ARRAY_REMOVE(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
+          ELSE ARRAY_APPEND(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
+        END
+      WHERE ${posts._id} = ${postId}
+      RETURNING "suggestForCuratedUserIds"
+    `);
+    await logFieldChanges(txn, currentUser._id, {
+      documentId: postId,
+      fieldName: "suggestForCuratedUserIds",
+      oldValue: post.suggestForCuratedUserIds,
+      newValue: result.rows[0].suggestForCuratedUserIds,
+    });
   });
-  if (!post) {
-    throw new Error("Post not found");
-  }
-  if (!userCanSuggestPostForCurated(currentUser, post)) {
-    throw new Error("You do not have permission to suggest this post for curation");
-  }
-  const userId = currentUser._id;
-  await db.execute(sql`
-    UPDATE ${posts}
-    SET "suggestForCuratedUserIds" =
-      CASE WHEN ${userId} = ANY(COALESCE("suggestForCuratedUserIds", '{}'))
-        THEN ARRAY_REMOVE(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
-        ELSE ARRAY_APPEND(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
-      END
-    WHERE ${posts._id} = ${postId}
-  `);
 };
 
 export const setAsQuickTakesPost = async (
@@ -180,18 +193,12 @@ export const setAsQuickTakesPost = async (
       throw new Error("Post not found");
     }
     await Promise.all([
-      txn
-        .update(users)
-        .set({
-          shortformFeedId: postId,
-        })
-        .where(eq(users._id, post.userId)),
-      txn
-        .update(posts)
-        .set({
-          shortform: true,
-        })
-        .where(eq(posts._id, postId)),
+      updateWithFieldChanges(txn, currentUser, posts, postId, {
+        shortform: true,
+      }),
+      updateWithFieldChanges(txn, currentUser, users, post.userId, {
+        shortformFeedId: postId,
+      }),
     ]);
   });
 };
@@ -203,8 +210,7 @@ export const toggleEnableRecommendation = async (
   if (!userCanDo(currentUser, "posts.edit.all")) {
     throw new Error("Permission denied");
   }
-  await db
-    .update(posts)
-    .set({ disableRecommendation: not(posts.disableRecommendation) })
-    .where(eq(posts._id, postId));
+  await updateWithFieldChanges(db, currentUser, posts, postId, {
+    disableRecommendation: not(posts.disableRecommendation),
+  });
 };
