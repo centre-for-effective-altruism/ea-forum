@@ -16,6 +16,7 @@ import { updatePostUser } from "./postCallbacks";
 import { getUniqueSlug } from "../slugs/uniqueSlug";
 import { performVote } from "../votes/voteMutations";
 import { fetchPostsListById } from "./postLists";
+import { elasticSyncDocument } from "../search/elastic/elasticSync";
 
 export const createShortformPost = async (user: CurrentUser) => {
   const _id = randomId();
@@ -211,6 +212,7 @@ export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
     throw new Error("Permission denied");
   }
   await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
+  void elasticSyncDocument("Posts", postId);
 };
 
 export const archiveDraft = async (currentUser: CurrentUser, postId: string) => {
@@ -225,4 +227,5 @@ export const archiveDraft = async (currentUser: CurrentUser, postId: string) => 
     draft: true,
     deletedDraft: true,
   });
+  void elasticSyncDocument("Posts", postId);
 };
