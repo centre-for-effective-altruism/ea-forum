@@ -15,10 +15,8 @@ import {
   useHover,
   useInteractions,
 } from "@floating-ui/react";
-import CheckIcon from "@heroicons/react/24/solid/CheckIcon";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import DropdownMenuItems from "./DropdownMenuItems";
-import ToggleSwitch from "../Forms/ToggleSwitch";
 import Type from "../Type";
 import Link from "../Link";
 
@@ -28,10 +26,9 @@ export type DropdownItemProps = {
   title: string;
   Icon?: ComponentType<{ className: string }>;
   href?: string;
-  checked?: boolean;
-  toggled?: boolean;
   onClick?: () => void | Promise<void>;
   submenu?: DropdownMenuItem[];
+  After?: ComponentType;
 };
 
 const SubmenuItemWrapper: FC<{
@@ -112,10 +109,9 @@ export default function DropdownItem({
   title,
   Icon,
   href,
-  checked,
-  toggled,
   onClick,
   submenu,
+  After,
 }: Readonly<DropdownItemProps>) {
   return (
     <DropdownItemWrapper
@@ -129,8 +125,7 @@ export default function DropdownItem({
     >
       {Icon && <Icon className="w-[20px] h-[20px] text-gray-600" />}
       <Type className="grow">{title}</Type>
-      {checked && <CheckIcon className="w-4 text-primary" />}
-      {typeof toggled === "boolean" && <ToggleSwitch value={toggled} />}
+      {After && <After />}
     </DropdownItemWrapper>
   );
 }

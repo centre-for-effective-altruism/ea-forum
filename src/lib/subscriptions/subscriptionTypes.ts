@@ -16,3 +16,6 @@ export const subscriptionTypes = {
 
 export type SubscriptionType =
   (typeof subscriptionTypes)[keyof typeof subscriptionTypes];
+
+export const isSubscriptionType = (type: string): type is SubscriptionType =>
+  type in subscriptionTypes;

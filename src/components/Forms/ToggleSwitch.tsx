@@ -1,20 +1,22 @@
 "use client";
 
-import { useCallback } from "react";
+import { ElementType, useCallback } from "react";
 import clsx from "clsx";
 
 export default function ToggleSwitch({
   value,
   onChange,
+  As = "button",
 }: Readonly<{
   value: boolean;
   onChange?: (value: boolean) => void;
+  As?: ElementType;
 }>) {
   const onClick = useCallback(() => {
     onChange?.(!value);
   }, [value, onChange]);
   return (
-    <button
+    <As
       type="button"
       role="switch"
       aria-checked={value}
@@ -31,6 +33,6 @@ export default function ToggleSwitch({
           value ? "left-[14px]" : "left-[2px]",
         )}
       />
-    </button>
+    </As>
   );
 }
