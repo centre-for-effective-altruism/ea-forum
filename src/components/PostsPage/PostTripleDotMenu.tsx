@@ -9,6 +9,7 @@ import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import { usePostSubscriptions } from "@/lib/hooks/useSubscriptions";
 import {
   useApproveNewUser,
+  useArchiveDraft,
   useExcludeFromRecommendations,
   useMoveToDraft,
   useMoveToFrontpage,
@@ -22,6 +23,7 @@ import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import ArchiveBoxArrowDownIcon from "@heroicons/react/24/outline/ArchiveBoxArrowDownIcon";
+import ArchiveBoxXMarkIcon from "@heroicons/react/24/outline/ArchiveBoxXMarkIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
@@ -67,6 +69,7 @@ export default function PostTripleDotMenu({
   const { isFrontpage, toggleFrontpage } = useMoveToFrontpage(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
   const moveToDraft = useMoveToDraft(post);
+  const archiveDraft = useArchiveDraft(post);
   const approveNewUser = useApproveNewUser(post);
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
@@ -136,6 +139,13 @@ export default function PostTripleDotMenu({
                 title: "Move to draft",
                 Icon: ArchiveBoxArrowDownIcon,
                 onClick: moveToDraft,
+              }
+            : null,
+          archiveDraft
+            ? {
+                title: "Archive draft",
+                Icon: ArchiveBoxXMarkIcon,
+                onClick: archiveDraft,
               }
             : null,
           toggleExcludeFromRecommendations

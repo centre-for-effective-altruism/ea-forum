@@ -3,10 +3,12 @@ import toast from "react-hot-toast";
 import { useCurrentUser } from "./useCurrentUser";
 import { userCanDo } from "../users/userHelpers";
 import {
+  canUserArchivePost,
   canUserEditPostMetadata,
   userCanSuggestPostForCurated,
 } from "../posts/postsHelpers";
 import {
+  archiveDraftAction,
   moveToDraftAction,
   setAsQuickTakesPostAction,
   toggleEnableRecommendationAction,
@@ -118,4 +120,21 @@ export const useMoveToDraft = (post: PostDisplay | PostListItem) => {
   return !draft && currentUser && canUserEditPostMetadata(currentUser, post)
     ? moveToDraft
     : null;
+};
+
+export const useArchiveDraft = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const [archived, setArchived] = useState(false);
+  const archivePost = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    toast.promise(archiveDraftAction({ postId: post._id }), {
+      loading: "Loading...",
+      success: () => {
+        setArchived(true);
+        return "Archived draft";
+      },
+      error: "Something went wrong",
+    });
+  }, [post._id]);
+  return !archived && canUserArchivePost(currentUser, post) ? archivePost : null;
 };

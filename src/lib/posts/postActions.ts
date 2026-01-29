@@ -10,6 +10,7 @@ import { getCurrentUser } from "../users/currentUser";
 import { fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
 import {
+  archiveDraft,
   moveToDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
@@ -103,4 +104,14 @@ export const moveToDraftAction = actionClient
       throw new Error("Not logged in");
     }
     await moveToDraft(currentUser, postId);
+  });
+
+export const archiveDraftAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Not logged in");
+    }
+    await archiveDraft(currentUser, postId);
   });

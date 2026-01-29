@@ -219,3 +219,18 @@ export const userCanSuggestPostForCurated = (
     userIsInGroup(user, "canSuggestCuration")
   );
 };
+
+export const canUserArchivePost = (
+  user: CurrentUser | null,
+  post: PostDisplay | PostListItem,
+) => {
+  if (!user) {
+    return false;
+  }
+  if (userCanDo(user, "posts.remove.all")) {
+    return true;
+  }
+  const organizerIds = post.group?.organizerIds;
+  const isPostGroupOrganizer = organizerIds?.some((id) => id === user?._id);
+  return (post.user?._id === user._id || isPostGroupOrganizer) && !!post.draft;
+};
