@@ -6,6 +6,7 @@ import { userCanDo } from "../users/userHelpers";
 import {
   setAsQuickTakesPostAction,
   toggleEnableRecommendationAction,
+  toggleFrontpageAction,
   toggleSuggestedForCurationAction,
 } from "../posts/postActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
@@ -79,4 +80,19 @@ export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
   const canApprove =
     unapproved && !!userId && userCanDo(currentUser, "posts.edit.all");
   return canApprove ? approveNewUser : null;
+};
+
+export const useMoveToFrontpage = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const [frontpage, setFrontpage] = useState(!!post.frontpageDate);
+  const canMove = userCanDo(currentUser, "posts.edit.all");
+  const toggleFrontpage = useCallback(() => {
+    const newFrontpage = !frontpage;
+    setFrontpage(newFrontpage);
+    void toggleFrontpageAction({ postId: post._id });
+  }, [frontpage, post._id]);
+  return {
+    isFrontpage: frontpage,
+    toggleFrontpage: canMove ? toggleFrontpage : null,
+  };
 };

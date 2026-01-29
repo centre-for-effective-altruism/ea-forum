@@ -10,6 +10,7 @@ import { usePostSubscriptions } from "@/lib/hooks/useSubscriptions";
 import {
   useApproveNewUser,
   useExcludeFromRecommendations,
+  useMoveToFrontpage,
   useSetAsQuickTakesPost,
   useSuggestForCurated,
 } from "@/lib/hooks/usePostModerationActions";
@@ -29,6 +30,7 @@ import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import ReportPopover from "./ReportPopover";
 
@@ -60,18 +62,19 @@ export default function PostTripleDotMenu({
     useSuggestForCurated(post);
   const { excludedFromRecommendations, toggleExcludeFromRecommendations } =
     useExcludeFromRecommendations(post);
+  const { isFrontpage, toggleFrontpage } = useMoveToFrontpage(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
   const approveNewUser = useApproveNewUser(post);
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
 
   // TODO: See PostActions.tsx
+  // resync rss
   // duplicate event
   // hide from frontpage
   // edit tags
   // move to draft
   // delete draft
-  // move to frontpage
 
   const TripleDotIcon =
     orientation === "horizontal" ? EllipsisHorizontalIcon : EllipsisVerticalIcon;
@@ -140,6 +143,13 @@ export default function PostTripleDotMenu({
                 title: "Approve new user",
                 Icon: CheckIcon,
                 onClick: approveNewUser,
+              }
+            : null,
+          toggleFrontpage
+            ? {
+                title: isFrontpage ? "Move to personal blog" : "Move to frontpage",
+                Icon: NewspaperIcon,
+                onClick: toggleFrontpage,
               }
             : null,
           setAsQuickTakesPost
