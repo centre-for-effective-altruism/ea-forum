@@ -146,6 +146,10 @@ export const users = pgTable(
     hideSubscribePoke: boolean().notNull().default(false),
     unsubscribeFromAll: boolean(),
     shortformFeedId: varchar({ length: 27 }),
+    sunshineNotes: text().notNull().default(""),
+    sunshineFlagged: boolean().notNull().default(false),
+    sunshineSnoozed: boolean().notNull().default(false),
+    reviewedAt: timestamp(),
 
     /*
   "profile" JSONB,
@@ -259,11 +263,6 @@ export const users = pgTable(
   "hideFrontpageBookAd" BOOL,
   "hideFrontpageBook2019Ad" BOOL,
   "hideFrontpageBook2020Ad" BOOL,
-  "sunshineNotes" TEXT NOT NULL DEFAULT '',
-  "sunshineFlagged" BOOL NOT NULL DEFAULT FALSE,
-  "sunshineSnoozed" BOOL NOT NULL DEFAULT FALSE,
-  "reviewedByUserId" VARCHAR(27),
-  "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "fullName" TEXT,
   "viewUnreviewedComments" BOOL,
@@ -1929,7 +1928,10 @@ export const posts = pgTable(
     eventImageId: text(),
     types: text().array(),
     metaSticky: boolean().default(false).notNull(),
-    sharingSettings: jsonb(),
+    sharingSettings: jsonb<{
+      explicitlySharedUsersCan: "none" | "read" | "comment" | "edit";
+      anyoneWithLinkCan: "none" | "read" | "comment" | "edit";
+    }>(),
     shareWithUsers: varchar({ length: 27 }).array().default([]).notNull(),
     linkSharingKey: text(),
     linkSharingKeyUsedBy: varchar({ length: 27 }).array(),

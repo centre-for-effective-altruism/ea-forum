@@ -3,11 +3,14 @@
 import { useCallback, useRef } from "react";
 import { useTracking } from "@/lib/analyticsEvents";
 import { usePostsListView } from "@/lib/hooks/usePostsListView";
+import type { PostsListViewType } from "@/lib/posts/postsListView";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
+import CheckIcon from "@heroicons/react/24/solid/CheckIcon";
 import CardViewIcon from "../Icons/CardView";
 import ListViewIcon from "../Icons/ListViewIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
-import { PostsListViewType } from "@/lib/posts/postsListView";
+
+const Check = () => <CheckIcon className="w-4 text-primary" />;
 
 export default function PostsListViewPicker() {
   const { captureEvent } = useTracking();
@@ -32,14 +35,14 @@ export default function PostsListViewPicker() {
         {
           title: "Card view",
           Icon: CardViewIcon,
-          checked: view === "card",
           onClick: () => onClick("card"),
+          afterNode: view === "card" ? <Check /> : undefined,
         },
         {
           title: "List view",
           Icon: ListViewIcon,
-          checked: view === "list",
           onClick: () => onClick("list"),
+          afterNode: view === "list" ? <Check /> : undefined,
         },
       ]}
     >

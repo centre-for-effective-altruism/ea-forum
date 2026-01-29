@@ -1,8 +1,8 @@
 import md5 from "md5";
-import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { users } from "./schema";
 import { userGetLocation } from "./users/userHelpers";
+import { updateWithFieldChanges } from "./fieldChanges";
 import type { CurrentUser } from "./users/currentUser";
 
 type MailchimpList = "digest";
@@ -92,5 +92,5 @@ export const updateUserMailchimpSubscription = async ({
     status === "subscribed"
       ? { subscribedToDigest: true, unsubscribeFromAll: false }
       : { subscribedToDigest: false };
-  await db.update(users).set(update).where(eq(users._id, user._id));
+  await updateWithFieldChanges(db, user, users, user._id, update);
 };

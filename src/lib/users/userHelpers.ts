@@ -180,7 +180,7 @@ export const getUserName = (
  * Get a user's display name (not unique, can take special characters and spaces)
  */
 export const userGetDisplayName = (user: UserDisplayNameInfo | null): string =>
-  user ? ((user.displayName || getUserName(user)) ?? "") : "";
+  user ? ((user.displayName || user.username) ?? "") : "";
 
 /**
  * Check if a user is an admin
@@ -345,3 +345,6 @@ export const userGetLocation = (
     ? { lat: currentUserLat, lng: currentUserLng, known: true }
     : { lat: 37.871853, lng: -122.258423, known: false };
 };
+
+export const userIsPodcaster = (user: UserPermissions | null): boolean =>
+  userIsInGroup(user, "podcasters");

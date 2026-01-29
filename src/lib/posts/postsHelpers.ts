@@ -1,10 +1,13 @@
 import { z } from "zod/v4";
+import type { CurrentUser } from "../users/currentUser";
+import type { PostDisplay } from "./postQueries";
 import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
+import { userCanDo, userIsInGroup } from "../users/userHelpers";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -119,4 +122,100 @@ export const getPostPlaintextDescription = (post: PostListItem): string | null =
     return null;
   }
   return htmlToTextDefault(highlightHtml) || null;
+};
+
+type SharablePost = Pick<
+  PostListItem,
+  // | "coauthorUserIds"
+  "sharingSettings" | "currentUserIsShared" | "currentUserUsedLinkKey"
+>;
+
+export const userIsSharedOnPost = (
+  currentUser: CurrentUser | null,
+  post: SharablePost,
+): boolean => {
+  if (!currentUser) {
+    return false;
+  }
+
+  // TODO coauthors
+  // Shared as a coauthor? Always give access
+  // const coauthorUserIds = post.coauthorUserIds ?? [];
+  // if (coauthorUserIds.indexOf(currentUser._id) >= 0) {
+  //   return true;
+  // }
+
+  // Explicitly shared?
+  if (post.currentUserIsShared) {
+    return (
+      !post.sharingSettings ||
+      post.sharingSettings.explicitlySharedUsersCan !== "none"
+    );
+  }
+
+  // If not individually shared with this user, still counts if shared if
+  // (1) link sharing is enabled and (2) the user's ID is in
+  // linkSharingKeyUsedBy.
+  return !!(
+    post.sharingSettings?.anyoneWithLinkCan &&
+    post.sharingSettings.anyoneWithLinkCan !== "none" &&
+    post.currentUserUsedLinkKey
+  );
+};
+
+/**
+ * Whether the user can make updates to the post document (including both the
+ * main post body and most other post fields)
+ */
+export const canUserEditPostMetadata = (
+  currentUser: CurrentUser | null,
+  post: PostDisplay | PostListItem,
+): boolean => {
+  if (!currentUser) {
+    return false;
+  }
+
+  const organizerIds = post.group?.organizerIds;
+  if (organizerIds?.some((id) => id === currentUser?._id)) {
+    return true;
+  }
+  if (post.user?._id === currentUser._id) {
+    return true;
+  }
+  if (userCanDo(currentUser, "posts.edit.all")) {
+    return true;
+  }
+  // TODO coauthors
+  // if (post.coauthors.some((user) => user._id === currentUser._id)) {
+  //   return true;
+  // }
+
+  if (
+    userIsSharedOnPost(currentUser, post) &&
+    post.sharingSettings?.anyoneWithLinkCan === "edit"
+  ) {
+    return true;
+  }
+
+  if (
+    post.currentUserIsShared &&
+    post.sharingSettings?.explicitlySharedUsersCan === "edit"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+export const userCanSuggestPostForCurated = (
+  user: CurrentUser | null,
+  post: Pick<Post, "frontpageDate" | "curatedDate">,
+) => {
+  if (!post.frontpageDate || post.curatedDate) {
+    return false;
+  }
+  return (
+    userCanDo(user, "posts.moderate.all") ||
+    userIsInGroup(user, "canSuggestCuration")
+  );
 };
