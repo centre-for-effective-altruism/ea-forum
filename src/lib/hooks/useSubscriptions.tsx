@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import stringify from "json-stringify-deterministic";
 import type { PostListItem } from "../posts/postLists";
 import type { PostDisplay } from "../posts/postQueries";
 import type { CurrentUser } from "../users/currentUser";
@@ -159,11 +160,13 @@ export const useSubscription = (id: SubscriptionId) => {
     throw new Error("No subscription provider found");
   }
   const { listen, get, update } = ctx;
-  useEffect(() => listen(id), [listen, id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableId = useMemo(() => id, [stringify(id)]);
+  useEffect(() => listen(stableId), [listen, stableId]);
   const state = get(id) ?? { data: null, loading: true };
   const updateThis = useCallback(
-    (subscribed: boolean) => update(id, { subscribed }),
-    [id, update],
+    (subscribed: boolean) => update(stableId, { subscribed }),
+    [stableId, update],
   );
   return { ...state, update: updateThis };
 };
@@ -212,22 +215,21 @@ const getSubscriptionItems = (
 
 export const usePostSubscriptions = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
-  const subscriptions = useMemo(() => {
+  const subscriptionMenuItems = useMemo(() => {
     const allSubs = getSubscriptionItems(post, currentUser);
     return allSubs
       .filter(({ enabled }) => enabled)
-      .map((sub) => ({
-        title: sub.title,
-        ToggleComponent: () => (
-          <SubscriptionToggle
-            collectionName={sub.collectionName}
-            documentId={sub.documentId}
-            type={sub.subscriptionType}
-          />
-        ),
-      }));
+      .map((sub) => (
+        <SubscriptionToggle
+          key={sub.title}
+          title={sub.title}
+          collectionName={sub.collectionName}
+          documentId={sub.documentId}
+          type={sub.subscriptionType}
+        />
+      ));
   }, [post, currentUser]);
   return {
-    subscriptions,
+    subscriptionMenuItems,
   };
 };

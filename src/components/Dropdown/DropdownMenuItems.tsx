@@ -1,6 +1,17 @@
-import { filterNonNull } from "@/lib/typeHelpers";
+import type { FC } from "react";
 import DropdownItem, { DropdownMenuItem } from "./DropdownItem";
 import clsx from "clsx";
+
+const Item: FC<{ item: DropdownMenuItem }> = ({ item }) => {
+  if (item === "divider") {
+    return <hr className="border-t border-solid border-gray-300 my-2" />;
+  }
+  if (item && typeof item === "object" && "title" in item) {
+    return <DropdownItem {...item} />;
+  }
+  // If we get here then `item` is a ReactNode
+  return item;
+};
 
 export default function DropdownMenuItems({
   items,
@@ -17,13 +28,9 @@ export default function DropdownMenuItems({
         className,
       )}
     >
-      {filterNonNull(items).map((item, i) =>
-        item === "divider" ? (
-          <hr key={i} className="border-t border-solid border-gray-300 my-2" />
-        ) : (
-          <DropdownItem key={item.title} {...item} />
-        ),
-      )}
+      {items.map((item, i) => (
+        <Item item={item} key={i} />
+      ))}
     </div>
   );
 }

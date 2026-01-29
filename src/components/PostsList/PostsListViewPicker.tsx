@@ -36,13 +36,13 @@ export default function PostsListViewPicker() {
           title: "Card view",
           Icon: CardViewIcon,
           onClick: () => onClick("card"),
-          After: view === "card" ? Check : undefined,
+          afterNode: view === "card" ? <Check /> : undefined,
         },
         {
           title: "List view",
           Icon: ListViewIcon,
           onClick: () => onClick("list"),
-          After: view === "list" ? Check : undefined,
+          afterNode: view === "list" ? <Check /> : undefined,
         },
       ]}
     >

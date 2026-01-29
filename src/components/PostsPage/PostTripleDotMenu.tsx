@@ -44,7 +44,7 @@ export default function PostTripleDotMenu({
   className?: string;
 }>) {
   const [reportOpen, setReportOpen] = useState(false);
-  const { subscriptions } = usePostSubscriptions(post);
+  const { subscriptionMenuItems } = usePostSubscriptions(post);
   const editLink = usePostEditLink(post);
   const analyticsLink = usePostAnalyticsLink(post);
   const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
@@ -98,10 +98,7 @@ export default function PostTripleDotMenu({
           {
             title: "Get notified",
             Icon: BellIcon,
-            submenu: subscriptions.map(({ title, ToggleComponent }) => ({
-              title,
-              After: ToggleComponent,
-            })),
+            submenu: subscriptionMenuItems,
           },
           hideBookmark
             ? null

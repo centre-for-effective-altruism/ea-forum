@@ -20,7 +20,7 @@ import DropdownMenuItems from "./DropdownMenuItems";
 import Type from "../Type";
 import Link from "../Link";
 
-export type DropdownMenuItem = DropdownItemProps | "divider" | null;
+export type DropdownMenuItem = DropdownItemProps | ReactNode | "divider";
 
 export type DropdownItemProps = {
   title: string;
@@ -28,7 +28,7 @@ export type DropdownItemProps = {
   href?: string;
   onClick?: () => void | Promise<void>;
   submenu?: DropdownMenuItem[];
-  After?: ComponentType;
+  afterNode?: ReactNode;
 };
 
 const SubmenuItemWrapper: FC<{
@@ -111,7 +111,7 @@ export default function DropdownItem({
   href,
   onClick,
   submenu,
-  After,
+  afterNode,
 }: Readonly<DropdownItemProps>) {
   return (
     <DropdownItemWrapper
@@ -125,7 +125,7 @@ export default function DropdownItem({
     >
       {Icon && <Icon className="w-[20px] h-[20px] text-gray-600" />}
       <Type className="grow">{title}</Type>
-      {After && <After />}
+      {afterNode}
     </DropdownItemWrapper>
   );
 }
