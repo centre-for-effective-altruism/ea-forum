@@ -3,13 +3,18 @@ import type { CurrentUser } from "../users/currentUser";
 import { db } from "../db";
 import { posts, users } from "../schema";
 import { randomId } from "../utils/random";
-import { postStatuses, userCanSuggestPostForCurated } from "./postsHelpers";
+import {
+  canUserEditPostMetadata,
+  postStatuses,
+  userCanSuggestPostForCurated,
+} from "./postsHelpers";
 import { createRevision } from "../revisions/revisionMutations";
 import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
 import { MINIMUM_APPROVAL_KARMA, userCanDo } from "../users/userHelpers";
 import { updatePostUser } from "./postCallbacks";
 import { getUniqueSlug } from "../slugs/uniqueSlug";
 import { performVote } from "../votes/voteMutations";
+import { fetchPostsListById } from "./postLists";
 
 export const createShortformPost = async (user: CurrentUser) => {
   const _id = randomId();
@@ -194,4 +199,15 @@ export const toggleFrontpage = async (currentUser: CurrentUser, postId: string) 
       reviewedByUserId: currentUser._id,
     });
   });
+};
+
+export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
+  const post = await fetchPostsListById(currentUser._id, postId);
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  if (!canUserEditPostMetadata(currentUser, post)) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
 };

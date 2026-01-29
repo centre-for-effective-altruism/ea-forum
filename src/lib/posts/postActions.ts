@@ -10,6 +10,7 @@ import { getCurrentUser } from "../users/currentUser";
 import { fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
 import {
+  moveToDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
   toggleFrontpage,
@@ -92,4 +93,14 @@ export const toggleFrontpageAction = actionClient
       throw new Error("Not logged in");
     }
     await toggleFrontpage(currentUser, postId);
+  });
+
+export const moveToDraftAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Not logged in");
+    }
+    await moveToDraft(currentUser, postId);
   });

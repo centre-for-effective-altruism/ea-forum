@@ -1,17 +1,21 @@
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { useCurrentUser } from "./useCurrentUser";
-import { userCanSuggestPostForCurated } from "../posts/postsHelpers";
 import { userCanDo } from "../users/userHelpers";
 import {
+  canUserEditPostMetadata,
+  userCanSuggestPostForCurated,
+} from "../posts/postsHelpers";
+import {
+  moveToDraftAction,
   setAsQuickTakesPostAction,
   toggleEnableRecommendationAction,
   toggleFrontpageAction,
   toggleSuggestedForCurationAction,
 } from "../posts/postActions";
+import { approveNewUserAction } from "../users/userActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
-import { approveNewUserAction } from "../users/userActions";
 
 export const useSuggestForCurated = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
@@ -95,4 +99,23 @@ export const useMoveToFrontpage = (post: PostDisplay | PostListItem) => {
     isFrontpage: frontpage,
     toggleFrontpage: canMove ? toggleFrontpage : null,
   };
+};
+
+export const useMoveToDraft = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const [draft, setDraft] = useState(post.draft);
+  const moveToDraft = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    toast.promise(moveToDraftAction({ postId: post._id }), {
+      loading: "Loading...",
+      success: () => {
+        setDraft(true);
+        return "Moved post to draft";
+      },
+      error: "Something went wrong",
+    });
+  }, [post._id]);
+  return !draft && currentUser && canUserEditPostMetadata(currentUser, post)
+    ? moveToDraft
+    : null;
 };

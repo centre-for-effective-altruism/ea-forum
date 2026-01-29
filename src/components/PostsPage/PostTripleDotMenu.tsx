@@ -10,6 +10,7 @@ import { usePostSubscriptions } from "@/lib/hooks/useSubscriptions";
 import {
   useApproveNewUser,
   useExcludeFromRecommendations,
+  useMoveToDraft,
   useMoveToFrontpage,
   useSetAsQuickTakesPost,
   useSuggestForCurated,
@@ -18,8 +19,9 @@ import clsx from "clsx";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
-import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
+import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
+import ArchiveBoxArrowDownIcon from "@heroicons/react/24/outline/ArchiveBoxArrowDownIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
@@ -64,6 +66,7 @@ export default function PostTripleDotMenu({
     useExcludeFromRecommendations(post);
   const { isFrontpage, toggleFrontpage } = useMoveToFrontpage(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
+  const moveToDraft = useMoveToDraft(post);
   const approveNewUser = useApproveNewUser(post);
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
@@ -73,7 +76,6 @@ export default function PostTripleDotMenu({
   // duplicate event
   // hide from frontpage
   // edit tags
-  // move to draft
   // delete draft
 
   const TripleDotIcon =
@@ -127,6 +129,13 @@ export default function PostTripleDotMenu({
                   : "Suggest curation",
                 Icon: hasSuggestedForCuration ? StarSolidIcon : StarIcon,
                 onClick: toggleSuggestedForCuration,
+              }
+            : null,
+          moveToDraft
+            ? {
+                title: "Move to draft",
+                Icon: ArchiveBoxArrowDownIcon,
+                onClick: moveToDraft,
               }
             : null,
           toggleExcludeFromRecommendations
