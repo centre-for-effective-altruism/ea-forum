@@ -3,7 +3,11 @@
 import { useCallback, useState } from "react";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
-import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks";
+import {
+  useDuplicateEventLink,
+  usePostAnalyticsLink,
+  usePostEditLink,
+} from "@/lib/hooks/usePostLinks";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import { usePostSubscriptions } from "@/lib/hooks/useSubscriptions";
@@ -18,6 +22,7 @@ import {
 } from "@/lib/hooks/usePostModerationActions";
 import clsx from "clsx";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import CalendarIcon from "@heroicons/react/24/outline/CalendarIcon";
 import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
@@ -52,6 +57,7 @@ export default function PostTripleDotMenu({
   const [reportOpen, setReportOpen] = useState(false);
   const { subscriptionMenuItems } = usePostSubscriptions(post);
   const editLink = usePostEditLink(post);
+  const duplicateEventLink = useDuplicateEventLink(post);
   const analyticsLink = usePostAnalyticsLink(post);
   const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
     "Posts",
@@ -74,12 +80,10 @@ export default function PostTripleDotMenu({
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
 
-  // TODO: See PostActions.tsx
-  // resync rss
-  // duplicate event
-  // hide from frontpage
-  // edit tags
-  // delete draft
+  // TODO: Remaining actions from PostActions.tsx - do we need these?
+  //  - resync rss
+  //  - hide from frontpage
+  //  - edit tags
 
   const TripleDotIcon =
     orientation === "horizontal" ? EllipsisHorizontalIcon : EllipsisVerticalIcon;
@@ -94,6 +98,13 @@ export default function PostTripleDotMenu({
                 title: "Edit",
                 Icon: PencilIcon,
                 href: editLink,
+              }
+            : null,
+          duplicateEventLink
+            ? {
+                title: "Duplicate event",
+                Icon: CalendarIcon,
+                href: duplicateEventLink,
               }
             : null,
           analyticsLink
