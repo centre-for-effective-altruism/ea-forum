@@ -94,6 +94,7 @@ export const postsListProjection = (
       postedAt: true,
       curatedDate: true,
       frontpageDate: true,
+      draft: true,
       question: true,
       isEvent: true,
       groupId: true,
@@ -248,6 +249,20 @@ export const fetchStickyPostsList = ({
     },
     limit,
   });
+};
+
+export const fetchPostsListById = async (
+  currentUserId: string | null,
+  postId: string,
+) => {
+  const posts = await fetchPostsList({
+    currentUserId,
+    where: {
+      _id: postId,
+    },
+    limit: 1,
+  });
+  return posts[0] ?? null;
 };
 
 export const fetchSidebarOpportunities = (limit: number) => {

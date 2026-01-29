@@ -3,22 +3,32 @@
 import { useCallback, useState } from "react";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
-import { usePostAnalyticsLink, usePostEditLink } from "@/lib/hooks/usePostLinks";
+import {
+  useDuplicateEventLink,
+  usePostAnalyticsLink,
+  usePostEditLink,
+} from "@/lib/hooks/usePostLinks";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import { usePostSubscriptions } from "@/lib/hooks/useSubscriptions";
 import {
   useApproveNewUser,
+  useArchiveDraft,
   useExcludeFromRecommendations,
+  useMoveToDraft,
+  useMoveToFrontpage,
   useSetAsQuickTakesPost,
   useSuggestForCurated,
 } from "@/lib/hooks/usePostModerationActions";
 import clsx from "clsx";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import CalendarIcon from "@heroicons/react/24/outline/CalendarIcon";
 import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
-import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
+import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
+import ArchiveBoxArrowDownIcon from "@heroicons/react/24/outline/ArchiveBoxArrowDownIcon";
+import ArchiveBoxXMarkIcon from "@heroicons/react/24/outline/ArchiveBoxXMarkIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
@@ -29,6 +39,7 @@ import XCircleIcon from "@heroicons/react/24/outline/XCircleIcon";
 import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import ReportPopover from "./ReportPopover";
 
@@ -46,6 +57,7 @@ export default function PostTripleDotMenu({
   const [reportOpen, setReportOpen] = useState(false);
   const { subscriptionMenuItems } = usePostSubscriptions(post);
   const editLink = usePostEditLink(post);
+  const duplicateEventLink = useDuplicateEventLink(post);
   const analyticsLink = usePostAnalyticsLink(post);
   const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
     "Posts",
@@ -60,18 +72,18 @@ export default function PostTripleDotMenu({
     useSuggestForCurated(post);
   const { excludedFromRecommendations, toggleExcludeFromRecommendations } =
     useExcludeFromRecommendations(post);
+  const { isFrontpage, toggleFrontpage } = useMoveToFrontpage(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
+  const moveToDraft = useMoveToDraft(post);
+  const archiveDraft = useArchiveDraft(post);
   const approveNewUser = useApproveNewUser(post);
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
 
-  // TODO: See PostActions.tsx
-  // duplicate event
-  // hide from frontpage
-  // edit tags
-  // move to draft
-  // delete draft
-  // move to frontpage
+  // TODO: Remaining actions from PostActions.tsx - do we need these?
+  //  - resync rss
+  //  - hide from frontpage
+  //  - edit tags
 
   const TripleDotIcon =
     orientation === "horizontal" ? EllipsisHorizontalIcon : EllipsisVerticalIcon;
@@ -86,6 +98,13 @@ export default function PostTripleDotMenu({
                 title: "Edit",
                 Icon: PencilIcon,
                 href: editLink,
+              }
+            : null,
+          duplicateEventLink
+            ? {
+                title: "Duplicate event",
+                Icon: CalendarIcon,
+                href: duplicateEventLink,
               }
             : null,
           analyticsLink
@@ -126,6 +145,20 @@ export default function PostTripleDotMenu({
                 onClick: toggleSuggestedForCuration,
               }
             : null,
+          moveToDraft
+            ? {
+                title: "Move to draft",
+                Icon: ArchiveBoxArrowDownIcon,
+                onClick: moveToDraft,
+              }
+            : null,
+          archiveDraft
+            ? {
+                title: "Archive draft",
+                Icon: ArchiveBoxXMarkIcon,
+                onClick: archiveDraft,
+              }
+            : null,
           toggleExcludeFromRecommendations
             ? {
                 title: excludedFromRecommendations
@@ -140,6 +173,13 @@ export default function PostTripleDotMenu({
                 title: "Approve new user",
                 Icon: CheckIcon,
                 onClick: approveNewUser,
+              }
+            : null,
+          toggleFrontpage
+            ? {
+                title: isFrontpage ? "Move to personal blog" : "Move to frontpage",
+                Icon: NewspaperIcon,
+                onClick: toggleFrontpage,
               }
             : null,
           setAsQuickTakesPost
