@@ -10,6 +10,14 @@ import type {
   SearchUser,
 } from "../searchDocuments";
 
+/**
+ * These queries define the projections that are stored in Elasticsearch.
+ *
+ * NOTE: There is a huge footgun here related to dates. Postgres returns timestamp
+ * fields in a non-standard format that Elasticsearch can't understand. All
+ * timestamps must be converted to standard ISO-8601 to work - the simplest
+ * way to do this is to convert via JSON: TO_JSON("createdAt")#>>'{}'
+ */
 const searchDocumentQueries = {
   posts: `
     SELECT
@@ -24,8 +32,8 @@ const searchDocumentQueries = {
       p."curatedDate" IS NOT NULL AND "curatedDate" < NOW() AS "curated",
       p."legacy",
       COALESCE(p."commentCount", 0) AS "commentCount",
-      p."postedAt",
-      p."createdAt",
+      TO_JSON(p."postedAt")#>>'{}' AS "postedAt",
+      TO_JSON(p."createdAt")#>>'{}' AS "createdAt",
       EXTRACT(EPOCH FROM p."postedAt") * 1000 AS "publicDateMs",
       COALESCE(p."isFuture", FALSE) AS "isFuture",
       COALESCE(p."isEvent", FALSE) AS "isEvent",
@@ -33,7 +41,7 @@ const searchDocumentQueries = {
       COALESCE(p."authorIsUnreviewed", FALSE) AS "authorIsUnreviewed",
       COALESCE(p."unlisted", FALSE) AS "unlisted",
       COALESCE(p."viewCount", 0) AS "viewCount",
-      p."lastCommentedAt",
+      TO_JSON(p."lastCommentedAt")#>>'{}' AS "lastCommentedAt",
       COALESCE(p."draft", FALSE) AS "draft",
       COALESCE(p."af", FALSE) AS "af",
       (SELECT JSONB_AGG(JSONB_BUILD_OBJECT(
@@ -59,7 +67,7 @@ const searchDocumentQueries = {
       rss."nickname" AS "feedName",
       p."feedLink",
       revision."html" AS "body",
-      NOW() AS "exportedAt"
+      TO_JSON(NOW())#>>'{}' AS "exportedAt"
     FROM "Posts" p
     LEFT JOIN "Revisions" revision ON p."contents_latest" = revision."_id"
     LEFT JOIN "Users" author ON p."userId" = author."_id"
@@ -78,8 +86,8 @@ const searchDocumentQueries = {
       COALESCE(c."retracted", FALSE) AS "retracted",
       COALESCE(c."spam", FALSE) AS "spam",
       c."legacy",
-      c."createdAt",
-      c."postedAt",
+      TO_JSON(c."createdAt")#>>'{}' AS "createdAt",
+      TO_JSON(c."postedAt")#>>'{}' AS "postedAt",
       EXTRACT(EPOCH FROM c."postedAt") * 1000 AS "publicDateMs",
       COALESCE(c."af", FALSE) AS "af",
       CASE
@@ -109,7 +117,7 @@ const searchDocumentQueries = {
       tag."slug" AS "tagSlug",
       c."tagCommentType",
       c."contents"->>'html' AS "body",
-      NOW() AS "exportedAt"
+      TO_JSON(NOW())#>>'{}' AS "exportedAt"
     FROM "Comments" c
     LEFT JOIN "Users" author ON c."userId" = author."_id"
     LEFT JOIN "Posts" post on c."postId" = post."_id"
@@ -121,7 +129,7 @@ const searchDocumentQueries = {
       s."_id" AS "objectID",
       s."title",
       s."userId",
-      s."createdAt",
+      TO_JSON(s."createdAt")#>>'{}' AS "createdAt",
       EXTRACT(EPOCH FROM s."createdAt") * 1000 AS "publicDateMs",
       COALESCE(s."isDeleted", FALSE) AS "isDeleted",
       COALESCE(s."draft", FALSE) AS "draft",
@@ -141,7 +149,7 @@ const searchDocumentQueries = {
         ELSE author."username"
       END AS "authorUserName",
       s."contents"->>'html' AS "plaintextDescription",
-      NOW() AS "exportedAt"
+      TO_JSON(NOW())#>>'{}' AS "exportedAt"
     FROM "Sequences" s
     LEFT JOIN "Users" author on s."userId" = author."_id"
   `,
@@ -151,7 +159,7 @@ const searchDocumentQueries = {
       u."_id" AS "objectID",
       u."username",
       u."displayName",
-      u."createdAt",
+      TO_JSON(u."createdAt")#>>'{}' AS "createdAt",
       EXTRACT(EPOCH FROM u."createdAt") * 1000 AS "publicDateMs",
       COALESCE(u."isAdmin", FALSE) AS "isAdmin",
       COALESCE(u."deleted", FALSE) AS "deleted",
@@ -212,7 +220,7 @@ const searchDocumentQueries = {
             u."mapLocation"->'geometry'->'location'->'lat'
         )) END AS "_geoloc",
       u."mapLocation"->'formatted_address' AS "mapLocationAddress",
-      u."profileUpdatedAt",
+      TO_JSON(u."profileUpdatedAt")#>>'{}' AS "profileUpdatedAt",
       (
         CASE WHEN u."profileImageId" IS NULL THEN 0 ELSE 1 END +
         CASE WHEN u."jobTitle" IS NULL THEN 0 ELSE 1 END +
@@ -232,7 +240,7 @@ const searchDocumentQueries = {
         CASE WHEN u."postCount" < 1 THEN 0 ELSE 2 END +
         CASE WHEN u."karma" IS NULL OR u."karma" <= 0 THEN 0 ELSE 1 - 1 / u."karma" END * 100
       ) AS "profileCompletion",
-      NOW() AS "exportedAt"
+      TO_JSON(NOW())#>>'{}' AS "exportedAt"
     FROM "Users" u
   `,
   tags: `
@@ -255,7 +263,7 @@ const searchDocumentQueries = {
       t."bannerImageId",
       t."parentTagId",
       t."description"->>'html' AS "description",
-      NOW() AS "exportedAt"
+      TO_JSON(NOW())#>>'{}' AS "exportedAt"
     FROM "Tags" t
   `,
 };

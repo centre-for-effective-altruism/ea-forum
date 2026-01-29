@@ -27,9 +27,8 @@ import {
 /**
  * This is a custom timestamp type to meet our needs - _all_ time/date fields in
  * Postgres should use this type. This type always includes a timezone, and we
- * also automatically format the date from the custom format used by Postgres
- * to standard ISO8601 (this is required to, for instance, send the data to
- * elasticsearch without some complicated preprocessing).
+ * automatically format the date from the custom format used by Postgres to
+ * standard ISO-8601.
  */
 const timestamp = customType<{
   data: string;
