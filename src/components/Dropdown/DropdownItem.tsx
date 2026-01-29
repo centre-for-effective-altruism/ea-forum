@@ -15,6 +15,7 @@ import {
   useHover,
   useInteractions,
 } from "@floating-ui/react";
+import clsx from "clsx";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import DropdownMenuItems from "./DropdownMenuItems";
 import Type from "../Type";
@@ -112,16 +113,18 @@ export default function DropdownItem({
   onClick,
   submenu,
   afterNode,
-}: Readonly<DropdownItemProps>) {
+  className,
+}: Readonly<DropdownItemProps & { className?: string }>) {
   return (
     <DropdownItemWrapper
       href={href}
       onClick={onClick}
       submenu={submenu}
-      className="
-        rounded p-2 cursor-pointer hover:bg-gray-100 outline-none w-full
-        flex items-center justify-start gap-3 text-left
-      "
+      className={clsx(
+        "rounded p-2 cursor-pointer hover:bg-gray-100 outline-none w-full",
+        "flex items-center justify-start gap-3 text-left",
+        className,
+      )}
     >
       {Icon && <Icon className="w-[20px] h-[20px] text-gray-600" />}
       <Type className="grow">{title}</Type>

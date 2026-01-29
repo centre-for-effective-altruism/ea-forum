@@ -25,6 +25,7 @@ export default function SubscriptionToggle({
     <DropdownItem
       title={title}
       onClick={onToggle}
+      className="whitespace-nowrap"
       afterNode={
         <div data-component="SubscriptionToggle" className="w-[28px] min-w-[28px]">
           {loading || !data ? (
