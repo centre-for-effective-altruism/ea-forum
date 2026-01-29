@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
-import { slugify } from "@/lib/utils/slugify";
+import { slugify } from "@/lib/slugs/slugify";
 import {
   Comment,
   comments,
@@ -51,7 +51,7 @@ export const createTestRevision = async (
     editedAt: new Date().toISOString(),
     version: "1.0.0",
     wordCount: 0,
-    changeMetrics: {},
+    changeMetrics: { added: 0, removed: 0 },
     draft: false,
     ...data,
   };
@@ -125,10 +125,10 @@ export const createTestComment = async (
   return result[0];
 };
 
-export const createTestTag = async (data: Partial<InsertTag>): Promise<Tag> => {
+export const createTestTag = async (data?: Partial<InsertTag>): Promise<Tag> => {
   const userId = data?.userId ?? (await createTestUser())._id;
   const tagId = data?._id ?? randomId();
-  const createdAt = data.createdAt || new Date().toISOString();
+  const createdAt = data?.createdAt || new Date().toISOString();
   const revision = await createTestRevision({
     collectionName: "Comments",
     documentId: tagId,
@@ -138,8 +138,8 @@ export const createTestTag = async (data: Partial<InsertTag>): Promise<Tag> => {
   });
   const insertValues: InsertTag = {
     _id: tagId,
-    name: data.name ?? randomId(),
-    slug: data.slug ?? randomId(),
+    name: data?.name ?? randomId(),
+    slug: data?.slug ?? randomId(),
     userId,
     descriptionLatest: revision._id,
     description: "",

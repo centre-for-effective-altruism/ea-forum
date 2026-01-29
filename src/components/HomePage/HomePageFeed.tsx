@@ -3,13 +3,15 @@ import { cookies } from "next/headers";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
+import { QuickTakesListProvider } from "../QuickTakes/QuickTakesListContext";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
+import QuickTakesCommunityToggle from "../QuickTakes/QuickTakesCommunityToggle";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
-import RecentDiscussionsFeed from "./RecentDiscussions/RecentDiscussionsFeed";
+import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import NewQuickTake from "../QuickTakes/NewQuickTake";
 import Link from "../Link";
@@ -131,25 +133,30 @@ export default async function HomePageFeed({
               </div>
             </>
           )}
-          <div className="flex justify-between item-center">
-            <Type className="mb-2" style="sectionTitleLarge">
-              Quick takes
-            </Type>
-            <Type style="loadMore">
-              <Link
-                href="/quicktakes"
-                className="text-gray-600 hover:text-gray-1000"
-              >
-                View more
-              </Link>
-            </Type>
-          </div>
-          <NewQuickTake className="mb-1" />
-          <div className="mb-10">
-            <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
-              <FrontpageQuickTakesList initialLimit={5} />
-            </Suspense>
-          </div>
+          <QuickTakesListProvider>
+            <div className="flex justify-between item-center">
+              <Type className="mb-2" style="sectionTitleLarge">
+                Quick takes
+              </Type>
+              <div className="flex items-center gap-3">
+                <QuickTakesCommunityToggle className="hidden sm:block" />
+                <Type style="loadMore">
+                  <Link
+                    href="/quicktakes"
+                    className="text-gray-600 hover:text-gray-1000"
+                  >
+                    View more
+                  </Link>
+                </Type>
+              </div>
+            </div>
+            <NewQuickTake className="mb-1" />
+            <div className="mb-10">
+              <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
+                <FrontpageQuickTakesList initialLimit={5} />
+              </Suspense>
+            </div>
+          </QuickTakesListProvider>
           <Type className="mb-2" style="sectionTitleLarge">
             Popular comments
           </Type>
@@ -164,7 +171,7 @@ export default async function HomePageFeed({
           <Suspense
             fallback={<div className="bg-gray-200 w-full h-[400px] rounded" />}
           >
-            <RecentDiscussionsFeed />
+            <RecentDiscussionsSection />
           </Suspense>
         </>
       )}

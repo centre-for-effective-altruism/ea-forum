@@ -1,13 +1,16 @@
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import { stableSortTags } from "@/lib/tags/tagHelpers";
+import clsx from "clsx";
 import TruncationContainer from "../TruncationContainer";
 import TagChip from "../Tags/TagChip";
 import PostTypeTag from "./PostTypeTag";
 
 export default async function PostTags({
   post,
+  className,
 }: Readonly<{
   post: PostDisplay;
+  className?: string;
 }>) {
   if (!post.tags) {
     return null;
@@ -20,7 +23,10 @@ export default async function PostTags({
     <TruncationContainer
       items={items}
       gap={4}
-      className="flex flex-wrap items-center gap-1 w-full overflow-hidden"
+      className={clsx(
+        "flex flex-wrap items-center gap-1 w-full overflow-hidden",
+        className,
+      )}
     />
   );
 }

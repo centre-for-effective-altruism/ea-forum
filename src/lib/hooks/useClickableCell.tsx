@@ -90,7 +90,7 @@ export const InteractionWrapper: FC<{
     [router, href, openInNewTab],
   );
   return (
-    <div onClick={onClick} className={className}>
+    <div data-component="InteractionWrapper" onClick={onClick} className={className}>
       {children}
     </div>
   );

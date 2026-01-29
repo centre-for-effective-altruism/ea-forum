@@ -29,10 +29,10 @@ export function CurrentUserProvider({
 }: Readonly<{ user: CurrentUser | null; children: ReactNode }>) {
   const [currentUser, setCurrentUser] = useState(user);
 
-  const refetchCurrentUser = useCallback(async () => {
-    const user = await fetchCurrentUserAction();
-    setCurrentUser(user);
-    return user;
+  const refetchCurrentUser = useCallback(async (): Promise<CurrentUser | null> => {
+    const { data = null } = await fetchCurrentUserAction();
+    setCurrentUser(data);
+    return data;
   }, []);
 
   const value = useMemo(

@@ -10,9 +10,13 @@ export const useIsInView = <T extends HTMLElement>({
   const observer = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    if (!window.IntersectionObserver) return;
+    if (!window.IntersectionObserver) {
+      return;
+    }
 
-    if (observer.current && node) observer.current.disconnect();
+    if (observer.current && node) {
+      observer.current.disconnect();
+    }
 
     observer.current = new window.IntersectionObserver(
       ([entry]) => {
@@ -26,7 +30,9 @@ export const useIsInView = <T extends HTMLElement>({
 
     const { current: currentObserver } = observer;
 
-    if (node) currentObserver.observe(node);
+    if (node) {
+      currentObserver.observe(node);
+    }
 
     return () => currentObserver.disconnect();
   }, [node, rootMargin, threshold]);

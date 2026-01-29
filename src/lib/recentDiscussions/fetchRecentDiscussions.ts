@@ -1,3 +1,4 @@
+import sortBy from "lodash/sortBy";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import {
@@ -6,108 +7,150 @@ import {
   PostRelationalProjection,
   viewablePostFilter,
   PostFromProjection,
+  postsListProjection,
 } from "../posts/postLists";
-import { viewableCommentFilter } from "../comments/commentLists";
-import { isNotTrue } from "../utils/queryHelpers";
-import sortBy from "lodash/sortBy";
-import type { Comment, posts, Revision, Tag } from "../schema";
+import {
+  CommentFromProjection,
+  commentListProjection,
+  CommentRelationalProjection,
+  viewableCommentFilter,
+} from "../comments/commentLists";
+import type {
+  RevisionFromProjection,
+  RevisionRelationalProjection,
+} from "../revisions/revisionQueries";
+import type { TagFromProjection, TagRelationalProjection } from "../tags/tagQueries";
+import type { posts } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
-import { userDefaultProjection } from "../users/userQueries";
+import { userBaseProjection } from "../users/userQueries";
+import { htmlSubstring, isNotTrue } from "../utils/queryHelpers";
+
+const MAX_COMMENT_AGE_HOURS = 18;
+const MAX_COMMENTS_PER_POST = 5;
 
 const getPostProjection = ({
   currentUserId,
-  maxCommentAgeHours,
-  maxCommentsPerPost,
   excludeTopLevel,
 }: {
   currentUserId: string | null;
-  maxCommentAgeHours: number;
-  maxCommentsPerPost: number;
   excludeTopLevel: boolean;
-}) =>
-  ({
+}) => {
+  const postProj = postsListProjection(currentUserId, { highlightLength: 500 });
+  const commentProj = commentListProjection(currentUserId);
+  return {
     columns: {
-      _id: true,
-      slug: true,
-      title: true,
+      ...postProj.columns,
+      lastCommentReplyAt: true,
       draft: true,
-      isEvent: true,
-      groupId: true,
-      question: true,
-      postedAt: true,
-      lastCommentedAt: true,
     },
+    extras: postProj.extras,
     with: {
-      user: userDefaultProjection,
-      readStatus: currentUserId
-        ? {
-            columns: {
-              isRead: true,
-              lastUpdated: true,
-            },
-            where: {
-              userId: currentUserId,
-            },
-          }
-        : undefined,
+      ...postProj.with,
       comments: {
-        columns: {
-          _id: true,
-          baseScore: true,
-          parentCommentId: true,
-          topLevelCommentId: true,
-          postedAt: true,
-        },
+        ...commentProj,
         with: {
-          user: userDefaultProjection,
+          ...commentProj.with,
+          topLevelComment: commentProj,
         },
         where: {
           ...viewableCommentFilter,
           score: { gt: 0 },
           deletedPublic: isNotTrue,
           parentCommentId: excludeTopLevel ? { isNotNull: true } : undefined,
-          // TODO HACK: Using the `d0` table alias here is a hack because drizzle
-          // currently doesn't offer a way to access the correct table alias
-          // programatically. This should be stable for the current version of
-          // drizzle, but it's liable to break on version upgrades.
           RAW: (commentsTable) => sql`(
-          ${commentsTable}."postedAt" >
-            COALESCE("d0"."lastCommentedAt", NOW()) -
-              MAKE_INTERVAL(hours => ${maxCommentAgeHours})
-        )`,
+            ${commentsTable}."postedAt" >
+              COALESCE("lastCommentedAt", NOW()) -
+                MAKE_INTERVAL(hours => ${MAX_COMMENT_AGE_HOURS})
+          )`,
         },
-        limit: maxCommentsPerPost,
+        limit: MAX_COMMENTS_PER_POST,
         orderBy: {
           postedAt: "desc",
         },
       },
     },
-  }) as const satisfies PostRelationalProjection;
+  } as const satisfies PostRelationalProjection;
+};
 
 export type RecentDiscussionPost = PostFromProjection<
   ReturnType<typeof getPostProjection>
 >;
 
-const commentColumns = {
-  _id: true,
-  postedAt: true,
-} as const;
+const getCommentProjection = (currentUserId: string | null) => {
+  const base = commentListProjection(currentUserId);
+  return {
+    ...base,
+    with: {
+      ...base.with,
+      post: {
+        columns: {
+          _id: true,
+          slug: true,
+          title: true,
+        },
+      },
+    },
+  } as const satisfies CommentRelationalProjection;
+};
 
-export type RecentDiscussionComment = Pick<Comment, keyof typeof commentColumns>;
+export type RecentDiscussionComment = CommentFromProjection<
+  ReturnType<typeof getCommentProjection>
+>;
 
-const tagColumns = {
-  _id: true,
-  lastCommentedAt: true,
-} as const;
+const getTagProjection = (currentUserId: string | null) =>
+  ({
+    columns: {
+      _id: true,
+      slug: true,
+      name: true,
+      lastCommentedAt: true,
+      postCount: true,
+      wikiOnly: true,
+    },
+    extras: {
+      html: htmlSubstring(sql`"description"->>'html'`, 500),
+    },
+    with: {
+      comments: {
+        ...getCommentProjection(currentUserId),
+        where: {
+          ...viewableCommentFilter,
+          score: { gt: 0 },
+          deletedPublic: false,
+          RAW: (commentsTable) => sql`(
+          ${commentsTable}."postedAt" >
+            COALESCE("lastCommentedAt", NOW()) -
+              MAKE_INTERVAL(hours => ${MAX_COMMENT_AGE_HOURS})
+        )`,
+        },
+        limit: MAX_COMMENTS_PER_POST,
+        orderBy: {
+          postedAt: "desc",
+        },
+      },
+    },
+  }) as const satisfies TagRelationalProjection;
 
-export type RecentDiscussionTag = Pick<Tag, keyof typeof tagColumns>;
+export type RecentDiscussionTag = TagFromProjection<
+  ReturnType<typeof getTagProjection>
+>;
 
-const revisionColumns = {
-  _id: true,
-  editedAt: true,
-} as const;
+const getRevisionProjection = (currentUserId: string | null) =>
+  ({
+    columns: {
+      _id: true,
+      editedAt: true,
+      changeMetrics: true,
+    },
+    with: {
+      user: userBaseProjection,
+      tag: getTagProjection(currentUserId),
+    },
+  }) as const satisfies RevisionRelationalProjection;
 
-export type RecentDiscussionRevision = Pick<Revision, keyof typeof revisionColumns>;
+export type RecentDiscussionRevision = RevisionFromProjection<
+  ReturnType<typeof getRevisionProjection>
+>;
 
 type FeedSubquery<ResultType, SortKeyType> = {
   type: string;
@@ -116,10 +159,10 @@ type FeedSubquery<ResultType, SortKeyType> = {
 };
 
 type RecentDiscussionsSubquery =
-  | FeedSubquery<RecentDiscussionPost, Date>
-  | FeedSubquery<RecentDiscussionComment, Date>
-  | FeedSubquery<RecentDiscussionTag, Date>
-  | FeedSubquery<RecentDiscussionRevision, Date>;
+  | FeedSubquery<RecentDiscussionPost, number>
+  | FeedSubquery<RecentDiscussionComment, number>
+  | FeedSubquery<RecentDiscussionTag, number>
+  | FeedSubquery<RecentDiscussionRevision, number>;
 
 const getPostCommunityFilter = (
   postsTable: typeof posts,
@@ -141,19 +184,12 @@ const getPostCommunityFilter = (
   )`;
 };
 
-const buildRecentDiscussionsSubqueries = ({
-  currentUser,
-  maxCommentAgeHours,
-  maxCommentsPerPost,
-}: {
-  currentUser: CurrentUser | null;
-  maxCommentAgeHours: number;
-  maxCommentsPerPost: number;
-}): RecentDiscussionsSubquery[] => {
+const buildRecentDiscussionsSubqueries = (
+  currentUser: CurrentUser | null,
+): RecentDiscussionsSubquery[] => {
+  const currentUserId = currentUser?._id ?? null;
   const postProjection = getPostProjection({
-    currentUserId: currentUser?._id ?? null,
-    maxCommentAgeHours,
-    maxCommentsPerPost,
+    currentUserId,
     excludeTopLevel: true,
   });
   const postSelector: PostsFilter = {
@@ -171,106 +207,113 @@ const buildRecentDiscussionsSubqueries = ({
   return [
     {
       type: "postCommented",
-      getSortKey: (post) => new Date(post.lastCommentedAt ?? 0),
+      getSortKey: (post) => new Date(post.lastCommentedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
           ...postProjection,
           where: {
             ...postSelector,
             shortform: isNotTrue,
-            ...(cutoff ? { lastCommentedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { lastCommentedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             lastCommentedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionPost, Date>,
+    } as FeedSubquery<RecentDiscussionPost, number>,
     {
       type: "newQuickTake",
-      getSortKey: (comment) => new Date(comment.postedAt),
+      getSortKey: (comment) => new Date(comment.postedAt).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.comments.findMany({
-          columns: commentColumns,
+          ...getCommentProjection(currentUserId),
           where: {
             ...viewableCommentFilter,
             baseScore: { gt: 0 },
             shortform: true,
             parentCommentId: { isNull: true },
             descendentCount: 0,
-            ...(cutoff ? { postedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { postedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             postedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionComment, Date>,
-    /* TODO: The branch that adds this field hasn't been merged to master yet
+    } as FeedSubquery<RecentDiscussionComment, number>,
     {
       type: "quickTakeCommented",
-      getSortKey: (post) => new Date(post.lastCommentReplyAt ?? 0),
+      getSortKey: (post) => new Date(post.lastCommentReplyAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
-          columns: postColumns,
+          ...postProjection,
           where: {
             ...postSelector,
             shortform: true,
-            ...(cutoff ? { lastCommentReplyAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { lastCommentReplyAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             lastCommentReplyAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionPost, Date>,
-    */
+    } as FeedSubquery<RecentDiscussionPost, number>,
     {
       type: "tagDiscussed",
-      getSortKey: (tag) => new Date(tag.lastCommentedAt ?? 0),
+      getSortKey: (tag) => new Date(tag.lastCommentedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.tags.findMany({
-          columns: tagColumns,
+          ...getTagProjection(currentUserId),
           where: {
-            wikiOnly: isNotTrue,
             deleted: isNotTrue,
             adminOnly: isNotTrue,
-            ...(cutoff ? { lastCommentedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { lastCommentedAt: { lt: new Date(cutoff).toISOString() } }
+              : { lastCommentedAt: { isNotNull: true } }),
           },
           orderBy: {
             lastCommentedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionTag, Date>,
+    } as FeedSubquery<RecentDiscussionTag, number>,
     {
       type: "tagRevised",
-      getSortKey: (tag) => new Date(tag.editedAt ?? 0),
+      getSortKey: (tag) => new Date(tag.editedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.revisions.findMany({
-          columns: revisionColumns,
+          ...getRevisionProjection(currentUserId),
           where: {
             collectionName: "Tags",
             fieldName: "description",
             editedAt: { isNotNull: true },
             RAW: (revisionsTable) =>
               sql`(${revisionsTable}."changeMetrics"->'added')::INTEGER > 100`,
-            ...(cutoff ? { editedAt: { lt: cutoff.toISOString() } } : null),
+            ...(cutoff
+              ? { editedAt: { lt: new Date(cutoff).toISOString() } }
+              : null),
           },
           orderBy: {
             editedAt: "desc",
           },
           limit,
         }),
-    } as FeedSubquery<RecentDiscussionRevision, Date>,
+    } as FeedSubquery<RecentDiscussionRevision, number>,
   ];
 };
 
-type RecentDiscussionsItem = { sortKey: string } & (
+type RecentDiscussionsItem = { sortKey: number } & (
   | { type: "postCommented"; item: RecentDiscussionPost }
   | { type: "newQuickTake"; item: RecentDiscussionComment }
   | { type: "quickTakeCommented"; item: RecentDiscussionPost }
-  | { type: "tagDiscussed"; item: RecentDiscussionPost }
+  | { type: "tagDiscussed"; item: RecentDiscussionTag }
   | { type: "tagRevised"; item: RecentDiscussionRevision }
   | { type: "subscribeReminder"; item: null }
 );
@@ -282,51 +325,45 @@ type RecentDiscussionsItem = { sortKey: string } & (
 const insertSubscribeReminder = (
   results: RecentDiscussionsItem[],
   offset: number | undefined = 0,
-  limit: number,
 ): RecentDiscussionsItem[] => {
   const index = 3;
-  if (offset > index) {
+  const pageStart = offset;
+  const pageEnd = offset + results.length;
+
+  if (pageStart > index || pageEnd <= index) {
     return results;
   }
-  const end = offset + limit;
-  if (end < index) {
-    return results;
-  }
-  const before = results.slice(0, offset);
-  const after = results.slice(offset);
-  const subscribeReminder = {
-    type: "subscribeReminder",
-    sortKey: String(index),
-    item: null,
-  } as const;
-  return [...before, subscribeReminder, ...after];
+
+  const insertAt = index - pageStart;
+  return [
+    ...results.slice(0, insertAt),
+    {
+      type: "subscribeReminder",
+      sortKey: NaN,
+      item: null,
+    },
+    ...results.slice(insertAt),
+  ];
 };
 
 export const fetchRecentDiscussions = async ({
   currentUser,
-  maxCommentAgeHours = 18,
-  maxCommentsPerPost = 5,
   limit,
   cutoff,
   offset,
 }: {
   currentUser: CurrentUser | null;
-  maxCommentAgeHours?: number;
-  maxCommentsPerPost?: number;
   limit: number;
   cutoff?: Date;
   offset?: number;
 }) => {
-  const subqueries = buildRecentDiscussionsSubqueries({
-    currentUser,
-    maxCommentAgeHours,
-    maxCommentsPerPost,
-  });
+  const cutoffMs = cutoff?.getTime();
+  const subqueries = buildRecentDiscussionsSubqueries(currentUser);
 
   // Perform the subqueries
   const unsortedSubqueryResults = (await Promise.all(
     subqueries.map(async (subquery) => {
-      const subqueryResults = await subquery.doQuery(limit, cutoff);
+      const subqueryResults = await subquery.doQuery(limit, cutoffMs);
       return subqueryResults.map((result) => ({
         type: subquery.type,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -338,12 +375,12 @@ export const fetchRecentDiscussions = async ({
 
   // Sort by shared sort key and apply cutoff
   const sortedResults = sortBy(unsortedSubqueryResults.flat(), "sortKey").reverse();
-  const withCutoffApplied = cutoff
-    ? sortedResults.filter(({ sortKey }) => new Date(sortKey) < cutoff)
+  const withCutoffApplied = cutoffMs
+    ? sortedResults.filter(({ sortKey }) => sortKey < cutoffMs)
     : sortedResults;
 
   // Insert the subscribe reminder and apply final limit
-  const allResults = insertSubscribeReminder(withCutoffApplied, offset, limit);
+  const allResults = insertSubscribeReminder(withCutoffApplied, offset);
   const results = allResults.slice(0, limit);
   const nextCutoff = results.length > 0 ? results[results.length - 1].sortKey : null;
   return {
@@ -352,3 +389,7 @@ export const fetchRecentDiscussions = async ({
     endOffset: (offset || 0) + results.length,
   };
 };
+
+export type RecentDiscussionsData = Awaited<
+  ReturnType<typeof fetchRecentDiscussions>
+>;

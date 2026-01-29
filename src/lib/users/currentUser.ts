@@ -36,6 +36,9 @@ export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
       hideCommunitySection: true,
       reviewedByUserId: true,
       snoozedUntilContentCount: true,
+      subscribedToDigest: true,
+      hideSubscribePoke: true,
+      mongoLocation: true,
     },
     where: {
       RAW: (users, { sql }) => sql`

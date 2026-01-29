@@ -28,11 +28,17 @@ export default function VoteButton({
   direction,
   orientation,
   onVote,
+  dimWhenNotVoted,
+  large,
+  className,
 }: Readonly<{
   currentVoteStrength: VoteStrength;
   direction: VoteDirection;
   orientation: Orientation;
   onVote: (voteType: VoteType) => void;
+  dimWhenNotVoted?: boolean;
+  large?: boolean;
+  className?: string;
 }>) {
   const [votingTransition, setVotingTransition] = useState<NodeJS.Timeout | null>(
     null,
@@ -43,6 +49,7 @@ export default function VoteButton({
 
   const voted = currentVoteStrength !== "neutral";
   const bigVoted = currentVoteStrength === "big";
+  const upvote = direction === "Upvote";
 
   const wrappedVote = useCallback(
     (voteStrength: VoteStrength) => {
@@ -119,14 +126,19 @@ export default function VoteButton({
         onMouseUp={onMouseUp}
         onClick={onPress}
         className={clsx(
-          "relative cursor-pointer text-gray-400",
+          "relative cursor-pointer",
           orientations[orientation],
+          className,
         )}
       >
         <ChevronUpIcon
-          width={16}
-          height={16}
-          className={clsx("opacity-70", voted && "text-primary")}
+          width={large ? 20 : 16}
+          height={large ? 20 : 16}
+          className={clsx(
+            voted && (upvote ? "text-primary" : "text-error"),
+            !voted && dimWhenNotVoted && "opacity-70",
+            !voted && "hover:text-gray-800",
+          )}
         />
         <Transition
           in={!!(bigVotingTransition || bigVoted)}
@@ -136,11 +148,13 @@ export default function VoteButton({
           {(state) => (
             <ChevronUpIcon
               ref={ref}
-              width={24}
-              height={24}
+              width={large ? 30 : 24}
+              height={large ? 30 : 24}
               className={clsx(
-                "pointer-events-none absolute -top-[7px] -left-[4px]",
-                (bigVoteCompleted || bigVoted) && "text-primary-light",
+                "pointer-events-none absolute",
+                large ? "-top-[9px] -left-[5px]" : "-top-[7px] -left-[4px]",
+                (bigVoteCompleted || bigVoted) &&
+                  (upvote ? "text-primary-light" : "text-error-light"),
                 state === "entering" || state === "entered"
                   ? "opacity-100"
                   : "opacity-0",

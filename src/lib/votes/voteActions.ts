@@ -1,38 +1,48 @@
 "use server";
 
-import type { VoteType } from "../votes/voteHelpers";
+import { z } from "zod/v4";
+import { voteTypeSchema } from "../votes/voteHelpers";
+import { actionClient } from "../actionClient";
 import { db } from "../db";
 import { getCurrentUser } from "../users/currentUser";
 import { performVote } from "../votes/voteMutations";
 import {
   getVoteableDocument,
-  VoteableCollectionName,
+  voteableCollectionNameSchema,
 } from "../votes/voteableDocument";
 
-export const onVoteAction = async (
-  collectionName: VoteableCollectionName,
-  documentId: string,
-  voteType: VoteType,
-  extendedVote?: Record<string, string>,
-) => {
-  const [user, document] = await Promise.all([
-    getCurrentUser(),
-    getVoteableDocument(collectionName, documentId),
-  ]);
-  if (!user) {
-    throw new Error("Not logged in");
-  }
-  if (!document) {
-    throw new Error("Document not found");
-  }
-  return await db.transaction((txn) =>
-    performVote({
-      txn,
-      collectionName,
-      document,
-      user,
-      voteType,
-      extendedVote,
+export const onVoteAction = actionClient
+  .inputSchema(
+    z.object({
+      collectionName: voteableCollectionNameSchema,
+      documentId: z.string(),
+      voteType: voteTypeSchema,
+      extendedVote: z.record(z.string(), z.string()).optional(),
     }),
+  )
+  .action(
+    async ({
+      parsedInput: { collectionName, documentId, voteType, extendedVote },
+    }) => {
+      const [user, document] = await Promise.all([
+        getCurrentUser(),
+        getVoteableDocument(collectionName, documentId),
+      ]);
+      if (!user) {
+        throw new Error("Not logged in");
+      }
+      if (!document) {
+        throw new Error("Document not found");
+      }
+      return await db.transaction((txn) =>
+        performVote({
+          txn,
+          collectionName,
+          document,
+          user,
+          voteType,
+          extendedVote,
+        }),
+      );
+    },
   );
-};

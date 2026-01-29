@@ -2,6 +2,13 @@ import { cache } from "react";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { posts, Tag } from "../schema";
+import type { RelationalProjection } from "../utils/queryHelpers";
+
+export type TagRelationalProjection = RelationalProjection<typeof db.query.tags>;
+
+export type TagFromProjection<TConfig extends TagRelationalProjection> = Awaited<
+  ReturnType<typeof db.query.tags.findMany<TConfig>>
+>[number];
 
 export const fetchCoreTags = cache(() => {
   return db.query.tags.findMany({

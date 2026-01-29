@@ -1,13 +1,17 @@
+"use client";
+
 import { ReactNode, RefObject, useImperativeHandle, useState } from "react";
 import {
   autoUpdate,
   flip,
   FloatingFocusManager,
+  FloatingTree,
   Placement,
   shift,
   useClick,
   useDismiss,
   useFloating,
+  useFloatingNodeId,
   useInteractions,
   useRole,
 } from "@floating-ui/react";
@@ -25,11 +29,13 @@ export default function Dropdown({
 }>) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const nodeId = useFloatingNodeId();
   const {
     refs: { setReference, setFloating },
     floatingStyles,
     context,
   } = useFloating({
+    nodeId,
     open: isOpen,
     onOpenChange: setIsOpen,
     middleware: [flip(), shift()],
@@ -48,7 +54,7 @@ export default function Dropdown({
   useImperativeHandle(dismissRef, () => () => setIsOpen(false));
 
   return (
-    <>
+    <FloatingTree>
       <div
         className="inline-block"
         ref={setReference}
@@ -63,12 +69,13 @@ export default function Dropdown({
             ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            data-component="Dropdown"
+            className="z-(--zindex-dropdown)"
+            data-component="Dropdown-inner"
           >
             {menu}
           </div>
         </FloatingFocusManager>
       )}
-    </>
+    </FloatingTree>
   );
 }

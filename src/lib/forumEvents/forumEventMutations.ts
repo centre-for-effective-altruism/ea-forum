@@ -1,11 +1,11 @@
 import "server-only";
-import { eq } from "drizzle-orm";
 import { load as cheerioLoad } from "cheerio";
 import type { DbOrTransaction } from "../db";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import { randomId } from "../utils/random";
 import { isAnyTest } from "../environment";
+import { updateWithFieldChanges } from "../fieldChanges";
 import { buildForumEventRevisions } from "./forumEventQueries";
 import {
   forumEvents,
@@ -89,13 +89,10 @@ const updateForumEvent = async ({
     documentId,
     editableFields,
   );
-  await txn
-    .update(forumEvents)
-    .set({
-      ...data,
-      ...revisions,
-    })
-    .where(eq(forumEvents._id, documentId));
+  await updateWithFieldChanges(txn, user, forumEvents, documentId, {
+    ...data,
+    ...revisions,
+  });
 };
 
 /** Upsert a ForumEvent with eventFormat = "POLL" */

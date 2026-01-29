@@ -28,7 +28,17 @@ export const getCommentAncestorIds = async (
 };
 
 /** Fetches a post, returning just the fields needed to create a comment on it */
-export const getPostForCommentCreation = (txn: DbOrTransaction, postId: string) =>
+export const getPostForCommentCreation = ({
+  txn,
+  postId,
+  shortform,
+  userId,
+}: {
+  txn: DbOrTransaction;
+  postId?: string;
+  shortform: boolean;
+  userId: string;
+}) =>
   txn.query.posts.findFirst({
     columns: {
       _id: true,
@@ -47,9 +57,14 @@ export const getPostForCommentCreation = (txn: DbOrTransaction, postId: string) 
         },
       },
     },
-    where: {
-      _id: postId,
-    },
+    where: shortform
+      ? {
+          shortform,
+          userId,
+        }
+      : {
+          _id: postId,
+        },
   });
 
 export type PostForCommentCreation = NonNullable<

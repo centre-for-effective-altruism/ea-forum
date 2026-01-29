@@ -6,8 +6,10 @@ import Type from "../Type";
 import CommentItem from "./CommentItem";
 
 export default function CommentsList({
+  borderless,
   className,
 }: Readonly<{
+  borderless?: boolean;
   className?: string;
 }>) {
   const { comments } = useCommentsList();
@@ -23,7 +25,7 @@ export default function CommentsList({
         </div>
       )}
       {comments.map((node) => (
-        <CommentItem node={node} key={node.comment._id} />
+        <CommentItem node={node} borderless={borderless} key={node.comment._id} />
       ))}
     </section>
   );

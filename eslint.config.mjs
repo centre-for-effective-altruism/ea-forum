@@ -4,6 +4,7 @@ import { globalIgnores } from "eslint/config";
 
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
+import prettier from "eslint-config-prettier/flat";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,9 +12,15 @@ const __dirname = dirname(__filename);
 const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
-  globalIgnores(["**/*.queries.ts"]),
+  prettier,
   {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+      },
+    },
     rules: {
+      "@typescript-eslint/no-floating-promises": "error",
       "react-hooks/set-state-in-effect": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
@@ -66,6 +73,7 @@ const eslintConfig = [
       "next-env.d.ts",
       "ckEditor/**",
       "src/vendor/**",
+      "*.mjs",
     ],
   },
 ];

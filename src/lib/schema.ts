@@ -1,6 +1,8 @@
 import "server-only";
-import type { Json } from "./typeHelpers";
+import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
+import type { VoteType } from "./votes/voteHelpers";
+import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
 import {
   pgTable,
@@ -16,7 +18,6 @@ import {
   pgMaterializedView,
   customType,
 } from "drizzle-orm/pg-core";
-import { DenormalizedRevision } from "./revisions/revisionHelpers";
 
 /**
  * This file contains the postgres schemas for all tables.
@@ -86,6 +87,7 @@ export const users = pgTable(
     karma: doublePrecision().notNull().default(0),
     postCount: doublePrecision().notNull().default(0),
     maxPostCount: doublePrecision().notNull().default(0),
+    frontpagePostCount: doublePrecision().notNull().default(0),
     commentCount: doublePrecision().notNull().default(0),
     maxCommentCount: doublePrecision().notNull().default(0),
     banned: timestamp(),
@@ -126,7 +128,7 @@ export const users = pgTable(
     needsReview: boolean().notNull().default(false),
     snoozedUntilContentCount: doublePrecision(),
     mapLocation: jsonb(),
-    mongoLocation: jsonb(),
+    mongoLocation: jsonb<{ type: "Point"; coordinates: [number, number] }>(),
     googleLocation: jsonb(),
     location: text(),
     mapLocationSet: boolean(),
@@ -140,6 +142,14 @@ export const users = pgTable(
     profileTagIds: varchar({ length: 27 }).array().notNull().default([]),
     organizerOfGroupIds: varchar({ length: 27 }).array().notNull().default([]),
     programParticipation: text().array(),
+    subscribedToDigest: boolean().notNull().default(false),
+    hideSubscribePoke: boolean().notNull().default(false),
+    unsubscribeFromAll: boolean(),
+    shortformFeedId: varchar({ length: 27 }),
+    sunshineNotes: text().notNull().default(""),
+    sunshineFlagged: boolean().notNull().default(false),
+    sunshineSnoozed: boolean().notNull().default(false),
+    reviewedAt: timestamp(),
 
     /*
   "profile" JSONB,
@@ -235,14 +245,10 @@ export const users = pgTable(
   "karmaChangeLastOpened" TIMESTAMPTZ,
   "karmaChangeBatchStart" TIMESTAMPTZ,
   "emailSubscribedToCurated" BOOL,
-  "subscribedToDigest" BOOL NOT NULL DEFAULT FALSE,
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
   "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
-  "unsubscribeFromAll" BOOL,
-  "hideSubscribePoke" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
-  "frontpagePostCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "mapMarkerText" TEXT,
@@ -257,14 +263,8 @@ export const users = pgTable(
   "hideFrontpageBookAd" BOOL,
   "hideFrontpageBook2019Ad" BOOL,
   "hideFrontpageBook2020Ad" BOOL,
-  "sunshineNotes" TEXT NOT NULL DEFAULT '',
-  "sunshineFlagged" BOOL NOT NULL DEFAULT FALSE,
-  "sunshineSnoozed" BOOL NOT NULL DEFAULT FALSE,
-  "reviewedByUserId" VARCHAR(27),
-  "reviewedAt" TIMESTAMPTZ,
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "fullName" TEXT,
-  "shortformFeedId" VARCHAR(27),
   "viewUnreviewedComments" BOOL,
   "partiallyReadSequences" JSONB[],
   "beta" BOOL,
@@ -344,7 +344,10 @@ export const bans = pgTable(
 export const bookmarks = pgTable(
   "Bookmarks",
   {
-    ...universalFields,
+    // For some reason bookmarks doesn't have legacyData and schemaVersion
+    // universal fields...
+    _id: varchar({ length: 27 }).primaryKey().notNull(),
+    createdAt: timestampDefaultNow().notNull(),
     documentId: text().notNull(),
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
@@ -477,7 +480,10 @@ export const comments = pgTable(
     author: text(),
     postId: varchar({ length: 27 }),
     tagId: varchar({ length: 27 }),
-    tagCommentType: text().default("DISCUSSION").notNull(),
+    tagCommentType: text()
+      .default("DISCUSSION")
+      .notNull()
+      .$type<"SUBFORUM" | "DISCUSSION">(),
     subforumStickyPriority: doublePrecision(),
     userId: varchar({ length: 27 }).notNull(),
     userIP: text(),
@@ -1481,7 +1487,7 @@ export const lwEvents = pgTable(
     name: text(),
     documentId: text(),
     important: boolean(),
-    properties: jsonb(),
+    properties: jsonb<JsonRecord>(),
     intercom: boolean(),
   },
   (table) => [
@@ -1922,7 +1928,10 @@ export const posts = pgTable(
     eventImageId: text(),
     types: text().array(),
     metaSticky: boolean().default(false).notNull(),
-    sharingSettings: jsonb(),
+    sharingSettings: jsonb<{
+      explicitlySharedUsersCan: "none" | "read" | "comment" | "edit";
+      anyoneWithLinkCan: "none" | "read" | "comment" | "edit";
+    }>(),
     shareWithUsers: varchar({ length: 27 }).array().default([]).notNull(),
     linkSharingKey: text(),
     linkSharingKeyUsedBy: varchar({ length: 27 }).array(),
@@ -2926,7 +2935,7 @@ export const revisions = pgTable(
     originalContents: jsonb<EditorContents>(),
     html: text(),
     wordCount: doublePrecision().notNull(),
-    changeMetrics: jsonb().notNull(),
+    changeMetrics: jsonb<{ added: number; removed: number }>().notNull(),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
     extendedScore: jsonb(),
@@ -3421,7 +3430,7 @@ export const votes = pgTable(
     collectionName: text().notNull(),
     userId: varchar({ length: 27 }).notNull(),
     authorIds: varchar({ length: 27 }).array(),
-    voteType: text().notNull(),
+    voteType: text().$type<VoteType>().notNull(),
     extendedVoteType: jsonb(),
     power: doublePrecision().notNull(),
     afPower: doublePrecision(),

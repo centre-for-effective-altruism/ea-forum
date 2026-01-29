@@ -54,7 +54,7 @@ export default function TruncationContainer({
     let width = itemNodeWidths[0] + gap + afterNodeWidth;
     while (total < itemNodeWidths.length) {
       const nextItemWidth = itemNodeWidths[total];
-      const nextWidth = width + nextItemWidth;
+      const nextWidth = width + gap + nextItemWidth;
       if (nextWidth > containerWidth) {
         break;
       }

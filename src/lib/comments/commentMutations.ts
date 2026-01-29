@@ -14,6 +14,8 @@ import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
+import { createShortformPost } from "../posts/postMutations";
+import { MINIMUM_APPROVAL_KARMA } from "../users/userHelpers";
 import {
   updateCommentForumEvent,
   checkCommentForSpam,
@@ -25,31 +27,39 @@ import {
   updateReadStatusAfterComment,
 } from "./commentCallbacks";
 
-const MINIMUM_APPROVAL_KARMA = 5;
-
 export const createPostComment = async ({
   user,
   postId,
+  shortform = false,
   parentCommentId,
   editorData,
   draft,
 }: {
   user: CurrentUser;
-  postId: string;
+  postId?: string;
+  shortform?: boolean;
   parentCommentId: string | null;
   editorData: EditorData;
-  draft?: false;
+  draft?: boolean;
 }) => {
+  if (user.banned) {
+    throw new Error("Banned");
+  }
+
   const { originalContents } = editorData;
   if (originalContents.type !== "ckEditorMarkup") {
     throw new Error("Invalid editor type");
   }
   if (!originalContents.data) {
-    throw new Error("Comment is empty");
+    throw new Error(shortform ? "Quick take is empty" : "Comment is empty");
+  }
+  if (!postId && !shortform) {
+    throw new Error("No post provided");
   }
 
-  const [post, parentComment] = await Promise.all([
-    getPostForCommentCreation(db, postId),
+  // eslint-disable-next-line prefer-const
+  let [post, parentComment] = await Promise.all([
+    getPostForCommentCreation({ txn: db, postId, shortform, userId: user._id }),
     parentCommentId
       ? db.query.comments.findFirst({
           columns: {
@@ -66,9 +76,23 @@ export const createPostComment = async ({
         })
       : null,
   ]);
+
   if (!post) {
-    throw new Error("Post not found");
+    if (!shortform) {
+      throw new Error("Post not found");
+    }
+    await createShortformPost(user);
+    post = await getPostForCommentCreation({
+      txn: db,
+      postId,
+      shortform,
+      userId: user._id,
+    });
+    if (!post) {
+      throw new Error("Failed to create quick takes post");
+    }
   }
+
   if (parentCommentId && !parentComment) {
     throw new Error("Parent comment not found");
   }
@@ -83,11 +107,8 @@ export const createPostComment = async ({
     });
     const pingbacks = revision.html ? await htmlToPingbacks(revision.html) : null;
 
-    // TODO: Create shortform post if needed
-    // shortform, shortformFrontpage, relevantTagIds
-
     const now = new Date().toISOString();
-    const insert = await txn
+    const [comment] = await txn
       .insert(comments)
       .values({
         _id: commentId,
@@ -106,13 +127,15 @@ export const createPostComment = async ({
         contentsLatest: revision._id,
         pingbacks,
         postVersion: post.contents?.version || "1.0.0",
+        shortform,
+        // TODO: shortformFrontpage, relevantTagIds
+        shortformFrontpage: true,
         postedAt: now,
         createdAt: now,
         lastEditedAt: now,
         lastSubthreadActivity: now,
       })
       .returning();
-    const comment = insert[0];
 
     // TODO: A lot of these callbacks shouldn't be run on draft comments
     await Promise.all([

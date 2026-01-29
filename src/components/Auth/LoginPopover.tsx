@@ -1,4 +1,5 @@
 import { ChangeEvent, useCallback, useEffect, useState, useTransition } from "react";
+import { captureException } from "@sentry/nextjs";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
@@ -14,7 +15,6 @@ import Loading from "../Loading";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
-import { captureException } from "@sentry/nextjs";
 
 export default function LoginPopover() {
   const { loginAction: action, setLoginAction: setAction } =
@@ -95,14 +95,14 @@ export default function LoginPopover() {
 
       try {
         // TODO Handle signup with `isSignup`
-        const result = await loginAction(email, password);
-        if (result?.redirect) {
-          window.location.href = result.redirect;
-        } else if (!result?.ok || !result?.currentUser) {
-          console.error("Login error:", result);
-          setError(result.error ?? "An error occurred");
+        const { data } = await loginAction({ email, password });
+        if (data?.redirect) {
+          window.location.href = data.redirect;
+        } else if (!data?.ok || !data?.currentUser) {
+          console.error("Login error:", data);
+          setError(data?.error ?? "Something went wrong");
         } else {
-          setCurrentUser(result.currentUser);
+          setCurrentUser(data.currentUser);
         }
       } catch (err) {
         const e = err as Error & { description?: string; policy?: string };

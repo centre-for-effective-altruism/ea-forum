@@ -1,13 +1,18 @@
+import { z } from "zod/v4";
+
 export type VoteStrength = "big" | "small" | "neutral";
 
 export type VoteDirection = "Upvote" | "Downvote";
 
-export type VoteType =
-  | "bigUpvote"
-  | "smallUpvote"
-  | "neutral"
-  | "smallDownvote"
-  | "bigDownvote";
+export const voteTypeSchema = z.enum([
+  "bigUpvote",
+  "smallUpvote",
+  "neutral",
+  "smallDownvote",
+  "bigDownvote",
+]);
+
+export type VoteType = z.infer<typeof voteTypeSchema>;
 
 /**
  * Create a vote type from a vote strength and direction

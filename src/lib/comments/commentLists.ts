@@ -1,11 +1,18 @@
-import { arrayContains, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { comments } from "@/lib/schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
-import { isAnyInArray, isNotTrue } from "@/lib/utils/queryHelpers";
-import { postStatuses } from "../posts/postLists";
+import { userBaseProjection } from "../users/userQueries";
+import { postStatuses } from "../posts/postsHelpers";
+import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+
+export type CommentRelationalProjection = RelationalProjection<
+  typeof db.query.comments
+>;
+
+export type CommentFromProjection<TConfig extends CommentRelationalProjection> =
+  Awaited<ReturnType<typeof db.query.comments.findMany<TConfig>>>[number];
 
 export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
@@ -24,20 +31,8 @@ export const viewableCommentFilter = {
   draft: isNotTrue,
 } as const;
 
-const fetchCommentsList = ({
-  currentUserId,
-  where,
-  orderBy,
-  offset,
-  limit,
-}: {
-  currentUserId: string | null;
-  where?: CommentsFilter;
-  orderBy?: CommentsOrderBy;
-  offset?: number;
-  limit?: number;
-}) => {
-  return db.query.comments.findMany({
+export const commentListProjection = (currentUserId: string | null) =>
+  ({
     columns: {
       _id: true,
       postedAt: true,
@@ -53,19 +48,7 @@ const fetchCommentsList = ({
     },
     with: {
       user: {
-        columns: {
-          _id: true,
-          slug: true,
-          displayName: true,
-          createdAt: true,
-          profileImageId: true,
-          karma: true,
-          jobTitle: true,
-          organization: true,
-          postCount: true,
-          commentCount: true,
-          biography: true,
-        },
+        ...userBaseProjection,
         where: {
           deleted: isNotTrue,
         },
@@ -80,13 +63,32 @@ const fetchCommentsList = ({
               },
               where: {
                 userId: currentUserId,
-                cancelled: false,
+              },
+              orderBy: {
+                votedAt: "desc",
               },
               limit: 1,
             },
           }
         : {}),
     },
+  }) as const satisfies CommentRelationalProjection;
+
+const fetchCommentsList = ({
+  currentUserId,
+  where,
+  orderBy,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  where?: CommentsFilter;
+  orderBy?: CommentsOrderBy;
+  offset?: number;
+  limit?: number;
+}) => {
+  return db.query.comments.findMany({
+    ...commentListProjection(currentUserId),
     where: {
       ...viewableCommentFilter,
       ...where,
@@ -127,25 +129,16 @@ export const fetchCommmentsForPost = ({
 export const fetchFrontpageQuickTakes = ({
   currentUserId,
   includeCommunity,
-  relevantTagId,
   offset,
   limit = 5,
 }: {
   currentUserId: string | null;
   includeCommunity?: boolean;
-  relevantTagId?: string;
   offset?: number;
   limit?: number;
 }) => {
   const fiveDaysAgo = nDaysAgo(5).toISOString();
   const twoHoursAgo = nHoursAgo(2).toISOString();
-  const communityFilter =
-    includeCommunity && process.env.COMMUNITY_TAG_ID
-      ? arrayContains(comments.relevantTagIds, [process.env.COMMUNITY_TAG_ID])
-      : undefined;
-  const tagFilter = relevantTagId
-    ? arrayContains(comments.relevantTagIds, [relevantTagId])
-    : undefined;
   return fetchCommentsList({
     currentUserId,
     where: {
@@ -154,8 +147,13 @@ export const fetchFrontpageQuickTakes = ({
       deleted: isNotTrue,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
-      ...communityFilter,
-      ...tagFilter,
+      ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
+        ? {
+            NOT: {
+              relevantTagIds: { arrayContains: [process.env.COMMUNITY_TAG_ID] },
+            },
+          }
+        : null),
       AND: [
         {
           OR: [
@@ -215,7 +213,7 @@ const fetchPopularCommentsUncached = async ({
   recencyBias = 60 * 60 * 2,
 }: PopularCommentsConfig): Promise<CommentsList[]> => {
   const communityTopicId = process.env.COMMUNITY_TAG_ID;
-  const popularComments = await db.execute(sql`
+  const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id
     FROM (
       SELECT DISTINCT ON ("postId") "_id"
@@ -236,14 +234,14 @@ const fetchPopularCommentsUncached = async ({
       p."hideFromPopularComments" IS NOT TRUE
       AND p."frontpageDate" IS NOT NULL
       AND p."status" = ${postStatuses.STATUS_APPROVED}
-      AND p."draft" IS FALSE
-      AND p."deletedDraft" IS FALSE
-      AND p."isFuture" IS FALSE
-      AND p."unlisted" IS FALSE
-      AND p."shortform" IS FALSE
-      AND p."authorIsUnreviewed" IS FALSE
-      AND p."hiddenRelatedQuestion" IS FALSE
-      AND p."isEvent" IS FALSE
+      AND p."draft" IS NOT TRUE
+      AND p."deletedDraft" IS NOT TRUE
+      AND p."isFuture" IS NOT TRUE
+      AND p."unlisted" IS NOT TRUE
+      AND p."shortform" IS NOT TRUE
+      AND p."authorIsUnreviewed" IS NOT TRUE
+      AND p."hiddenRelatedQuestion" IS NOT TRUE
+      AND p."isEvent" IS NOT TRUE
       AND p."postedAt" IS NOT NULL
       AND COALESCE((p."tagRelevance"->${communityTopicId})::INTEGER, 0) < 1
     ORDER BY
@@ -259,7 +257,7 @@ const fetchPopularCommentsUncached = async ({
   const result = await fetchCommentsList({
     currentUserId,
     where: {
-      RAW: (commentsTable) => isAnyInArray(commentsTable._id, popularCommentIds),
+      _id: { in: popularCommentIds },
     },
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));

@@ -36,3 +36,32 @@ export const commentGetPageUrlFromIds = ({
     return "/";
   }
 };
+
+export const commentGetPageUrl = ({
+  comment,
+  permalink,
+  isAbsolute,
+}: {
+  comment: {
+    _id: string;
+    tagCommentType?: TagCommentType;
+    post?: null | {
+      _id: string;
+      slug: string;
+    };
+    tag?: null | {
+      slug: string;
+    };
+  };
+  permalink?: boolean;
+  isAbsolute?: boolean;
+}) =>
+  commentGetPageUrlFromIds({
+    commentId: comment._id,
+    postId: comment.post?._id,
+    postSlug: comment.post?.slug,
+    tagSlug: comment.tag?.slug,
+    tagCommentType: comment.tagCommentType,
+    permalink,
+    isAbsolute,
+  });

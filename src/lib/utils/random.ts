@@ -3,6 +3,7 @@ import { isServer } from "@/lib/environment";
 
 // Excludes 0O1lIUV
 const unmistakableChars = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTWXYZ23456789";
+const lowercaseUnmistakableChars = "abcdefghijkmnopqrstuvwxyz23456789";
 
 export type RandIntCallback = (max: number) => number;
 
@@ -53,3 +54,12 @@ export const isNotRandomId = (id: string, length = ID_LENGTH): boolean => {
   const regex = new RegExp(`^[${unmistakableChars}]{${length}}$`);
   return !regex.test(id);
 };
+
+/**
+ * Like randomId, but doesn't use uppercase letters (which makes it suitable
+ * for using in slugs).
+ */
+export const randomLowercaseId = (
+  length = ID_LENGTH,
+  randIntCallback?: RandIntCallback,
+) => randomId(length, randIntCallback, lowercaseUnmistakableChars);

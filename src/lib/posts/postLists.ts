@@ -1,28 +1,26 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
-import type { PostsListView } from "./postsHelpers";
-import { userDefaultProjection } from "../users/userQueries";
+import { postStatuses, type PostsListView } from "./postsHelpers";
+import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
+  htmlSubstring,
   isNotTrue,
   RelationalFilter,
   RelationalOrderBy,
   RelationalProjection,
 } from "@/lib/utils/queryHelpers";
+import {
+  currentUserIsSharedSelector,
+  currentUserUsedLinkKeySelector,
+  currentUserSuggestedCurationSelector,
+} from "./postQueries";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
 const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
-
-export const postStatuses = {
-  STATUS_PENDING: 1, // Unused
-  STATUS_APPROVED: 2,
-  STATUS_REJECTED: 3,
-  STATUS_SPAM: 4,
-  STATUS_DELETED: 5,
-};
 
 // TODO: This should be a function that takes the current user and does permission
 // checks
@@ -78,20 +76,13 @@ export type PostsFilter = RelationalFilter<typeof db.query.posts>;
 
 type PostsOrderBy = RelationalOrderBy<typeof db.query.posts>;
 
-const fetchPostsList = ({
-  currentUserId,
-  where,
-  orderBy,
-  offset,
-  limit,
-}: {
-  currentUserId: string | null;
-  where?: PostsFilter;
-  orderBy?: PostsOrderBy;
-  offset?: number;
-  limit?: number;
-}) => {
-  return db.query.posts.findMany({
+export const postsListProjection = (
+  currentUserId: string | null,
+  options?: {
+    highlightLength?: number;
+  },
+) =>
+  ({
     columns: {
       _id: true,
       slug: true,
@@ -112,34 +103,85 @@ const fetchPostsList = ({
       socialPreviewImageAutoUrl: true,
       readTimeMinutesOverride: true,
       collabEditorDialogue: true,
+      disableRecommendation: true,
+      authorIsUnreviewed: true,
+      lastCommentedAt: true,
+      sharingSettings: true,
+      shortform: true,
     },
     extras: {
       customHtmlHighlight: (posts, { sql }) =>
-        sql<string>`SUBSTRING(${posts}."customHighlight"->>'html', 1, 350)`,
+        htmlSubstring(
+          sql`${posts}."customHighlight"->>'html'`,
+          options?.highlightLength || 350,
+        ),
       tags: postTagsProjection,
+      ...(currentUserId
+        ? {
+            currentUserIsShared: currentUserIsSharedSelector(currentUserId),
+            currentUserUsedLinkKey: currentUserUsedLinkKeySelector(currentUserId),
+            currentUserSuggestedCuration:
+              currentUserSuggestedCurationSelector(currentUserId),
+          }
+        : null),
     },
     with: {
-      user: userDefaultProjection,
+      user: userBaseProjection,
       contents: {
         columns: {
           wordCount: true,
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            sql<string>`SUBSTRING(${revisions}."html", 1, 350)`,
+            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
         },
       },
-      readStatus: currentUserId
+      group: {
+        columns: {
+          _id: true,
+          name: true,
+          organizerIds: true,
+        },
+      },
+      ...(currentUserId
         ? {
-            columns: {
-              isRead: true,
+            bookmarks: {
+              columns: {
+                active: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
             },
-            where: {
-              userId: currentUserId,
+            readStatus: {
+              columns: {
+                isRead: true,
+                lastUpdated: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
             },
           }
-        : undefined,
+        : null),
     },
+  }) as const satisfies PostRelationalProjection;
+
+const fetchPostsList = ({
+  currentUserId,
+  where,
+  orderBy,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  where?: PostsFilter;
+  orderBy?: PostsOrderBy;
+  offset?: number;
+  limit?: number;
+}) => {
+  return db.query.posts.findMany({
+    ...postsListProjection(currentUserId),
     where: {
       ...viewablePostFilter,
       ...where,
