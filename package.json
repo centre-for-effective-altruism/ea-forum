@@ -24,7 +24,7 @@
     "@sentry/nextjs": "^10.34.0",
     "auth0": "^5.3.0",
     "bowser": "^2.13.1",
-    "cheerio": "^1.1.2",
+    "cheerio": "^1.2.0",
     "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^1.0.0-beta.3-36e9b9e",
