@@ -2,17 +2,14 @@
 
 ### [Effective Altruism Forum](https://forum.effectivealtruism.org)
 
+NOTE: This repository is still in beta.
+
 ## Running
 
 First install dependencies with `npm install`. You'll then need to setup a
-`.env` file (see environment variables below), then you can run the forum with
-`npm run dev`.
-
-## Environment variables
-
-The forum reads environment variables from a `.env` file. For a full list of
-expected environment variables see `ProcessEnv.d.ts`. CEA devs can find a
-development `.env` file in 1password.
+`.env` file (see `ProcessEnv.d.ts` for a complete list), then you can run the
+forum with `npm run dev`. CEA devs can find a development `.env` file in
+1password.
 
 ## Coding conventions
 
@@ -25,8 +22,13 @@ development `.env` file in 1password.
  - Where possible prefer Drizzle's
    [relational API](https://orm.drizzle.team/docs/rqb-v2) for querying
 
+## Reporting security vulnerabilities
+
+Please report security vulnerabilities to
+[forum@effectivealtruism.org](mailto:forum@effectivealtruism.org).
+
 ## License
 
 The forum is free software under the GNU Affero GPL v3. See the included
 `LICENSE.txt` file for details. Several libraries are also included as source
-in `src/vendor` as these have their own licenses.
+in `src/vendor` and these have their own licenses.
