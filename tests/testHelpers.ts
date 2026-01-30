@@ -8,11 +8,14 @@ import {
   forumEvents,
   InsertComment,
   InsertForumEvent,
+  InsertLocalgroup,
   InsertPost,
   InsertRevision,
   InsertTag,
   InsertUser,
   InsertVote,
+  Localgroup,
+  localgroups,
   Post,
   posts,
   Revision,
@@ -100,11 +103,11 @@ export const createTestPost = async (data?: Partial<InsertPost>): Promise<Post> 
 };
 
 export const createTestComment = async (
-  data: Partial<InsertComment>,
+  data?: Partial<InsertComment>,
 ): Promise<Comment> => {
   const userId = data?.userId ?? (await createTestUser())._id;
   const commentId = data?._id ?? randomId();
-  const createdAt = data.postedAt || data.createdAt || new Date().toISOString();
+  const createdAt = data?.postedAt || data?.createdAt || new Date().toISOString();
   const revision = await createTestRevision({
     collectionName: "Comments",
     documentId: commentId,
@@ -178,5 +181,18 @@ export const createTestVote = async (data: Partial<InsertVote>): Promise<Vote> =
     ...data,
   };
   const result = await db.insert(votes).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestGroup = async (
+  data: Partial<InsertLocalgroup>,
+): Promise<Localgroup> => {
+  const insertValues: InsertLocalgroup = {
+    _id: randomId(),
+    name: randomId(),
+    lastActivity: new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(localgroups).values(insertValues).returning();
   return result[0];
 };

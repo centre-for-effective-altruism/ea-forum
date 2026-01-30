@@ -425,7 +425,7 @@ export const fetchRecentOpportunitiesPostsList = async ({
   limit: number;
 }) => {
   // TODO: This logic for these recommendations in ForumMagnum is much more
-  // complicated - this will be for now though
+  // complicated - this will be enough for now though
   return fetchPostsList({
     currentUserId,
     where: {

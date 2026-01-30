@@ -6,6 +6,7 @@ import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+import { User } from "@sentry/nextjs";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -24,12 +25,18 @@ type CommentsOrderBy = NonNullable<
   Parameters<typeof db.query.comments.findMany>[0]
 >["orderBy"];
 
-export const viewableCommentFilter = {
-  rejected: isNotTrue,
-  debateResponse: isNotTrue,
-  authorIsUnreviewed: isNotTrue,
-  draft: isNotTrue,
-} as const;
+export const viewableCommentFilter = (currentUserId: string | null) => ({
+  OR: [
+    ...(currentUserId ? [{ userId: currentUserId }] : []),
+    {
+      rejected: isNotTrue,
+      deleted: isNotTrue,
+      debateResponse: isNotTrue,
+      authorIsUnreviewed: isNotTrue,
+      draft: isNotTrue,
+    },
+  ],
+});
 
 export const commentListProjection = (currentUserId: string | null) =>
   ({
@@ -75,22 +82,38 @@ export const commentListProjection = (currentUserId: string | null) =>
   }) as const satisfies CommentRelationalProjection;
 
 const fetchCommentsList = ({
-  currentUserId,
+  currentUser,
   where,
   orderBy,
   offset,
   limit,
 }: {
-  currentUserId: string | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
   offset?: number;
   limit?: number;
 }) => {
+  const currentUserId = currentUser?._id ?? null;
+  const currentUserIsModerator =
+    currentUser?.isAdmin ||
+    currentUser?.groups?.includes("sunshineRegiment") ||
+    false;
   return db.query.comments.findMany({
     ...commentListProjection(currentUserId),
     where: {
-      ...viewableCommentFilter,
+      ...viewableCommentFilter(currentUserId),
+      post: currentUserIsModerator
+        ? undefined
+        : {
+            OR: [
+              ...(currentUserId ? [{ userId: currentUserId }] : []),
+              {
+                draft: isNotTrue,
+                deletedDraft: isNotTrue,
+              },
+            ],
+          },
       ...where,
     },
     orderBy,
@@ -100,14 +123,14 @@ const fetchCommentsList = ({
 };
 
 export const fetchCommentsListItem = async ({
+  currentUser,
   commentId,
-  currentUserId,
 }: {
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   commentId: string;
-  currentUserId: string | null;
 }) => {
   const result = await fetchCommentsList({
-    currentUserId,
+    currentUser,
     where: { _id: commentId },
     limit: 1,
   });
@@ -115,24 +138,24 @@ export const fetchCommentsListItem = async ({
 };
 
 export const fetchCommmentsForPost = ({
+  currentUser,
   postId,
-  currentUserId,
 }: {
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   postId: string;
-  currentUserId: string | null;
 }) =>
   fetchCommentsList({
-    currentUserId,
+    currentUser,
     where: { postId },
   });
 
 export const fetchFrontpageQuickTakes = ({
-  currentUserId,
+  currentUser,
   includeCommunity,
   offset,
   limit = 5,
 }: {
-  currentUserId: string | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   includeCommunity?: boolean;
   offset?: number;
   limit?: number;
@@ -140,11 +163,10 @@ export const fetchFrontpageQuickTakes = ({
   const fiveDaysAgo = nDaysAgo(5).toISOString();
   const twoHoursAgo = nHoursAgo(2).toISOString();
   return fetchCommentsList({
-    currentUserId,
+    currentUser,
     where: {
       shortform: true,
       shortformFrontpage: true,
-      deleted: isNotTrue,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
       ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
@@ -158,7 +180,7 @@ export const fetchFrontpageQuickTakes = ({
         {
           OR: [
             { authorIsUnreviewed: isNotTrue },
-            { userId: currentUserId ? { eq: currentUserId } : undefined },
+            { userId: currentUser?._id ? { eq: currentUser?._id } : undefined },
           ],
         },
         // Quick takes older than 2 hours must have at least 1 karma, quick
@@ -189,7 +211,7 @@ export const fetchFrontpageQuickTakes = ({
 };
 
 type PopularCommentsConfig = {
-  currentUserId: string | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   offset?: number;
   limit?: number;
   minScore?: number;
@@ -205,7 +227,7 @@ type PopularCommentsConfig = {
  * slow so we actually use a cached version of this below.
  */
 const fetchPopularCommentsUncached = async ({
-  currentUserId,
+  currentUser,
   minScore = 12,
   offset = 0,
   limit = 3,
@@ -255,7 +277,7 @@ const fetchPopularCommentsUncached = async ({
   `);
   const popularCommentIds = popularComments.rows.map(({ _id }) => _id);
   const result = await fetchCommentsList({
-    currentUserId,
+    currentUser,
     where: {
       _id: { in: popularCommentIds },
     },

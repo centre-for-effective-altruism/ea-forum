@@ -11,7 +11,7 @@ export default async function PopularCommentsList({
 }>) {
   const currentUser = await getCurrentUser();
   const popularComments = await fetchPopularComments({
-    currentUserId: currentUser?._id ?? null,
+    currentUser,
     limit: initialLimit,
   });
   // TODO: This probably shouldn't be using quick takes list...

@@ -11,8 +11,8 @@ export default async function CommentsSection({
 }: Readonly<{ postId: string; className?: string }>) {
   const currentUser = await getCurrentUser();
   const comments = await fetchCommmentsForPost({
+    currentUser,
     postId,
-    currentUserId: currentUser?._id ?? null,
   });
   return (
     <CommentsListProvider comments={comments}>

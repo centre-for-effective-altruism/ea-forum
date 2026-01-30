@@ -26,7 +26,7 @@ import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
-  const post = await fetchPostDisplay(currentUser?._id ?? null, postId);
+  const post = await fetchPostDisplay(currentUser, postId);
   if (!post) {
     notFound();
   }

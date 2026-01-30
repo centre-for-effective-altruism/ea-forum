@@ -40,7 +40,7 @@ export const createPostCommentAction = actionClient
         draft,
       });
       return await fetchCommentsListItem({
-        currentUserId: user._id,
+        currentUser: user,
         commentId,
       });
     },
@@ -57,7 +57,7 @@ export const fetchQuickTakesAction = actionClient
   .action(async ({ parsedInput: { includeCommunity, offset, limit } }) => {
     const currentUser = await getCurrentUser();
     return await fetchFrontpageQuickTakes({
-      currentUserId: currentUser?._id ?? null,
+      currentUser,
       includeCommunity,
       offset,
       limit,
