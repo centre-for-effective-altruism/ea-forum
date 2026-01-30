@@ -59,6 +59,9 @@ const relations = defineRelations(
       user: r.one.users({
         from: r.posts.userId,
         to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
       contents: r.one.revisions({
         from: r.posts.contentsLatest,
@@ -67,6 +70,9 @@ const relations = defineRelations(
       group: r.one.localgroups({
         from: r.posts.groupId,
         to: r.localgroups._id,
+        where: {
+          deleted: false,
+        },
       }),
       podcastEpisode: r.one.podcastEpisodes({
         from: r.posts.podcastEpisodeId,
@@ -79,6 +85,9 @@ const relations = defineRelations(
       comments: r.many.comments({
         from: r.posts._id,
         to: r.comments.postId,
+        where: {
+          deleted: false,
+        },
       }),
       votes: r.many.votes({
         from: r.posts._id,
@@ -111,10 +120,16 @@ const relations = defineRelations(
       tag: r.one.tags({
         from: r.comments.tagId,
         to: r.tags._id,
+        where: {
+          deleted: false,
+        },
       }),
       user: r.one.users({
         from: r.comments.userId,
         to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
       votes: r.many.votes({
         from: r.comments._id,
@@ -128,26 +143,42 @@ const relations = defineRelations(
       topLevelComment: r.one.comments({
         from: r.comments.topLevelCommentId,
         to: r.comments._id,
+        where: {
+          deleted: false,
+        },
       }),
     },
     tags: {
       comments: r.many.comments({
         from: r.tags._id,
         to: r.comments.tagId,
+        where: {
+          deleted: false,
+        },
       }),
     },
     revisions: {
       user: r.one.users({
         from: r.revisions.userId,
         to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
       tag: r.one.tags({
         from: r.revisions.documentId,
         to: r.tags._id,
+        where: {
+          deleted: false,
+        },
       }),
       post: r.one.posts({
         from: r.revisions.documentId,
         to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
+        },
       }),
     },
     userLoginTokens: {

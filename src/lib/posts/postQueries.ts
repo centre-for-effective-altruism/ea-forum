@@ -3,6 +3,8 @@ import { db } from "../db";
 import { posts } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
+import { postStatuses } from "./postsHelpers";
+import { isNotTrue } from "../utils/queryHelpers";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -16,8 +18,11 @@ export const currentUserSuggestedCurationSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
     sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
-export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
-  return db.query.posts.findFirst({
+export const fetchPostDisplay = async (
+  currentUserId: string | null,
+  postId: string,
+) => {
+  const post = await db.query.posts.findFirst({
     columns: {
       _id: true,
       title: true,
@@ -56,6 +61,16 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
     },
     where: {
       _id: postId,
+      OR: [
+        ...(currentUserId ? [{ userId: currentUserId }] : []),
+        {
+          draft: isNotTrue,
+          deletedDraft: isNotTrue,
+          isFuture: isNotTrue,
+          postedAt: { isNotNull: true },
+          status: postStatuses.STATUS_APPROVED,
+        },
+      ],
     },
     with: {
       user: userBaseProjection,
@@ -123,6 +138,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
         : {}),
     },
   });
+  return post ?? null;
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;

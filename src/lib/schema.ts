@@ -1391,6 +1391,7 @@ export const localgroups = pgTable(
 );
 
 export type Localgroup = typeof localgroups.$inferSelect;
+export type InsertLocalgroup = typeof localgroups.$inferInsert;
 
 export const messages = pgTable(
   "Messages",

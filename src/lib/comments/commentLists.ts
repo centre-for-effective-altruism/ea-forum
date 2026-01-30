@@ -24,12 +24,18 @@ type CommentsOrderBy = NonNullable<
   Parameters<typeof db.query.comments.findMany>[0]
 >["orderBy"];
 
-export const viewableCommentFilter = {
-  rejected: isNotTrue,
-  debateResponse: isNotTrue,
-  authorIsUnreviewed: isNotTrue,
-  draft: isNotTrue,
-} as const;
+export const viewableCommentFilter = (currentUserId: string | null) => ({
+  OR: [
+    ...(currentUserId ? [{ userId: currentUserId }] : []),
+    {
+      rejected: isNotTrue,
+      deleted: isNotTrue,
+      debateResponse: isNotTrue,
+      authorIsUnreviewed: isNotTrue,
+      draft: isNotTrue,
+    },
+  ],
+});
 
 export const commentListProjection = (currentUserId: string | null) =>
   ({
@@ -90,7 +96,16 @@ const fetchCommentsList = ({
   return db.query.comments.findMany({
     ...commentListProjection(currentUserId),
     where: {
-      ...viewableCommentFilter,
+      ...viewableCommentFilter(currentUserId),
+      post: {
+        OR: [
+          ...(currentUserId ? [{ userId: currentUserId }] : []),
+          {
+            draft: isNotTrue,
+            deletedDraft: isNotTrue,
+          },
+        ],
+      },
       ...where,
     },
     orderBy,
@@ -144,7 +159,6 @@ export const fetchFrontpageQuickTakes = ({
     where: {
       shortform: true,
       shortformFrontpage: true,
-      deleted: isNotTrue,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
       ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
