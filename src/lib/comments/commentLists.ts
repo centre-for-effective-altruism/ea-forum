@@ -88,19 +88,22 @@ const fetchCommentsList = ({
   offset,
   limit,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
   offset?: number;
   limit?: number;
 }) => {
   const currentUserId = currentUser?._id ?? null;
-  const currentUserIsAdmin = currentUser?.isAdmin ?? false;
+  const currentUserIsModerator =
+    currentUser?.isAdmin ||
+    currentUser?.groups?.includes("sunshineRegiment") ||
+    false;
   return db.query.comments.findMany({
     ...commentListProjection(currentUserId),
     where: {
       ...viewableCommentFilter(currentUserId),
-      post: currentUserIsAdmin
+      post: currentUserIsModerator
         ? undefined
         : {
             OR: [
@@ -123,7 +126,7 @@ export const fetchCommentsListItem = async ({
   currentUser,
   commentId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   commentId: string;
 }) => {
   const result = await fetchCommentsList({
@@ -138,7 +141,7 @@ export const fetchCommmentsForPost = ({
   currentUser,
   postId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   postId: string;
 }) =>
   fetchCommentsList({
@@ -152,7 +155,7 @@ export const fetchFrontpageQuickTakes = ({
   offset,
   limit = 5,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   includeCommunity?: boolean;
   offset?: number;
   limit?: number;
@@ -208,7 +211,7 @@ export const fetchFrontpageQuickTakes = ({
 };
 
 type PopularCommentsConfig = {
-  currentUser: Pick<User, "_id" | "isAdmin"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   offset?: number;
   limit?: number;
   minScore?: number;

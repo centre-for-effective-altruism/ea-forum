@@ -19,11 +19,14 @@ export const currentUserSuggestedCurationSelector =
     sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
 export const fetchPostDisplay = async (
-  currentUser: Pick<User, "_id" | "isAdmin"> | null,
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null,
   postId: string,
 ) => {
   const currentUserId = currentUser?._id ?? null;
-  const currentUserIsAdmin = currentUser?.isAdmin ?? false;
+  const currentUserIsModerator =
+    currentUser?.isAdmin ||
+    currentUser?.groups?.includes("sunshineRegiment") ||
+    false;
   const post = await db.query.posts.findFirst({
     columns: {
       _id: true,
@@ -63,7 +66,7 @@ export const fetchPostDisplay = async (
     },
     where: {
       _id: postId,
-      OR: currentUserIsAdmin
+      OR: currentUserIsModerator
         ? undefined
         : [
             ...(currentUserId ? [{ userId: currentUserId }] : []),

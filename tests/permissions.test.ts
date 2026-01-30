@@ -33,12 +33,16 @@ suite("Permissions", () => {
       expect(display).not.toBe(null);
       expect(display!._id).toBe(post._id);
     });
-    test("Admins can view drafts", async () => {
+    test("Admins and moderators can view drafts", async () => {
       const post = await createTestPost({ draft: true });
       const admin = await createTestUser({ isAdmin: true });
-      const display = await fetchPostDisplay(admin, post._id);
-      expect(display).not.toBe(null);
-      expect(display!._id).toBe(post._id);
+      const adminDisplay = await fetchPostDisplay(admin, post._id);
+      expect(adminDisplay).not.toBe(null);
+      expect(adminDisplay!._id).toBe(post._id);
+      const moderator = await createTestUser({ groups: ["sunshineRegiment"] });
+      const moderatorDisplay = await fetchPostDisplay(moderator, post._id);
+      expect(moderatorDisplay).not.toBe(null);
+      expect(moderatorDisplay!._id).toBe(post._id);
     });
     test("Can't fetch deleted post display", async () => {
       const post = await createTestPost({ deletedDraft: true });
@@ -55,12 +59,16 @@ suite("Permissions", () => {
       expect(display).not.toBe(null);
       expect(display!._id).toBe(post._id);
     });
-    test("Admins can view deleted posts", async () => {
+    test("Admins and moderators can view deleted posts", async () => {
       const post = await createTestPost({ deletedDraft: true });
       const admin = await createTestUser({ isAdmin: true });
-      const display = await fetchPostDisplay(admin, post._id);
-      expect(display).not.toBe(null);
-      expect(display!._id).toBe(post._id);
+      const displayDisplay = await fetchPostDisplay(admin, post._id);
+      expect(displayDisplay).not.toBe(null);
+      expect(displayDisplay!._id).toBe(post._id);
+      const moderator = await createTestUser({ groups: ["sunshineRegiment"] });
+      const moderatorDisplay = await fetchPostDisplay(moderator, post._id);
+      expect(moderatorDisplay).not.toBe(null);
+      expect(moderatorDisplay!._id).toBe(post._id);
     });
     test("Can't fetch rejected post display", async () => {
       const post = await createTestPost({ rejected: true });
@@ -77,12 +85,16 @@ suite("Permissions", () => {
       expect(display).not.toBe(null);
       expect(display!._id).toBe(post._id);
     });
-    test("Admins can view rejected posts", async () => {
+    test("Admins and moderators can view rejected posts", async () => {
       const post = await createTestPost({ rejected: true });
       const admin = await createTestUser({ isAdmin: true });
-      const display = await fetchPostDisplay(admin, post._id);
-      expect(display).not.toBe(null);
-      expect(display!._id).toBe(post._id);
+      const adminDisplay = await fetchPostDisplay(admin, post._id);
+      expect(adminDisplay).not.toBe(null);
+      expect(adminDisplay!._id).toBe(post._id);
+      const moderator = await createTestUser({ groups: ["sunshineRegiment"] });
+      const moderatorDisplay = await fetchPostDisplay(moderator, post._id);
+      expect(moderatorDisplay).not.toBe(null);
+      expect(moderatorDisplay!._id).toBe(post._id);
     });
     test("Can fetch unlisted post display", async () => {
       const post = await createTestPost({ unlisted: true });
@@ -225,19 +237,26 @@ suite("Permissions", () => {
       expect(comments.length).toBe(1);
       expect(comments[0]._id).toBe(comment._id);
     });
-    test("Admins can't see other users' draft comments", async () => {
+    test("Admins and moderators can't see other users' draft comments", async () => {
       const post = await createTestPost();
       const [publicComment] = await Promise.all([
         createTestComment({ postId: post._id }),
         createTestComment({ postId: post._id, draft: true }),
       ]);
       const admin = await createTestUser({ isAdmin: true });
-      const comments = await fetchCommmentsForPost({
+      const adminComments = await fetchCommmentsForPost({
         currentUser: admin,
         postId: post._id,
       });
-      expect(comments.length).toBe(1);
-      expect(comments[0]._id).toBe(publicComment._id);
+      expect(adminComments.length).toBe(1);
+      expect(adminComments[0]._id).toBe(publicComment._id);
+      const moderator = await createTestUser({ groups: ["sunshineRegiment"] });
+      const moderatorComments = await fetchCommmentsForPost({
+        currentUser: moderator,
+        postId: post._id,
+      });
+      expect(moderatorComments.length).toBe(1);
+      expect(moderatorComments[0]._id).toBe(publicComment._id);
     });
     test("Comment lists don't include rejected comments", async () => {
       const post = await createTestPost();
@@ -334,7 +353,7 @@ suite("Permissions", () => {
       expect(comments.length).toBe(1);
       expect(comments[0]._id).toBe(comment._id);
     });
-    test("Admins can fetch comments for draft post", async () => {
+    test("Admins and moderators can fetch comments for draft post", async () => {
       const post = await createTestPost({ draft: true });
       const comment = await createTestComment({ postId: post._id });
       const admin = await createTestUser({ isAdmin: true });
@@ -344,6 +363,13 @@ suite("Permissions", () => {
       });
       expect(comments.length).toBe(1);
       expect(comments[0]._id).toBe(comment._id);
+      const moderator = await createTestUser({ groups: ["sunshineRegiment"] });
+      const moderatorComments = await fetchCommmentsForPost({
+        currentUser: moderator,
+        postId: post._id,
+      });
+      expect(moderatorComments.length).toBe(1);
+      expect(moderatorComments[0]._id).toBe(comment._id);
     });
   });
 });
