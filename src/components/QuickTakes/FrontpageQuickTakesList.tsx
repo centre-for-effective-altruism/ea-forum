@@ -11,7 +11,7 @@ export default async function FrontpageQuickTakesList({
 }>) {
   const currentUser = await getCurrentUser();
   const quickTakes = await fetchFrontpageQuickTakes({
-    currentUserId: currentUser?._id ?? null,
+    currentUser,
     limit: initialLimit,
   });
   return <QuickTakesList quickTakes={quickTakes} className={className} />;

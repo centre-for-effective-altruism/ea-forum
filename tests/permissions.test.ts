@@ -23,13 +23,20 @@ suite("Permissions", () => {
       const loggedOutDisplay = await fetchPostDisplay(null, post._id);
       expect(loggedOutDisplay).toBe(null);
       const user = await createTestUser();
-      const loggedInDisplay = await fetchPostDisplay(user._id, post._id);
+      const loggedInDisplay = await fetchPostDisplay(user, post._id);
       expect(loggedInDisplay).toBe(null);
     });
     test("Authors can view their own drafts", async () => {
       const user = await createTestUser();
       const post = await createTestPost({ userId: user._id, draft: true });
-      const display = await fetchPostDisplay(user._id, post._id);
+      const display = await fetchPostDisplay(user, post._id);
+      expect(display).not.toBe(null);
+      expect(display!._id).toBe(post._id);
+    });
+    test("Admins can view drafts", async () => {
+      const post = await createTestPost({ draft: true });
+      const admin = await createTestUser({ isAdmin: true });
+      const display = await fetchPostDisplay(admin, post._id);
       expect(display).not.toBe(null);
       expect(display!._id).toBe(post._id);
     });
@@ -38,13 +45,42 @@ suite("Permissions", () => {
       const loggedOutDisplay = await fetchPostDisplay(null, post._id);
       expect(loggedOutDisplay).toBe(null);
       const user = await createTestUser();
-      const loggedInDisplay = await fetchPostDisplay(user._id, post._id);
+      const loggedInDisplay = await fetchPostDisplay(user, post._id);
       expect(loggedInDisplay).toBe(null);
     });
     test("Authors can view their own deleted posts", async () => {
       const user = await createTestUser();
       const post = await createTestPost({ userId: user._id, deletedDraft: true });
-      const display = await fetchPostDisplay(user._id, post._id);
+      const display = await fetchPostDisplay(user, post._id);
+      expect(display).not.toBe(null);
+      expect(display!._id).toBe(post._id);
+    });
+    test("Admins can view deleted posts", async () => {
+      const post = await createTestPost({ deletedDraft: true });
+      const admin = await createTestUser({ isAdmin: true });
+      const display = await fetchPostDisplay(admin, post._id);
+      expect(display).not.toBe(null);
+      expect(display!._id).toBe(post._id);
+    });
+    test("Can't fetch rejected post display", async () => {
+      const post = await createTestPost({ rejected: true });
+      const loggedOutDisplay = await fetchPostDisplay(null, post._id);
+      expect(loggedOutDisplay).toBe(null);
+      const user = await createTestUser();
+      const loggedInDisplay = await fetchPostDisplay(user, post._id);
+      expect(loggedInDisplay).toBe(null);
+    });
+    test("Authors can view their own rejected posts", async () => {
+      const user = await createTestUser();
+      const post = await createTestPost({ userId: user._id, rejected: true });
+      const display = await fetchPostDisplay(user, post._id);
+      expect(display).not.toBe(null);
+      expect(display!._id).toBe(post._id);
+    });
+    test("Admins can view rejected posts", async () => {
+      const post = await createTestPost({ rejected: true });
+      const admin = await createTestUser({ isAdmin: true });
+      const display = await fetchPostDisplay(admin, post._id);
       expect(display).not.toBe(null);
       expect(display!._id).toBe(post._id);
     });
@@ -159,20 +195,20 @@ suite("Permissions", () => {
     });
   });
   suite("Comment list permissions", () => {
-    test("Comment lists don't include drafts", async () => {
+    test("Comment lists don't include draft comments", async () => {
       const post = await createTestPost();
       const [publicComment] = await Promise.all([
         createTestComment({ postId: post._id }),
         createTestComment({ postId: post._id, draft: true }),
       ]);
       const comments = await fetchCommmentsForPost({
-        currentUserId: null,
+        currentUser: null,
         postId: post._id,
       });
       expect(comments.length).toBe(1);
       expect(comments[0]._id).toBe(publicComment._id);
     });
-    test("Comment lists do include a users own drafts", async () => {
+    test("Comment lists do include a users own draft comments", async () => {
       const [post, commenter] = await Promise.all([
         createTestPost(),
         createTestUser(),
@@ -183,11 +219,25 @@ suite("Permissions", () => {
         draft: true,
       });
       const comments = await fetchCommmentsForPost({
-        currentUserId: commenter._id,
+        currentUser: commenter,
         postId: post._id,
       });
       expect(comments.length).toBe(1);
       expect(comments[0]._id).toBe(comment._id);
+    });
+    test("Admins can't see other users' draft comments", async () => {
+      const post = await createTestPost();
+      const [publicComment] = await Promise.all([
+        createTestComment({ postId: post._id }),
+        createTestComment({ postId: post._id, draft: true }),
+      ]);
+      const admin = await createTestUser({ isAdmin: true });
+      const comments = await fetchCommmentsForPost({
+        currentUser: admin,
+        postId: post._id,
+      });
+      expect(comments.length).toBe(1);
+      expect(comments[0]._id).toBe(publicComment._id);
     });
     test("Comment lists don't include rejected comments", async () => {
       const post = await createTestPost();
@@ -196,7 +246,7 @@ suite("Permissions", () => {
         createTestComment({ postId: post._id, rejected: true }),
       ]);
       const comments = await fetchCommmentsForPost({
-        currentUserId: null,
+        currentUser: null,
         postId: post._id,
       });
       expect(comments.length).toBe(1);
@@ -213,7 +263,7 @@ suite("Permissions", () => {
         rejected: true,
       });
       const comments = await fetchCommmentsForPost({
-        currentUserId: commenter._id,
+        currentUser: commenter,
         postId: post._id,
       });
       expect(comments.length).toBe(1);
@@ -226,7 +276,7 @@ suite("Permissions", () => {
         createTestComment({ postId: post._id, deleted: true }),
       ]);
       const comments = await fetchCommmentsForPost({
-        currentUserId: null,
+        currentUser: null,
         postId: post._id,
       });
       expect(comments.length).toBe(1);
@@ -239,7 +289,7 @@ suite("Permissions", () => {
         createTestComment({ postId: post._id, deletedPublic: true }),
       ]);
       const comments = await fetchCommmentsForPost({
-        currentUserId: null,
+        currentUser: null,
         postId: post._id,
       });
       expect(comments.length).toBe(2);
@@ -257,7 +307,7 @@ suite("Permissions", () => {
         userId: commenter._id,
       });
       const comments = await fetchCommmentsForPost({
-        currentUserId: null,
+        currentUser: null,
         postId: post._id,
       });
       expect(comments.length).toBe(1);
@@ -268,7 +318,7 @@ suite("Permissions", () => {
       const post = await createTestPost({ draft: true });
       await createTestComment({ postId: post._id });
       const comments = await fetchCommmentsForPost({
-        currentUserId: null,
+        currentUser: null,
         postId: post._id,
       });
       expect(comments.length).toBe(0);
@@ -278,7 +328,18 @@ suite("Permissions", () => {
       const post = await createTestPost({ userId: user._id, draft: true });
       const comment = await createTestComment({ postId: post._id });
       const comments = await fetchCommmentsForPost({
-        currentUserId: user._id,
+        currentUser: user,
+        postId: post._id,
+      });
+      expect(comments.length).toBe(1);
+      expect(comments[0]._id).toBe(comment._id);
+    });
+    test("Admins can fetch comments for draft post", async () => {
+      const post = await createTestPost({ draft: true });
+      const comment = await createTestComment({ postId: post._id });
+      const admin = await createTestUser({ isAdmin: true });
+      const comments = await fetchCommmentsForPost({
+        currentUser: admin,
         postId: post._id,
       });
       expect(comments.length).toBe(1);

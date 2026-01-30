@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { posts } from "../schema";
+import { posts, User } from "../schema";
 import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
@@ -19,9 +19,11 @@ export const currentUserSuggestedCurationSelector =
     sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
 export const fetchPostDisplay = async (
-  currentUserId: string | null,
+  currentUser: Pick<User, "_id" | "isAdmin"> | null,
   postId: string,
 ) => {
+  const currentUserId = currentUser?._id ?? null;
+  const currentUserIsAdmin = currentUser?.isAdmin ?? false;
   const post = await db.query.posts.findFirst({
     columns: {
       _id: true,
@@ -61,16 +63,19 @@ export const fetchPostDisplay = async (
     },
     where: {
       _id: postId,
-      OR: [
-        ...(currentUserId ? [{ userId: currentUserId }] : []),
-        {
-          draft: isNotTrue,
-          deletedDraft: isNotTrue,
-          isFuture: isNotTrue,
-          postedAt: { isNotNull: true },
-          status: postStatuses.STATUS_APPROVED,
-        },
-      ],
+      OR: currentUserIsAdmin
+        ? undefined
+        : [
+            ...(currentUserId ? [{ userId: currentUserId }] : []),
+            {
+              draft: isNotTrue,
+              deletedDraft: isNotTrue,
+              rejected: isNotTrue,
+              isFuture: isNotTrue,
+              postedAt: { isNotNull: true },
+              status: postStatuses.STATUS_APPROVED,
+            },
+          ],
     },
     with: {
       user: userBaseProjection,
