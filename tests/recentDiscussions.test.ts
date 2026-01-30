@@ -12,7 +12,7 @@ suite("Recent discussions permissions", () => {
   beforeEach(async () => {
     await Promise.all([db.delete(posts), db.delete(comments), db.delete(tags)]);
   });
-  test.only("Draft posts are not included in recent discussions", async () => {
+  test("Draft posts are not included in recent discussions", async () => {
     const oneHourAgo = nHoursAgo(1).toISOString();
     const [publicPost] = await Promise.all([
       createTestPost({
@@ -34,7 +34,7 @@ suite("Recent discussions permissions", () => {
     expect(results.length).toBe(1);
     expect(results[0].item?._id).toBe(publicPost._id);
   });
-  test.only("Rejected posts are not included in recent discussions", async () => {
+  test("Rejected posts are not included in recent discussions", async () => {
     const oneHourAgo = nHoursAgo(1).toISOString();
     const [publicPost] = await Promise.all([
       createTestPost({
