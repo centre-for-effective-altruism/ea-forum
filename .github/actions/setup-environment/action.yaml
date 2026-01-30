@@ -22,8 +22,8 @@ runs:
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        npm install --package-lock-only
-        npm ci
+        npm install --package-lock-only --ignore-scripts
+        npm ci --ignore-scripts
     - name: Verify dependencies were installed
       shell: bash
       run: test -d node_modules
