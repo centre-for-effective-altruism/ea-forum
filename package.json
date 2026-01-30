@@ -19,7 +19,7 @@
     "@ckeditor/ckeditor5-core": "^43.1.0",
     "@ckeditor/ckeditor5-engine": "^43.1.0",
     "@elastic/elasticsearch": "^9.2.0",
-    "@floating-ui/react": "^0.27.15",
+    "@floating-ui/react": "^0.27.17",
     "@heroicons/react": "^2.2.0",
     "@sentry/nextjs": "^10.34.0",
     "auth0": "^5.2.0",
