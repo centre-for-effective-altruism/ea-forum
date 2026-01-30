@@ -34,7 +34,7 @@
     "json-stringify-deterministic": "^1.0.12",
     "jsonwebtoken": "^9.0.3",
     "lodash": "^4.17.21",
-    "lru-cache": "^11.1.0",
+    "lru-cache": "^11.2.5",
     "markdown-it": "^14.1.0",
     "markdown-it-container": "^4.0.0",
     "markdown-it-footnote": "^4.0.0",
