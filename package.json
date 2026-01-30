@@ -64,14 +64,14 @@
     "zod-form-data": "^3.0.1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.3.14",
+    "@electric-sql/pglite": "^0.3.15",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.1",
+    "@testing-library/react": "^16.3.2",
     "@types/hepburn": "^1.2.2",
     "@types/html-to-text": "^9.0.4",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/lodash": "^4.17.20",
+    "@types/lodash": "^4.17.23",
     "@types/markdown-it": "^14.1.2",
     "@types/markdown-it-container": "^2.0.11",
     "@types/markdown-it-footnote": "^3.0.4",
@@ -90,16 +90,16 @@
     "drizzle-kit": "^1.0.0-beta.3-36e9b9e",
     "env-cmd": "^10.1.0",
     "eslint": "^9.39.2",
-    "eslint-config-next": "^16.0.10",
+    "eslint-config-next": "^16.1.6",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "jsdom": "^27.4.0",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.1",
     "prettier-plugin-packagejson": "^2.5.20",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^6.0.3",
-    "vitest": "^4.0.16"
+    "vite-tsconfig-paths": "^6.0.5",
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=22.12.0"
