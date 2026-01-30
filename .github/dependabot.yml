@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    groups:
+      nextjs:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "eslint-config-next"
+      markdown:
+        patterns:
+          - "*markdown-it*"
+      turndown:
+        patterns:
+          - "*turndown*"
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "vitest"
+          - "vite-tsconfig-paths"
+          - "@vitejs/plugin-react-swc"
+      prettier:
+        patterns:
+          - "*prettier*"
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
