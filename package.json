@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-core": "^43.1.0",
+    "@ckeditor/ckeditor5-core": "^47.4.0",
     "@ckeditor/ckeditor5-engine": "^43.1.0",
     "@elastic/elasticsearch": "^9.2.0",
     "@floating-ui/react": "^0.27.15",
