@@ -87,7 +87,7 @@
     "@types/turndown": "^5.0.6",
     "@vitejs/plugin-react-swc": "^4.2.2",
     "dotenv": "^17.2.3",
-    "drizzle-kit": "^1.0.0-beta.3-36e9b9e",
+    "drizzle-kit": "^1.0.0-beta.12-5845444",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",
     "eslint-config-prettier": "^10.1.8",
