@@ -5,6 +5,8 @@ import {
   createTestUser,
   createTestVote,
 } from "./testHelpers";
+import { db } from "@/lib/db";
+import { performVote } from "@/lib/votes/voteMutations";
 import { fetchCommentReactors, fetchPostReactors } from "@/lib/votes/fetchReactors";
 
 suite("Reactions", () => {
@@ -99,5 +101,189 @@ suite("Reactions", () => {
     expect(Object.keys(reactors2).sort()).toEqual(["helpful", "love"].sort());
     expect(reactors2.helpful).toEqual(["publicReactor2"]);
     expect(reactors2.helpful).toEqual(["publicReactor2"]);
+  });
+  test("Can react to post", async () => {
+    const [post, reactor1, reactor2] = await Promise.all([
+      createTestPost(),
+      createTestUser(),
+      createTestUser(),
+    ]);
+
+    await performVote({
+      txn: db,
+      collectionName: "Posts",
+      document: post,
+      user: reactor1,
+      voteType: "neutral",
+      extendedVote: { agree: true },
+    });
+    {
+      const [updatedPost, vote] = await Promise.all([
+        db.query.posts.findFirst({
+          where: {
+            _id: post._id,
+          },
+        }),
+        db.query.votes.findFirst({
+          where: {
+            documentId: post._id,
+            userId: reactor1._id,
+          },
+        }),
+      ]);
+      expect(updatedPost!.extendedScore).toStrictEqual({ agree: 1 });
+      expect(vote!.extendedVoteType).toStrictEqual({ agree: true });
+    }
+
+    await performVote({
+      txn: db,
+      collectionName: "Posts",
+      document: post,
+      user: reactor2,
+      voteType: "neutral",
+      extendedVote: { agree: true },
+    });
+    {
+      const [updatedPost, vote] = await Promise.all([
+        db.query.posts.findFirst({
+          where: {
+            _id: post._id,
+          },
+        }),
+        db.query.votes.findFirst({
+          where: {
+            documentId: post._id,
+            userId: reactor1._id,
+          },
+        }),
+      ]);
+      expect(updatedPost!.extendedScore).toStrictEqual({ agree: 2 });
+      expect(vote!.extendedVoteType).toStrictEqual({ agree: true });
+    }
+
+    await performVote({
+      txn: db,
+      collectionName: "Posts",
+      document: post,
+      user: reactor1,
+      voteType: "neutral",
+      extendedVote: { helpful: true, disagree: true },
+    });
+    {
+      const [updatedPost, vote] = await Promise.all([
+        db.query.posts.findFirst({
+          where: {
+            _id: post._id,
+          },
+        }),
+        db.query.votes.findFirst({
+          where: {
+            documentId: post._id,
+            userId: reactor1._id,
+          },
+        }),
+      ]);
+      expect(updatedPost!.extendedScore).toStrictEqual({
+        agree: 1,
+        helpful: 1,
+        disagree: 1,
+      });
+      expect(vote!.extendedVoteType).toStrictEqual({
+        helpful: true,
+        disagree: true,
+      });
+    }
+  });
+  test("Can react to comment", async () => {
+    const [comment, reactor1, reactor2] = await Promise.all([
+      createTestComment(),
+      createTestUser(),
+      createTestUser(),
+    ]);
+
+    await performVote({
+      txn: db,
+      collectionName: "Comments",
+      document: comment,
+      user: reactor1,
+      voteType: "neutral",
+      extendedVote: { agree: true },
+    });
+    {
+      const [updatedComment, vote] = await Promise.all([
+        db.query.comments.findFirst({
+          where: {
+            _id: comment._id,
+          },
+        }),
+        db.query.votes.findFirst({
+          where: {
+            documentId: comment._id,
+            userId: reactor1._id,
+          },
+        }),
+      ]);
+      expect(updatedComment!.extendedScore).toStrictEqual({ agree: 1 });
+      expect(vote!.extendedVoteType).toStrictEqual({ agree: true });
+    }
+
+    await performVote({
+      txn: db,
+      collectionName: "Comments",
+      document: comment,
+      user: reactor2,
+      voteType: "neutral",
+      extendedVote: { agree: true },
+    });
+    {
+      const [updatedComment, vote] = await Promise.all([
+        db.query.comments.findFirst({
+          where: {
+            _id: comment._id,
+          },
+        }),
+        db.query.votes.findFirst({
+          where: {
+            documentId: comment._id,
+            userId: reactor1._id,
+          },
+        }),
+      ]);
+      expect(updatedComment!.extendedScore).toStrictEqual({ agree: 2 });
+      expect(vote!.extendedVoteType).toStrictEqual({ agree: true });
+    }
+
+    await performVote({
+      txn: db,
+      collectionName: "Comments",
+      document: comment,
+      user: reactor1,
+      voteType: "neutral",
+      extendedVote: { helpful: true, disagree: true },
+    });
+    {
+      const [updatedComment, vote] = await Promise.all([
+        db.query.comments.findFirst({
+          where: {
+            _id: comment._id,
+          },
+        }),
+        db.query.votes.findFirst({
+          where: {
+            documentId: comment._id,
+            userId: reactor1._id,
+          },
+        }),
+      ]);
+      expect(updatedComment!.extendedScore).toStrictEqual({
+        agree: 1,
+        helpful: 1,
+        disagree: 1,
+      });
+      expect(vote!.extendedVoteType).toStrictEqual({
+        helpful: true,
+        disagree: true,
+      });
+    }
   });
 });

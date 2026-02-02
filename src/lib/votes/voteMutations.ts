@@ -252,8 +252,6 @@ export const performVote = async ({
     }
   }
 
-  // TODO: Here check the validity of the extended vote
-
   // Create the new vote
   await txn.insert(votes).values({
     _id: randomId(),
@@ -262,12 +260,13 @@ export const performVote = async ({
     userId: user._id,
     authorIds,
     voteType,
+    extendedVoteType: extendedVote,
     power,
     votedAt: new Date().toISOString(),
   });
 
-  // Invalidate any old votes
-  await clearVotes({
+  // Invalidate any old votes and update the scores
+  const newDocument = await clearVotes({
     collectionName,
     schema,
     document,
@@ -276,17 +275,6 @@ export const performVote = async ({
     excludeLatest: true,
     txn,
   });
-
-  // Update scores on the voted document
-  const updatedScores = await recalculateDocumentScores(txn, document);
-  const newDocument: VoteableDocument = { ...document, ...updatedScores };
-  await txn
-    .update(schema)
-    .set({
-      ...("inactive" in schema ? { inactive: false } : null),
-      ...updatedScores,
-    })
-    .where(eq(schema._id, document._id));
 
   // Run callbacks
   await Promise.all([
@@ -304,8 +292,8 @@ export const performVote = async ({
   }
 
   return {
-    baseScore: updatedScores.baseScore,
-    voteCount: updatedScores.voteCount,
+    baseScore: newDocument.baseScore,
+    voteCount: newDocument.voteCount,
     voteType,
     showVotingPatternWarning,
   };

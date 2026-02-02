@@ -56,6 +56,11 @@ export const publicReactionPalette: ReactionOption[] = [
   },
 ];
 
+export const allReactionNames = [
+  ...anonymousReactionPalette,
+  ...publicReactionPalette,
+].map(({ name }) => name);
+
 export const countCurrentReactions = (
   extendedScore: Record<string, number> | null,
 ) => {
