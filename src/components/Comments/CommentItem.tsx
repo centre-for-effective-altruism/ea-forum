@@ -12,6 +12,7 @@ import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
 import CommentBody from "../ContentStyles/CommentBody";
 import UsersTooltip from "../UsersTooltip";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
+import CommentReactButtons from "../Voting/CommentReactButtons";
 import Type from "../Type";
 import Link from "../Link";
 import Tooltip from "../Tooltip";
@@ -93,6 +94,7 @@ export default function CommentItem({
           </Tooltip>
           <div className="flex items-center grow">
             <CommentVoteButtons comment={comment} />
+            <CommentReactButtons comment={comment} />
           </div>
           <Link href={`#${_id}`}>
             <LinkIcon className="w-[16px] text-gray-600 hover:opacity-70" />

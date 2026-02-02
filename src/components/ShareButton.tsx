@@ -119,7 +119,7 @@ export default function ShareButton({
           onClick={onClick}
           className="cursor-pointer text-gray-600 hover:text-gray-900 flex items-center"
         >
-          <ArrowUpTrayIcon className="w-4" />
+          <ArrowUpTrayIcon className="w-5" />
         </button>
       </Tooltip>
     </DropdownMenu>

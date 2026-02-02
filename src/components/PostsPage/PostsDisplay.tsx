@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
-import { getPostReadTimeMinutes, postGetPageUrl } from "@/lib/posts/postsHelpers";
+import { fetchPostReactorsWithCache } from "@/lib/votes/fetchReactors";
+import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatShortDate } from "@/lib/timeUtils";
 import { PostDisplayProvider } from "./usePostDisplay";
@@ -9,14 +10,16 @@ import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
 import PostTripleDotMenu from "./PostTripleDotMenu";
+import MorePostsLikeThis from "./MorePostsLikeThis";
 import UserProfileImage from "../UserProfileImage";
+import PostReactButtons from "./PostReactButtons";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
+import PostShareButton from "./PostShareButton";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
-import ShareButton from "../ShareButton";
 import PostTags from "../Tags/PostTags";
 import PostColumn from "./PostColumn";
 import UsersName from "../UsersName";
@@ -26,7 +29,10 @@ import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
-  const post = await fetchPostDisplay(currentUser, postId);
+  const [post, postReactors] = await Promise.all([
+    fetchPostDisplay(currentUser, postId),
+    fetchPostReactorsWithCache(postId),
+  ]);
   if (!post) {
     notFound();
   }
@@ -61,6 +67,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
               <PostVoteButtons post={post} />
+              <PostReactButtons post={post} reactors={postReactors} />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">
@@ -73,13 +80,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             <div className="flex items-center gap-5">
               <PostAudioToggle />
               <PostBookmark />
-              <ShareButton
-                title={post.title}
-                url={postGetPageUrl({ post, isAbsolute: true })}
-                clickEventName="sharePostButtonClicked"
-                shareEventName="sharePost"
-                campaign="post_share"
-              />
+              <PostShareButton post={post} />
               <PostTripleDotMenu post={post} orientation="horizontal" hideBookmark />
             </div>
           </div>
@@ -97,7 +98,18 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <PostTags post={post} className="mt-6" />
           <PostAudioPlayer className="mt-10" />
           <LinkPostMessage post={post} className="mt-10" />
-          <PostBody html={bodyHtml} className="mt-10" />
+          <PostBody html={bodyHtml} className="my-10" />
+          <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
+            <div className="flex items-center gap-4 grow">
+              <PostVoteButtons post={post} />
+              <PostReactButtons post={post} reactors={postReactors} />
+            </div>
+            <div className="flex items-center gap-5">
+              <PostShareButton post={post} />
+              <PostTripleDotMenu post={post} orientation="horizontal" hideBookmark />
+            </div>
+          </div>
+          <MorePostsLikeThis />
         </PostColumn>
       </ReadProgress>
     </PostDisplayProvider>

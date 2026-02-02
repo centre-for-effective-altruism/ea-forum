@@ -34,6 +34,7 @@ export const fetchPostDisplay = async (
       slug: true,
       url: true,
       baseScore: true,
+      extendedScore: true,
       voteCount: true,
       commentCount: true,
       readTimeMinutesOverride: true,

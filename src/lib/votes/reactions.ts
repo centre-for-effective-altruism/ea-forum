@@ -8,7 +8,7 @@ import DeltaReactionIcon from "@/components/Icons/Reactions/DeltaReactionIcon";
 import LaughReactionIcon from "@/components/Icons/Reactions/LaughReactionIcon";
 
 export type ReactionOption = {
-  Component: FC;
+  Component: FC<{ className?: string }>;
   name: string;
   label: string;
   isNegative?: boolean;
@@ -55,3 +55,34 @@ export const publicReactionPalette: ReactionOption[] = [
     label: "Made me laugh",
   },
 ];
+
+export const countCurrentReactions = (
+  extendedScore: Record<string, number> | null,
+) => {
+  const result = [];
+  for (const reaction of anonymousReactionPalette) {
+    result.push({
+      reaction,
+      score: extendedScore?.[reaction.name] ?? 0,
+      anonymous: true,
+    });
+  }
+  if (!extendedScore || !Object.keys(extendedScore).length) {
+    return result;
+  }
+  for (const reaction of publicReactionPalette) {
+    if ((extendedScore[reaction.name] ?? 0) > 0) {
+      result.push({
+        reaction,
+        score: extendedScore[reaction.name],
+        anonymous: false,
+      });
+    }
+  }
+  return result;
+};
+
+export const formatReactorNames = (names: string[]) =>
+  names.length > 1
+    ? names.slice(0, -1).join(", ") + ", and " + names[names.length - 1]
+    : names[0];

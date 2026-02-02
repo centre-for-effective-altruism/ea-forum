@@ -5,7 +5,7 @@ import { db } from "../db";
 import { publicReactionPalette } from "./reactions";
 
 // Map from emoji names to an array of user display names
-type PostReactors = Record<string, string[]>;
+export type PostReactors = Record<string, string[]>;
 
 const postReactorCache = new LRUCache<string, Promise<PostReactors>>({
   ttl: 30 * 1000, // 30 second TTL
@@ -15,7 +15,7 @@ const postReactorCache = new LRUCache<string, Promise<PostReactors>>({
 });
 
 // Map from comment ids to maps from emoji names to an array of user display names
-type CommentReactors = Record<string, Record<string, string[]>>;
+export type CommentReactors = Record<string, Record<string, string[]>>;
 
 const commentReactorCache = new LRUCache<string, Promise<CommentReactors>>({
   ttl: 30 * 1000, // 30 second TTL

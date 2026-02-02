@@ -1957,7 +1957,7 @@ export const posts = pgTable(
     customHighlightLatest: text("customHighlight_latest"),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     score: doublePrecision().default(0).notNull(),
     inactive: boolean().default(false).notNull(),
     afBaseScore: doublePrecision(),
