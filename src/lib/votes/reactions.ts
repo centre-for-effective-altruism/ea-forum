@@ -86,3 +86,19 @@ export const formatReactorNames = (names: string[]) =>
   names.length > 1
     ? names.slice(0, -1).join(", ") + ", and " + names[names.length - 1]
     : names[0];
+
+export const isReactionSelected = (
+  currentUserExtendedVote: Record<string, boolean> | null,
+  reaction: ReactionOption,
+) => Boolean(currentUserExtendedVote?.[reaction.name]);
+
+export const getReactionMutuallyExclusivePartner = (reactionName: string) => {
+  switch (reactionName) {
+    case "agree":
+      return "disagree";
+    case "disagree":
+      return "agree";
+    default:
+      return undefined;
+  }
+};

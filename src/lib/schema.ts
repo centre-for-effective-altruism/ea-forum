@@ -3431,7 +3431,7 @@ export const votes = pgTable(
     userId: varchar({ length: 27 }).notNull(),
     authorIds: varchar({ length: 27 }).array(),
     voteType: text().$type<VoteType>().notNull(),
-    extendedVoteType: jsonb(),
+    extendedVoteType: jsonb<Record<string, boolean>>(),
     power: doublePrecision().notNull(),
     afPower: doublePrecision(),
     cancelled: boolean().default(false).notNull(),

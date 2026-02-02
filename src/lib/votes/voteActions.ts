@@ -17,7 +17,7 @@ export const onVoteAction = actionClient
       collectionName: voteableCollectionNameSchema,
       documentId: z.string(),
       voteType: voteTypeSchema,
-      extendedVote: z.record(z.string(), z.string()).optional(),
+      extendedVote: z.record(z.string(), z.boolean()).optional(),
     }),
   )
   .action(

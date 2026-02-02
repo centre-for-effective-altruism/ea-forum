@@ -1,13 +1,16 @@
 "use client";
 
-import type { FC, ReactNode } from "react";
+import { useCallback, type FC, type ReactNode } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostReactors } from "@/lib/votes/fetchReactors";
+import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import {
   countCurrentReactions,
   formatReactorNames,
+  getReactionMutuallyExclusivePartner,
+  isReactionSelected,
   ReactionOption,
 } from "@/lib/votes/reactions";
 import clsx from "clsx";
@@ -16,6 +19,7 @@ import ReactionPalette from "../Voting/ReactionPalette";
 import Dropdown from "../Dropdown/Dropdown";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
+import { onVoteAction } from "@/lib/votes/voteActions";
 
 const AnonymousTooltipContent: FC<{
   reaction: ReactionOption;
@@ -63,8 +67,12 @@ const PublicTooltipContent: FC<{
   );
 };
 
-const ReactionButton: FC<{ children: ReactNode }> = ({ children }) => (
+const ReactionButton: FC<{
+  onClick?: () => void;
+  children: ReactNode;
+}> = ({ onClick, children }) => (
   <button
+    onClick={onClick}
     className="
       cursor-pointer flex items-center gap-1 user-select-none h-6 px-1
       hover:bg-gray-100 rounded
@@ -82,6 +90,36 @@ export default function PostReactButtons({
   reactors: PostReactors;
 }) {
   const { currentUser } = useCurrentUser();
+  const { onSignup } = useLoginPopoverContext();
+  const currentUserVote = post.votes?.[0]?.voteType;
+  const currentUserExtendedVote = post.votes?.[0]?.extendedVoteType;
+
+  const onSelectReaction = useCallback(
+    async (reaction: ReactionOption) => {
+      if (!currentUser) {
+        onSignup();
+        return;
+      }
+
+      const extendedVote: Record<string, boolean> = {
+        ...currentUserExtendedVote,
+        [reaction.name]: !isReactionSelected(currentUserExtendedVote, reaction),
+      };
+      const partner = getReactionMutuallyExclusivePartner(reaction.name);
+      if (partner && extendedVote[reaction.name]) {
+        extendedVote[partner] = false;
+      }
+
+      await onVoteAction({
+        collectionName: "Posts",
+        documentId: post._id,
+        voteType: currentUserVote ?? "neutral",
+        extendedVote,
+      });
+    },
+    [currentUser, onSignup, post._id, currentUserVote, currentUserExtendedVote],
+  );
+
   const reactions = countCurrentReactions(post.extendedScore);
   return (
     <div className="flex items-center gap-[2px]">
@@ -108,7 +146,7 @@ export default function PostReactButtons({
               )
             }
           >
-            <ReactionButton>
+            <ReactionButton onClick={onSelectReaction.bind(null, reaction)}>
               <reaction.Component className="w-4 text-primary" />
               <span className="text-gray-600">{score}</span>
             </ReactionButton>

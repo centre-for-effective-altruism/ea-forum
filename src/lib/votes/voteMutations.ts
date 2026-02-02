@@ -143,7 +143,7 @@ export const performVote = async ({
   document: VoteableDocument;
   user: CurrentUser;
   voteType: VoteType;
-  extendedVote?: Record<string, string>;
+  extendedVote?: Record<string, boolean>;
   skipRateLimits?: boolean;
   toggleIfAlreadyVoted?: boolean;
 }): Promise<{

@@ -14,7 +14,7 @@ const PaletteItem: FC<ReactionOption> = ({ Component, label }) => {
         hover:bg-gray-100 rounded
       "
     >
-      <div className="text-primary w-8 min-w-8 ml-1">
+      <div className="text-primary min-w-8 ml-1">
         <Component className="w-[18px] h-[18px]" />
       </div>
       <Type style="bodyMedium" className="text-gray-900 mr-4">
