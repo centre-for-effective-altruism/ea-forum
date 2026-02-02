@@ -1,6 +1,6 @@
 "use client";
 
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostReactors } from "@/lib/votes/fetchReactors";
@@ -11,6 +11,9 @@ import {
   ReactionOption,
 } from "@/lib/votes/reactions";
 import clsx from "clsx";
+import AddReactionIcon from "../Icons/Reactions/AddReactionIcon";
+import ReactionPalette from "../Voting/ReactionPalette";
+import Dropdown from "../Dropdown/Dropdown";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
@@ -60,6 +63,17 @@ const PublicTooltipContent: FC<{
   );
 };
 
+const ReactionButton: FC<{ children: ReactNode }> = ({ children }) => (
+  <button
+    className="
+      cursor-pointer flex items-center gap-1 user-select-none h-6 px-1
+      hover:bg-gray-100 rounded
+    "
+  >
+    {children}
+  </button>
+);
+
 export default function PostReactButtons({
   post,
   reactors,
@@ -94,18 +108,20 @@ export default function PostReactButtons({
               )
             }
           >
-            <button
-              className="
-                cursor-pointer flex items-center gap-1 user-select-none h-6 px-1
-                hover:bg-gray-100 rounded
-              "
-            >
+            <ReactionButton>
               <reaction.Component className="w-4 text-primary" />
               <span className="text-gray-600">{score}</span>
-            </button>
+            </ReactionButton>
           </Tooltip>
         );
       })}
+      <Dropdown menu={<ReactionPalette />} placement="bottom-start">
+        <Tooltip placement="top" title={<Type style="bodySmall">Add reaction</Type>}>
+          <ReactionButton>
+            <AddReactionIcon className="w-[18px]" />
+          </ReactionButton>
+        </Tooltip>
+      </Dropdown>
     </div>
   );
 }
