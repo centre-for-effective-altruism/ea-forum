@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, type FC, type ReactNode } from "react";
+import type { FC, ReactNode } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostReactors } from "@/lib/votes/fetchReactors";
-import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useVote } from "../Voting/useVote";
 import {
   countCurrentReactions,
   formatReactorNames,
-  getReactionMutuallyExclusivePartner,
   isReactionSelected,
   ReactionOption,
 } from "@/lib/votes/reactions";
@@ -19,7 +18,6 @@ import ReactionPalette from "../Voting/ReactionPalette";
 import Dropdown from "../Dropdown/Dropdown";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
-import { onVoteAction } from "@/lib/votes/voteActions";
 
 const AnonymousTooltipContent: FC<{
   reaction: ReactionOption;
@@ -69,14 +67,17 @@ const PublicTooltipContent: FC<{
 
 const ReactionButton: FC<{
   onClick?: () => void;
+  isSelected?: boolean;
   children: ReactNode;
-}> = ({ onClick, children }) => (
+}> = ({ onClick, isSelected, children }) => (
   <button
     onClick={onClick}
-    className="
-      cursor-pointer flex items-center gap-1 user-select-none h-6 px-1
-      hover:bg-gray-100 rounded
-    "
+    className={clsx(
+      "cursor-pointer flex items-center gap-1 user-select-none h-6 px-1 rounded",
+      isSelected
+        ? "text-primary bg-primary/5 hover:bg-primary/20 border-1 border-primary/50"
+        : "text-gray-600 hover:bg-gray-100",
+    )}
   >
     {children}
   </button>
@@ -90,41 +91,15 @@ export default function PostReactButtons({
   reactors: PostReactors;
 }) {
   const { currentUser } = useCurrentUser();
-  const { onSignup } = useLoginPopoverContext();
-  const currentUserVote = post.votes?.[0]?.voteType;
-  const currentUserExtendedVote = post.votes?.[0]?.extendedVoteType;
-
-  const onSelectReaction = useCallback(
-    async (reaction: ReactionOption) => {
-      if (!currentUser) {
-        onSignup();
-        return;
-      }
-
-      const extendedVote: Record<string, boolean> = {
-        ...currentUserExtendedVote,
-        [reaction.name]: !isReactionSelected(currentUserExtendedVote, reaction),
-      };
-      const partner = getReactionMutuallyExclusivePartner(reaction.name);
-      if (partner && extendedVote[reaction.name]) {
-        extendedVote[partner] = false;
-      }
-
-      await onVoteAction({
-        collectionName: "Posts",
-        documentId: post._id,
-        voteType: currentUserVote ?? "neutral",
-        extendedVote,
-      });
-    },
-    [currentUser, onSignup, post._id, currentUserVote, currentUserExtendedVote],
-  );
-
-  const reactions = countCurrentReactions(post.extendedScore);
+  const { extendedScore, extendedVoteType, onReact } = useVote({
+    collectionName: "Posts",
+    document: post,
+  });
+  const reactions = countCurrentReactions(extendedScore);
   return (
     <div className="flex items-center gap-[2px]">
       {reactions.map(({ reaction, score, anonymous }) => {
-        const isSelected = false; // TODO
+        const isSelected = isReactionSelected(extendedVoteType, reaction);
         return (
           <Tooltip
             key={reaction.name}
@@ -146,14 +121,20 @@ export default function PostReactButtons({
               )
             }
           >
-            <ReactionButton onClick={onSelectReaction.bind(null, reaction)}>
+            <ReactionButton
+              onClick={onReact.bind(null, reaction.name)}
+              isSelected={isSelected}
+            >
               <reaction.Component className="w-4 text-primary" />
-              <span className="text-gray-600">{score}</span>
+              <Type style="reactScore">{score}</Type>
             </ReactionButton>
           </Tooltip>
         );
       })}
-      <Dropdown menu={<ReactionPalette />} placement="bottom-start">
+      <Dropdown
+        menu={<ReactionPalette onReact={onReact} />}
+        placement="bottom-start"
+      >
         <Tooltip placement="top" title={<Type style="bodySmall">Add reaction</Type>}>
           <ReactionButton>
             <AddReactionIcon className="w-[18px]" />

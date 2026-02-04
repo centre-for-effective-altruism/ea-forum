@@ -93,7 +93,7 @@ export const formatReactorNames = (names: string[]) =>
     : names[0];
 
 export const isReactionSelected = (
-  currentUserExtendedVote: Record<string, boolean> | null,
+  currentUserExtendedVote: Record<string, boolean> | null | undefined,
   reaction: ReactionOption,
 ) => Boolean(currentUserExtendedVote?.[reaction.name]);
 

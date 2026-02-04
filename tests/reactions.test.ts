@@ -115,7 +115,7 @@ suite("Reactions", () => {
       document: post,
       user: reactor1,
       voteType: "neutral",
-      extendedVote: { agree: true },
+      extendedVoteType: { agree: true },
     });
     {
       const [updatedPost, vote] = await Promise.all([
@@ -141,7 +141,7 @@ suite("Reactions", () => {
       document: post,
       user: reactor2,
       voteType: "neutral",
-      extendedVote: { agree: true },
+      extendedVoteType: { agree: true },
     });
     {
       const [updatedPost, vote] = await Promise.all([
@@ -167,7 +167,7 @@ suite("Reactions", () => {
       document: post,
       user: reactor1,
       voteType: "neutral",
-      extendedVote: { helpful: true, disagree: true },
+      extendedVoteType: { helpful: true, disagree: true },
     });
     {
       const [updatedPost, vote] = await Promise.all([
@@ -207,7 +207,7 @@ suite("Reactions", () => {
       document: comment,
       user: reactor1,
       voteType: "neutral",
-      extendedVote: { agree: true },
+      extendedVoteType: { agree: true },
     });
     {
       const [updatedComment, vote] = await Promise.all([
@@ -233,7 +233,7 @@ suite("Reactions", () => {
       document: comment,
       user: reactor2,
       voteType: "neutral",
-      extendedVote: { agree: true },
+      extendedVoteType: { agree: true },
     });
     {
       const [updatedComment, vote] = await Promise.all([
@@ -259,7 +259,7 @@ suite("Reactions", () => {
       document: comment,
       user: reactor1,
       voteType: "neutral",
-      extendedVote: { helpful: true, disagree: true },
+      extendedVoteType: { helpful: true, disagree: true },
     });
     {
       const [updatedComment, vote] = await Promise.all([

@@ -134,7 +134,7 @@ export const performVote = async ({
   document,
   user,
   voteType,
-  extendedVote,
+  extendedVoteType,
   skipRateLimits,
   toggleIfAlreadyVoted = true,
 }: {
@@ -143,17 +143,23 @@ export const performVote = async ({
   document: VoteableDocument;
   user: CurrentUser;
   voteType: VoteType;
-  extendedVote?: Record<string, boolean>;
+  extendedVoteType?: Record<string, boolean>;
   skipRateLimits?: boolean;
   toggleIfAlreadyVoted?: boolean;
 }): Promise<{
   baseScore: number;
   voteCount: number;
+  extendedScore: Record<string, number>;
   voteType: VoteType;
+  extendedVoteType?: Record<string, boolean>;
   showVotingPatternWarning: boolean;
 }> => {
   const voteTypeAction = `${collectionName.toLowerCase()}.${voteType}`;
-  if (!extendedVote && voteType !== "neutral" && !userCanDo(user, voteTypeAction)) {
+  if (
+    !extendedVoteType &&
+    voteType !== "neutral" &&
+    !userCanDo(user, voteTypeAction)
+  ) {
     throw new Error(`User can't cast votes of type ${voteTypeAction}`);
   }
 
@@ -211,7 +217,7 @@ export const performVote = async ({
   const schema = voteableSchemas[collectionName];
 
   let showVotingPatternWarning = false;
-  if (existingVote && existingVote.voteType === voteType && !extendedVote) {
+  if (existingVote && existingVote.voteType === voteType && !extendedVoteType) {
     if (toggleIfAlreadyVoted) {
       document = await clearVotes({
         collectionName,
@@ -225,6 +231,7 @@ export const performVote = async ({
     return {
       baseScore: document.baseScore,
       voteCount: document.voteCount,
+      extendedScore: document.extendedScore ?? {},
       voteType: "neutral",
       showVotingPatternWarning,
     };
@@ -260,7 +267,7 @@ export const performVote = async ({
     userId: user._id,
     authorIds,
     voteType,
-    extendedVoteType: extendedVote,
+    extendedVoteType,
     power,
     votedAt: new Date().toISOString(),
   });
@@ -294,7 +301,9 @@ export const performVote = async ({
   return {
     baseScore: newDocument.baseScore,
     voteCount: newDocument.voteCount,
+    extendedScore: newDocument.extendedScore ?? {},
     voteType,
+    extendedVoteType,
     showVotingPatternWarning,
   };
 };
