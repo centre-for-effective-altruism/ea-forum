@@ -2,10 +2,8 @@
 
 import type { FC, ReactNode } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
-import type { PostDisplay } from "@/lib/posts/postQueries";
-import type { PostReactors } from "@/lib/votes/fetchReactors";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { useVote } from "../Voting/useVote";
+import { usePostDisplay } from "./usePostDisplay";
 import {
   countCurrentReactions,
   formatReactorNames,
@@ -83,18 +81,12 @@ const ReactionButton: FC<{
   </button>
 );
 
-export default function PostReactButtons({
-  post,
-  reactors,
-}: {
-  post: PostDisplay;
-  reactors: PostReactors;
-}) {
+export default function PostReactButtons() {
   const { currentUser } = useCurrentUser();
-  const { extendedScore, extendedVoteType, onReact } = useVote({
-    collectionName: "Posts",
-    document: post,
-  });
+  const {
+    vote: { extendedScore, extendedVoteType, onReact },
+    reactors,
+  } = usePostDisplay();
   const reactions = countCurrentReactions(extendedScore);
   return (
     <div className="flex items-center gap-[2px]">

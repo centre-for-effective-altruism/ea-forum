@@ -45,7 +45,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
   );
 
   return (
-    <PostDisplayProvider post={post}>
+    <PostDisplayProvider post={post} reactors={postReactors}>
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
@@ -66,8 +66,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           </div>
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
-              <PostVoteButtons post={post} />
-              <PostReactButtons post={post} reactors={postReactors} />
+              <PostVoteButtons />
+              <PostReactButtons />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">
@@ -101,8 +101,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <PostBody html={bodyHtml} className="my-10" />
           <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
             <div className="flex items-center gap-4 grow">
-              <PostVoteButtons post={post} />
-              <PostReactButtons post={post} reactors={postReactors} />
+              <PostVoteButtons />
+              <PostReactButtons />
             </div>
             <div className="flex items-center gap-5">
               <PostShareButton post={post} />

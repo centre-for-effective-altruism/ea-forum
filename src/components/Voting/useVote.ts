@@ -85,7 +85,7 @@ type UseVoteProps =
       document: CommentsList;
     };
 
-type UseVoteResult = VoteState & {
+export type UseVoteResult = VoteState & {
   onVote: (voteType: VoteType) => void;
   onReact: (reactionName: string) => void;
 };
