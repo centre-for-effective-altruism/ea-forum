@@ -12,7 +12,6 @@ import PostTableOfContents from "./PostTableOfContents";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
 import UserProfileImage from "../UserProfileImage";
-import PostReactButtons from "./PostReactButtons";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
@@ -67,7 +66,6 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
               <PostVoteButtons />
-              <PostReactButtons />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">
@@ -100,10 +98,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <LinkPostMessage post={post} className="mt-10" />
           <PostBody html={bodyHtml} className="my-10" />
           <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
-            <div className="flex items-center gap-4 grow">
-              <PostVoteButtons />
-              <PostReactButtons />
-            </div>
+            <PostVoteButtons />
             <div className="flex items-center gap-5">
               <PostShareButton post={post} />
               <PostTripleDotMenu post={post} orientation="horizontal" hideBookmark />

@@ -1,9 +1,6 @@
-"use client";
-
 import type { FC, ReactNode } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { usePostDisplay } from "./usePostDisplay";
 import {
   countCurrentReactions,
   formatReactorNames,
@@ -12,7 +9,7 @@ import {
 } from "@/lib/votes/reactions";
 import clsx from "clsx";
 import AddReactionIcon from "../Icons/Reactions/AddReactionIcon";
-import ReactionPalette from "../Voting/ReactionPalette";
+import ReactionPalette from "./ReactionPalette";
 import Dropdown from "../Dropdown/Dropdown";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
@@ -81,15 +78,23 @@ const ReactionButton: FC<{
   </button>
 );
 
-export default function PostReactButtons() {
+export default function ReactButtons({
+  reactors,
+  extendedScore,
+  extendedVoteType,
+  onReact,
+  className,
+}: Readonly<{
+  reactors: Record<string, string[]>;
+  extendedScore: Record<string, number>;
+  extendedVoteType?: Record<string, boolean>;
+  onReact: (reactionName: string) => void;
+  className?: string;
+}>) {
   const { currentUser } = useCurrentUser();
-  const {
-    vote: { extendedScore, extendedVoteType, onReact },
-    reactors,
-  } = usePostDisplay();
   const reactions = countCurrentReactions(extendedScore);
   return (
-    <div className="flex items-center gap-[2px]">
+    <div className={clsx("flex items-center gap-[2px]", className)}>
       {reactions.map(({ reaction, score, anonymous }) => {
         const isSelected = isReactionSelected(extendedVoteType, reaction);
         return (
