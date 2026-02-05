@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState, useTransition } from "react";
 import toast from "react-hot-toast";
 
-export const useOptimisticState = <Value, Args>(
+export const useOptimisticState = <Value, Props>(
   initialValue: Value,
-  optimisticUpdate: (previous: Value, args: Args) => Value,
-  asyncUpdate: (args: Args) => Promise<{ data?: Value }>,
+  optimisticUpdate: (previous: Value, props: Props) => Value,
+  asyncUpdate: (props: Props) => Promise<{ data?: Value }>,
   onError: (error: Error) => void = (error) => toast.error(error.message),
 ) => {
   const [value, setValue] = useState(initialValue);
@@ -12,14 +12,14 @@ export const useOptimisticState = <Value, Args>(
   const requestIdRef = useRef(0);
 
   const execute = useCallback(
-    async (args: Args) => {
+    async (props: Props) => {
       const previous = value;
-      setValue(optimisticUpdate(previous, args));
+      setValue(optimisticUpdate(previous, props));
 
-      const requestId = requestIdRef.current++;
+      const requestId = ++requestIdRef.current;
       startTransition(async () => {
         try {
-          const result = await asyncUpdate(args);
+          const result = await asyncUpdate(props);
           if (requestId === requestIdRef.current) {
             if (!result.data) {
               throw new Error("Async update missing data");

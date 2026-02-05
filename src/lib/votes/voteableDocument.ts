@@ -1,7 +1,10 @@
 import sumBy from "lodash/sumBy";
 import { z } from "zod/v4";
+import fromPairs from "lodash/fromPairs";
+import pickBy from "lodash/pickBy";
 import type { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { filterNonNull } from "../typeHelpers";
+import { allReactionNames } from "./reactions";
 import { db, DbOrTransaction } from "../db";
 import {
   Post,
@@ -145,6 +148,7 @@ export const recalculateDocumentScores = async (
     columns: {
       power: true,
       voteType: true,
+      extendedVoteType: true,
     },
     where: {
       documentId: document._id,
@@ -156,10 +160,17 @@ export const recalculateDocumentScores = async (
   });
   const baseScore = sumBy(votes, (v) => v.power);
   const voteCount = votes.filter(voteHasAnyEffect).length;
+  const reactCounts = fromPairs(
+    allReactionNames.map((reaction) => [
+      reaction,
+      sumBy(votes, (v) => (v?.extendedVoteType?.[reaction] ? 1 : 0)),
+    ]),
+  );
+  const extendedScore = pickBy(reactCounts, (count) => count > 0);
   return {
     baseScore,
     voteCount,
-    extendedScore: {}, // TODO: Emojis
+    extendedScore,
     score: recalculateScore({ ...document, baseScore }),
   };
 };

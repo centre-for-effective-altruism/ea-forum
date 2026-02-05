@@ -134,7 +134,7 @@ export const performVote = async ({
   document,
   user,
   voteType,
-  extendedVote,
+  extendedVoteType,
   skipRateLimits,
   toggleIfAlreadyVoted = true,
 }: {
@@ -143,17 +143,23 @@ export const performVote = async ({
   document: VoteableDocument;
   user: CurrentUser;
   voteType: VoteType;
-  extendedVote?: Record<string, string>;
+  extendedVoteType?: Record<string, boolean>;
   skipRateLimits?: boolean;
   toggleIfAlreadyVoted?: boolean;
 }): Promise<{
   baseScore: number;
   voteCount: number;
+  extendedScore: Record<string, number>;
   voteType: VoteType;
+  extendedVoteType?: Record<string, boolean>;
   showVotingPatternWarning: boolean;
 }> => {
   const voteTypeAction = `${collectionName.toLowerCase()}.${voteType}`;
-  if (!extendedVote && voteType !== "neutral" && !userCanDo(user, voteTypeAction)) {
+  if (
+    !extendedVoteType &&
+    voteType !== "neutral" &&
+    !userCanDo(user, voteTypeAction)
+  ) {
     throw new Error(`User can't cast votes of type ${voteTypeAction}`);
   }
 
@@ -211,7 +217,7 @@ export const performVote = async ({
   const schema = voteableSchemas[collectionName];
 
   let showVotingPatternWarning = false;
-  if (existingVote && existingVote.voteType === voteType && !extendedVote) {
+  if (existingVote && existingVote.voteType === voteType && !extendedVoteType) {
     if (toggleIfAlreadyVoted) {
       document = await clearVotes({
         collectionName,
@@ -225,6 +231,7 @@ export const performVote = async ({
     return {
       baseScore: document.baseScore,
       voteCount: document.voteCount,
+      extendedScore: document.extendedScore ?? {},
       voteType: "neutral",
       showVotingPatternWarning,
     };
@@ -252,8 +259,6 @@ export const performVote = async ({
     }
   }
 
-  // TODO: Here check the validity of the extended vote
-
   // Create the new vote
   await txn.insert(votes).values({
     _id: randomId(),
@@ -262,12 +267,13 @@ export const performVote = async ({
     userId: user._id,
     authorIds,
     voteType,
+    extendedVoteType,
     power,
     votedAt: new Date().toISOString(),
   });
 
-  // Invalidate any old votes
-  await clearVotes({
+  // Invalidate any old votes and update the scores
+  const newDocument = await clearVotes({
     collectionName,
     schema,
     document,
@@ -276,17 +282,6 @@ export const performVote = async ({
     excludeLatest: true,
     txn,
   });
-
-  // Update scores on the voted document
-  const updatedScores = await recalculateDocumentScores(txn, document);
-  const newDocument: VoteableDocument = { ...document, ...updatedScores };
-  await txn
-    .update(schema)
-    .set({
-      ...("inactive" in schema ? { inactive: false } : null),
-      ...updatedScores,
-    })
-    .where(eq(schema._id, document._id));
 
   // Run callbacks
   await Promise.all([
@@ -304,9 +299,11 @@ export const performVote = async ({
   }
 
   return {
-    baseScore: updatedScores.baseScore,
-    voteCount: updatedScores.voteCount,
+    baseScore: newDocument.baseScore,
+    voteCount: newDocument.voteCount,
+    extendedScore: newDocument.extendedScore ?? {},
     voteType,
+    extendedVoteType,
     showVotingPatternWarning,
   };
 };

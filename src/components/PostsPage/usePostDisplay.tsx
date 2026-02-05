@@ -13,9 +13,11 @@ import type { PostDisplay } from "@/lib/posts/postQueries";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
 import { useTracking } from "@/lib/analyticsEvents";
+import { useVote, UseVoteResult } from "@/components/Voting/useVote";
 
 type PostDisplayContext = {
   post: PostDisplay;
+  vote: UseVoteResult;
   showAudio: boolean;
   toggleShowAudio: () => void;
 };
@@ -32,6 +34,7 @@ export const PostDisplayProvider: FC<{
   const { recordPostView } = useRecordPostView(post);
   const [cookies, setCookie] = useCookiesWithConsent([audioCookie]);
   const [showAudio, setShowAudio] = useState(cookies[audioCookie] === "true");
+  const vote = useVote({ collectionName: "Posts", document: post });
 
   const toggleShowAudio = useCallback(() => {
     setShowAudio((value) => {
@@ -54,7 +57,7 @@ export const PostDisplayProvider: FC<{
   }, []);
 
   return (
-    <postDisplayContext.Provider value={{ post, showAudio, toggleShowAudio }}>
+    <postDisplayContext.Provider value={{ post, vote, showAudio, toggleShowAudio }}>
       {children}
     </postDisplayContext.Provider>
   );

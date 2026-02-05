@@ -1,21 +1,25 @@
 "use client";
 
-import type { PostDisplay } from "@/lib/posts/postQueries";
+import { usePostDisplay } from "../PostsPage/usePostDisplay";
 import { getVoteDownStrength, getVoteUpStrength } from "@/lib/votes/voteHelpers";
-import { useVote } from "./useVote";
+import ReactButtons from "./ReactButtons";
 import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-export default function PostVoteButtons({
-  post,
-}: Readonly<{
-  post: PostDisplay;
-}>) {
-  const { onVote, baseScore, voteCount, voteType } = useVote({
-    collectionName: "Posts",
-    document: post,
-  });
+export default function PostVoteButtons() {
+  const {
+    post: { reactors },
+    vote: {
+      onVote,
+      onReact,
+      baseScore,
+      extendedScore,
+      voteCount,
+      voteType,
+      extendedVoteType,
+    },
+  } = usePostDisplay();
   return (
     <div data-component="PostVoteButtons" className="flex items-center gap-1">
       <VoteButton
@@ -46,6 +50,13 @@ export default function PostVoteButtons({
         onVote={onVote}
         large
         className="text-gray-600"
+      />
+      <ReactButtons
+        reactors={reactors}
+        extendedScore={extendedScore}
+        extendedVoteType={extendedVoteType}
+        onReact={onReact}
+        className="ml-3"
       />
     </div>
   );
