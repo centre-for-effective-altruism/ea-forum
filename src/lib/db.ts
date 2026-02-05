@@ -10,6 +10,7 @@ import { vector } from "@electric-sql/pglite/vector";
 import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { cube } from "@electric-sql/pglite/contrib/cube";
 import { defineRelations } from "drizzle-orm";
+import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
   comments,
@@ -190,12 +191,9 @@ const relations = defineRelations(
   }),
 );
 
-if (!process.env.DATABASE_URL && !isAnyTest()) {
-  throw new Error("Postgres URL is not configured");
-}
-
-export const db = isAnyTest()
-  ? pgLiteDrizzle({
+const createDb = () => {
+  if (isAnyTest()) {
+    return pgLiteDrizzle({
       relations,
       logger: process.env.LOG_DRIZZLE_QUERIES === "true",
       // We supply a custom client here with extensions. Note this just makes the
@@ -213,11 +211,23 @@ export const db = isAnyTest()
           cube,
         },
       }),
-    })
-  : pgDrizzle(process.env.DATABASE_URL, {
-      relations,
-      logger: process.env.LOG_DRIZZLE_QUERIES === "true",
     });
+  }
+  if (!process.env.DATABASE_URL) {
+    throw new Error("Postgres URL is not configured");
+  }
+  const db = pgDrizzle(process.env.DATABASE_URL, {
+    relations,
+    logger: process.env.LOG_DRIZZLE_QUERIES === "true",
+  });
+  if (process.env.ENABLE_QUERY_PERFORMANCE_LOGGER) {
+    const explainAnalyze = process.env.ENABLE_QUERY_PERFORMANCE_LOGGER === "full";
+    createPerformanceLogger(db.$client, explainAnalyze);
+  }
+  return db;
+};
+
+export const db = createDb();
 
 export type Db = typeof db;
 
