@@ -87,6 +87,8 @@ const getCommentProjection = (currentUserId: string | null) => {
           _id: true,
           slug: true,
           title: true,
+          userId: true,
+          coauthorUserIds: true,
         },
       },
     },

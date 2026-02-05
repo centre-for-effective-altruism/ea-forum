@@ -3,19 +3,24 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
-import { userGetProfileUrl, userIsNew } from "@/lib/users/userHelpers";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
+import {
+  userGetProfileUrl,
+  userIsNew,
+  userIsPostAuthor,
+} from "@/lib/users/userHelpers";
 import clsx from "clsx";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
+import SproutIcon from "../Icons/SproutIcon";
+import AuthorIcon from "../Icons/AuthorIcon";
+import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
 import UsersTooltip from "../UsersTooltip";
-import CommentVoteButtons from "../Voting/CommentVoteButtons";
+import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
-import Tooltip from "../Tooltip";
-import SproutIcon from "../Icons/SproutIcon";
 
 export default function CommentItem({
   node: { comment, depth, children },
@@ -34,7 +39,8 @@ export default function CommentItem({
   const toggleExpanded = useCallback(() => {
     setExpanded((expanded) => !expanded);
   }, []);
-  const { _id, user, html, postedAt } = comment;
+  const { _id, user, html, postedAt, post } = comment;
+  const isPostAuthor = userIsPostAuthor(user, post);
   return (
     <div
       data-component="CommentItem"
@@ -72,6 +78,14 @@ export default function CommentItem({
               )}
             </Type>
           </UsersTooltip>
+          {isPostAuthor && (
+            <Tooltip
+              title={<Type style="bodySmall">Post author</Type>}
+              placement="bottom"
+            >
+              <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
+            </Tooltip>
+          )}
           {user && userIsNew(user) && (
             <Tooltip
               title={

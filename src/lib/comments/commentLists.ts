@@ -63,6 +63,12 @@ export const commentListProjection = (currentUserId: string | null) =>
           deleted: isNotTrue,
         },
       },
+      post: {
+        columns: {
+          userId: true,
+          coauthorUserIds: true,
+        },
+      },
       ...(currentUserId
         ? {
             votes: {
