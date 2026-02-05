@@ -93,13 +93,21 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           <PostAudioPlayer className="mt-10" />
           <LinkPostMessage post={post} className="mt-10" />
           <PostBody html={bodyHtml} className="my-10" />
-          <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
-            <PostVoteButtons />
-            <div className="flex items-center gap-5">
-              <PostShareButton post={post} />
-              <PostTripleDotMenu post={post} orientation="horizontal" hideBookmark />
+          {!post.shortform && (
+            <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
+              <div className="grow">
+                <PostVoteButtons />
+              </div>
+              <div className="flex items-center gap-5">
+                <PostShareButton post={post} />
+                <PostTripleDotMenu
+                  post={post}
+                  orientation="horizontal"
+                  hideBookmark
+                />
+              </div>
             </div>
-          </div>
+          )}
           <MorePostsLikeThis />
         </PostColumn>
       </ReadProgress>
