@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react/jsx-runtime";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
@@ -15,6 +16,7 @@ import {
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
+import TruncationContainer from "../TruncationContainer";
 import PostsTooltip from "../PostsTooltip";
 import UsersName from "../UsersName";
 import PostIcons from "./PostIcons";
@@ -41,6 +43,7 @@ export default function PostsItem({
     voteCount,
     sticky,
     user,
+    coauthors,
     readStatus,
   } = post;
   const postLink = postGetPageUrl({ post });
@@ -110,7 +113,18 @@ export default function PostsItem({
             </div>
             <Type style="bodySmall">
               <InteractionWrapper className="inline">
-                <UsersName user={user} />
+                <TruncationContainer
+                  items={[
+                    <UsersName key="author" user={user} />,
+                    ...(coauthors ?? []).map((coauthor) => (
+                      <Fragment key={coauthor._id}>
+                        , <UsersName user={coauthor} />
+                      </Fragment>
+                    )),
+                  ]}
+                  gap={0}
+                  className="inline"
+                />
               </InteractionWrapper>
               {" · "}
               <TimeAgo

@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts, User } from "../schema";
-import { userBaseProjection } from "../users/userQueries";
+import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
 import { isNotTrue } from "../utils/queryHelpers";
@@ -56,6 +56,7 @@ export const fetchPostDisplay = async (
       sharingSettings: true,
     },
     extras: {
+      coauthors: coauthorsSelector,
       tags: postTagsProjection,
       reactors: reactorsSelector("Posts"),
       ...(currentUserId

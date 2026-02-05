@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
-import { userBaseProjection } from "../users/userQueries";
+import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
   htmlSubstring,
@@ -111,6 +111,7 @@ export const postsListProjection = (
       shortform: true,
     },
     extras: {
+      coauthors: coauthorsSelector,
       customHtmlHighlight: (posts, { sql }) =>
         htmlSubstring(
           sql`${posts}."customHighlight"->>'html'`,
