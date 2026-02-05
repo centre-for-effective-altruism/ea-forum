@@ -20,8 +20,8 @@ import clsx from "clsx";
 
 export default function Tooltip({
   placement,
-  className = "",
-  tooltipClassName = "",
+  className,
+  tooltipClassName,
   title,
   As = "div",
   children,
