@@ -105,7 +105,7 @@ export default function CommentItem({
               {formatRelativeTime(postedAt, { style: "short" })}
             </Type>
           </Tooltip>
-          <CommentVoteButtons comment={comment} />
+          <CommentVoteButtons comment={comment} className="grow" />
           <Link href={`#${_id}`}>
             <LinkIcon className="w-[16px] text-gray-600 hover:opacity-70" />
           </Link>
