@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
@@ -51,6 +52,11 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             <div>
               <Type style="bodyMedium">
                 <UsersName user={post.user} pageSectionContext="post_header" />
+                {post.coauthors?.map((coauthor) => (
+                  <Fragment key={coauthor._id}>
+                    , <UsersName user={coauthor} pageSectionContext="post_header" />
+                  </Fragment>
+                ))}
               </Type>
               <Type style="bodyMedium" className="text-gray-600">
                 {readTimeMinutes} min read

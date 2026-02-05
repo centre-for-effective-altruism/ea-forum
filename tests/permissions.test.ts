@@ -195,8 +195,8 @@ suite("Permissions", () => {
       const author = await createTestUser({ deleted: true });
       const post = await createTestPost({ userId: author._id });
       const list = await fetchPostsListById(null, post._id);
-      expect(list._id).toBe(post._id);
-      expect(list.user).toBe(null);
+      expect(list!._id).toBe(post._id);
+      expect(list!.user).toBe(null);
     });
     test("Public post with deleted group is fetched without group", async () => {
       const group = await createTestGroup({ deleted: true });
@@ -204,6 +204,18 @@ suite("Permissions", () => {
       const list = await fetchPostsListById(null, post._id);
       expect(list!._id).toBe(post._id);
       expect(list!.group).toBe(null);
+    });
+    test("Post lists don't include deleted coauthors", async () => {
+      const [coauthor1, coauthor2] = await Promise.all([
+        createTestUser(),
+        createTestUser({ deleted: true }),
+      ]);
+      const post = await createTestPost({
+        coauthorUserIds: [coauthor1._id, coauthor2._id],
+      });
+      const list = await fetchPostsListById(null, post._id);
+      expect(list!.coauthors).toHaveLength(1);
+      expect(list!.coauthors[0]._id).toBe(coauthor1._id);
     });
   });
   suite("Comment list permissions", () => {
