@@ -68,6 +68,20 @@ export const commentListProjection = (currentUserId: string | null) =>
           userId: true,
           coauthorUserIds: true,
         },
+        with: {
+          ...(currentUserId
+            ? {
+                readStatus: {
+                  columns: {
+                    lastUpdated: true,
+                  },
+                  where: {
+                    userId: currentUserId,
+                  },
+                },
+              }
+            : {}),
+        },
       },
       ...(currentUserId
         ? {

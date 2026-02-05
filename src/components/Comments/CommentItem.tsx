@@ -41,6 +41,9 @@ export default function CommentItem({
   }, []);
   const { _id, user, html, postedAt, post } = comment;
   const isPostAuthor = userIsPostAuthor(user, post);
+  const isNew =
+    !!post?.readStatus?.[0]?.lastUpdated &&
+    new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
   return (
     <div
       data-component="CommentItem"
@@ -51,6 +54,7 @@ export default function CommentItem({
           ? "bg-(--color-comment-odd)"
           : "bg-(--color-comment-even)",
         !borderless && depth === 0 ? "" : "border-r-0",
+        isNew && "border-l-primary-light border-l-[4px]",
         className,
       )}
     >
