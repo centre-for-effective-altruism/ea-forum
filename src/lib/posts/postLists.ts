@@ -255,7 +255,7 @@ export const fetchStickyPostsList = ({
 export const fetchPostsListById = async (
   currentUserId: string | null,
   postId: string,
-) => {
+): Promise<PostListItem | null> => {
   const posts = await fetchPostsList({
     currentUserId,
     where: {
