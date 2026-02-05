@@ -7,7 +7,8 @@ import {
 } from "./testHelpers";
 import { db } from "@/lib/db";
 import { performVote } from "@/lib/votes/voteMutations";
-import { fetchCommentReactors, fetchPostReactors } from "@/lib/votes/fetchReactors";
+import { fetchPostDisplay } from "@/lib/posts/postQueries";
+import { fetchCommentsListItem } from "@/lib/comments/commentLists";
 
 suite("Reactions", () => {
   test("Can fetch post reactors", async () => {
@@ -45,12 +46,14 @@ suite("Reactions", () => {
         extendedVoteType: { agree: true, disagree: false },
       }),
     ]);
-    const reactors = await fetchPostReactors(post._id);
+    const fetchedPost = await fetchPostDisplay(null, post._id);
+    expect(fetchedPost).not.toBeNull();
+    const { reactors } = fetchedPost!;
     const expectedKeys = ["helpful", "laugh", "love"];
-    expect(Object.keys(reactors).sort()).toEqual(expectedKeys.sort());
-    expect(reactors.helpful.sort()).toEqual(["publicReactor1", "publicReactor2"]);
-    expect(reactors.laugh).toEqual(["publicReactor1"]);
-    expect(reactors.love).toEqual(["publicReactor2"]);
+    expect(Object.keys(reactors!).sort()).toEqual(expectedKeys.sort());
+    expect(reactors?.helpful.sort()).toEqual(["publicReactor1", "publicReactor2"]);
+    expect(reactors?.laugh).toEqual(["publicReactor1"]);
+    expect(reactors?.love).toEqual(["publicReactor2"]);
   });
   test("Can fetch comment reactors", async () => {
     const post = await createTestPost();
@@ -89,18 +92,24 @@ suite("Reactions", () => {
         extendedVoteType: { agree: true, disagree: false },
       }),
     ]);
-    const reactors = await fetchCommentReactors(post._id);
-    expect(Object.keys(reactors).sort()).toEqual(
-      [comment1._id, comment2._id].sort(),
-    );
-    const reactors1 = reactors[comment1._id];
-    expect(Object.keys(reactors1).sort()).toEqual(["helpful", "laugh"].sort());
-    expect(reactors1.helpful).toEqual(["publicReactor1"]);
-    expect(reactors1.laugh).toEqual(["publicReactor1"]);
-    const reactors2 = reactors[comment2._id];
-    expect(Object.keys(reactors2).sort()).toEqual(["helpful", "love"].sort());
-    expect(reactors2.helpful).toEqual(["publicReactor2"]);
-    expect(reactors2.helpful).toEqual(["publicReactor2"]);
+    const fetchedComment1 = await fetchCommentsListItem({
+      currentUser: null,
+      commentId: comment1._id,
+    });
+    expect(fetchedComment1).not.toBeNull();
+    const { reactors: reactors1 } = fetchedComment1;
+    expect(Object.keys(reactors1!).sort()).toEqual(["helpful", "laugh"].sort());
+    expect(reactors1?.helpful).toEqual(["publicReactor1"]);
+    expect(reactors1?.laugh).toEqual(["publicReactor1"]);
+    const fetchedComment2 = await fetchCommentsListItem({
+      currentUser: null,
+      commentId: comment2._id,
+    });
+    expect(fetchedComment2).not.toBeNull();
+    const { reactors: reactors2 } = fetchedComment2;
+    expect(Object.keys(reactors2!).sort()).toEqual(["helpful", "love"].sort());
+    expect(reactors2?.helpful).toEqual(["publicReactor2"]);
+    expect(reactors2?.helpful).toEqual(["publicReactor2"]);
   });
   test("Can react to post", async () => {
     const [post, reactor1, reactor2] = await Promise.all([

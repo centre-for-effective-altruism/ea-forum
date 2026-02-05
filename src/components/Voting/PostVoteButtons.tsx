@@ -9,6 +9,7 @@ import Type from "../Type";
 
 export default function PostVoteButtons() {
   const {
+    post: { reactors },
     vote: {
       onVote,
       onReact,
@@ -18,7 +19,6 @@ export default function PostVoteButtons() {
       voteType,
       extendedVoteType,
     },
-    reactors,
   } = usePostDisplay();
   return (
     <div data-component="PostVoteButtons" className="flex items-center gap-1">

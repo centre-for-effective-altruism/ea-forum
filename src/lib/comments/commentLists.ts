@@ -1,12 +1,13 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import type { User } from "../schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
 import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
+import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
-import { User } from "@sentry/nextjs";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -53,6 +54,7 @@ export const commentListProjection = (currentUserId: string | null) =>
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
+      reactors: reactorsSelector("Comments"),
     },
     with: {
       user: {

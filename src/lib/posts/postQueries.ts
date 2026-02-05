@@ -5,6 +5,7 @@ import { userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
 import { isNotTrue } from "../utils/queryHelpers";
+import { reactorsSelector } from "../votes/reactorsSelector";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -56,6 +57,7 @@ export const fetchPostDisplay = async (
     },
     extras: {
       tags: postTagsProjection,
+      reactors: reactorsSelector("Posts"),
       ...(currentUserId
         ? {
             currentUserIsShared: currentUserIsSharedSelector(currentUserId),

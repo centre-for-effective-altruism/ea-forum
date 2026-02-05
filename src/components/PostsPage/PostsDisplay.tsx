@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
-import { fetchPostReactorsWithCache } from "@/lib/votes/fetchReactors";
 import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatShortDate } from "@/lib/timeUtils";
@@ -28,10 +27,7 @@ import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
-  const [post, postReactors] = await Promise.all([
-    fetchPostDisplay(currentUser, postId),
-    fetchPostReactorsWithCache(postId),
-  ]);
+  const post = await fetchPostDisplay(currentUser, postId);
   if (!post) {
     notFound();
   }
@@ -44,7 +40,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
   );
 
   return (
-    <PostDisplayProvider post={post} reactors={postReactors}>
+    <PostDisplayProvider post={post}>
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">

@@ -10,7 +10,6 @@ import {
   useState,
 } from "react";
 import type { PostDisplay } from "@/lib/posts/postQueries";
-import type { PostReactors } from "@/lib/votes/fetchReactors";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
 import { useTracking } from "@/lib/analyticsEvents";
@@ -19,7 +18,6 @@ import { useVote, UseVoteResult } from "@/components/Voting/useVote";
 type PostDisplayContext = {
   post: PostDisplay;
   vote: UseVoteResult;
-  reactors: PostReactors;
   showAudio: boolean;
   toggleShowAudio: () => void;
 };
@@ -30,9 +28,8 @@ const audioCookie = "show_post_podcast_player";
 
 export const PostDisplayProvider: FC<{
   post: PostDisplay;
-  reactors: PostReactors;
   children: ReactNode;
-}> = ({ post, reactors, children }) => {
+}> = ({ post, children }) => {
   const { captureEvent } = useTracking();
   const { recordPostView } = useRecordPostView(post);
   const [cookies, setCookie] = useCookiesWithConsent([audioCookie]);
@@ -60,9 +57,7 @@ export const PostDisplayProvider: FC<{
   }, []);
 
   return (
-    <postDisplayContext.Provider
-      value={{ post, vote, reactors, showAudio, toggleShowAudio }}
-    >
+    <postDisplayContext.Provider value={{ post, vote, showAudio, toggleShowAudio }}>
       {children}
     </postDisplayContext.Provider>
   );

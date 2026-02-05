@@ -35,7 +35,7 @@ const PublicTooltipContent: FC<{
   currentUser: CurrentUser | null;
   reaction: ReactionOption;
   isSelected: boolean;
-  reactors?: Record<string, string[]>;
+  reactors?: Record<string, string[]> | null;
 }> = ({ currentUser, reaction, isSelected, reactors }) => {
   let displayNames = reactors?.[reaction.name] ?? [];
   if (currentUser) {
@@ -85,7 +85,7 @@ export default function ReactButtons({
   onReact,
   className,
 }: Readonly<{
-  reactors: Record<string, string[]>;
+  reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
