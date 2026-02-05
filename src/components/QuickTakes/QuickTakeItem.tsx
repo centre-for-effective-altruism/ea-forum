@@ -17,16 +17,15 @@ export default function QuickTakeItem({
   const { baseScore, voteCount, user, postedAt, descendentCount, html } = quickTake;
   return (
     <article
-      className="max-w-full rounded bg-gray-50 border border-gray-100 px-4 py-3"
       data-component="QuickTakeItem"
+      className="max-w-full rounded bg-gray-50 border border-gray-100 px-4 py-3"
     >
-      <div className="flex flex-row w-full gap-2 items-center mb-2 text-gray-600">
+      <div className="flex flex-row gap-2 items-center mb-2 text-gray-600">
         <Score baseScore={baseScore} voteCount={voteCount} orient="horizontal" />
         <Type style="body" className="text-black font-[700]">
           {user ? (
             <Link href={userGetProfileUrl({ user })}>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <UsersTooltip As="span" user={user as any /* TODO types */}>
+              <UsersTooltip As="span" user={user}>
                 {user.displayName}
               </UsersTooltip>
             </Link>
@@ -34,7 +33,8 @@ export default function QuickTakeItem({
             "[Anonymous]"
           )}
         </Type>
-        <TimeAgo time={postedAt} className="grow" />
+        <TimeAgo time={postedAt} />
+        <div className="grow" />
         <Type
           style="body"
           className="flex flex-row gap-1 cursor-pointer hover:text-black"
