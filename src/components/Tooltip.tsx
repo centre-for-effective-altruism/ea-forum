@@ -16,6 +16,7 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
+import clsx from "clsx";
 
 export default function Tooltip({
   placement,
@@ -73,10 +74,11 @@ export default function Tooltip({
             ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className={`
-              absolute bg-(--color-tooltip-background) text-gray-50 rounded
-              z-(--zindex-tooltip) px-2 py-1 overflow-hidden ${tooltipClassName}
-            `}
+            className={clsx(
+              "absolute bg-(--color-tooltip-background) text-gray-50 rounded",
+              "z-(--zindex-tooltip) px-2 py-1 overflow-hidden",
+              tooltipClassName,
+            )}
             data-component="Tooltip"
           >
             {title}

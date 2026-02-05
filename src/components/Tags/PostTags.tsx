@@ -23,6 +23,7 @@ export default async function PostTags({
     <TruncationContainer
       items={items}
       gap={4}
+      canShowMore
       className={clsx(
         "flex flex-wrap items-center gap-1 w-full overflow-hidden",
         className,

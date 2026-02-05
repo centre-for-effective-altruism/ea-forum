@@ -1,6 +1,5 @@
 "use client";
 
-import { Fragment } from "react/jsx-runtime";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
@@ -112,29 +111,37 @@ export default function PostsItem({
               </Type>
             </div>
             <Type style="bodySmall">
-              <InteractionWrapper className="inline">
+              <InteractionWrapper>
                 <TruncationContainer
                   items={[
                     <UsersName key="author" user={user} />,
                     ...(coauthors ?? []).map((coauthor) => (
-                      <Fragment key={coauthor._id}>
-                        , <UsersName user={coauthor} />
-                      </Fragment>
+                      <span key={coauthor._id}>
+                        <span className="coauthor-comma">, </span>
+                        <UsersName user={coauthor} />
+                      </span>
                     )),
                   ]}
+                  tooltipClassName="[&_.coauthor-comma]:hidden"
                   gap={0}
-                  className="inline"
+                  hiddenItemsTooltip
+                  afterNodeTextStyle="bodySmall"
+                  afterNodeFormat={(count) => `+ ${count} more`}
+                  finalNode={
+                    <>
+                      <span className="px-1">·</span>
+                      <TimeAgo
+                        As="span"
+                        textStyle="bodySmall"
+                        time={post.postedAt}
+                        includeAgo
+                      />
+                      <span className="px-1">·</span>
+                      <span>{readTime}m read</span>
+                    </>
+                  }
                 />
               </InteractionWrapper>
-              {" · "}
-              <TimeAgo
-                As="span"
-                textStyle="bodySmall"
-                time={post.postedAt}
-                includeAgo
-              />
-              {" · "}
-              {readTime}m read
             </Type>
           </div>
           <InteractionWrapper>
