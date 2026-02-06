@@ -3,7 +3,7 @@
 import { z } from "zod/v4";
 import { actionClient } from "../actionClient";
 import { getCurrentUser } from "../users/currentUser";
-import { createPostComment } from "./commentMutations";
+import { createPostComment, updateCommentPinnedOnProfile } from "./commentMutations";
 import { fetchCommentsListItem, fetchFrontpageQuickTakes } from "./commentLists";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 
@@ -62,4 +62,24 @@ export const fetchQuickTakesAction = actionClient
       offset,
       limit,
     });
+  });
+
+export const updateCommentPinnedOnProfileAction = actionClient
+  .inputSchema(
+    z.object({
+      commentId: z.string(),
+      pinned: z.boolean(),
+    }),
+  )
+  .action(async ({ parsedInput: { commentId, pinned } }) => {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Please login");
+    }
+    const isPinnedOnProfile = await updateCommentPinnedOnProfile(
+      user,
+      commentId,
+      pinned,
+    );
+    return { isPinnedOnProfile };
   });

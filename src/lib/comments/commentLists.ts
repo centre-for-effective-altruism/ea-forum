@@ -52,6 +52,7 @@ export const commentListProjection = (currentUserId: string | null) =>
       descendentCount: true,
       deleted: true,
       tagCommentType: true,
+      isPinnedOnProfile: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),

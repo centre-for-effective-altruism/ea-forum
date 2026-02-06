@@ -1,3 +1,6 @@
+import type { CurrentUser } from "../users/currentUser";
+import type { Comment } from "../schema";
+import type { CommentsList } from "./commentLists";
 import { getSiteUrl } from "../routeHelpers";
 import { TagCommentType, tagGetCommentLink } from "../tags/tagHelpers";
 
@@ -65,3 +68,19 @@ export const commentGetPageUrl = ({
     permalink,
     isAbsolute,
   });
+
+export const userCanPinCommentOnProfile = (
+  user: CurrentUser | null,
+  comment: Pick<Comment, "userId"> | CommentsList,
+) => {
+  if (!user) {
+    return false;
+  }
+  if (user.isAdmin) {
+    return true;
+  }
+  if ("user" in comment) {
+    return user._id === comment.user?._id;
+  }
+  return user._id === comment.userId;
+};

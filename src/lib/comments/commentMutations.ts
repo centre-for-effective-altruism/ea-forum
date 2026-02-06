@@ -26,6 +26,8 @@ import {
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
 } from "./commentCallbacks";
+import { logFieldChanges } from "../fieldChanges";
+import { userCanPinCommentOnProfile } from "./commentHelpers";
 
 export const createPostComment = async ({
   user,
@@ -182,4 +184,45 @@ export const createPostComment = async ({
   void elasticSyncDocument("Comments", commentId);
 
   return commentId;
+};
+
+export const updateCommentPinnedOnProfile = async (
+  currentUser: CurrentUser,
+  commentId: string,
+  isPinnedOnProfile: boolean,
+) => {
+  const result = await db.transaction(async (txn) => {
+    const comment = await txn.query.comments.findFirst({
+      columns: {
+        userId: true,
+        isPinnedOnProfile: true,
+      },
+      where: {
+        _id: commentId,
+      },
+    });
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+    if (isPinnedOnProfile === comment.isPinnedOnProfile) {
+      return;
+    }
+    if (!userCanPinCommentOnProfile(currentUser, comment)) {
+      throw new Error("You do not have permission to do this");
+    }
+    await Promise.all([
+      txn
+        .update(comments)
+        .set({ isPinnedOnProfile })
+        .where(eq(comments._id, commentId)),
+      logFieldChanges(txn, currentUser._id, {
+        documentId: commentId,
+        fieldName: "isPinnedOnProfile",
+        oldValue: comment.isPinnedOnProfile,
+        newValue: isPinnedOnProfile,
+      }),
+    ]);
+    return isPinnedOnProfile;
+  });
+  return result;
 };

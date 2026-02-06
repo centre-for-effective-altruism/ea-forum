@@ -1,10 +1,12 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
+import { usePinCommentOnProfile } from "@/lib/hooks/useCommentModerationActions";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
+import PinIcon from "../Icons/PinIcon";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 
@@ -21,10 +23,11 @@ export default function CommentTripleDotMenu({
     comment._id,
     comment.bookmarks?.[0]?.active ?? false,
   );
+  const { isPinnedOnProfile, toggleIsPinnedOnProfile } =
+    usePinCommentOnProfile(comment);
 
   // TODO:
   // Edit
-  // Pin to profile
   // Subscriptions
   // Shortform frontpage
   // Delete
@@ -41,6 +44,15 @@ export default function CommentTripleDotMenu({
         placement="bottom-end"
         className="text-gray-900"
         items={[
+          toggleIsPinnedOnProfile
+            ? {
+                title: isPinnedOnProfile
+                  ? "Unpin from user profile"
+                  : "Pin to user profile",
+                Icon: PinIcon,
+                onClick: toggleIsPinnedOnProfile,
+              }
+            : null,
           {
             title: isBookmarked ? "Saved" : "Save",
             Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
@@ -56,7 +68,7 @@ export default function CommentTripleDotMenu({
         <button
           aria-label="Comment options"
           className="
-            text-gray-600 hover:text-gray-900 cursor-pointer flex items-center]
+            text-gray-600 hover:text-gray-900 cursor-pointer flex items-center
           "
         >
           <EllipsisVerticalIcon className="w-5 text-gray-600 hover:text-gray-1000" />
