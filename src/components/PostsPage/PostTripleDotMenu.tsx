@@ -55,6 +55,8 @@ export default function PostTripleDotMenu({
   className?: string;
 }>) {
   const [reportOpen, setReportOpen] = useState(false);
+  const openReport = useCallback(() => setReportOpen(true), []);
+  const closeReport = useCallback(() => setReportOpen(false), []);
   const { subscriptionMenuItems } = usePostSubscriptions(post);
   const editLink = usePostEditLink(post);
   const duplicateEventLink = useDuplicateEventLink(post);
@@ -77,8 +79,6 @@ export default function PostTripleDotMenu({
   const moveToDraft = useMoveToDraft(post);
   const archiveDraft = useArchiveDraft(post);
   const approveNewUser = useApproveNewUser(post);
-  const openReport = useCallback(() => setReportOpen(true), []);
-  const closeReport = useCallback(() => setReportOpen(false), []);
 
   // TODO: Remaining actions from PostActions.tsx - do we need these?
   //  - resync rss

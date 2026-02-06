@@ -148,6 +148,13 @@ const relations = defineRelations(
           deleted: false,
         },
       }),
+      bookmarks: r.many.bookmarks({
+        from: r.comments._id,
+        to: r.bookmarks.documentId,
+        where: {
+          collectionName: "Comments",
+        },
+      }),
     },
     tags: {
       comments: r.many.comments({

@@ -1,7 +1,10 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
+import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
+import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
+import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 
@@ -13,12 +16,36 @@ export default function CommentTripleDotMenu({
   const [reportOpen, setReportOpen] = useState(false);
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
+  const { isBookmarked, toggleIsBookmarked } = useUpdateBookmark(
+    "Comments",
+    comment._id,
+    comment.bookmarks?.[0]?.active ?? false,
+  );
+
+  // TODO:
+  // Edit
+  // Pin to profile
+  // Subscriptions
+  // Shortform frontpage
+  // Delete
+  // Retract
+  // Lock thread
+  // Ban user from post
+  // Ban user from all posts
+  // Ban user from all personal posts
+  // Toggle is moderator comment
+
   return (
     <>
       <DropdownMenu
         placement="bottom-end"
         className="text-gray-900"
         items={[
+          {
+            title: isBookmarked ? "Saved" : "Save",
+            Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
+            onClick: toggleIsBookmarked,
+          },
           {
             title: "Report",
             Icon: ExclamationCircleIcon,

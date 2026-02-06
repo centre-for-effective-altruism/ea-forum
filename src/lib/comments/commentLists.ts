@@ -93,6 +93,14 @@ export const commentListProjection = (currentUserId: string | null) =>
       },
       ...(currentUserId
         ? {
+            bookmarks: {
+              columns: {
+                active: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
+            },
             votes: {
               columns: {
                 voteType: true,
