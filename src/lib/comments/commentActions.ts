@@ -3,9 +3,13 @@
 import { z } from "zod/v4";
 import { actionClient } from "../actionClient";
 import { getCurrentUser } from "../users/currentUser";
-import { createPostComment, updateCommentPinnedOnProfile } from "./commentMutations";
 import { fetchCommentsListItem, fetchFrontpageQuickTakes } from "./commentLists";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
+import {
+  createPostComment,
+  updateCommentPinnedOnProfile,
+  updateQuickTakeFrontpage,
+} from "./commentMutations";
 
 export const createPostCommentAction = actionClient
   .inputSchema(
@@ -82,4 +86,24 @@ export const updateCommentPinnedOnProfileAction = actionClient
       pinned,
     );
     return { isPinnedOnProfile };
+  });
+
+export const updateQuickTakeFrontpageAction = actionClient
+  .inputSchema(
+    z.object({
+      commentId: z.string(),
+      frontpage: z.boolean(),
+    }),
+  )
+  .action(async ({ parsedInput: { commentId, frontpage } }) => {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Please login");
+    }
+    const shortformFrontpage = await updateQuickTakeFrontpage(
+      user,
+      commentId,
+      frontpage,
+    );
+    return { shortformFrontpage };
   });

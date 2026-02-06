@@ -1,7 +1,12 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
-import { usePinCommentOnProfile } from "@/lib/hooks/useCommentModerationActions";
+import { userCanModeratePost } from "@/lib/posts/postsHelpers";
+import {
+  usePinCommentOnProfile,
+  useQuickTakeFrontpage,
+} from "@/lib/hooks/useCommentModerationActions";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
@@ -15,6 +20,7 @@ export default function CommentTripleDotMenu({
 }: Readonly<{
   comment: CommentsList;
 }>) {
+  const { currentUser } = useCurrentUser();
   const [reportOpen, setReportOpen] = useState(false);
   const openReport = useCallback(() => setReportOpen(true), []);
   const closeReport = useCallback(() => setReportOpen(false), []);
@@ -25,18 +31,8 @@ export default function CommentTripleDotMenu({
   );
   const { isPinnedOnProfile, toggleIsPinnedOnProfile } =
     usePinCommentOnProfile(comment);
-
-  // TODO:
-  // Edit
-  // Subscriptions
-  // Shortform frontpage
-  // Delete
-  // Retract
-  // Lock thread
-  // Ban user from post
-  // Ban user from all posts
-  // Ban user from all personal posts
-  // Toggle is moderator comment
+  const { isQuickTakeFrontpage, toggleQuickTakeFrontpage } =
+    useQuickTakeFrontpage(comment);
 
   return (
     <>
@@ -44,6 +40,7 @@ export default function CommentTripleDotMenu({
         placement="bottom-end"
         className="text-gray-900"
         items={[
+          // TODO Edit comment
           toggleIsPinnedOnProfile
             ? {
                 title: isPinnedOnProfile
@@ -53,6 +50,7 @@ export default function CommentTripleDotMenu({
                 onClick: toggleIsPinnedOnProfile,
               }
             : null,
+          // TODO subscriptions
           {
             title: isBookmarked ? "Saved" : "Save",
             Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
@@ -63,6 +61,23 @@ export default function CommentTripleDotMenu({
             Icon: ExclamationCircleIcon,
             onClick: openReport,
           },
+          userCanModeratePost(currentUser, comment.post) ? "divider" : null,
+          toggleQuickTakeFrontpage
+            ? {
+                title: isQuickTakeFrontpage
+                  ? "Remove from frontpage"
+                  : "Allow on frontpage",
+                onClick: toggleQuickTakeFrontpage,
+              }
+            : null,
+          // TODO
+          // Delete
+          // Retract
+          // Lock thread
+          // Ban user from post
+          // Ban user from all posts
+          // Ban user from all personal posts
+          // Toggle is moderator comment
         ]}
       >
         <button

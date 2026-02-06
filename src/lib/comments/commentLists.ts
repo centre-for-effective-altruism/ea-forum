@@ -53,6 +53,8 @@ export const commentListProjection = (currentUserId: string | null) =>
       deleted: true,
       tagCommentType: true,
       isPinnedOnProfile: true,
+      shortform: true,
+      shortformFrontpage: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -70,6 +72,7 @@ export const commentListProjection = (currentUserId: string | null) =>
           _id: true,
           slug: true,
           userId: true,
+          frontpageDate: true,
           coauthorUserIds: true,
         },
         with: {

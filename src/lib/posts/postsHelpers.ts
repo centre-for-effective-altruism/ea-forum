@@ -204,6 +204,26 @@ export const canUserEditPostMetadata = (
   return false;
 };
 
+export const userCanModeratePost = (
+  user: CurrentUser | null,
+  post?: Pick<Post, "userId" | "frontpageDate"> | null,
+): boolean => {
+  if (userCanDo(user, "posts.moderate.all")) {
+    return true;
+  }
+  if (!user || !post) {
+    return false;
+  }
+  if (
+    userCanDo(user, "posts.moderate.own.personal") &&
+    user._id === post.userId &&
+    !post.frontpageDate
+  ) {
+    return true;
+  }
+  return !!(userCanDo(user, "posts.moderate.own") && user._id === post.userId);
+};
+
 export const userCanSuggestPostForCurated = (
   user: CurrentUser | null,
   post: Pick<Post, "frontpageDate" | "curatedDate">,
