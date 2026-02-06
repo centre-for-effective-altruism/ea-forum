@@ -5,6 +5,7 @@ import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import {
   userGetProfileUrl,
   userIsNew,
@@ -37,6 +38,7 @@ export default function CommentItem({
   borderless?: boolean;
   className?: string;
 }>) {
+  const { currentUser } = useCurrentUser();
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = useCallback(() => {
     setExpanded((expanded) => !expanded);
@@ -130,7 +132,7 @@ export default function CommentItem({
           <Link href={`#${_id}`} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>
-          <CommentTripleDotMenu comment={comment} />
+          {currentUser && <CommentTripleDotMenu comment={comment} />}
         </div>
         {expanded && <CommentBody html={html} />}
       </article>
