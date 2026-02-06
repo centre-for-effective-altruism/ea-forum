@@ -183,7 +183,7 @@ export const canUserEditPostMetadata = (
   if (userCanDo(currentUser, "posts.edit.all")) {
     return true;
   }
-  if (post.coauthors.some((user) => user._id === currentUser._id)) {
+  if (post.coauthors?.some((user) => user._id === currentUser._id)) {
     return true;
   }
 

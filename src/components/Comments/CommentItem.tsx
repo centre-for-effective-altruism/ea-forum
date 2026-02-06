@@ -4,17 +4,19 @@ import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
+import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import {
   userGetProfileUrl,
   userIsNew,
   userIsPostAuthor,
 } from "@/lib/users/userHelpers";
+import toast from "react-hot-toast";
 import clsx from "clsx";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
-import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
 import SproutIcon from "../Icons/SproutIcon";
 import AuthorIcon from "../Icons/AuthorIcon";
+import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
 import UsersTooltip from "../UsersTooltip";
@@ -39,6 +41,21 @@ export default function CommentItem({
   const toggleExpanded = useCallback(() => {
     setExpanded((expanded) => !expanded);
   }, []);
+
+  const copyLink = useCallback(async () => {
+    try {
+      const link = commentGetPageUrl({
+        comment,
+        permalink: true,
+        isAbsolute: true,
+      });
+      await navigator.clipboard.writeText(link);
+      toast.success("Copied comment link to clipboard");
+    } catch {
+      toast.error("Something went wrong");
+    }
+  }, [comment]);
+
   const { _id, user, html, postedAt, post } = comment;
   const isPostAuthor = userIsPostAuthor(user, post);
   const isNew =
@@ -110,13 +127,10 @@ export default function CommentItem({
             </Type>
           </Tooltip>
           <CommentVoteButtons comment={comment} className="grow" />
-          <Link href={`#${_id}`}>
-            <LinkIcon className="w-[16px] text-gray-600 hover:opacity-70" />
+          <Link href={`#${_id}`} onClick={copyLink}>
+            <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>
-          <EllipsisVerticalIcon
-            className="cursor-pointer w-[20px] text-gray-600 hover:opacity-70"
-            role="button"
-          />
+          <CommentTripleDotMenu comment={comment} />
         </div>
         {expanded && <CommentBody html={html} />}
       </article>

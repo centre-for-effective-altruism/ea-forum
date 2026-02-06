@@ -51,6 +51,7 @@ export const commentListProjection = (currentUserId: string | null) =>
       topLevelCommentId: true,
       descendentCount: true,
       deleted: true,
+      tagCommentType: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -65,6 +66,8 @@ export const commentListProjection = (currentUserId: string | null) =>
       },
       post: {
         columns: {
+          _id: true,
+          slug: true,
           userId: true,
           coauthorUserIds: true,
         },
@@ -81,6 +84,11 @@ export const commentListProjection = (currentUserId: string | null) =>
                 },
               }
             : {}),
+        },
+      },
+      tag: {
+        columns: {
+          slug: true,
         },
       },
       ...(currentUserId
