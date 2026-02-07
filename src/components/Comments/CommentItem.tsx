@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
-import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import {
@@ -21,16 +20,19 @@ import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
 import UsersTooltip from "../UsersTooltip";
+import CommentDate from "./CommentDate";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
 
 export default function CommentItem({
   node: { comment, depth, children },
+  onToggleExpanded,
   borderless,
   className,
 }: Readonly<{
   node: CommentTreeNode<CommentsList>;
+  onToggleExpanded?: (expanded: boolean) => void;
   /**
    * Don't render a border or outside padding - used for embedding in another
    * component.
@@ -41,8 +43,12 @@ export default function CommentItem({
   const { currentUser } = useCurrentUser();
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = useCallback(() => {
-    setExpanded((expanded) => !expanded);
-  }, []);
+    setExpanded((expanded) => {
+      const newExpanded = !expanded;
+      onToggleExpanded?.(newExpanded);
+      return newExpanded;
+    });
+  }, [onToggleExpanded]);
 
   const copyLink = useCallback(async () => {
     try {
@@ -123,13 +129,9 @@ export default function CommentItem({
               <SproutIcon className="text-new-user-sprout" />
             </Tooltip>
           )}
-          <Tooltip title={<Type>{formatLongDateWithTime(postedAt)}</Type>}>
-            <Type className="text-gray-600">
-              {formatRelativeTime(postedAt, { style: "short" })}
-            </Type>
-          </Tooltip>
+          <CommentDate comment={comment} />
           <CommentVoteButtons comment={comment} className="grow" />
-          <Link href={`#${_id}`} onClick={copyLink}>
+          <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>
           {currentUser && <CommentTripleDotMenu comment={comment} />}

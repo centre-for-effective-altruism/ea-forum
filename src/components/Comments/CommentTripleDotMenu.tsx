@@ -14,11 +14,14 @@ import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import PinIcon from "../Icons/PinIcon";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
+import clsx from "clsx";
 
 export default function CommentTripleDotMenu({
   comment,
+  small,
 }: Readonly<{
   comment: CommentsList;
+  small?: boolean;
 }>) {
   const { currentUser } = useCurrentUser();
   const [reportOpen, setReportOpen] = useState(false);
@@ -86,7 +89,12 @@ export default function CommentTripleDotMenu({
             text-gray-600 hover:text-gray-900 cursor-pointer flex items-center
           "
         >
-          <EllipsisVerticalIcon className="w-5 text-gray-600 hover:text-gray-1000" />
+          <EllipsisVerticalIcon
+            className={clsx(
+              "text-gray-600 hover:text-gray-1000",
+              small ? "w-4" : "w-5",
+            )}
+          />
         </button>
       </DropdownMenu>
       <ReportPopover comment={comment} open={reportOpen} onClose={closeReport} />
