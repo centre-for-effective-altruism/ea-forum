@@ -8,6 +8,7 @@ import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+import { commentTagsProjection } from "../tags/tagQueries";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -60,6 +61,7 @@ export const commentListProjection = (currentUserId: string | null) =>
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
       reactors: reactorsSelector("Comments"),
+      tags: commentTagsProjection,
     },
     with: {
       user: {

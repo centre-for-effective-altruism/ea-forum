@@ -19,6 +19,7 @@ import AuthorIcon from "../Icons/AuthorIcon";
 import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
+import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
 import Tooltip from "../Tooltip";
@@ -130,7 +131,10 @@ export default function CommentItem({
             </Tooltip>
           )}
           <CommentDate comment={comment} />
-          <CommentVoteButtons comment={comment} className="grow" />
+          <CommentVoteButtons comment={comment} />
+          <div className="grow">
+            <CommentTags comment={comment} />
+          </div>
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>

@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import type { posts, Tag } from "../schema";
+import type { comments, posts, Tag } from "../schema";
 import type { RelationalProjection } from "../utils/queryHelpers";
 
 export type TagRelationalProjection = RelationalProjection<typeof db.query.tags>;
@@ -41,7 +41,6 @@ export const postTagsProjection = (postsTable: typeof posts) =>
     SELECT ARRAY_AGG(JSONB_BUILD_OBJECT(
       '_id', post_tags."_id",
       'name', post_tags."name",
-      'shortName', post_tags."shortName",
       'slug', post_tags."slug",
       'core', post_tags."core",
       'baseScore', rel."baseScore"::INTEGER
@@ -53,4 +52,25 @@ export const postTagsProjection = (postsTable: typeof posts) =>
     WHERE
       post_for_tags."_id" = ${postsTable}."_id"
       AND rel."baseScore"::INTEGER > 0
+  `;
+
+export type CommentTag = Pick<
+  Tag,
+  "name" | "shortName" | "slug" | "core" | "postCount"
+>;
+
+export const commentTagsProjection = (commentsTable: typeof comments) =>
+  sql<CommentTag[] | null>`
+    SELECT ARRAY_AGG(JSONB_BUILD_OBJECT(
+      'name', comment_tags."name",
+      'shortName', comment_tags."shortName",
+      'slug', comment_tags."slug",
+      'core', comment_tags."core",
+      'postCount', comment_tags."postCount"
+    ))
+    FROM "Comments" comment_for_tags
+    INNER JOIN "Tags" comment_tags
+      ON comment_tags."_id" = ANY(comment_for_tags."relevantTagIds")
+    WHERE
+      comment_for_tags."_id" = ${commentsTable}."_id"
   `;
