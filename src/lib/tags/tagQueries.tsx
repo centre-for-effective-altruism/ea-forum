@@ -1,8 +1,8 @@
 import { cache } from "react";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
-import type { RelationalProjection } from "../utils/queryHelpers";
 
 export type TagRelationalProjection = RelationalProjection<typeof db.query.tags>;
 
@@ -32,7 +32,8 @@ export const fetchCoreTags = cache(() => {
 
 export type CoreTag = Awaited<ReturnType<typeof fetchCoreTags>>[0];
 
-export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core"> & {
+export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core" | "postCount"> & {
+  description: string | null;
   baseScore: number;
 };
 
@@ -43,6 +44,8 @@ export const postTagsProjection = (postsTable: typeof posts) =>
       'name', post_tags."name",
       'slug', post_tags."slug",
       'core', post_tags."core",
+      'description', ${htmlSubstring(sql`post_tags."description"->>'html'`)},
+      'postCount', post_tags."postCount",
       'baseScore', rel."baseScore"::INTEGER
     ))
     FROM "Posts" post_for_tags
@@ -57,7 +60,7 @@ export const postTagsProjection = (postsTable: typeof posts) =>
 export type CommentTag = Pick<
   Tag,
   "name" | "shortName" | "slug" | "core" | "postCount"
->;
+> & { description: string | null };
 
 export const commentTagsProjection = (commentsTable: typeof comments) =>
   sql<CommentTag[] | null>`
@@ -66,6 +69,7 @@ export const commentTagsProjection = (commentsTable: typeof comments) =>
       'shortName', comment_tags."shortName",
       'slug', comment_tags."slug",
       'core', comment_tags."core",
+      'description', ${htmlSubstring(sql`comment_tags."description"->>'html'`)},
       'postCount', comment_tags."postCount"
     ))
     FROM "Comments" comment_for_tags
