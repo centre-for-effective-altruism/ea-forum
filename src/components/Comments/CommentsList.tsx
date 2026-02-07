@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCommentsList } from "./useCommentsList";
 import clsx from "clsx";
 import Type from "../Type";
@@ -12,7 +14,22 @@ export default function CommentsList({
   borderless?: boolean;
   className?: string;
 }>) {
-  const { comments } = useCommentsList();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { comments, containsCommentWithId } = useCommentsList();
+
+  useEffect(() => {
+    const commentId = searchParams.get("commentId");
+    if (commentId && containsCommentWithId(commentId)) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("commentId");
+      const query = params.toString();
+      const newUrl =
+        window.location.pathname + (query ? `?${query}` : "") + `#${commentId}`;
+      router.replace(newUrl);
+    }
+  }, [containsCommentWithId, searchParams, router]);
+
   return (
     <section
       className={clsx("flex flex-col gap-4", className)}
