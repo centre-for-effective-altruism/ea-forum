@@ -215,7 +215,7 @@ suite("Permissions", () => {
       });
       const list = await fetchPostsListById(null, post._id);
       expect(list!.coauthors).toHaveLength(1);
-      expect(list!.coauthors[0]._id).toBe(coauthor1._id);
+      expect(list!.coauthors?.[0]._id).toBe(coauthor1._id);
     });
   });
   suite("Comment list permissions", () => {

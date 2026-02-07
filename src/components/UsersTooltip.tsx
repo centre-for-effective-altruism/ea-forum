@@ -48,7 +48,7 @@ export default function UsersTooltip({
     <Tooltip
       placement={placement}
       As={As}
-      tooltipClassName="bg-white! text-black! p-0! shadow w-[270px]"
+      tooltipClassName="bg-gray-0! text-gray-900! p-0! shadow w-[270px]"
       title={
         <div
           data-component="UsersTooltip"

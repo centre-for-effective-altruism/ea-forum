@@ -51,7 +51,7 @@ export default function PostsTooltip({
                   <TagChip tag={tag} key={tag._id} />
                 ))}
                 gap={4}
-                className="flex flex-wrap items-center gap-1 w-full overflow-hidden"
+                className="flex flex-wrap items-center w-full overflow-hidden"
               />
             )}
             {htmlHighlight && (

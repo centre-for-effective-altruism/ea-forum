@@ -14,6 +14,7 @@ import { commentsToCommentTree, CommentTreeNode } from "@/lib/comments/CommentTr
 type CommentsListContext = {
   comments: CommentTreeNode<CommentsList>[];
   addTopLevelComment: (comment: CommentsList) => void;
+  containsCommentWithId: (commentId: string) => boolean;
 };
 
 const commentsListContext = createContext<CommentsListContext | null>(null);
@@ -33,8 +34,17 @@ export const CommentsListProvider = ({
   const addTopLevelComment = useCallback((comment: CommentsList) => {
     setLocalComments((comments) => [...comments, comment]);
   }, []);
+  const containsCommentWithId = useCallback(
+    (commentId: string) => {
+      const allComments = [...comments, ...localComments];
+      return allComments.some(({ _id }) => _id === commentId);
+    },
+    [comments, localComments],
+  );
   return (
-    <commentsListContext.Provider value={{ comments: tree, addTopLevelComment }}>
+    <commentsListContext.Provider
+      value={{ comments: tree, addTopLevelComment, containsCommentWithId }}
+    >
       {children}
     </commentsListContext.Provider>
   );

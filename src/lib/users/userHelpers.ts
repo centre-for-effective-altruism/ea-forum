@@ -250,8 +250,9 @@ export const userCanDo = (
 };
 
 type HasUserIdType = { userId: string | null };
+type HasUserType = { user?: { _id: string } | null };
 
-type OwnableDocument = HasUserIdType | User;
+type OwnableDocument = HasUserIdType | HasUserType | User;
 
 /**
  * Check if a user owns a document
@@ -268,8 +269,11 @@ export const userOwns = (
   }
 
   // Document has a userId - it's a post, comment, tag, etc.
-  if ((document as HasUserIdType).userId) {
+  if ("userId" in document) {
     return user._id === (document as HasUserIdType).userId;
+  }
+  if ("user" in document) {
+    return user._id === document.user?._id;
   }
 
   // Document is a user - check for _id or slug equality

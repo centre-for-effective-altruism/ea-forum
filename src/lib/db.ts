@@ -148,6 +148,13 @@ const relations = defineRelations(
           deleted: false,
         },
       }),
+      bookmarks: r.many.bookmarks({
+        from: r.comments._id,
+        to: r.bookmarks.documentId,
+        where: {
+          collectionName: "Comments",
+        },
+      }),
     },
     tags: {
       comments: r.many.comments({
@@ -220,7 +227,9 @@ const createDb = () => {
     relations,
     logger: process.env.LOG_DRIZZLE_QUERIES === "true",
   });
-  if (process.env.ENABLE_QUERY_PERFORMANCE_LOGGER) {
+  if (
+    ["full", "simple"].includes(process.env.ENABLE_QUERY_PERFORMANCE_LOGGER ?? "")
+  ) {
     const explainAnalyze = process.env.ENABLE_QUERY_PERFORMANCE_LOGGER === "full";
     createPerformanceLogger(db.$client, explainAnalyze);
   }

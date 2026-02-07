@@ -2,9 +2,11 @@ import type { CSSProperties, ElementType, MouseEvent, ReactNode } from "react";
 
 const styles = {
   body: "font-sans text-[14px] font-[450]",
-  bodySerif: "font-serif text-[17px] font-[400] tracking-tight",
   bodyMedium: "font-sans text-[14px] font-[500]",
+  bodyHeavy: "font-sans text-[14px] font-[600]",
   bodySmall: "font-sans text-[13px] font-[450]",
+  bodyXSmall: "font-sans text-[12px] font-[500]",
+  bodySerif: "font-serif text-[17px] font-[400] tracking-tight",
   postTitle: "font-sans text-[16px] font-[600]",
   reactScore: "font-sans text-[16px] font-[500]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",

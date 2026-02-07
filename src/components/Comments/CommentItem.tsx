@@ -3,26 +3,37 @@
 import { useCallback, useState } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
-import { userGetProfileUrl, userIsNew } from "@/lib/users/userHelpers";
-import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
+import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import {
+  userGetProfileUrl,
+  userIsNew,
+  userIsPostAuthor,
+} from "@/lib/users/userHelpers";
+import toast from "react-hot-toast";
 import clsx from "clsx";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
-import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
-import CommentBody from "../ContentStyles/CommentBody";
-import UsersTooltip from "../UsersTooltip";
+import SproutIcon from "../Icons/SproutIcon";
+import AuthorIcon from "../Icons/AuthorIcon";
+import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
+import CommentBody from "../ContentStyles/CommentBody";
+import CommentTags from "../Tags/CommentTags";
+import UsersTooltip from "../UsersTooltip";
+import CommentDate from "./CommentDate";
+import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
-import Tooltip from "../Tooltip";
-import SproutIcon from "../Icons/SproutIcon";
 
 export default function CommentItem({
   node: { comment, depth, children },
+  onToggleExpanded,
   borderless,
   className,
 }: Readonly<{
   node: CommentTreeNode<CommentsList>;
+  onToggleExpanded?: (expanded: boolean) => void;
   /**
    * Don't render a border or outside padding - used for embedding in another
    * component.
@@ -30,11 +41,35 @@ export default function CommentItem({
   borderless?: boolean;
   className?: string;
 }>) {
+  const { currentUser } = useCurrentUser();
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = useCallback(() => {
-    setExpanded((expanded) => !expanded);
-  }, []);
-  const { _id, user, html, postedAt } = comment;
+    setExpanded((expanded) => {
+      const newExpanded = !expanded;
+      onToggleExpanded?.(newExpanded);
+      return newExpanded;
+    });
+  }, [onToggleExpanded]);
+
+  const copyLink = useCallback(async () => {
+    try {
+      const link = commentGetPageUrl({
+        comment,
+        permalink: true,
+        isAbsolute: true,
+      });
+      await navigator.clipboard.writeText(link);
+      toast.success("Copied comment link to clipboard");
+    } catch {
+      toast.error("Something went wrong");
+    }
+  }, [comment]);
+
+  const { _id, user, html, postedAt, post } = comment;
+  const isPostAuthor = userIsPostAuthor(user, post);
+  const isNew =
+    !!post?.readStatus?.[0]?.lastUpdated &&
+    new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
   return (
     <div
       data-component="CommentItem"
@@ -45,6 +80,7 @@ export default function CommentItem({
           ? "bg-(--color-comment-odd)"
           : "bg-(--color-comment-even)",
         !borderless && depth === 0 ? "" : "border-r-0",
+        isNew && "border-l-primary-light border-l-[4px]",
         className,
       )}
     >
@@ -72,6 +108,14 @@ export default function CommentItem({
               )}
             </Type>
           </UsersTooltip>
+          {isPostAuthor && (
+            <Tooltip
+              title={<Type style="bodySmall">Post author</Type>}
+              placement="bottom"
+            >
+              <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
+            </Tooltip>
+          )}
           {user && userIsNew(user) && (
             <Tooltip
               title={
@@ -86,19 +130,15 @@ export default function CommentItem({
               <SproutIcon className="text-new-user-sprout" />
             </Tooltip>
           )}
-          <Tooltip title={<Type>{formatLongDateWithTime(postedAt)}</Type>}>
-            <Type className="text-gray-600">
-              {formatRelativeTime(postedAt, { style: "short" })}
-            </Type>
-          </Tooltip>
+          <CommentDate comment={comment} />
           <CommentVoteButtons comment={comment} />
-          <Link href={`#${_id}`}>
-            <LinkIcon className="w-[16px] text-gray-600 hover:opacity-70" />
+          <div className="grow">
+            <CommentTags comment={comment} />
+          </div>
+          <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
+            <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>
-          <EllipsisVerticalIcon
-            className="cursor-pointer w-[20px] text-gray-600 hover:opacity-70"
-            role="button"
-          />
+          {currentUser && <CommentTripleDotMenu comment={comment} />}
         </div>
         {expanded && <CommentBody html={html} />}
       </article>

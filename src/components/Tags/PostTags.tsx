@@ -2,17 +2,17 @@ import type { PostDisplay } from "@/lib/posts/postQueries";
 import { stableSortTags } from "@/lib/tags/tagHelpers";
 import clsx from "clsx";
 import TruncationContainer from "../TruncationContainer";
-import TagChip from "../Tags/TagChip";
 import PostTypeTag from "./PostTypeTag";
+import TagChip from "../Tags/TagChip";
 
-export default async function PostTags({
+export default function PostTags({
   post,
   className,
 }: Readonly<{
   post: PostDisplay;
   className?: string;
 }>) {
-  if (!post.tags) {
+  if (!post.tags?.length) {
     return null;
   }
   const tags = stableSortTags(post.tags);

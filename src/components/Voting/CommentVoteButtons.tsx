@@ -1,6 +1,7 @@
 import type { CommentsList } from "@/lib/comments/commentLists";
 import { getVoteDownStrength, getVoteUpStrength } from "@/lib/votes/voteHelpers";
 import { useVote } from "./useVote";
+import clsx from "clsx";
 import ReactButtons from "./ReactButtons";
 import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
@@ -8,7 +9,8 @@ import Type from "../Type";
 
 export default function CommentVoteButtons({
   comment,
-}: Readonly<{ comment: CommentsList }>) {
+  className,
+}: Readonly<{ comment: CommentsList; className?: string }>) {
   const {
     onVote,
     onReact,
@@ -22,7 +24,10 @@ export default function CommentVoteButtons({
     document: comment,
   });
   return (
-    <div data-component="CommentVoteButtons" className="flex items-center gap-1">
+    <div
+      data-component="CommentVoteButtons"
+      className={clsx("flex items-center gap-1", className)}
+    >
       <div
         className="
           inline-flex items-center h-[22px] px-2

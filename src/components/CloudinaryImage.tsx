@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useRef, CSSProperties, useEffect } from "react";
 import {
   CloudinaryPropsType,
   makeCloudinaryImageUrl,
@@ -16,6 +18,7 @@ export default function CloudinaryImage({
   alt = "",
   fullWidthHeader,
   loading,
+  onLoaded,
   className = "",
   wrapperClassName = "",
 }: Readonly<{
@@ -30,9 +33,20 @@ export default function CloudinaryImage({
   /** Overrides width */
   fullWidthHeader?: boolean;
   loading?: "lazy" | "eager";
+  onLoaded?: () => void;
   className?: string;
   wrapperClassName?: string;
 }>) {
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    // If the image is cached then the normal `onLoad` callback isn't called and
+    // we have to trigger this manually instead
+    if (imgRef.current?.complete) {
+      onLoaded?.();
+    }
+  }, [onLoaded]);
+
   // TODO: Handle dark mode
   const themeOptions = { name: "default" };
 
@@ -131,8 +145,10 @@ export default function CloudinaryImage({
         />
       )}
       <img
+        ref={imgRef}
         alt={alt}
         loading={loading}
+        onLoad={onLoaded}
         src={basicImageUrl}
         style={imageStyle}
         className={className}

@@ -1,6 +1,9 @@
-import { memo } from "react";
+"use client";
+
+import { memo, useState } from "react";
 import CloudinaryImage from "./CloudinaryImage";
 import prand from "pure-rand";
+import clsx from "clsx";
 
 type UserWithProfileImage = {
   displayName: string | null;
@@ -66,7 +69,7 @@ const InitialFallback = memo(function InitialFallback({
       width={`${size}px`}
       height={`${size}px`}
       viewBox={`0 0 ${size} ${size}`}
-      className={`select-none ${className}`}
+      className={clsx("select-none", className)}
     >
       <rect
         fill={background}
@@ -102,7 +105,12 @@ export default function UserProfileImage({
   size: number;
   className?: string;
 }>) {
-  const rootClassName = `rounded-full profile-image-loading ${className}`;
+  const [loaded, setLoaded] = useState(false);
+  const rootClassName = clsx(
+    "rounded-full",
+    !loaded && "profile-image-loading",
+    className,
+  );
   const wrapperClassName = "flex items-center";
 
   if (!user?.displayName) {
@@ -121,7 +129,8 @@ export default function UserProfileImage({
         imgProps={{ q: "100", dpr: "2" }}
         publicId={user.profileImageId}
         alt={user.displayName}
-        className={`${rootClassName} text-[0px]`}
+        onLoaded={() => setLoaded(true)}
+        className={clsx(rootClassName, "text-[0px]")}
         wrapperClassName={wrapperClassName}
         data-component="UserProfileImage"
       />

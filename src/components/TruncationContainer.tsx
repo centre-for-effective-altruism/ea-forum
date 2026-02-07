@@ -10,6 +10,7 @@ import {
 } from "react";
 import Type, { TextStyle } from "./Type";
 import Tooltip from "./Tooltip";
+import clsx from "clsx";
 
 export default function TruncationContainer({
   items,
@@ -126,8 +127,9 @@ export default function TruncationContainer({
       {/* Main visible container */}
       <div
         data-component="TruncationContainer"
+        style={{ gap: `${gap}px` }}
         ref={containerRef}
-        className={className}
+        className={clsx("flex items-center", className)}
       >
         {shownItems.map((item, i) => (
           <Fragment key={i}>{item}</Fragment>

@@ -7,6 +7,7 @@ import {
   flip,
   offset,
   Placement,
+  safePolygon,
   shift,
   useDismiss,
   useFloating,
@@ -23,6 +24,7 @@ export default function Tooltip({
   className,
   tooltipClassName,
   title,
+  interactable,
   As = "div",
   children,
 }: Readonly<{
@@ -30,6 +32,7 @@ export default function Tooltip({
   className?: string;
   tooltipClassName?: string;
   title: ReactNode;
+  interactable?: boolean;
   As?: ElementType;
   children: ReactNode;
 }>) {
@@ -47,9 +50,12 @@ export default function Tooltip({
     middleware: [offset(10), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
-  const hover = useHover(context, { move: false });
+  const hover = useHover(context, {
+    move: false,
+    handleClose: interactable ? safePolygon() : undefined,
+  });
   const focus = useFocus(context);
-  const dismiss = useDismiss(context);
+  const dismiss = useDismiss(context, { outsidePress: true });
   const role = useRole(context, { role: "tooltip" });
   const { getReferenceProps, getFloatingProps } = useInteractions([
     hover,
