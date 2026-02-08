@@ -10,11 +10,17 @@ import {
 } from "react";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import { commentsToCommentTree, CommentTreeNode } from "@/lib/comments/CommentTree";
+import {
+  CommentSorting,
+  defaultCommentSorting,
+} from "@/lib/comments/commentSortings";
 
 type CommentsListContext = {
   comments: CommentTreeNode<CommentsList>[];
   addTopLevelComment: (comment: CommentsList) => void;
   containsCommentWithId: (commentId: string) => boolean;
+  commentSorting: CommentSorting;
+  setCommentSorting: (sorting: CommentSorting) => void;
 };
 
 const commentsListContext = createContext<CommentsListContext | null>(null);
@@ -26,10 +32,11 @@ export const CommentsListProvider = ({
   comments: CommentsList[];
   children: ReactNode;
 }>) => {
+  const [commentSorting, setCommentSorting] = useState(defaultCommentSorting);
   const [localComments, setLocalComments] = useState<CommentsList[]>([]);
   const tree = useMemo(
-    () => commentsToCommentTree(comments, localComments),
-    [comments, localComments],
+    () => commentsToCommentTree(commentSorting, comments, localComments),
+    [commentSorting, comments, localComments],
   );
   const addTopLevelComment = useCallback((comment: CommentsList) => {
     setLocalComments((comments) => [...comments, comment]);
@@ -43,7 +50,13 @@ export const CommentsListProvider = ({
   );
   return (
     <commentsListContext.Provider
-      value={{ comments: tree, addTopLevelComment, containsCommentWithId }}
+      value={{
+        comments: tree,
+        addTopLevelComment,
+        containsCommentWithId,
+        commentSorting,
+        setCommentSorting,
+      }}
     >
       {children}
     </commentsListContext.Provider>

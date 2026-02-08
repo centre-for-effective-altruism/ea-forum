@@ -46,6 +46,8 @@ export const commentListProjection = (currentUserId: string | null) =>
       _id: true,
       postedAt: true,
       lastEditedAt: true,
+      lastSubthreadActivity: true,
+      score: true,
       baseScore: true,
       voteCount: true,
       extendedScore: true,
