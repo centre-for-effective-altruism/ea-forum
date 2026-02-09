@@ -40,8 +40,8 @@ import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
+import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
-import ReportPopover from "./ReportPopover";
 
 export default function PostTripleDotMenu({
   post,
@@ -55,6 +55,8 @@ export default function PostTripleDotMenu({
   className?: string;
 }>) {
   const [reportOpen, setReportOpen] = useState(false);
+  const openReport = useCallback(() => setReportOpen(true), []);
+  const closeReport = useCallback(() => setReportOpen(false), []);
   const { subscriptionMenuItems } = usePostSubscriptions(post);
   const editLink = usePostEditLink(post);
   const duplicateEventLink = useDuplicateEventLink(post);
@@ -77,8 +79,6 @@ export default function PostTripleDotMenu({
   const moveToDraft = useMoveToDraft(post);
   const archiveDraft = useArchiveDraft(post);
   const approveNewUser = useApproveNewUser(post);
-  const openReport = useCallback(() => setReportOpen(true), []);
-  const closeReport = useCallback(() => setReportOpen(false), []);
 
   // TODO: Remaining actions from PostActions.tsx - do we need these?
   //  - resync rss
@@ -193,7 +193,7 @@ export default function PostTripleDotMenu({
         <button
           aria-label="Post options"
           className="
-            text-gray-600 hover:text-gray-900 cursor-pointer flex items-center
+            text-gray-600 hover:text-gray-1000 cursor-pointer flex items-center
           "
         >
           <TripleDotIcon className={clsx("w-5", className)} />

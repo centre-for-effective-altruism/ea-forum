@@ -1,12 +1,14 @@
-export type ThreadableCommentType = {
-  _id: string;
-  parentCommentId?: string | null;
-  topLevelCommentId?: string | null;
-  baseScore: number;
-  postedAt: string;
-};
+import type { Comment } from "@/lib/schema";
+import {
+  CommentSorting,
+  commentSortingCompare,
+  SortableComment,
+} from "./commentSortings";
 
-export interface CommentTreeNode<T extends ThreadableCommentType> {
+export type ThreadableComment = SortableComment &
+  Pick<Comment, "_id" | "parentCommentId" | "topLevelCommentId" | "promoted">;
+
+export interface CommentTreeNode<T extends ThreadableComment> {
   comment: T;
   depth: number;
   /** True if this comment was created by an optimistic client-side update */
@@ -14,7 +16,7 @@ export interface CommentTreeNode<T extends ThreadableCommentType> {
   children: CommentTreeNode<T>[];
 }
 
-const updateDepths = <T extends ThreadableCommentType>(
+const updateDepths = <T extends ThreadableComment>(
   nodes: CommentTreeNode<T>[],
   depth = 0,
 ) => {
@@ -26,18 +28,28 @@ const updateDepths = <T extends ThreadableCommentType>(
 
 /**
  * Sort the comments in the tree.
+ * Deleted comments are always shown last.
  * Local comments are always displayed first sorted newest to oldest.
- * Non-local comments are then sorted by karma, then date, then _id.
+ * Promoted comments are then shown after local comments.
+ * Non-local comments are then sorted according to the current sorting mode
+ * and for tie-breaks we use date then _id.
  */
-const sortTreeNodes = <T extends ThreadableCommentType>(
+const sortTreeNodes = <T extends ThreadableComment>(
   nodes: CommentTreeNode<T>[],
+  sorting: CommentSorting,
 ) => {
   nodes.sort((a, b) => {
+    if (a.comment.deleted !== b.comment.deleted) {
+      return a.comment.deleted ? 1 : -1;
+    }
     if (a.isLocal !== b.isLocal) {
       return a.isLocal ? -1 : 1;
     }
+    if (a.comment.promoted !== b.comment.promoted) {
+      return a.comment.promoted ? -1 : 1;
+    }
     if (!a.isLocal && !b.isLocal) {
-      const scoreDiff = b.comment.baseScore - a.comment.baseScore;
+      const scoreDiff = commentSortingCompare(sorting, a.comment, b.comment);
       if (scoreDiff !== 0) {
         return scoreDiff;
       }
@@ -51,7 +63,7 @@ const sortTreeNodes = <T extends ThreadableCommentType>(
     return b.comment._id.localeCompare(a.comment._id);
   });
   for (const node of nodes) {
-    sortTreeNodes(node.children);
+    sortTreeNodes(node.children, sorting);
   }
 };
 
@@ -63,8 +75,13 @@ const sortTreeNodes = <T extends ThreadableCommentType>(
  * avoids cloning the comment object, which is good because the clone messes
  * with React's ability to detect whether updates are needed.
  */
-export const commentsToCommentTree = <T extends ThreadableCommentType>(
+export const commentsToCommentTree = <T extends ThreadableComment>(
+  sorting: CommentSorting,
   comments: T[],
+  /**
+   * "Local" comments are comments which have been created by the current user
+   * in the current session and should therefore be displayed first.
+   */
   localComments: T[] = [],
 ): CommentTreeNode<T>[] => {
   const commentTreeNodes: CommentTreeNode<T>[] = [
@@ -102,6 +119,6 @@ export const commentsToCommentTree = <T extends ThreadableCommentType>(
     }
   }
   updateDepths(roots);
-  sortTreeNodes(roots);
+  sortTreeNodes(roots, sorting);
   return roots;
 };

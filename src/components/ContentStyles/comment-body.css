@@ -1,0 +1,32 @@
+.comment-body {
+  cursor: default;
+  font-family: var(--font-stack-sans);
+  font-size: 14px;
+  line-height: 1.5em;
+  color: var(--color-gray-900);
+}
+.comment-body h1,
+.comment-body h2,
+.comment-body h3 {
+  margin-top: 0.5em;
+  font-size: 19px;
+  font-weight: 450;
+  font-family: var(--font-stack-sans);
+}
+.comment-body li {
+  font-size: 14px;
+  font-weight: 450;
+  line-height: 1.5em;
+  font-family: var(--font-stack-sans);
+}
+.comment-body blockquote {
+  font-size: 14px;
+  font-weight: 450;
+  line-height: 1.5em;
+  margin: 0 0 0 12px;
+  padding: 8px 24px 8px 16px;
+  font-family: var(--font-stack-sans);
+}
+.comment-body hr {
+  margin: 12px 0;
+}

@@ -87,6 +87,23 @@ const getCommentProjection = (currentUserId: string | null) => {
           _id: true,
           slug: true,
           title: true,
+          userId: true,
+          coauthorUserIds: true,
+          frontpageDate: true,
+        },
+        with: {
+          ...(currentUserId
+            ? {
+                readStatus: {
+                  columns: {
+                    lastUpdated: true,
+                  },
+                  where: {
+                    userId: currentUserId,
+                  },
+                },
+              }
+            : {}),
         },
       },
     },

@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
 import { CommentsListProvider } from "./useCommentsList";
 import CommentsList from "./CommentsList";
+import CommentsSort from "./CommentsSort";
 import NewComment from "./NewComment";
 import Type from "../Type";
 
@@ -23,6 +24,7 @@ export default async function CommentsSection({
         )}
       </Type>
       <NewComment postId={postId} className="mb-6" />
+      <CommentsSort className="mb-3" />
       <CommentsList className={className} />
     </CommentsListProvider>
   );

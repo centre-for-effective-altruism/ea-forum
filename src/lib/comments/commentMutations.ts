@@ -15,7 +15,9 @@ import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
-import { MINIMUM_APPROVAL_KARMA } from "../users/userHelpers";
+import { MINIMUM_APPROVAL_KARMA, userCanDo, userOwns } from "../users/userHelpers";
+import { userCanPinCommentOnProfile } from "./commentHelpers";
+import { logFieldChanges } from "../fieldChanges";
 import {
   updateCommentForumEvent,
   checkCommentForSpam,
@@ -182,4 +184,93 @@ export const createPostComment = async ({
   void elasticSyncDocument("Comments", commentId);
 
   return commentId;
+};
+
+export const updateCommentPinnedOnProfile = async (
+  currentUser: CurrentUser,
+  commentId: string,
+  isPinnedOnProfile: boolean,
+) => {
+  const result = await db.transaction(async (txn) => {
+    const comment = await txn.query.comments.findFirst({
+      columns: {
+        userId: true,
+        isPinnedOnProfile: true,
+      },
+      where: {
+        _id: commentId,
+      },
+    });
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+    if (isPinnedOnProfile === comment.isPinnedOnProfile) {
+      return;
+    }
+    if (!userCanPinCommentOnProfile(currentUser, comment)) {
+      throw new Error("You do not have permission to do this");
+    }
+    await Promise.all([
+      txn
+        .update(comments)
+        .set({ isPinnedOnProfile })
+        .where(eq(comments._id, commentId)),
+      logFieldChanges(txn, currentUser._id, {
+        documentId: commentId,
+        fieldName: "isPinnedOnProfile",
+        oldValue: comment.isPinnedOnProfile,
+        newValue: isPinnedOnProfile,
+      }),
+    ]);
+    return isPinnedOnProfile;
+  });
+  return result;
+};
+
+export const updateQuickTakeFrontpage = async (
+  currentUser: CurrentUser,
+  commentId: string,
+  shortformFrontpage: boolean,
+) => {
+  const result = await db.transaction(async (txn) => {
+    const comment = await txn.query.comments.findFirst({
+      columns: {
+        userId: true,
+        shortform: true,
+        shortformFrontpage: true,
+      },
+      where: {
+        _id: commentId,
+      },
+    });
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+    if (!comment.shortform) {
+      throw new Error("Comment is not a quick take");
+    }
+    if (shortformFrontpage === comment.shortformFrontpage) {
+      return;
+    }
+    if (
+      !userCanDo(currentUser, "comments.edit.all") &&
+      !userOwns(currentUser, comment)
+    ) {
+      throw new Error("You do not have permission to do this");
+    }
+    await Promise.all([
+      txn
+        .update(comments)
+        .set({ shortformFrontpage })
+        .where(eq(comments._id, commentId)),
+      logFieldChanges(txn, currentUser._id, {
+        documentId: commentId,
+        fieldName: "shortformFrontpage",
+        oldValue: comment.shortformFrontpage,
+        newValue: shortformFrontpage,
+      }),
+    ]);
+    return shortformFrontpage;
+  });
+  return result;
 };

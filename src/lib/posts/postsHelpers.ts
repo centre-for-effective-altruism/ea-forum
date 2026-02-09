@@ -126,8 +126,7 @@ export const getPostPlaintextDescription = (post: PostListItem): string | null =
 
 type SharablePost = Pick<
   PostListItem,
-  // | "coauthorUserIds"
-  "sharingSettings" | "currentUserIsShared" | "currentUserUsedLinkKey"
+  "coauthors" | "sharingSettings" | "currentUserIsShared" | "currentUserUsedLinkKey"
 >;
 
 export const userIsSharedOnPost = (
@@ -138,12 +137,11 @@ export const userIsSharedOnPost = (
     return false;
   }
 
-  // TODO coauthors
   // Shared as a coauthor? Always give access
-  // const coauthorUserIds = post.coauthorUserIds ?? [];
-  // if (coauthorUserIds.indexOf(currentUser._id) >= 0) {
-  //   return true;
-  // }
+  const coauthorUserIds = post.coauthors?.map(({ _id }) => _id) ?? [];
+  if (coauthorUserIds.indexOf(currentUser._id) >= 0) {
+    return true;
+  }
 
   // Explicitly shared?
   if (post.currentUserIsShared) {
@@ -185,10 +183,9 @@ export const canUserEditPostMetadata = (
   if (userCanDo(currentUser, "posts.edit.all")) {
     return true;
   }
-  // TODO coauthors
-  // if (post.coauthors.some((user) => user._id === currentUser._id)) {
-  //   return true;
-  // }
+  if (post.coauthors?.some((user) => user._id === currentUser._id)) {
+    return true;
+  }
 
   if (
     userIsSharedOnPost(currentUser, post) &&
@@ -205,6 +202,26 @@ export const canUserEditPostMetadata = (
   }
 
   return false;
+};
+
+export const userCanModeratePost = (
+  user: CurrentUser | null,
+  post?: Pick<Post, "userId" | "frontpageDate"> | null,
+): boolean => {
+  if (userCanDo(user, "posts.moderate.all")) {
+    return true;
+  }
+  if (!user || !post) {
+    return false;
+  }
+  if (
+    userCanDo(user, "posts.moderate.own.personal") &&
+    user._id === post.userId &&
+    !post.frontpageDate
+  ) {
+    return true;
+  }
+  return !!(userCanDo(user, "posts.moderate.own") && user._id === post.userId);
 };
 
 export const userCanSuggestPostForCurated = (

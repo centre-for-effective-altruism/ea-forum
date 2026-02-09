@@ -8,6 +8,7 @@ import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+import { commentTagsProjection } from "../tags/tagQueries";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -44,6 +45,9 @@ export const commentListProjection = (currentUserId: string | null) =>
     columns: {
       _id: true,
       postedAt: true,
+      lastEditedAt: true,
+      lastSubthreadActivity: true,
+      score: true,
       baseScore: true,
       voteCount: true,
       extendedScore: true,
@@ -51,10 +55,17 @@ export const commentListProjection = (currentUserId: string | null) =>
       topLevelCommentId: true,
       descendentCount: true,
       deleted: true,
+      tagCommentType: true,
+      isPinnedOnProfile: true,
+      shortform: true,
+      shortformFrontpage: true,
+      moderatorHat: true,
+      promoted: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
       reactors: reactorsSelector("Comments"),
+      tags: commentTagsProjection,
     },
     with: {
       user: {
@@ -63,8 +74,49 @@ export const commentListProjection = (currentUserId: string | null) =>
           deleted: isNotTrue,
         },
       },
+      promotedBy: {
+        columns: {
+          displayName: true,
+        },
+      },
+      post: {
+        columns: {
+          _id: true,
+          slug: true,
+          userId: true,
+          frontpageDate: true,
+          coauthorUserIds: true,
+        },
+        with: {
+          ...(currentUserId
+            ? {
+                readStatus: {
+                  columns: {
+                    lastUpdated: true,
+                  },
+                  where: {
+                    userId: currentUserId,
+                  },
+                },
+              }
+            : {}),
+        },
+      },
+      tag: {
+        columns: {
+          slug: true,
+        },
+      },
       ...(currentUserId
         ? {
+            bookmarks: {
+              columns: {
+                active: true,
+              },
+              where: {
+                userId: currentUserId,
+              },
+            },
             votes: {
               columns: {
                 voteType: true,

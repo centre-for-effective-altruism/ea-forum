@@ -1,5 +1,8 @@
 import { isServer } from "@/lib/environment";
 import { load as cheerioLoad } from "cheerio";
+import clsx from "clsx";
+import "./content-base.css";
+import "./tag-body.css";
 
 export default function TagBody({
   html,
@@ -14,11 +17,10 @@ export default function TagBody({
     // Fix hydration errors from malformed HTML in excerpts created with substring
     html = cheerioLoad(html, null, false).html();
   }
-  // TODO: This needs styles
   return (
     <div
       dangerouslySetInnerHTML={{ __html: html }}
-      className={className}
+      className={clsx("content-base tag-body", className)}
       data-component="TagBody"
     />
   );

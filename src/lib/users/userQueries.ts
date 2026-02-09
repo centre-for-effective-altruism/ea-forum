@@ -39,7 +39,9 @@ export type UserBase = UserFromProjection<typeof userBaseProjection>;
  * match `userBaseProjection` above.
  * Also see https://github.com/drizzle-team/drizzle-orm/issues/4988
  */
-export const coauthorsSelector = (postsTable: typeof posts) => sql<UserBase[]>`(
+export const coauthorsSelector = (postsTable: typeof posts) => sql<
+  UserBase[] | null
+>`(
   SELECT ARRAY_AGG(JSONB_BUILD_OBJECT(
     '_id', coauthor."_id",
     'slug', coauthor."slug",
