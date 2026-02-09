@@ -29,11 +29,21 @@ import Link from "../Link";
 export default function CommentItem({
   node: { comment, depth, children },
   onToggleExpanded,
+  startCollapsed,
+  showPreviewWhenCollapsed,
   borderless,
   className,
 }: Readonly<{
   node: CommentTreeNode<CommentsList>;
   onToggleExpanded?: (expanded: boolean) => void;
+  /** If true, the comment initially renders un-collapsed */
+  startCollapsed?: boolean;
+  /**
+   * By default, the body of an un-expanded comment is completely hidden. When
+   * this is true, we instead show the first couple of lines as a preview, and
+   * clicking the preview expands the comment.
+   */
+  showPreviewWhenCollapsed?: boolean;
   /**
    * Don't render a border or outside padding - used for embedding in another
    * component.
@@ -42,7 +52,7 @@ export default function CommentItem({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(!startCollapsed);
   const toggleExpanded = useCallback(() => {
     setExpanded((expanded) => {
       const newExpanded = !expanded;
@@ -146,6 +156,11 @@ export default function CommentItem({
           </Link>
           {currentUser && <CommentTripleDotMenu comment={comment} />}
         </div>
+        {!expanded && showPreviewWhenCollapsed && (
+          <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
+            <CommentBody html={html} />
+          </div>
+        )}
         {expanded && (
           <>
             {promotedBy?.displayName && (
