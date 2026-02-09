@@ -65,7 +65,7 @@ export type StrategySpecification = StrategySettings & {
 };
 
 export type RecommendationResult = {
-  posts: Post[];
+  postIds: string[];
   settings: StrategySettings;
 };
 
@@ -190,12 +190,12 @@ abstract class RecommendationStrategy {
     postId: string,
     filter: SQL<unknown>,
     sort: keyof Post = "score",
-  ): Promise<Post[]> {
+  ): Promise<string[]> {
     const readFilter = this.getAlreadyReadFilter(currentUser);
     const recommendedFilter = this.getAlreadyRecommendedFilter(currentUser);
     const postFilter = this.getDefaultPostFilter();
-    const result = await db.execute<Post>(sql`
-      SELECT p.*
+    const result = await db.execute<{ _id: string }>(sql`
+      SELECT p."_id"
       FROM "Posts" p
       ${readFilter.join}
       ${recommendedFilter.join}
@@ -209,7 +209,7 @@ abstract class RecommendationStrategy {
       ORDER BY p."${sql.raw(sort)}" DESC
       LIMIT ${count}
     `);
-    return result.rows;
+    return result.rows.map(({ _id }) => _id);
   }
 }
 

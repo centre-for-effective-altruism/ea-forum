@@ -1,10 +1,11 @@
 import { captureException } from "@sentry/nextjs";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { postRecommendations, Post } from "../schema";
+import { postRecommendations } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
 import { isAnyTest } from "../environment";
 import { randomId } from "../utils/random";
+import { fetchPostsListByIds, PostListItem } from "../posts/postLists";
 import MoreFromAuthorStrategy from "./MoreFromAuthorStrategy";
 import MoreFromTagStrategy from "./MoreFromTagStrategy";
 import BestOfStrategy from "./BestOfStrategy";
@@ -47,13 +48,13 @@ class RecommendationService {
     count: number,
     strategy: StrategySpecification,
     disableFallbacks = false,
-  ): Promise<Post[]> {
+  ): Promise<PostListItem[]> {
     if (strategy.forceLoggedOutView) {
       currentUser = null;
     }
 
     const strategies = this.getStrategyStack(strategy.name, disableFallbacks);
-    let posts: Post[] = [];
+    const postIds: string[] = [];
 
     while (count > 0 && strategies.length) {
       const result = await this.recommendWithStrategyName(
@@ -62,14 +63,14 @@ class RecommendationService {
         strategy,
         strategies[0],
       );
-      const newPosts = result.posts.filter(
-        ({ _id }) => !posts.some((post) => post._id === _id),
+      const newPostIds = result.postIds.filter(
+        (_id) => !postIds.some((postId) => postId === _id),
       );
 
       const strategyName = strategies[0];
       const strategySettings = { ...result.settings, context: strategy.context };
       void Promise.all(
-        posts.map((post) =>
+        postIds.map((postId) =>
           // We need to write this manually as drizzle can't handle expression indexes
           db.execute(sql`
           INSERT INTO "PostRecommendations" (
@@ -86,7 +87,7 @@ class RecommendationService {
             ${randomId()},
             ${currentUser?._id ?? null},
             ${clientId},
-            ${post._id},
+            ${postId},
             ${strategyName},
             ${strategySettings},
             0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -100,12 +101,13 @@ class RecommendationService {
         ),
       );
 
-      posts = posts.concat(newPosts);
-      count -= newPosts.length;
+      postIds.push(...newPostIds);
+      count -= newPostIds.length;
 
       strategies.shift();
     }
 
+    const posts = await fetchPostsListByIds(currentUser?._id ?? null, postIds);
     return posts;
   }
 
@@ -144,7 +146,7 @@ class RecommendationService {
         bias: strategy.bias,
         features: strategy.features,
       };
-      return { posts: [], settings };
+      return { postIds: [], settings };
     }
   }
 

@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import type { CurrentUser } from "../users/currentUser";
-import type { Post } from "../schema";
 import RecommendationStrategy, {
   RecommendationResult,
   StrategySpecification,
@@ -17,8 +16,8 @@ class MoreFromAuthorStrategy extends RecommendationStrategy {
     { postId }: StrategySpecification,
   ): Promise<RecommendationResult> {
     const postFilter = this.getDefaultPostFilter();
-    const posts = await db.execute<Post>(sql`
-      SELECT p.*
+    const posts = await db.execute<{ _id: string }>(sql`
+      SELECT p."_id"
       FROM "Posts" p
       JOIN "Posts" src ON src."_id" = ${postId}
       ${postFilter.join}
@@ -30,7 +29,7 @@ class MoreFromAuthorStrategy extends RecommendationStrategy {
       LIMIT ${count}
     `);
     return {
-      posts: posts.rows,
+      postIds: posts.rows.map(({ _id }) => _id),
       settings: { postId },
     };
   }

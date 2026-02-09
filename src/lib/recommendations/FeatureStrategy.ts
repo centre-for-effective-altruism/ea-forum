@@ -1,7 +1,6 @@
 import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import type { CurrentUser } from "../users/currentUser";
-import type { Post } from "../schema";
 import { featureRegistry } from "./Feature";
 import RecommendationStrategy, {
   RecommendationResult,
@@ -65,9 +64,9 @@ class FeatureStrategy extends RecommendationStrategy {
       }
     }
 
-    const posts = await db.execute<Post>(sql`
+    const posts = await db.execute<{ _id: string }>(sql`
       -- ${sql.raw(this.constructor.name)}
-      SELECT p.*
+      SELECT p."_id"
       FROM (
         SELECT p."_id", MAX(${sql.join(scores, sql`+`)}) as max_score
         FROM "Posts" p
@@ -92,7 +91,7 @@ class FeatureStrategy extends RecommendationStrategy {
     `);
 
     return {
-      posts: posts.rows,
+      postIds: posts.rows.map(({ _id }) => _id),
       settings: { postId, features },
     };
   }

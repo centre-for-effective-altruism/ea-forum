@@ -21,7 +21,7 @@ class NewAndUpvotedInTagStrategy extends RecommendationStrategy {
     if (!tagId) {
       throw new Error("No tag id provided");
     }
-    const posts = await this.recommendDefaultWithPostFilter(
+    const postIds = await this.recommendDefaultWithPostFilter(
       currentUser,
       count,
       postId,
@@ -30,7 +30,10 @@ class NewAndUpvotedInTagStrategy extends RecommendationStrategy {
         (NOW() - p."createdAt") < '3 months'
       `,
     );
-    return { posts, settings: { postId, tagId } };
+    return {
+      postIds,
+      settings: { postId, tagId },
+    };
   }
 }
 
