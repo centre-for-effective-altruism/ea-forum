@@ -19,11 +19,13 @@ export default function PostsTooltip({
   post,
   placement = "bottom-start",
   As = "div",
+  className,
   children,
 }: Readonly<{
   post: PostForTooltip | null | undefined;
   placement?: Placement;
   As?: ElementType;
+  className?: string;
   children: ReactNode;
 }>) {
   if (!post) {
@@ -36,6 +38,7 @@ export default function PostsTooltip({
     <Tooltip
       placement={placement}
       As={As}
+      className={className}
       tooltipClassName="
         bg-gray-0! text-gray-900! p-0! shadow-md w-[360px] max-w-full
       "

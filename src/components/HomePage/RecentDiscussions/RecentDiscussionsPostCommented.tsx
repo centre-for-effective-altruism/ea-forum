@@ -86,7 +86,7 @@ export default function RecentDiscussionsPostCommented({
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
-            orient="vertical"
+            orientation="vertical"
             className="min-w-[33px]"
           />
           <div className="truncate grow">

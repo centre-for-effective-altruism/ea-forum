@@ -171,7 +171,7 @@ export default function CommentItem({
                 Promoted by {promotedBy.displayName}
               </Type>
             )}
-            <CommentBody html={html} />
+            <CommentBody html={html} className="cursor-default" />
           </>
         )}
       </article>

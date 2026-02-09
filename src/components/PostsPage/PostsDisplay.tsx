@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplay } from "@/lib/posts/postQueries";
@@ -114,7 +114,9 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               </div>
             </div>
           )}
-          <MorePostsLikeThis />
+          <Suspense>
+            <MorePostsLikeThis postId={post._id} />
+          </Suspense>
         </PostColumn>
       </ReadProgress>
     </PostDisplayProvider>
