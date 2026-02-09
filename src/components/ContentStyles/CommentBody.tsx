@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import clsx from "clsx";
+import "./content-base.css";
+import "./comment-body.css";
 
 type CommentBodyHTML = {
   html: string | null;
@@ -21,7 +24,7 @@ export default function CommentBody({
     className?: string;
   }
 >) {
-  const classes = `font-sans text-[14px] font-[450] cursor-default ${className}`;
+  const classes = clsx("content-base comment-body", className);
   if (html) {
     return (
       <div

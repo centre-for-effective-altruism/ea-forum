@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { isServer } from "@/lib/environment";
 import { load as cheerioLoad } from "cheerio";
 import clsx from "clsx";
-import "./post-body.css";
+import "./content-base.css";
 
 type PostBodyContent =
   | {
@@ -26,7 +26,7 @@ export default function PostBody({
     className?: string;
   }
 >) {
-  const styledClassName = clsx("post-body", className);
+  const styledClassName = clsx("content-base", className);
   if (html) {
     if (isServer && isExcerpt) {
       // Fix hydration errors from malformed HTML in excerpts created with substring
