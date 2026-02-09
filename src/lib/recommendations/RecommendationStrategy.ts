@@ -100,13 +100,13 @@ abstract class RecommendationStrategy {
     return currentUser
       ? {
           join: sql`
-          LEFT JOIN "ReadStatuses" rs
-            ON rs."userId" = ${currentUser._id}
-            AND rs."postId" = p."_id"
-        `,
+            LEFT JOIN "ReadStatuses" rs
+              ON rs."userId" = ${currentUser._id}
+              AND rs."postId" = p."_id"
+          `,
           filter: sql`
-          rs."isRead" IS NOT TRUE AND
-        `,
+            rs."isRead" IS NOT TRUE AND
+          `,
         }
       : {
           join: sql``,
@@ -206,7 +206,7 @@ abstract class RecommendationStrategy {
         ${recommendedFilter.filter}
         ${postFilter.filter}
         ${filter}
-      ORDER BY p."${sort}" DESC
+      ORDER BY p."${sql.raw(sort)}" DESC
       LIMIT ${count}
     `);
     return result.rows;

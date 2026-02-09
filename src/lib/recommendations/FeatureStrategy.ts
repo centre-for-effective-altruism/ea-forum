@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import type { CurrentUser } from "../users/currentUser";
 import type { Post } from "../schema";
@@ -35,49 +35,48 @@ class FeatureStrategy extends RecommendationStrategy {
     const postFilter = this.getDefaultPostFilter();
     const tagFilter = this.getTagFilter();
 
-    let joins = "";
-    let filters = "";
-    let score = "";
+    const joins: SQL[] = [];
+    const filters: SQL[] = [];
+    const scores: SQL[] = [];
 
     if (options?.publishedAfter) {
-      filters += sql`p."postedAt" > $(publishedAfter) AND `;
+      filters.push(sql`p."postedAt" > $(publishedAfter)`);
     }
     if (options?.publishedBefore) {
-      filters += `p."postedAt" < $(publishedBefore) AND `;
+      filters.push(sql`p."postedAt" < $(publishedBefore)`);
     }
 
     for (const { feature: featureName, weight } of features) {
       if (weight === 0) {
         continue;
       }
-      const feature = new featureRegistry[featureName](currentUser);
+      const feature = new featureRegistry[featureName](currentUser, postId);
       const featureJoin = feature.getJoin();
       if (featureJoin) {
-        joins += ` ${featureJoin}`;
+        joins.push(featureJoin);
       }
       const featureFilter = feature.getFilter();
       if (featureFilter) {
-        filters += ` ${featureFilter} AND`;
+        filters.push(featureFilter);
       }
-      const weightName = `${featureName}Weight`;
       const featureScore = feature.getScore();
       if (featureScore) {
-        score += sql`${sql.raw(score)} + ($(${weightName}) * (${featureScore}))`;
+        scores.push(sql`(${weight} * (${featureScore})::FLOAT)`);
       }
     }
 
     const posts = await db.execute<Post>(sql`
-      -- FeatureStrategy
+      -- ${sql.raw(this.constructor.name)}
       SELECT p.*
       FROM (
-        SELECT p."_id", MAX(${score}) as max_score
+        SELECT p."_id", MAX(${sql.join(scores, sql`+`)}) as max_score
         FROM "Posts" p
         ${readFilter.join}
         ${postFilter.join}
-        ${joins}
+        ${sql.join(joins, sql` `)}
         WHERE
           p."_id" <> ${postId} AND
-          ${filters}
+          ${sql.join(filters, sql` AND `)}
           ${readFilter.filter}
           ${postFilter.filter}
           ${tagFilter.filter}

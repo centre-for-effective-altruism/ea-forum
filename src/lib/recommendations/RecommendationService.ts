@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { postRecommendations, Post } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
+import { isAnyTest } from "../environment";
 import { randomId } from "../utils/random";
 import MoreFromAuthorStrategy from "./MoreFromAuthorStrategy";
 import MoreFromTagStrategy from "./MoreFromTagStrategy";
@@ -30,14 +31,14 @@ type ConstructableStrategy = {
  */
 class RecommendationService {
   private strategies: Record<RecommendationStrategyName, ConstructableStrategy> = {
-    newAndUpvotedInTag: NewAndUpvotedInTagStrategy,
-    moreFromTag: MoreFromTagStrategy,
-    moreFromAuthor: MoreFromAuthorStrategy,
     bestOf: BestOfStrategy,
-    wrapped: WrappedStrategy,
     tagWeightedCollabFilter: TagWeightedCollabFilterStrategy,
     collabFilter: CollabFilterStrategy,
     feature: FeatureStrategy,
+    newAndUpvotedInTag: NewAndUpvotedInTagStrategy,
+    moreFromTag: MoreFromTagStrategy,
+    moreFromAuthor: MoreFromAuthorStrategy,
+    wrapped: WrappedStrategy,
   };
 
   async recommend(
@@ -83,7 +84,7 @@ class RecommendationService {
             "createdAt"
           ) VALUES (
             ${randomId()},
-            ${currentUser?._id},
+            ${currentUser?._id ?? null},
             ${clientId},
             ${post._id},
             ${strategyName},
@@ -133,6 +134,9 @@ class RecommendationService {
     try {
       return await source.recommend(currentUser, count, strategy);
     } catch (e) {
+      if (isAnyTest()) {
+        throw new Error("Recommendation error", { cause: e });
+      }
       captureException(e);
       console.error("Recommendations error:", e);
       const settings = {

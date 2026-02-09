@@ -1,3 +1,4 @@
+import { sql, SQL } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import type { RecommendationFeatureName } from "./RecommendationStrategy";
 import {
@@ -9,34 +10,33 @@ import {
 } from "../filterSettings";
 
 abstract class Feature {
-  constructor(protected currentUser: CurrentUser | null) {}
+  constructor(
+    protected currentUser: CurrentUser | null,
+    protected postId: string,
+  ) {}
 
-  getJoin(): string {
-    return "";
+  getJoin(): SQL | null {
+    return null;
   }
 
-  getFilter(): string {
-    return "";
+  getFilter(): SQL | null {
+    return null;
   }
 
-  getScore(): string {
-    return "";
-  }
-
-  getArgs(): Record<string, unknown> {
-    return {};
+  getScore(): SQL | null {
+    return null;
   }
 }
 
 type ConstructableFeature = {
-  new (currentUser: CurrentUser | null): Feature;
+  new (currentUser: CurrentUser | null, postId: string): Feature;
 };
 
 class KarmaFeature extends Feature {
   private readonly pivot = 100;
 
   getScore() {
-    return `
+    return sql`
       CASE WHEN p."baseScore" > 0
         THEN p."baseScore" / (${this.pivot} + p."baseScore")
         ELSE 0
@@ -47,28 +47,32 @@ class KarmaFeature extends Feature {
 
 class CuratedFeature extends Feature {
   getScore() {
-    return `CASE WHEN p."curatedDate" IS NULL THEN 0 ELSE 1 END`;
+    return sql`CASE WHEN p."curatedDate" IS NULL THEN 0 ELSE 1 END`;
   }
 }
 
 class TagSimilarityFeature extends Feature {
   getScore() {
-    return `fm_post_tag_similarity($(postId), p."_id")`;
+    return sql`fm_post_tag_similarity(${this.postId}, p."_id")`;
   }
 }
 
 class CollabFilterFeature extends Feature {
+  constructor(currentUser: CurrentUser | null, postId: string) {
+    super(currentUser, postId);
+  }
+
   getJoin() {
-    return `INNER JOIN "UniquePostUpvoters" rec ON rec."postId" = p."_id"`;
+    return sql`INNER JOIN "UniquePostUpvoters" rec ON rec."postId" = p."_id"`;
   }
 
   getScore() {
-    const srcVoters = `(
+    const srcVoters = sql`(
       SELECT voters
       FROM "UniquePostUpvoters"
-      WHERE "postId" = $(postId)
+      WHERE "postId" = ${this.postId}
     )`;
-    return `
+    return sql`
       COALESCE(
         (# (${srcVoters} & rec.voters))::FLOAT /
           NULLIF((# (${srcVoters} | rec.voters))::FLOAT, 0),
@@ -81,36 +85,31 @@ class CollabFilterFeature extends Feature {
 class TextSimilarityFeature extends Feature {
   constructor(
     currentUser: CurrentUser | null,
+    postId: string,
     private model = "text-embedding-ada-002",
   ) {
-    super(currentUser);
+    super(currentUser, postId);
   }
 
   getJoin() {
-    return `
+    return sql`
       INNER JOIN "PostEmbeddings" pe ON
         pe."postId" = p."_id" AND
-        pe."model" = $(embeddingsModel)
+        pe."model" = ${this.model}
       JOIN "PostEmbeddings" seed_embeddings ON
-        seed_embeddings."postId" = $(postId) AND
-        seed_embeddings."model" = $(embeddingsModel)
+        seed_embeddings."postId" = ${this.postId} AND
+        seed_embeddings."model" = ${this.model}
     `;
   }
 
   getScore() {
-    return `(-1 * (pe."embeddings" <#> seed_embeddings."embeddings"))`;
-  }
-
-  getArgs() {
-    return {
-      embeddingsModel: this.model,
-    };
+    return sql`(-1 * (pe."embeddings" <#> seed_embeddings."embeddings"))`;
   }
 }
 
 class SubscribedAuthorPostsFeature extends Feature {
   getJoin() {
-    return `
+    return sql`
       LEFT JOIN "Subscriptions" author_subs ON
         author_subs."collectionName" = 'Users' AND
         author_subs."state" = 'subscribed' AND
@@ -123,13 +122,13 @@ class SubscribedAuthorPostsFeature extends Feature {
   }
 
   getScore() {
-    return `(CASE WHEN author_subs."_id" IS NULL THEN 0 ELSE 1 END)`;
+    return sql`(CASE WHEN author_subs."_id" IS NULL THEN 0 ELSE 1 END)`;
   }
 }
 
 class SubscribedTagPostsFeature extends Feature {
   getJoin() {
-    return `
+    return sql`
       LEFT JOIN "Subscriptions" tag_subs ON
         tag_subs."collectionName" = 'Tags' AND
         tag_subs."state" = 'subscribed' AND
@@ -141,17 +140,16 @@ class SubscribedTagPostsFeature extends Feature {
   }
 
   getScore() {
-    return `(CASE WHEN tag_subs."_id" IS NULL THEN 0 ELSE 1 END)`;
+    return sql`(CASE WHEN tag_subs."_id" IS NULL THEN 0 ELSE 1 END)`;
   }
 }
 
 class FrontpageFilterSettingsFeature extends Feature {
-  private filterClauses: string[] = [];
-  private score: string;
-  private args: Record<string, unknown> = {};
+  private filterClauses: SQL[] = [];
+  private score: SQL;
 
-  constructor(currentUser: CurrentUser | null) {
-    super(currentUser);
+  constructor(currentUser: CurrentUser | null, postId: string) {
+    super(currentUser, postId);
 
     const filterSettings: FilterSettings =
       (currentUser?.frontpageFilterSettings as FilterSettings) ??
@@ -159,39 +157,30 @@ class FrontpageFilterSettingsFeature extends Feature {
     const { tagsRequired, tagsExcluded, tagsSoftFiltered } =
       resolveFrontpageFilters(filterSettings);
 
-    let argCount = 0;
-    const makeArgName = () => `tagFilter${argCount++}`;
-
     for (const tag of tagsRequired) {
-      const argName = makeArgName();
-      this.args[argName] = tag.tagId;
       this.filterClauses.push(
-        `COALESCE((p."tagRelevance"->$(${argName}))::INTEGER, 0) >= 1`,
+        sql`COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) >= 1`,
       );
     }
     for (const tag of tagsExcluded) {
-      const argName = makeArgName();
-      this.args[argName] = tag.tagId;
       this.filterClauses.push(
-        `COALESCE((p."tagRelevance"->$(${argName}))::INTEGER, 0) < 1`,
+        sql`COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) < 1`,
       );
     }
 
-    const addClauses = ['p."baseScore"'];
-    const multClauses = ["1"];
+    const addClauses: SQL[] = [sql`p."baseScore"`];
+    const multClauses: SQL[] = [sql`1`];
     for (const tag of tagsSoftFiltered) {
-      const argName = makeArgName();
-      this.args[argName] = tag.tagId;
-      addClauses.push(`(
+      addClauses.push(sql`(
         CASE
-          WHEN COALESCE((p."tagRelevance"->$(${argName}))::INTEGER, 0) > 0
+          WHEN COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) > 0
           THEN ${filterModeToAdditiveKarmaModifier(tag.filterMode)}
           ELSE 0
         END
       )`);
-      multClauses.push(`(
+      multClauses.push(sql`(
         CASE
-          WHEN COALESCE((p."tagRelevance"->$(${argName}))::INTEGER, 0) > 0
+          WHEN COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) > 0
           THEN ${filterModeToMultiplicativeKarmaModifier(tag.filterMode)}
           ELSE 1
         END
@@ -200,13 +189,13 @@ class FrontpageFilterSettingsFeature extends Feature {
 
     switch (filterSettings.personalBlog) {
       case "Hidden":
-        this.filterClauses.push(`p."frontpageDate" IS NOT NULL`);
+        this.filterClauses.push(sql`p."frontpageDate" IS NOT NULL`);
         break;
       case "Required":
-        this.filterClauses.push(`p."frontpageDate" IS NULL`);
+        this.filterClauses.push(sql`p."frontpageDate" IS NULL`);
         break;
       default:
-        addClauses.push(`(
+        addClauses.push(sql`(
           CASE
             WHEN p."frontpageDate" IS NULL
             THEN 0
@@ -216,19 +205,17 @@ class FrontpageFilterSettingsFeature extends Feature {
         break;
     }
 
-    this.score = `((${addClauses.join(" + ")}) * ${multClauses.join(" * ")})`;
+    const addClause = sql.join(addClauses, sql`+`);
+    const multClause = sql.join(multClauses, sql`*`);
+    this.score = sql`((${addClause}) * ${multClause})`;
   }
 
   getFilter() {
-    return this.filterClauses.join(" AND ");
+    return sql.join(this.filterClauses, sql` AND `);
   }
 
   getScore() {
     return this.score;
-  }
-
-  getArgs() {
-    return this.args;
   }
 }
 
