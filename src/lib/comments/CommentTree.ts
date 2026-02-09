@@ -6,7 +6,7 @@ import {
 } from "./commentSortings";
 
 export type ThreadableComment = SortableComment &
-  Pick<Comment, "_id" | "parentCommentId" | "topLevelCommentId">;
+  Pick<Comment, "_id" | "parentCommentId" | "topLevelCommentId" | "promoted">;
 
 export interface CommentTreeNode<T extends ThreadableComment> {
   comment: T;
@@ -28,7 +28,9 @@ const updateDepths = <T extends ThreadableComment>(
 
 /**
  * Sort the comments in the tree.
+ * Deleted comments are always shown last.
  * Local comments are always displayed first sorted newest to oldest.
+ * Promoted comments are then shown after local comments.
  * Non-local comments are then sorted according to the current sorting mode
  * and for tie-breaks we use date then _id.
  */
@@ -37,8 +39,14 @@ const sortTreeNodes = <T extends ThreadableComment>(
   sorting: CommentSorting,
 ) => {
   nodes.sort((a, b) => {
+    if (a.comment.deleted !== b.comment.deleted) {
+      return a.comment.deleted ? 1 : -1;
+    }
     if (a.isLocal !== b.isLocal) {
       return a.isLocal ? -1 : 1;
+    }
+    if (a.comment.promoted !== b.comment.promoted) {
+      return a.comment.promoted ? -1 : 1;
     }
     if (!a.isLocal && !b.isLocal) {
       const scoreDiff = commentSortingCompare(sorting, a.comment, b.comment);

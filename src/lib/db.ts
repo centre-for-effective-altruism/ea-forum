@@ -132,6 +132,13 @@ const relations = defineRelations(
           deleted: false,
         },
       }),
+      promotedBy: r.one.users({
+        from: r.comments.promotedByUserId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
       votes: r.many.votes({
         from: r.comments._id,
         to: r.votes.documentId,

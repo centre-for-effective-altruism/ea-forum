@@ -65,7 +65,8 @@ export default function CommentItem({
     }
   }, [comment]);
 
-  const { _id, user, html, postedAt, post } = comment;
+  const { _id, user, html, postedAt, post, promoted, promotedBy, moderatorHat } =
+    comment;
   const isPostAuthor = userIsPostAuthor(user, post);
   const isNew =
     !!post?.readStatus?.[0]?.lastUpdated &&
@@ -74,11 +75,13 @@ export default function CommentItem({
     <div
       data-component="CommentItem"
       className={clsx(
+        !borderless && "border rounded-sm pl-3 pt-2 mb-1",
         !borderless &&
-          "border border-(--color-comment-border) rounded-sm pl-3 pt-2 mb-1",
-        !borderless && depth & 1
-          ? "bg-(--color-comment-odd)"
-          : "bg-(--color-comment-even)",
+          (promoted ? "border-promoted-comment" : "border-comment-border"),
+        !borderless &&
+          !moderatorHat &&
+          (depth & 1 ? "bg-comment-odd" : "bg-comment-even"),
+        !borderless && moderatorHat && "bg-moderator-comment",
         !borderless && depth === 0 ? "" : "border-r-0",
         isNew && "border-l-primary-light border-l-[4px]",
         className,
@@ -131,6 +134,9 @@ export default function CommentItem({
             </Tooltip>
           )}
           <CommentDate comment={comment} />
+          {comment.moderatorHat && (
+            <Type className="text-gray-600 cursor-default">Moderator comment</Type>
+          )}
           <CommentVoteButtons comment={comment} />
           <div className="grow">
             <CommentTags comment={comment} />
@@ -140,7 +146,19 @@ export default function CommentItem({
           </Link>
           {currentUser && <CommentTripleDotMenu comment={comment} />}
         </div>
-        {expanded && <CommentBody html={html} />}
+        {expanded && (
+          <>
+            {promotedBy?.displayName && (
+              <Type
+                style="bodySmall"
+                className="text-promoted-comment cursor-default mb-2"
+              >
+                Promoted by {promotedBy.displayName}
+              </Type>
+            )}
+            <CommentBody html={html} />
+          </>
+        )}
       </article>
       {expanded && children.length > 0 && (
         <div>

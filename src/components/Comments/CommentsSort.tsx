@@ -19,7 +19,7 @@ export default function CommentsSort({
   const { commentSorting, setCommentSorting } = useCommentsList();
   const sortings = getCommentSortings(currentUser);
   return (
-    <Type className={clsx("text-gray-600", className)}>
+    <Type style="bodyMedium" className={clsx("text-gray-600", className)}>
       Sorted by{" "}
       <InlineSelect
         value={commentSorting}

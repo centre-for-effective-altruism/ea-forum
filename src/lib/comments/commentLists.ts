@@ -59,6 +59,8 @@ export const commentListProjection = (currentUserId: string | null) =>
       isPinnedOnProfile: true,
       shortform: true,
       shortformFrontpage: true,
+      moderatorHat: true,
+      promoted: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -70,6 +72,11 @@ export const commentListProjection = (currentUserId: string | null) =>
         ...userBaseProjection,
         where: {
           deleted: isNotTrue,
+        },
+      },
+      promotedBy: {
+        columns: {
+          displayName: true,
         },
       },
       post: {

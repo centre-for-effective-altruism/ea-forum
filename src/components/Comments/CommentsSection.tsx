@@ -24,7 +24,7 @@ export default async function CommentsSection({
         )}
       </Type>
       <NewComment postId={postId} className="mb-6" />
-      <CommentsSort className="mb-4" />
+      <CommentsSort className="mb-3" />
       <CommentsList className={className} />
     </CommentsListProvider>
   );

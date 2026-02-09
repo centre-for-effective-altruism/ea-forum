@@ -21,7 +21,7 @@ export default function CommentBody({
     className?: string;
   }
 >) {
-  const classes = `font-sans text-[14px] font-[450] ${className}`;
+  const classes = `font-sans text-[14px] font-[450] cursor-default ${className}`;
   if (html) {
     return (
       <div
