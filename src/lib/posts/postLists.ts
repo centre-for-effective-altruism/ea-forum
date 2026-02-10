@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
+import sortBy from "lodash/sortBy";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
-import { userBaseProjection } from "../users/userQueries";
+import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
   htmlSubstring,
@@ -94,6 +95,7 @@ export const postsListProjection = (
       postedAt: true,
       curatedDate: true,
       frontpageDate: true,
+      draft: true,
       question: true,
       isEvent: true,
       groupId: true,
@@ -110,6 +112,7 @@ export const postsListProjection = (
       shortform: true,
     },
     extras: {
+      coauthors: coauthorsSelector,
       customHtmlHighlight: (posts, { sql }) =>
         htmlSubstring(
           sql`${posts}."customHighlight"->>'html'`,
@@ -250,6 +253,34 @@ export const fetchStickyPostsList = ({
   });
 };
 
+export const fetchPostsListById = async (
+  currentUserId: string | null,
+  postId: string,
+): Promise<PostListItem | null> => {
+  const posts = await fetchPostsList({
+    currentUserId,
+    where: {
+      _id: postId,
+    },
+    limit: 1,
+  });
+  return posts[0] ?? null;
+};
+
+export const fetchPostsListByIds = async (
+  currentUserId: string | null,
+  postIds: string[],
+): Promise<PostListItem[]> => {
+  const posts = await fetchPostsList({
+    currentUserId,
+    where: {
+      _id: { in: postIds },
+    },
+  });
+  const order = new Map(postIds.map((id, i) => [id, i]));
+  return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
+};
+
 export const fetchSidebarOpportunities = (limit: number) => {
   const tagId = process.env.OPPORTUNITIES_TAG_ID;
   if (!tagId) {
@@ -325,7 +356,7 @@ export const fetchMoreFromAuthorPostsList = async ({
   minScore?: number;
   limit: number;
 }) => {
-  // TODO: Can we do this a single drizzle query instead of fetching the post?
+  // TODO: Can we do this in a single drizzle query instead of fetching the post?
   const post = await db.query.posts.findFirst({
     columns: {
       userId: true,
@@ -410,7 +441,7 @@ export const fetchRecentOpportunitiesPostsList = async ({
   limit: number;
 }) => {
   // TODO: This logic for these recommendations in ForumMagnum is much more
-  // complicated - this will be for now though
+  // complicated - this will be enough for now though
   return fetchPostsList({
     currentUserId,
     where: {

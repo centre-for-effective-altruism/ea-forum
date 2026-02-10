@@ -10,6 +10,7 @@ import { vector } from "@electric-sql/pglite/vector";
 import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { cube } from "@electric-sql/pglite/contrib/cube";
 import { defineRelations } from "drizzle-orm";
+import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
   comments,
@@ -59,6 +60,9 @@ const relations = defineRelations(
       user: r.one.users({
         from: r.posts.userId,
         to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
       contents: r.one.revisions({
         from: r.posts.contentsLatest,
@@ -67,6 +71,9 @@ const relations = defineRelations(
       group: r.one.localgroups({
         from: r.posts.groupId,
         to: r.localgroups._id,
+        where: {
+          deleted: false,
+        },
       }),
       podcastEpisode: r.one.podcastEpisodes({
         from: r.posts.podcastEpisodeId,
@@ -79,6 +86,9 @@ const relations = defineRelations(
       comments: r.many.comments({
         from: r.posts._id,
         to: r.comments.postId,
+        where: {
+          deleted: false,
+        },
       }),
       votes: r.many.votes({
         from: r.posts._id,
@@ -111,10 +121,23 @@ const relations = defineRelations(
       tag: r.one.tags({
         from: r.comments.tagId,
         to: r.tags._id,
+        where: {
+          deleted: false,
+        },
       }),
       user: r.one.users({
         from: r.comments.userId,
         to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      promotedBy: r.one.users({
+        from: r.comments.promotedByUserId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
       votes: r.many.votes({
         from: r.comments._id,
@@ -128,26 +151,49 @@ const relations = defineRelations(
       topLevelComment: r.one.comments({
         from: r.comments.topLevelCommentId,
         to: r.comments._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      bookmarks: r.many.bookmarks({
+        from: r.comments._id,
+        to: r.bookmarks.documentId,
+        where: {
+          collectionName: "Comments",
+        },
       }),
     },
     tags: {
       comments: r.many.comments({
         from: r.tags._id,
         to: r.comments.tagId,
+        where: {
+          deleted: false,
+        },
       }),
     },
     revisions: {
       user: r.one.users({
         from: r.revisions.userId,
         to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
       tag: r.one.tags({
         from: r.revisions.documentId,
         to: r.tags._id,
+        where: {
+          deleted: false,
+        },
       }),
       post: r.one.posts({
         from: r.revisions.documentId,
         to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
+        },
       }),
     },
     userLoginTokens: {
@@ -159,12 +205,9 @@ const relations = defineRelations(
   }),
 );
 
-if (!process.env.DATABASE_URL && !isAnyTest()) {
-  throw new Error("Postgres URL is not configured");
-}
-
-export const db = isAnyTest()
-  ? pgLiteDrizzle({
+const createDb = () => {
+  if (isAnyTest()) {
+    return pgLiteDrizzle({
       relations,
       logger: process.env.LOG_DRIZZLE_QUERIES === "true",
       // We supply a custom client here with extensions. Note this just makes the
@@ -182,11 +225,25 @@ export const db = isAnyTest()
           cube,
         },
       }),
-    })
-  : pgDrizzle(process.env.DATABASE_URL, {
-      relations,
-      logger: process.env.LOG_DRIZZLE_QUERIES === "true",
     });
+  }
+  if (!process.env.DATABASE_URL) {
+    throw new Error("Postgres URL is not configured");
+  }
+  const db = pgDrizzle(process.env.DATABASE_URL, {
+    relations,
+    logger: process.env.LOG_DRIZZLE_QUERIES === "true",
+  });
+  if (
+    ["full", "simple"].includes(process.env.ENABLE_QUERY_PERFORMANCE_LOGGER ?? "")
+  ) {
+    const explainAnalyze = process.env.ENABLE_QUERY_PERFORMANCE_LOGGER === "full";
+    createPerformanceLogger(db.$client, explainAnalyze);
+  }
+  return db;
+};
+
+export const db = createDb();
 
 export type Db = typeof db;
 

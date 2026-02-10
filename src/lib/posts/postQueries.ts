@@ -1,12 +1,11 @@
-import { not, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { posts, users } from "../schema";
-import { userBaseProjection } from "../users/userQueries";
+import { posts, User } from "../schema";
+import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
-import { userCanSuggestPostForCurated } from "./postsHelpers";
-import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
-import { userCanDo } from "../users/userHelpers";
-import type { CurrentUser } from "../users/currentUser";
+import { postStatuses } from "./postsHelpers";
+import { isNotTrue } from "../utils/queryHelpers";
+import { reactorsSelector } from "../votes/reactorsSelector";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -20,14 +19,23 @@ export const currentUserSuggestedCurationSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
     sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
-export const fetchPostDisplay = (currentUserId: string | null, postId: string) => {
-  return db.query.posts.findFirst({
+export const fetchPostDisplay = async (
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null,
+  postId: string,
+) => {
+  const currentUserId = currentUser?._id ?? null;
+  const currentUserIsModerator =
+    currentUser?.isAdmin ||
+    currentUser?.groups?.includes("sunshineRegiment") ||
+    false;
+  const post = await db.query.posts.findFirst({
     columns: {
       _id: true,
       title: true,
       slug: true,
       url: true,
       baseScore: true,
+      extendedScore: true,
       voteCount: true,
       commentCount: true,
       readTimeMinutesOverride: true,
@@ -48,7 +56,9 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
       sharingSettings: true,
     },
     extras: {
+      coauthors: coauthorsSelector,
       tags: postTagsProjection,
+      reactors: reactorsSelector("Posts"),
       ...(currentUserId
         ? {
             currentUserIsShared: currentUserIsSharedSelector(currentUserId),
@@ -60,6 +70,19 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
     },
     where: {
       _id: postId,
+      OR: currentUserIsModerator
+        ? undefined
+        : [
+            ...(currentUserId ? [{ userId: currentUserId }] : []),
+            {
+              draft: isNotTrue,
+              deletedDraft: isNotTrue,
+              rejected: isNotTrue,
+              isFuture: isNotTrue,
+              postedAt: { isNotNull: true },
+              status: postStatuses.STATUS_APPROVED,
+            },
+          ],
     },
     with: {
       user: userBaseProjection,
@@ -127,91 +150,7 @@ export const fetchPostDisplay = (currentUserId: string | null, postId: string) =
         : {}),
     },
   });
+  return post ?? null;
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
-
-export const toggleSuggestedForCuration = async (
-  currentUser: CurrentUser,
-  postId: string,
-) => {
-  await db.transaction(async (txn) => {
-    const post = await db.query.posts.findFirst({
-      columns: {
-        frontpageDate: true,
-        curatedDate: true,
-        suggestForCuratedUserIds: true,
-      },
-      where: {
-        _id: postId,
-      },
-    });
-    if (!post) {
-      throw new Error("Post not found");
-    }
-    if (!userCanSuggestPostForCurated(currentUser, post)) {
-      throw new Error(
-        "You do not have permission to suggest this post for curation",
-      );
-    }
-    const userId = currentUser._id;
-    const result = await db.execute<{ suggestForCuratedUserIds: string[] }>(sql`
-      UPDATE ${posts}
-      SET "suggestForCuratedUserIds" =
-        CASE WHEN ${userId} = ANY(COALESCE("suggestForCuratedUserIds", '{}'))
-          THEN ARRAY_REMOVE(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
-          ELSE ARRAY_APPEND(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
-        END
-      WHERE ${posts._id} = ${postId}
-      RETURNING "suggestForCuratedUserIds"
-    `);
-    await logFieldChanges(txn, currentUser._id, {
-      documentId: postId,
-      fieldName: "suggestForCuratedUserIds",
-      oldValue: post.suggestForCuratedUserIds,
-      newValue: result.rows[0].suggestForCuratedUserIds,
-    });
-  });
-};
-
-export const setAsQuickTakesPost = async (
-  currentUser: CurrentUser,
-  postId: string,
-) => {
-  if (!userCanDo(currentUser, "posts.edit.all")) {
-    throw new Error("Permission denied");
-  }
-  await db.transaction(async (txn) => {
-    const post = await txn.query.posts.findFirst({
-      columns: {
-        userId: true,
-      },
-      where: {
-        _id: postId,
-      },
-    });
-    if (!post) {
-      throw new Error("Post not found");
-    }
-    await Promise.all([
-      updateWithFieldChanges(txn, currentUser, posts, postId, {
-        shortform: true,
-      }),
-      updateWithFieldChanges(txn, currentUser, users, post.userId, {
-        shortformFeedId: postId,
-      }),
-    ]);
-  });
-};
-
-export const toggleEnableRecommendation = async (
-  currentUser: CurrentUser,
-  postId: string,
-) => {
-  if (!userCanDo(currentUser, "posts.edit.all")) {
-    throw new Error("Permission denied");
-  }
-  await updateWithFieldChanges(db, currentUser, posts, postId, {
-    disableRecommendation: not(posts.disableRecommendation),
-  });
-};

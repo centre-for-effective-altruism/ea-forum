@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/schema";
 import { postgresExtensions } from "@/lib/postgresExtensions";
 import { postgresFunctions } from "@/lib/postgresFunctions";
+import { createUniquePostUpvotersQuery } from "@/lib/postgresViews";
 
 // server-only breaks vitest if not mocked
 vi.mock("server-only", () => {
@@ -21,5 +22,8 @@ beforeAll(async () => {
   const { apply } = await pushSchema(schema, db);
   await apply();
 
-  await Promise.all(postgresFunctions.map((func) => db.execute(func.source)));
+  await Promise.all([
+    ...postgresFunctions.map((func) => db.execute(func.source)),
+    db.execute(createUniquePostUpvotersQuery),
+  ]);
 });

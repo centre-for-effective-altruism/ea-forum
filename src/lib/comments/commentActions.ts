@@ -3,9 +3,13 @@
 import { z } from "zod/v4";
 import { actionClient } from "../actionClient";
 import { getCurrentUser } from "../users/currentUser";
-import { createPostComment } from "./commentMutations";
 import { fetchCommentsListItem, fetchFrontpageQuickTakes } from "./commentLists";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
+import {
+  createPostComment,
+  updateCommentPinnedOnProfile,
+  updateQuickTakeFrontpage,
+} from "./commentMutations";
 
 export const createPostCommentAction = actionClient
   .inputSchema(
@@ -40,7 +44,7 @@ export const createPostCommentAction = actionClient
         draft,
       });
       return await fetchCommentsListItem({
-        currentUserId: user._id,
+        currentUser: user,
         commentId,
       });
     },
@@ -57,9 +61,49 @@ export const fetchQuickTakesAction = actionClient
   .action(async ({ parsedInput: { includeCommunity, offset, limit } }) => {
     const currentUser = await getCurrentUser();
     return await fetchFrontpageQuickTakes({
-      currentUserId: currentUser?._id ?? null,
+      currentUser,
       includeCommunity,
       offset,
       limit,
     });
+  });
+
+export const updateCommentPinnedOnProfileAction = actionClient
+  .inputSchema(
+    z.object({
+      commentId: z.string(),
+      pinned: z.boolean(),
+    }),
+  )
+  .action(async ({ parsedInput: { commentId, pinned } }) => {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Please login");
+    }
+    const isPinnedOnProfile = await updateCommentPinnedOnProfile(
+      user,
+      commentId,
+      pinned,
+    );
+    return { isPinnedOnProfile };
+  });
+
+export const updateQuickTakeFrontpageAction = actionClient
+  .inputSchema(
+    z.object({
+      commentId: z.string(),
+      frontpage: z.boolean(),
+    }),
+  )
+  .action(async ({ parsedInput: { commentId, frontpage } }) => {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("Please login");
+    }
+    const shortformFrontpage = await updateQuickTakeFrontpage(
+      user,
+      commentId,
+      frontpage,
+    );
+    return { shortformFrontpage };
   });

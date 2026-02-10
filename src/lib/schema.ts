@@ -27,9 +27,8 @@ import {
 /**
  * This is a custom timestamp type to meet our needs - _all_ time/date fields in
  * Postgres should use this type. This type always includes a timezone, and we
- * also automatically format the date from the custom format used by Postgres
- * to standard ISO8601 (this is required to, for instance, send the data to
- * elasticsearch without some complicated preprocessing).
+ * automatically format the date from the custom format used by Postgres to
+ * standard ISO-8601.
  */
 const timestamp = customType<{
   data: string;
@@ -535,7 +534,7 @@ export const comments = pgTable(
     contentsLatest: text("contents_latest"),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     score: doublePrecision().default(0).notNull(),
     inactive: boolean().default(false).notNull(),
     afBaseScore: doublePrecision(),
@@ -1110,7 +1109,7 @@ export const electionCandidates = pgTable(
     postCount: doublePrecision().default(0).notNull(),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     score: doublePrecision().default(0).notNull(),
     inactive: boolean().default(false).notNull(),
     afBaseScore: doublePrecision(),
@@ -1392,6 +1391,7 @@ export const localgroups = pgTable(
 );
 
 export type Localgroup = typeof localgroups.$inferSelect;
+export type InsertLocalgroup = typeof localgroups.$inferInsert;
 
 export const messages = pgTable(
   "Messages",
@@ -1957,7 +1957,7 @@ export const posts = pgTable(
     customHighlightLatest: text("customHighlight_latest"),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     score: doublePrecision().default(0).notNull(),
     inactive: boolean().default(false).notNull(),
     afBaseScore: doublePrecision(),
@@ -2792,7 +2792,7 @@ export const tagRels = pgTable(
     userId: varchar({ length: 27 }),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     score: doublePrecision().default(0).notNull(),
     inactive: boolean().default(false).notNull(),
     afBaseScore: doublePrecision(),
@@ -2938,7 +2938,7 @@ export const revisions = pgTable(
     changeMetrics: jsonb<{ added: number; removed: number }>().notNull(),
     voteCount: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     score: doublePrecision().default(0).notNull(),
     afBaseScore: doublePrecision(),
     afExtendedScore: jsonb(),
@@ -3316,7 +3316,7 @@ export const tags = pgTable(
     voteCount: doublePrecision().default(0).notNull(),
     score: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
-    extendedScore: jsonb(),
+    extendedScore: jsonb<Record<string, number>>(),
     inactive: boolean().default(false).notNull(),
     afBaseScore: doublePrecision(),
     afExtendedScore: jsonb(),
@@ -3431,7 +3431,7 @@ export const votes = pgTable(
     userId: varchar({ length: 27 }).notNull(),
     authorIds: varchar({ length: 27 }).array(),
     voteType: text().$type<VoteType>().notNull(),
-    extendedVoteType: jsonb(),
+    extendedVoteType: jsonb<Record<string, boolean>>(),
     power: doublePrecision().notNull(),
     afPower: doublePrecision(),
     cancelled: boolean().default(false).notNull(),

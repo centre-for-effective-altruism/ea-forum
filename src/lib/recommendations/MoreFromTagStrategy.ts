@@ -31,13 +31,13 @@ class MoreFromTagStrategy extends RecommendationStrategy {
     if (!tag) {
       throw new Error("Couldn't choose a relevant tag for post " + postId);
     }
-    const posts = await this.recommendDefaultWithPostFilter(
+    const postIds = await this.recommendDefaultWithPostFilter(
       currentUser,
       count,
       postId,
       sql`("p"."tagRelevance"->${tag._id})::INTEGER >= 1`,
     );
-    return { posts, settings: { postId } };
+    return { postIds, settings: { postId } };
   }
 
   private async chooseTagForPost(postId: string): Promise<{ _id: string } | null> {

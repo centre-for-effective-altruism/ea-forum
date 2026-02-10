@@ -1,13 +1,22 @@
+import { not, sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import { db } from "../db";
-import { posts } from "../schema";
+import { posts, users } from "../schema";
 import { randomId } from "../utils/random";
-import { postStatuses } from "./postsHelpers";
+import {
+  canUserArchivePost,
+  canUserEditPostMetadata,
+  postStatuses,
+  userCanSuggestPostForCurated,
+} from "./postsHelpers";
 import { createRevision } from "../revisions/revisionMutations";
-import { MINIMUM_APPROVAL_KARMA } from "../users/userHelpers";
+import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
+import { MINIMUM_APPROVAL_KARMA, userCanDo } from "../users/userHelpers";
 import { updatePostUser } from "./postCallbacks";
 import { getUniqueSlug } from "../slugs/uniqueSlug";
 import { performVote } from "../votes/voteMutations";
+import { fetchPostsListById } from "./postLists";
+import { elasticSyncDocument } from "../search/elastic/elasticSync";
 
 export const createShortformPost = async (user: CurrentUser) => {
   const _id = randomId();
@@ -82,4 +91,141 @@ export const createShortformPost = async (user: CurrentUser) => {
   // New post notifications
 
   return _id;
+};
+
+export const toggleSuggestedForCuration = async (
+  currentUser: CurrentUser,
+  postId: string,
+) => {
+  await db.transaction(async (txn) => {
+    const post = await db.query.posts.findFirst({
+      columns: {
+        frontpageDate: true,
+        curatedDate: true,
+        suggestForCuratedUserIds: true,
+      },
+      where: {
+        _id: postId,
+      },
+    });
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    if (!userCanSuggestPostForCurated(currentUser, post)) {
+      throw new Error(
+        "You do not have permission to suggest this post for curation",
+      );
+    }
+    const userId = currentUser._id;
+    const result = await db.execute<{ suggestForCuratedUserIds: string[] }>(sql`
+      UPDATE ${posts}
+      SET "suggestForCuratedUserIds" =
+        CASE WHEN ${userId} = ANY(COALESCE("suggestForCuratedUserIds", '{}'))
+          THEN ARRAY_REMOVE(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
+          ELSE ARRAY_APPEND(COALESCE("suggestForCuratedUserIds", '{}'), ${userId})
+        END
+      WHERE ${posts._id} = ${postId}
+      RETURNING "suggestForCuratedUserIds"
+    `);
+    await logFieldChanges(txn, currentUser._id, {
+      documentId: postId,
+      fieldName: "suggestForCuratedUserIds",
+      oldValue: post.suggestForCuratedUserIds,
+      newValue: result.rows[0].suggestForCuratedUserIds,
+    });
+  });
+};
+
+export const setAsQuickTakesPost = async (
+  currentUser: CurrentUser,
+  postId: string,
+) => {
+  if (!userCanDo(currentUser, "posts.edit.all")) {
+    throw new Error("Permission denied");
+  }
+  await db.transaction(async (txn) => {
+    const post = await txn.query.posts.findFirst({
+      columns: {
+        userId: true,
+      },
+      where: {
+        _id: postId,
+      },
+    });
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    await Promise.all([
+      updateWithFieldChanges(txn, currentUser, posts, postId, {
+        shortform: true,
+      }),
+      updateWithFieldChanges(txn, currentUser, users, post.userId, {
+        shortformFeedId: postId,
+      }),
+    ]);
+  });
+};
+
+export const toggleEnableRecommendation = async (
+  currentUser: CurrentUser,
+  postId: string,
+) => {
+  if (!userCanDo(currentUser, "posts.edit.all")) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, posts, postId, {
+    disableRecommendation: not(posts.disableRecommendation),
+  });
+};
+
+export const toggleFrontpage = async (currentUser: CurrentUser, postId: string) => {
+  if (!userCanDo(currentUser, "posts.edit.all")) {
+    throw new Error("Permission denied");
+  }
+  await db.transaction(async (txn) => {
+    const post = await txn.query.posts.findFirst({
+      columns: {
+        frontpageDate: true,
+      },
+      where: {
+        _id: postId,
+      },
+    });
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    await updateWithFieldChanges(db, currentUser, posts, postId, {
+      frontpageDate: post.frontpageDate ? null : new Date().toISOString(),
+      meta: false,
+      draft: false,
+      reviewedByUserId: currentUser._id,
+    });
+  });
+};
+
+export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
+  const post = await fetchPostsListById(currentUser._id, postId);
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  if (!canUserEditPostMetadata(currentUser, post)) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
+  void elasticSyncDocument("Posts", postId);
+};
+
+export const archiveDraft = async (currentUser: CurrentUser, postId: string) => {
+  const post = await fetchPostsListById(currentUser._id, postId);
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  if (!canUserArchivePost(currentUser, post)) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, posts, postId, {
+    draft: true,
+    deletedDraft: true,
+  });
+  void elasticSyncDocument("Posts", postId);
 };

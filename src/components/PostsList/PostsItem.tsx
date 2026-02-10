@@ -15,6 +15,7 @@ import {
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
+import TruncationContainer from "../TruncationContainer";
 import PostsTooltip from "../PostsTooltip";
 import UsersName from "../UsersName";
 import PostIcons from "./PostIcons";
@@ -41,6 +42,7 @@ export default function PostsItem({
     voteCount,
     sticky,
     user,
+    coauthors,
     readStatus,
   } = post;
   const postLink = postGetPageUrl({ post });
@@ -86,7 +88,7 @@ export default function PostsItem({
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
-            orient="vertical"
+            orientation="vertical"
             className={clsx("min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("truncate", cardView && "mt-1")}>
@@ -109,18 +111,37 @@ export default function PostsItem({
               </Type>
             </div>
             <Type style="bodySmall">
-              <InteractionWrapper className="inline">
-                <UsersName user={user} />
+              <InteractionWrapper>
+                <TruncationContainer
+                  items={[
+                    <UsersName key="author" user={user} />,
+                    ...(coauthors ?? []).map((coauthor) => (
+                      <span key={coauthor._id}>
+                        <span className="coauthor-comma">, </span>
+                        <UsersName user={coauthor} />
+                      </span>
+                    )),
+                  ]}
+                  tooltipClassName="[&_.coauthor-comma]:hidden"
+                  gap={0}
+                  hiddenItemsTooltip
+                  afterNodeTextStyle="bodySmall"
+                  afterNodeFormat={(count) => `+ ${count} more`}
+                  finalNode={
+                    <>
+                      <span className="px-1">·</span>
+                      <TimeAgo
+                        As="span"
+                        textStyle="bodySmall"
+                        time={post.postedAt}
+                        includeAgo
+                      />
+                      <span className="px-1">·</span>
+                      <span>{readTime}m read</span>
+                    </>
+                  }
+                />
               </InteractionWrapper>
-              {" · "}
-              <TimeAgo
-                As="span"
-                textStyle="bodySmall"
-                time={post.postedAt}
-                includeAgo
-              />
-              {" · "}
-              {readTime}m read
             </Type>
           </div>
           <InteractionWrapper>

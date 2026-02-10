@@ -17,12 +17,12 @@ export const onVoteAction = actionClient
       collectionName: voteableCollectionNameSchema,
       documentId: z.string(),
       voteType: voteTypeSchema,
-      extendedVote: z.record(z.string(), z.string()).optional(),
+      extendedVoteType: z.record(z.string(), z.boolean()).optional(),
     }),
   )
   .action(
     async ({
-      parsedInput: { collectionName, documentId, voteType, extendedVote },
+      parsedInput: { collectionName, documentId, voteType, extendedVoteType },
     }) => {
       const [user, document] = await Promise.all([
         getCurrentUser(),
@@ -41,7 +41,7 @@ export const onVoteAction = actionClient
           document,
           user,
           voteType,
-          extendedVote,
+          extendedVoteType,
         }),
       );
     },

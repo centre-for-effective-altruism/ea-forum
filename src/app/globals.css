@@ -54,6 +54,8 @@
   --color-new-user-sprout: #5eb25c;
   --color-diff-added: #d4ead4;
   --color-diff-removed: #f0d3d3;
+  --color-moderator-comment: #ecf2ed;
+  --color-promoted-comment: #137283;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;

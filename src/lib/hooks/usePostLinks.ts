@@ -26,3 +26,12 @@ export const usePostAnalyticsLink = (
     ? `/postAnalytics?${qs.stringify({ postId: post._id })}`
     : null;
 };
+
+export const useDuplicateEventLink = (
+  post: PostDisplay | PostListItem,
+): string | null => {
+  const { currentUser } = useCurrentUser();
+  return canUserEditPostMetadata(currentUser, post) && post.isEvent
+    ? `/newPost?${qs.stringify({ eventForm: post.isEvent, templateId: post._id })}`
+    : null;
+};

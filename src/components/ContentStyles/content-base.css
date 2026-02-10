@@ -1,17 +1,17 @@
-.post-body {
+.content-base {
   color: var(--foreground);
   font-family: var(--font-stack-serif);
   font-size: 17px;
   font-weight: 450;
   word-break: break-word;
 }
-.post-body p:not(:first-child) {
+.content-base p:not(:first-child) {
   margin-top: 1em;
 }
-.post-body p:not(:last-child) {
+.content-base p:not(:last-child) {
   margin-bottom: 1em;
 }
-.post-body pre {
+.content-base pre {
   background-color: var(--color-gray-100);
   border-radius: 5px;
   border: solid 1px var(--color-gray-300);
@@ -19,7 +19,7 @@
   white-space: pre-wrap;
   margin: 1em 0;
 }
-.post-body code {
+.content-base code {
   font-family: var(--font-stack-mono);
   font-size: 0.7em;
   font-weight: 400;
@@ -29,7 +29,7 @@
   padding-bottom: 3px;
   line-height: 1.42;
 }
-.post-body blockquote {
+.content-base blockquote {
   font-weight: 450;
   padding: 16px;
   border-left: solid 3px var(--color-gray-300);
@@ -39,7 +39,12 @@
   font-family: var(--font-stack-serif);
   color: var(--color-gray-900);
 }
-.post-body li {
+.content-base ul {
+  list-style-type: revert;
+  padding-left: revert;
+  margin: 0;
+}
+.content-base li {
   font-size: 17px;
   line-height: 1.75em;
   font-weight: 450;
@@ -47,85 +52,85 @@
   color: var(--color-gray-900);
   margin-bottom: 6.5px;
 }
-.post-body h1,
-.post-body h2,
-.post-body h3,
-.post-body h4,
-.post-body h5,
-.post-body h6 {
+.content-base h1,
+.content-base h2,
+.content-base h3,
+.content-base h4,
+.content-base h5,
+.content-base h6 {
   color: var(--color-gray-1000);
   font-family: var(--font-stack-serif);
 }
-.post-body h1,
-.post-body h2,
-.post-body h3 {
+.content-base h1,
+.content-base h2,
+.content-base h3 {
   margin-top: 1em;
 }
-.post-body h1 {
+.content-base h1 {
   font-size: 31.2px;
   font-weight: 600;
   line-height: 1.25em;
   margin-left: -0.02em;
 }
-.post-body h1:first-child {
+.content-base h1:first-child {
   margin-top: 0;
   margin-block-start: -3px;
 }
-.post-body h2 {
+.content-base h2 {
   font-size: 26px;
   font-weight: 650;
   line-height: 1.25em;
 }
-.post-body h2:first-child {
+.content-base h2:first-child {
   margin-top: 0;
   margin-block-start: -2px;
 }
-.post-body h3 {
+.content-base h3 {
   font-size: 20.8px;
   font-weight: 600;
   line-height: 1.25em;
 }
-.post-body h3:first-child {
+.content-base h3:first-child {
   margin-top: 0;
   margin-block-start: 0px;
 }
-.post-body h4 {
+.content-base h4 {
   font-size: 15.6px;
   font-weight: 600;
   line-height: 1.75em;
 }
-.post-body img {
+.content-base img {
   max-width: 100%;
 }
-.post-body sup {
+.content-base sup {
   vertical-align: baseline;
   top: -0.6em;
   font-size: 65%;
   position: relative;
   line-height: 0;
 }
-.post-body sub {
+.content-base sub {
   font-size: 70%;
   vertical-align: baseline;
   position: relative;
   top: 0.2em;
   padding-right: 0.07em;
 }
-.post-body a,
-.post-body a:hover,
-.post-body a:active {
+.content-base a,
+.content-base a:hover,
+.content-base a:active {
   color: var(--color-primary);
 }
-.post-body a u,
-.post-body a:hover u,
-.post-body a:active u {
+.content-base a u,
+.content-base a:hover u,
+.content-base a:active u {
   text-decoration: none;
 }
-.post-body a:visited,
-.post-body a.visited {
+.content-base a:visited,
+.content-base a.visited {
   color: var(--color-visited-link);
 }
-.post-body table {
+.content-base table {
   border-collapse: collapse;
   border-spacing: 0;
   border: 1px double var(--color-table-border);
@@ -134,141 +139,141 @@
   text-align: left;
   width: 100%;
 }
-.post-body table * {
+.content-base table * {
   font-family: var(--font-stack-sans);
   font-size: 14px;
   line-height: 1.4em;
 }
-.post-body table sup * {
+.content-base table sup * {
   font-size: 10px;
 }
-.post-body table ul,
-.post-body table ol {
+.content-base table ul,
+.content-base table ol {
   padding-left: 1.5em;
 }
-.post-body figure.table {
+.content-base figure.table {
   width: fit-content;
   height: fit-content;
 }
-.post-body figure.table:has(> table > tbody > tr > td + td + td + td) {
+.content-base figure.table:has(> table > tbody > tr > td + td + td + td) {
   overflow-x: auto;
 }
-.post-body figure.table:has(> table > tbody > tr > td + td + td + td) table {
+.content-base figure.table:has(> table > tbody > tr > td + td + td + td) table {
   width: 700px;
 }
-.post-body td,
-.post-body th {
+.content-base td,
+.content-base th {
   min-width: 2em;
   padding: 0.4em;
   border: 1px double var(--color-table-cell-border);
   word-break: normal;
 }
-.post-body td p,
-.post-body th p {
+.content-base td p,
+.content-base th p {
   margin: 0.5em 2px 0.5em 2px;
   line-height: 1.4em;
 }
-.post-body td p:first-of-type,
-.post-body th p:first-of-type {
+.content-base td p:first-of-type,
+.content-base th p:first-of-type {
   margin-top: 0;
 }
-.post-body th {
+.content-base th {
   background: var(--color-table-header-bg);
   font-weight: 700;
 }
-.post-body figure {
+.content-base figure {
   max-width: 100%;
   margin: 1em auto;
   text-align: center;
 }
-.post-body figcaption {
+.content-base figcaption {
   font-size: 11.7px;
   font-weight: 450;
   font-family: var(--font-stack-serif);
   line-height: 1.75em;
   color: var(--color-gray-900);
 }
-.post-body ol > li > ol {
+.content-base ol > li > ol {
   list-style: lower-alpha;
 }
-.post-body ol > li > ol > li > ol {
+.content-base ol > li > ol > li > ol {
   list-style: lower-roman;
 }
-.post-body u {
+.content-base u {
   text-decoration: none;
 }
-.post-body p.spoiler {
+.content-base p.spoiler {
   margin: 0;
 }
-.post-body .spoiler {
+.content-base .spoiler {
   padding: 8px;
   pointer-events: auto;
 }
-.post-body div.spoilers {
+.content-base div.spoilers {
   margin: 1em 0;
   overflow: auto;
 }
-.post-body .spoiler:not(:hover),
-.post-body .spoiler:not(:hover) a,
-.post-body .spoiler:not(:hover) a:hover,
-.post-body .spoiler:not(:hover) a:focus,
-.post-body .spoiler:not(:hover) a::after,
-.post-body .spoiler:not(:hover) li,
-.post-body .spoiler:not(:hover) code,
-.post-body div.spoilers:not(:hover),
-.post-body div.spoilers:not(:hover) a,
-.post-body div.spoilers:not(:hover) a:hover,
-.post-body div.spoilers:not(:hover) a:focus,
-.post-body div.spoilers:not(:hover) a::after,
-.post-body div.spoilers:not(:hover) li,
-.post-body div.spoilers:not(:hover) code,
-.post-body .spoilers > p:hover ~ p,
-.post-body .spoilers > p:hover ~ p a,
-.post-body .spoilers > p:hover ~ p a:hover,
-.post-body .spoilers > p:hover ~ p a:focus,
-.post-body .spoilers > p:hover ~ p a::after,
-.post-body .spoilers > p:hover ~ p li,
-.post-body .spoilers > p:hover ~ p code {
+.content-base .spoiler:not(:hover),
+.content-base .spoiler:not(:hover) a,
+.content-base .spoiler:not(:hover) a:hover,
+.content-base .spoiler:not(:hover) a:focus,
+.content-base .spoiler:not(:hover) a::after,
+.content-base .spoiler:not(:hover) li,
+.content-base .spoiler:not(:hover) code,
+.content-base div.spoilers:not(:hover),
+.content-base div.spoilers:not(:hover) a,
+.content-base div.spoilers:not(:hover) a:hover,
+.content-base div.spoilers:not(:hover) a:focus,
+.content-base div.spoilers:not(:hover) a::after,
+.content-base div.spoilers:not(:hover) li,
+.content-base div.spoilers:not(:hover) code,
+.content-base .spoilers > p:hover ~ p,
+.content-base .spoilers > p:hover ~ p a,
+.content-base .spoilers > p:hover ~ p a:hover,
+.content-base .spoilers > p:hover ~ p a:focus,
+.content-base .spoilers > p:hover ~ p a::after,
+.content-base .spoilers > p:hover ~ p li,
+.content-base .spoilers > p:hover ~ p code {
   background-color: var(--color-gray-1000);
   color: var(--color-gray-1000);
 }
-.post-body div.spoilers:hover {
+.content-base div.spoilers:hover {
   background: var(--color-spoiler-hover);
 }
-.post-body div.spoilers > p {
+.content-base div.spoilers > p {
   margin: 0 !important;
   padding: 0.5em 8px !important;
 }
-.post-body p.spoiler-v2 {
+.content-base p.spoiler-v2 {
   margin: 0;
   padding: 0.5em 8px;
 }
-.post-body .spoilers:not(:hover)::selection,
-.post-body .spoilers:not(:hover) ::selection {
+.content-base .spoilers:not(:hover)::selection,
+.content-base .spoilers:not(:hover) ::selection {
   background-color: transparent;
 }
-.post-body div.metaculus-preview {
+.content-base div.metaculus-preview {
   background-color: var(--color-metaculus-preview);
 }
-.post-body div.metaculus-preview iframe,
-.post-body div.manifold-preview iframe,
-.post-body div.strawpoll-embed iframe,
-.post-body div.metaforecast-preview iframe,
-.post-body div.estimaker-preview iframe,
-.post-body div.viewpoints-preview iframe,
-.post-body div.owid-preview iframe {
+.content-base div.metaculus-preview iframe,
+.content-base div.manifold-preview iframe,
+.content-base div.strawpoll-embed iframe,
+.content-base div.metaforecast-preview iframe,
+.content-base div.estimaker-preview iframe,
+.content-base div.viewpoints-preview iframe,
+.content-base div.owid-preview iframe {
   width: 100%;
   height: 400px;
   border: none;
 }
-.post-body div.neuronpedia-preview iframe {
+.content-base div.neuronpedia-preview iframe {
   width: 100%;
   height: 360px;
   max-width: 639px;
   border: 1px solid var(--color-gray-300);
   border-radius: 6px;
 }
-.post-body div.calendly-preview iframe {
+.content-base div.calendly-preview iframe {
   width: calc(100% - 10px);
   height: 750px;
   border: 2px solid var(--color-gray-200);
@@ -277,18 +282,18 @@
   margin-right: 5px;
   margin-left: 5px;
 }
-.post-body div.estimaker-preview,
-.post-body div.viewpoints-preview {
+.content-base div.estimaker-preview,
+.content-base div.viewpoints-preview {
   display: flex;
 }
-.post-body figure.media div[data-oembed-url*="youtube.com"],
-.post-body figure.media div[data-oembed-url*="youtu.be"] {
+.content-base figure.media div[data-oembed-url*="youtube.com"],
+.content-base figure.media div[data-oembed-url*="youtu.be"] {
   position: relative;
   height: 0;
   padding-bottom: 56.2493%;
 }
-.post-body figure.media div[data-oembed-url*="youtube.com"] iframe,
-.post-body figure.media div[data-oembed-url*="youtu.be"] iframe {
+.content-base figure.media div[data-oembed-url*="youtube.com"] iframe,
+.content-base figure.media div[data-oembed-url*="youtu.be"] iframe {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -296,58 +301,60 @@
   left: 0;
   border: none;
 }
-.post-body .footnote-item > * {
+.content-base .footnote-item > * {
   vertical-align: text-top;
 }
-.post-body .footnote-back-link {
+.content-base .footnote-back-link {
   position: relative;
   top: -0.2em;
 }
-.post-body .footnotes .footnote-back-link > sup {
+.content-base .footnotes .footnote-back-link > sup {
   margin-right: 0;
 }
-.post-body .footnote-content {
+.content-base .footnote-content {
   display: inline-block;
   padding: 0 0.3em;
   width: 95%;
 }
-.post-body .detailsBlock {
+.content-base .detailsBlock {
   border-radius: 8px;
   margin-top: 0;
   margin-bottom: 8px;
 }
-.post-body .detailsBlockTitle {
+.content-base .detailsBlockTitle {
   padding: 8px;
   border-radius: 0;
 }
-.post-body .detailsBlockTitle > * {
+.content-base .detailsBlockTitle > * {
   display: inline;
 }
-.post-body .detailsBlockTitle[open] {
+.content-base .detailsBlockTitle[open] {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
-.post-body summary.detailsBlockTitle {
+.content-base summary.detailsBlockTitle {
   cursor: pointer;
 }
-.post-body .detailsBlockContent {
+.content-base .detailsBlockContent {
   padding: 0 8px 8px 20px;
 }
-.post-body .detailsBlockContent > p:last-child,
-.post-body .detailsBlockTitle > p:last-child {
+.content-base .detailsBlockContent > p:last-child,
+.content-base .detailsBlockTitle > p:last-child {
   margin-bottom: 0 !important;
 }
-.post-body .detailsBlockTitle p:has(> br[data-cke-filler="true"]:only-child)::after {
+.content-base
+  .detailsBlockTitle
+  p:has(> br[data-cke-filler="true"]:only-child)::after {
   content: "Collapsible Section Title";
   color: var(--color-details-title);
   pointer-events: none;
   position: absolute;
   top: 8px;
 }
-.post-body .detailsBlock.closed .detailsBlockContent {
+.content-base .detailsBlock.closed .detailsBlockContent {
   display: none;
 }
-.post-body div.detailsBlockTitle {
+.content-base div.detailsBlockTitle {
   position: relative;
   padding-left: 20px;
   font-family: var(--font-stack-sans);
@@ -355,7 +362,7 @@
   line-height: 1.25em;
   font-weight: 600;
 }
-.post-body div.detailsBlockTitle::before {
+.content-base div.detailsBlockTitle::before {
   content: "▼";
   cursor: pointer;
   font-size: 12px;
@@ -363,18 +370,18 @@
   position: absolute;
   left: 0;
 }
-.post-body .detailsBlock.closed div.detailsBlockTitle::before {
+.content-base .detailsBlock.closed div.detailsBlockTitle::before {
   content: "▶";
 }
-.post-body .conditionallyVisibleBlock {
+.content-base .conditionallyVisibleBlock {
   border: 1px solid var(--color-conditionally-visible);
   border-radius: 4px;
   padding: 8px;
 }
-.post-body .conditionallyVisibleBlock.defaultHidden {
+.content-base .conditionallyVisibleBlock.defaultHidden {
   display: none;
 }
-.post-body .ck-cta-button {
+.content-base .ck-cta-button {
   display: block;
   font-family: var(--font-stack-sans);
   min-width: 30px;
@@ -391,53 +398,53 @@
   color: var(--color-gray-50);
   transition: background-color 0.3s ease;
 }
-.post-body .ck-cta-button:hover {
+.content-base .ck-cta-button:hover {
   opacity: 1;
   background-color: var(--color-primary-dark);
   color: var(--color-gray-50);
 }
-.post-body .ck-cta-button:visited,
-.post-body .ck-cta-button.visited,
-.post-body .ck-cta-button:visited:hover,
-.post-body .ck-cta-button.visited:hover {
+.content-base .ck-cta-button:visited,
+.content-base .ck-cta-button.visited,
+.content-base .ck-cta-button:visited:hover,
+.content-base .ck-cta-button.visited:hover {
   color: var(--color-gray-50);
 }
-.post-body .ck-cta-button:disabled {
+.content-base .ck-cta-button:disabled {
   background-color: var(--color-primary);
   color: var(--color-gray-50);
   opacity: 0.5;
 }
-.post-body .ck-cta-button-centered {
+.content-base .ck-cta-button-centered {
   margin: auto;
 }
-.post-body .footnotes {
+.content-base .footnotes {
   font-size: 0.9em;
   margin-top: 40px;
   padding-top: 40px;
   border-top: 1px solid var(--color-gray-300);
 }
-.post-body .footnotes sup {
+.content-base .footnotes sup {
   margin-right: 10px;
 }
-.post-body .footnotes ol {
+.content-base .footnotes ol {
   margin-block-start: 1em;
   padding-inline-start: 0;
   margin-inline-start: 1em;
 }
-.post-body .footnotes li {
+.content-base .footnotes li {
   font-size: 0.9em;
 }
-.post-body .footnotes blockquote {
+.content-base .footnotes blockquote {
   font-size: 0.9em;
   line-height: 1.5em;
   padding: 1px;
   padding-left: 3px;
   margin-top: -10px;
 }
-.post-body .footnotes-sep {
+.content-base .footnotes-sep {
   display: none;
 }
-.post-body hr {
+.content-base hr {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -448,7 +455,7 @@
   background: transparent;
   text-align: center;
 }
-.post-body hr:after {
+.content-base hr:after {
   margin-left: 12px;
   color: var(--color-post-hr);
   font-size: 13px;

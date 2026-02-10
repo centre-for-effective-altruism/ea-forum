@@ -10,10 +10,13 @@ import { getCurrentUser } from "../users/currentUser";
 import { fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
 import {
+  archiveDraft,
+  moveToDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
+  toggleFrontpage,
   toggleSuggestedForCuration,
-} from "./postQueries";
+} from "./postMutations";
 
 export const fetchPostsListAction = actionClient
   .inputSchema(postsListViewSchema)
@@ -81,4 +84,34 @@ export const toggleEnableRecommendationAction = actionClient
       throw new Error("Not logged in");
     }
     await toggleEnableRecommendation(currentUser, postId);
+  });
+
+export const toggleFrontpageAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Not logged in");
+    }
+    await toggleFrontpage(currentUser, postId);
+  });
+
+export const moveToDraftAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Not logged in");
+    }
+    await moveToDraft(currentUser, postId);
+  });
+
+export const archiveDraftAction = actionClient
+  .inputSchema(z.object({ postId: z.string() }))
+  .action(async ({ parsedInput: { postId } }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Not logged in");
+    }
+    await archiveDraft(currentUser, postId);
   });

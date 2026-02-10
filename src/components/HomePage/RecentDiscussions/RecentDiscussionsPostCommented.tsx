@@ -1,7 +1,7 @@
 "use client";
 
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import { defaultCommentSorting } from "@/lib/comments/commentSortings";
 import RecentDiscussionsItem, {
   RecentDiscussionItemProps,
 } from "./RecentDiscussionsItem";
@@ -68,7 +68,10 @@ export default function RecentDiscussionsPostCommented({
     // If we get here it usually means a spam comment was deleted
     return null;
   }
-  const nestedComments = commentsToCommentTree<CommentsList>(comments ?? []);
+  const nestedComments = commentsToCommentTree(
+    defaultCommentSorting,
+    comments ?? [],
+  );
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
   const commentsLink = postGetCommentsUrl({ post });
@@ -83,7 +86,7 @@ export default function RecentDiscussionsPostCommented({
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
-            orient="vertical"
+            orientation="vertical"
             className="min-w-[33px]"
           />
           <div className="truncate grow">

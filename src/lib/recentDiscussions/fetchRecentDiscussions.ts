@@ -53,7 +53,7 @@ const getPostProjection = ({
           topLevelComment: commentProj,
         },
         where: {
-          ...viewableCommentFilter,
+          ...viewableCommentFilter(currentUserId),
           score: { gt: 0 },
           deletedPublic: isNotTrue,
           parentCommentId: excludeTopLevel ? { isNotNull: true } : undefined,
@@ -87,6 +87,23 @@ const getCommentProjection = (currentUserId: string | null) => {
           _id: true,
           slug: true,
           title: true,
+          userId: true,
+          coauthorUserIds: true,
+          frontpageDate: true,
+        },
+        with: {
+          ...(currentUserId
+            ? {
+                readStatus: {
+                  columns: {
+                    lastUpdated: true,
+                  },
+                  where: {
+                    userId: currentUserId,
+                  },
+                },
+              }
+            : {}),
         },
       },
     },
@@ -114,7 +131,7 @@ const getTagProjection = (currentUserId: string | null) =>
       comments: {
         ...getCommentProjection(currentUserId),
         where: {
-          ...viewableCommentFilter,
+          ...viewableCommentFilter(currentUserId),
           score: { gt: 0 },
           deletedPublic: false,
           RAW: (commentsTable) => sql`(
@@ -231,7 +248,7 @@ const buildRecentDiscussionsSubqueries = (
         db.query.comments.findMany({
           ...getCommentProjection(currentUserId),
           where: {
-            ...viewableCommentFilter,
+            ...viewableCommentFilter(currentUserId),
             baseScore: { gt: 0 },
             shortform: true,
             parentCommentId: { isNull: true },

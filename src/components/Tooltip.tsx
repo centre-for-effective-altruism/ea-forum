@@ -7,6 +7,7 @@ import {
   flip,
   offset,
   Placement,
+  safePolygon,
   shift,
   useDismiss,
   useFloating,
@@ -16,12 +17,14 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
+import clsx from "clsx";
 
 export default function Tooltip({
   placement,
-  className = "",
-  tooltipClassName = "",
+  className,
+  tooltipClassName,
   title,
+  interactable,
   As = "div",
   children,
 }: Readonly<{
@@ -29,6 +32,7 @@ export default function Tooltip({
   className?: string;
   tooltipClassName?: string;
   title: ReactNode;
+  interactable?: boolean;
   As?: ElementType;
   children: ReactNode;
 }>) {
@@ -46,9 +50,12 @@ export default function Tooltip({
     middleware: [offset(10), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
-  const hover = useHover(context, { move: false });
+  const hover = useHover(context, {
+    move: false,
+    handleClose: interactable ? safePolygon() : undefined,
+  });
   const focus = useFocus(context);
-  const dismiss = useDismiss(context);
+  const dismiss = useDismiss(context, { outsidePress: true });
   const role = useRole(context, { role: "tooltip" });
   const { getReferenceProps, getFloatingProps } = useInteractions([
     hover,
@@ -73,10 +80,11 @@ export default function Tooltip({
             ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className={`
-              absolute bg-(--color-tooltip-background) text-gray-50 rounded
-              z-(--zindex-tooltip) px-2 py-1 overflow-hidden ${tooltipClassName}
-            `}
+            className={clsx(
+              "absolute bg-(--color-tooltip-background) text-gray-50 rounded",
+              "z-(--zindex-tooltip) px-2 py-1 overflow-hidden",
+              tooltipClassName,
+            )}
             data-component="Tooltip"
           >
             {title}
