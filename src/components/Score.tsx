@@ -6,15 +6,15 @@ import Type from "./Type";
 export default function Score({
   baseScore,
   voteCount,
-  orient,
+  orientation,
   className,
 }: Readonly<{
   baseScore: number;
   voteCount: number;
-  orient: "vertical" | "horizontal";
+  orientation: "vertical" | "horizontal";
   className?: string;
 }>) {
-  const orientClass = orient === "vertical" ? "flex-col" : "flex-row-reverse";
+  const orientClass = orientation === "vertical" ? "flex-col" : "flex-row-reverse";
   return (
     <div
       className={clsx(

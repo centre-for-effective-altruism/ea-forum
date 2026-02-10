@@ -3,12 +3,12 @@ import { db } from "@/lib/db";
 import type { User } from "../schema";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
+import { commentTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
-import { commentTagsProjection } from "../tags/tagQueries";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments

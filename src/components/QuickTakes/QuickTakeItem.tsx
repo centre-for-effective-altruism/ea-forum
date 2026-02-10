@@ -46,7 +46,11 @@ export default function QuickTakeItem({
       "
     >
       <div className="flex flex-row gap-2 items-center mb-2 text-gray-600">
-        <Score baseScore={baseScore} voteCount={voteCount} orient="horizontal" />
+        <Score
+          baseScore={baseScore}
+          voteCount={voteCount}
+          orientation="horizontal"
+        />
         <Type style="body" className="text-black font-[700]">
           {user ? (
             <InteractionWrapper>

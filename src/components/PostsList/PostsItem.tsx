@@ -88,7 +88,7 @@ export default function PostsItem({
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
-            orient="vertical"
+            orientation="vertical"
             className={clsx("min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("truncate", cardView && "mt-1")}>

@@ -17,7 +17,7 @@ export default async function CommentsSection({
   });
   return (
     <CommentsListProvider comments={comments}>
-      <Type style="commentsHeader" className="mt-18 mb-6" id="comments">
+      <Type style="commentsHeader" className="mt-12 mb-6" id="comments">
         Comments{" "}
         {comments.length > 0 && (
           <span className="text-gray-600">{comments.length}</span>

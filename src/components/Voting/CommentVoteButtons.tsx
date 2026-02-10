@@ -49,7 +49,7 @@ export default function CommentVoteButtons({
               {voteCount === 1 ? "" : "s"})
             </Type>
           }
-          className="text-[14px] font-500 text-gray-600"
+          className="text-[14px] font-500 text-gray-600 cursor-default"
         >
           {baseScore}
         </Tooltip>
