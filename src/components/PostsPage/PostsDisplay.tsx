@@ -114,7 +114,9 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               </div>
             </div>
           )}
-          <Suspense>
+          <Suspense
+            fallback={<div className="rounded bg-gray-100 w-full h-[182px]" />}
+          >
             <MorePostsLikeThis postId={post._id} />
           </Suspense>
         </PostColumn>
