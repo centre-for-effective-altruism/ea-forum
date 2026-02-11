@@ -1,6 +1,5 @@
 import { useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { fetchNotificationsAction } from "@/lib/notifications/notificationActions";
 import type { NotificationDisplay as TNotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import range from "lodash/range";
 import debounce from "lodash/debounce";
@@ -10,6 +9,7 @@ import InfiniteLoadTrigger from "../InfiniteLoadTrigger";
 import NotificationDisplay from "./NotificationDisplay";
 import Dropdown from "../Dropdown/Dropdown";
 import Type from "../Type";
+import { rpc } from "@/lib/rpc";
 
 const PAGE_SIZE = 20;
 
@@ -34,7 +34,7 @@ export default function NotificationsDropdown({
         return next;
       });
 
-      const { data = [] } = await fetchNotificationsAction({
+      const data = await rpc.notifications.list({
         offset: pageIndex * PAGE_SIZE,
         limit: PAGE_SIZE,
       });
