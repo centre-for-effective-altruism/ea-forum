@@ -2,7 +2,7 @@ declare namespace NodeJS {
   export interface ProcessEnv {
     // General settings
     LOG_DRIZZLE_QUERIES?: "true" | "false";
-    ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple";
+    ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
