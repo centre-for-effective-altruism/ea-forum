@@ -40,6 +40,13 @@ export default async function PostDisplay({ postId }: { postId: string }) {
     post.contents?.wordCount ?? null,
   );
 
+  // TODO: When we implement sequence UI, that should also hide recommendations
+  const showRecommendations =
+    !post.shortform &&
+    !post.draft &&
+    !post.isEvent &&
+    (post.contents?.wordCount ?? 0) >= 500;
+
   return (
     <PostDisplayProvider post={post}>
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
@@ -114,11 +121,13 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               </div>
             </div>
           )}
-          <Suspense
-            fallback={<div className="rounded bg-gray-100 w-full h-[182px]" />}
-          >
-            <MorePostsLikeThis postId={post._id} />
-          </Suspense>
+          {showRecommendations && (
+            <Suspense
+              fallback={<div className="rounded bg-gray-100 w-full h-[182px]" />}
+            >
+              <MorePostsLikeThis postId={post._id} />
+            </Suspense>
+          )}
         </PostColumn>
       </ReadProgress>
     </PostDisplayProvider>
