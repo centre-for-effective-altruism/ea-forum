@@ -1,9 +1,10 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
+import { captureException } from "@sentry/nextjs";
 import { db } from "../db";
 import { users } from "../schema";
-import { getCurrentUser } from "@/lib/users/currentUser";
 import { userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { approveNewUser } from "./userMutations";
@@ -11,8 +12,47 @@ import {
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
 } from "../mailchimp";
+import {
+  LOGIN_TOKEN_COOKIE_NAME,
+  loginWithPassword,
+  UserIsBannedError,
+} from "../authHelpers";
+import {
+  fetchCurrentUserByHashedToken,
+  getCurrentUser,
+} from "@/lib/users/currentUser";
 
 export const usersRouter = {
+  // This handles user/password login. Google login redirects through auth0
+  // and uses the route handler at /auth/auth0/callback
+  login: os
+    .input(
+      z.object({
+        email: z.string().nonempty(),
+        password: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { email, password } }) => {
+      try {
+        const cookieStore = await cookies();
+        const hashedToken = await loginWithPassword(cookieStore, email, password);
+        const currentUser = await fetchCurrentUserByHashedToken(hashedToken);
+        return { ok: true, currentUser };
+      } catch (e) {
+        if (e instanceof UserIsBannedError) {
+          return { redirect: "/ban-notice" };
+        }
+        captureException(e);
+        if (e instanceof Error) {
+          return { ok: false, error: e.message };
+        }
+        return { ok: false, error: "Unknown error" };
+      }
+    }),
+  logout: os.handler(async () => {
+    const cookieStore = await cookies();
+    cookieStore.delete(LOGIN_TOKEN_COOKIE_NAME);
+  }),
   currentUser: os.handler(getCurrentUser),
   subscribeToDigest: os
     .input(z.object({ email: z.string().optional() }))
