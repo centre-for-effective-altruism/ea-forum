@@ -7,7 +7,6 @@ import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
   htmlSubstring,
-  isNotTrue,
   RelationalFilter,
   RelationalOrderBy,
   RelationalProjection,
@@ -26,14 +25,14 @@ const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 // TODO: This should be a function that takes the current user and does permission
 // checks
 export const viewablePostFilter = {
-  draft: isNotTrue,
-  deletedDraft: isNotTrue,
-  isFuture: isNotTrue,
-  unlisted: isNotTrue,
-  shortform: isNotTrue,
-  rejected: isNotTrue,
-  authorIsUnreviewed: isNotTrue,
-  hiddenRelatedQuestion: isNotTrue,
+  draft: false,
+  deletedDraft: false,
+  isFuture: false,
+  unlisted: false,
+  shortform: false,
+  rejected: false,
+  authorIsUnreviewed: false,
+  hiddenRelatedQuestion: false,
   postedAt: { isNotNull: true },
   status: postStatuses.STATUS_APPROVED,
 } as const;
@@ -213,8 +212,8 @@ export const fetchFrontpagePostsList = ({
     where: {
       ...(onlyTagId ? { RAW: onlyTagFilter(onlyTagId) } : null),
       ...(excludeTagId ? { RAW: excludeTagFilter(excludeTagId) } : null),
-      isEvent: isNotTrue,
-      sticky: isNotTrue,
+      isEvent: false,
+      sticky: false,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },
@@ -298,8 +297,8 @@ export const fetchSidebarOpportunities = (limit: number) => {
     },
     where: {
       ...viewablePostFilter,
-      isEvent: isNotTrue,
-      sticky: isNotTrue,
+      isEvent: false,
+      sticky: false,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },
@@ -373,9 +372,9 @@ export const fetchMoreFromAuthorPostsList = async ({
     where: {
       _id: { ne: postId },
       groupId: { isNull: true },
-      isEvent: isNotTrue,
+      isEvent: false,
       baseScore: { gte: minScore },
-      disableRecommendation: isNotTrue,
+      disableRecommendation: false,
       user: {
         _id: post.userId,
         deleted: false,
@@ -400,9 +399,9 @@ export const fetchCuratedAndPopularPostsList = async ({
       currentUserId,
       where: {
         RAW: (postsTable) =>
-          sql`NOW() - ${postsTable.curatedDate} < '7 days'::INTERVAL`,
-        disableRecommendation: isNotTrue,
-        readStatus: currentUserId ? { isRead: isNotTrue } : undefined,
+          sql`${postsTable.curatedDate} > NOW() - '7 days'::INTERVAL`,
+        disableRecommendation: false,
+        readStatus: currentUserId ? { isRead: false } : undefined,
       },
       orderBy: {
         curatedDate: "desc",
@@ -413,15 +412,15 @@ export const fetchCuratedAndPopularPostsList = async ({
       currentUserId,
       where: {
         RAW: (postsTable) => sql`
-          NOW() - ${postsTable.frontpageDate} < '7 days'::INTERVAL AND
+          ${postsTable.frontpageDate} > NOW() - '7 days'::INTERVAL AND
           ${excludeTagFilter(process.env.COMMUNITY_TAG_ID)(postsTable)}
         `,
         curatedDate: { isNull: true },
         groupId: { isNull: true },
-        disableRecommendation: isNotTrue,
-        readStatus: currentUserId ? { isRead: isNotTrue } : undefined,
+        disableRecommendation: false,
+        readStatus: currentUserId ? { isRead: false } : undefined,
         user: {
-          deleted: isNotTrue,
+          deleted: false,
         },
       },
       orderBy: {

@@ -3,13 +3,10 @@
 import { useCallback } from "react";
 import type { RecentDiscussionPost } from "../recentDiscussions/fetchRecentDiscussions";
 import type { JsonRecord } from "../typeHelpers";
+import { rpc } from "../rpc";
 import { useCurrentUser } from "./useCurrentUser";
 import { useItemsRead } from "./useItemsRead";
 import { useNewEvents } from "./useNewEvents";
-import {
-  increasePostViewCountAction,
-  markPostCommentsReadAction,
-} from "../posts/postActions";
 
 type ViewablePost = Pick<
   RecentDiscussionPost,
@@ -41,7 +38,7 @@ export const useRecordPostView = (post: ViewablePost) => {
         // session - update the client-side cache and notify the server
         if (!postsRead[post._id]) {
           setPostRead(post._id, true);
-          void increasePostViewCountAction({ postId: post._id });
+          void rpc.posts.incrementViewCount({ postId: post._id });
         }
 
         // Register page-visit event
@@ -76,7 +73,7 @@ export const useRecordPostView = (post: ViewablePost) => {
           // likely that someone else posts a comment after the first time we
           // send this but then we send it again because e.g. the user clicked on
           // another comment (from the initial render).
-          void markPostCommentsReadAction({ postId });
+          void rpc.posts.markCommentsRead({ postId });
         }
       }
     },

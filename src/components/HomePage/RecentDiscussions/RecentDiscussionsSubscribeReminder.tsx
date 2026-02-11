@@ -1,13 +1,10 @@
 "use client";
 
-import { FormEvent, useCallback, useState } from "react";
+import { SubmitEvent, useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
+import { rpc } from "@/lib/rpc";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import {
-  hideSubscribePokeAction,
-  subscribeToDigestAction,
-} from "@/lib/users/userActions";
 import {
   AnalyticsContext,
   AnalyticsInViewTracker,
@@ -30,12 +27,12 @@ export default function RecentDiscussionsSubscribeReminder() {
   const [hide, setHide] = useState(false);
 
   const onSubmit = useCallback(
-    async (ev: FormEvent) => {
+    async (ev: SubmitEvent) => {
       ev.preventDefault();
       if (currentUser || email) {
         setLoading(true);
         try {
-          await subscribeToDigestAction({ email });
+          await rpc.users.subscribeToDigest({ email });
           await refetchCurrentUser();
           setSuccess(true);
           captureEvent("subscribeReminderButtonClicked", {
@@ -57,7 +54,7 @@ export default function RecentDiscussionsSubscribeReminder() {
   const onHide = useCallback(() => {
     setHide(true);
     if (currentUser) {
-      void hideSubscribePokeAction();
+      void rpc.users.hideSubscribePoke();
     }
     captureEvent("subscribeReminderButtonClicked", {
       buttonType: "dontAskAgainButton",

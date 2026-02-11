@@ -1,7 +1,7 @@
 import { ReactNode, useCallback } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
-import { logoutAction } from "@/lib/users/authActions";
+import { rpc } from "@/lib/rpc";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import BookmarkIcon from "@heroicons/react/24/outline/BookmarkIcon";
@@ -22,7 +22,7 @@ export default function UserDropdownMenu({
   }, [currentUser]);
 
   const onLogout = useCallback(async () => {
-    await logoutAction();
+    await rpc.users.logout();
     window.location.reload();
   }, []);
 

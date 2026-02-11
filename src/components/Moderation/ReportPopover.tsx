@@ -1,12 +1,9 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import {
-  createPostReportAction,
-  createCommentReportAction,
-} from "@/lib/reports/reportActions";
+import { SubmitEvent, useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
+import { rpc } from "@/lib/rpc";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { CommentsList } from "@/lib/comments/commentLists";
@@ -50,11 +47,11 @@ export default function ReportPopover({
   }, [currentUser, open, onClose, onSignup]);
 
   const onSubmit = useCallback(
-    (ev: FormEvent<HTMLFormElement>) => {
+    (ev: SubmitEvent<HTMLFormElement>) => {
       ev.preventDefault();
       const action = post
-        ? createPostReportAction({ postId: post._id, description })
-        : createCommentReportAction({ commentId: comment._id, description });
+        ? rpc.reports.createPost({ postId: post._id, description })
+        : rpc.reports.createComment({ commentId: comment._id, description });
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       toast.promise(action, {
         loading: <Type>Creating report...</Type>,
