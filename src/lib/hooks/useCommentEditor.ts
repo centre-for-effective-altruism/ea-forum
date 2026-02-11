@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  FormEvent,
+  SubmitEvent,
   KeyboardEvent,
   startTransition,
   useCallback,
@@ -12,9 +12,9 @@ import toast from "react-hot-toast";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
 import type { CommentsList } from "../comments/commentLists";
-import { createPostCommentAction } from "../comments/commentActions";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useCurrentUser } from "./useCurrentUser";
+import { rpc } from "../rpc";
 
 type UseCommentEditorDocument =
   | {
@@ -51,7 +51,7 @@ export const useCommentEditor = ({
   }, []);
 
   const onSubmit = useCallback(
-    async (ev?: FormEvent) => {
+    async (ev?: SubmitEvent) => {
       ev?.preventDefault();
       if (!currentUser) {
         onSignup();
@@ -66,7 +66,7 @@ export const useCommentEditor = ({
       const data = await editorApi.getSubmitData();
       startTransition(async () => {
         try {
-          const { data: newComment } = await createPostCommentAction({
+          const newComment = await rpc.comments.create({
             postId,
             shortform,
             parentCommentId: null,

@@ -1,5 +1,6 @@
 import "server-only";
 import { bookmarksRouter } from "./bookmarks/bookmarksRouter";
+import { commentsRouter } from "./comments/commentsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
 import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
@@ -13,6 +14,7 @@ import { votesRouter } from "./votes/voteRouter";
 
 export const router = {
   bookmarks: bookmarksRouter,
+  comments: commentsRouter,
   lwEvents: lwEventRouter,
   notifications: notificationsRouter,
   readStatuses: readStatusesRouter,
