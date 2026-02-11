@@ -20,7 +20,7 @@ type VoteState = {
   showVotingPatternWarning: boolean;
 };
 
-type VoteStateUpdate = Parameters<typeof rpc.vote.create>[0];
+type VoteStateUpdate = Parameters<typeof rpc.votes.create>[0];
 
 const getInitialVoteState = (document: PostDisplay | CommentsList): VoteState => ({
   baseScore: document.baseScore,
@@ -105,7 +105,7 @@ export const useVote = ({
   const { value, execute } = useOptimisticState<VoteState, VoteStateUpdate>(
     getInitialVoteState(document),
     doOptimisticVote.bind(null, currentUser?.karma ?? 0),
-    rpc.vote.create,
+    rpc.votes.create,
   );
 
   const onVote = useCallback(

@@ -9,7 +9,7 @@ import {
   voteableCollectionNameSchema,
 } from "../votes/voteableDocument";
 
-export const vote = {
+export const votesRouter = {
   create: os
     .input(
       z.object({

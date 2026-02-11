@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { userIsInGroup } from "../users/userHelpers";
 import { useCurrentUser } from "./useCurrentUser";
-import { toggleAdminAction } from "../users/userActions";
+import { rpc } from "../rpc";
 import toast from "react-hot-toast";
 
 export const useAdminToggle = () => {
@@ -12,7 +12,7 @@ export const useAdminToggle = () => {
     const toastId = toast.loading("Toggling admin powers...");
     try {
       setIsAdmin((admin) => !admin);
-      await toggleAdminAction();
+      await rpc.users.toggleAdmin();
       window.location.reload();
     } catch (e) {
       setIsAdmin((admin) => !admin);

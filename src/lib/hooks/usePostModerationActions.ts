@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { useCurrentUser } from "./useCurrentUser";
 import { userCanDo } from "../users/userHelpers";
+import { rpc } from "../rpc";
 import {
   canUserArchivePost,
   canUserEditPostMetadata,
@@ -15,7 +16,6 @@ import {
   toggleFrontpageAction,
   toggleSuggestedForCurationAction,
 } from "../posts/postActions";
-import { approveNewUserAction } from "../users/userActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
 
@@ -76,7 +76,7 @@ export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
   const userId = post.user?._id;
   const approveNewUser = useCallback(async () => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    toast.promise(approveNewUserAction({ userId: userId! }), {
+    toast.promise(rpc.users.approveNewUser({ userId: userId! }), {
       loading: "Loading...",
       success: "Approved new user",
       error: "Something went wrong",

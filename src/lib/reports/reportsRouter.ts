@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { getCurrentUser } from "../users/currentUser";
 import { createCommentReport, createPostReport } from "./reportMutations";
 
-export const reports = {
+export const reportsRouter = {
   createPost: os
     .input(
       z.object({

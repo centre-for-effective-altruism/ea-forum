@@ -1,12 +1,14 @@
 import "server-only";
-import { recentDiscussions } from "./recentDiscussions/recentDiscussionsRouter";
-import { reports } from "./reports/reportsRouter";
-import { vote } from "./votes/voteRouter";
+import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
+import { reportsRouter } from "./reports/reportsRouter";
+import { usersRouter } from "./users/usersRouter";
+import { votesRouter } from "./votes/voteRouter";
 
 export const router = {
-  recentDiscussions,
-  reports,
-  vote,
+  recentDiscussions: recentDiscussionsRouter,
+  reports: reportsRouter,
+  users: usersRouter,
+  votes: votesRouter,
 };
 
 export type Router = typeof router;

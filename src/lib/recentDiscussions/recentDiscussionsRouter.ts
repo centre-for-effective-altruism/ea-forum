@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { getCurrentUser } from "../users/currentUser";
 import { fetchRecentDiscussions } from "./fetchRecentDiscussions";
 
-export const recentDiscussions = {
+export const recentDiscussionsRouter = {
   list: os
     .input(
       z.object({
