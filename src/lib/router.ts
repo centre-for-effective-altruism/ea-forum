@@ -6,6 +6,7 @@ import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
 import { reportsRouter } from "./reports/reportsRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
+import { tagsRouter } from "./tags/tagsRouter";
 import { usersRouter } from "./users/usersRouter";
 import { votesRouter } from "./votes/voteRouter";
 
@@ -17,6 +18,7 @@ export const router = {
   recentDiscussions: recentDiscussionsRouter,
   reports: reportsRouter,
   subscriptions: subscriptionsRouter,
+  tags: tagsRouter,
   users: usersRouter,
   votes: votesRouter,
 };
