@@ -5,7 +5,7 @@ import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
-import { fetchPostsListAction } from "@/lib/posts/postActions";
+import { rpc } from "@/lib/rpc";
 import { usePostsListView } from "@/lib/hooks/usePostsListView";
 import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListView";
 import clsx from "clsx";
@@ -50,7 +50,7 @@ export default function PostsList({
     setLoading(true);
 
     try {
-      const { data = [] } = await fetchPostsListAction({
+      const data = await rpc.posts.list({
         ...loadMoreView,
         offset: offset_,
       });

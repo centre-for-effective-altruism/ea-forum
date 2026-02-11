@@ -8,14 +8,6 @@ import {
   canUserEditPostMetadata,
   userCanSuggestPostForCurated,
 } from "../posts/postsHelpers";
-import {
-  archiveDraftAction,
-  moveToDraftAction,
-  setAsQuickTakesPostAction,
-  toggleEnableRecommendationAction,
-  toggleFrontpageAction,
-  toggleSuggestedForCurationAction,
-} from "../posts/postActions";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
 
@@ -27,7 +19,7 @@ export const useSuggestForCurated = (post: PostDisplay | PostListItem) => {
   const toggleSuggestedForCuration = useCallback(() => {
     const newSuggested = !hasSuggestedForCuration;
     setHasSuggestedForCuration(newSuggested);
-    void toggleSuggestedForCurationAction({ postId: post._id });
+    void rpc.posts.toggleSuggestedForCuration({ postId: post._id });
   }, [hasSuggestedForCuration, post._id]);
   const canSuggest = userCanSuggestPostForCurated(currentUser, post);
   return {
@@ -40,7 +32,7 @@ export const useSetAsQuickTakesPost = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
   const setAsQuickTakesPost = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    toast.promise(setAsQuickTakesPostAction({ postId: post._id }), {
+    toast.promise(rpc.posts.setAsQuickTakesPost({ postId: post._id }), {
       loading: "Loading...",
       success: "Set quick takes post",
       error: "Something went wrong",
@@ -59,7 +51,7 @@ export const useExcludeFromRecommendations = (post: PostDisplay | PostListItem) 
   const toggleExcludeFromRecommendations = useCallback(() => {
     const newExcluded = !excludedFromRecommendations;
     setExcludedFromRecommendations(newExcluded);
-    void toggleEnableRecommendationAction({ postId: post._id });
+    void rpc.posts.toggleEnableRecommendations({ postId: post._id });
   }, [excludedFromRecommendations, post._id]);
   const canExclude = userCanDo(currentUser, "posts.edit.all");
   return {
@@ -95,7 +87,7 @@ export const useMoveToFrontpage = (post: PostDisplay | PostListItem) => {
   const toggleFrontpage = useCallback(() => {
     const newFrontpage = !frontpage;
     setFrontpage(newFrontpage);
-    void toggleFrontpageAction({ postId: post._id });
+    void rpc.posts.toggleFrontpage({ postId: post._id });
   }, [frontpage, post._id]);
   return {
     isFrontpage: frontpage,
@@ -108,7 +100,7 @@ export const useMoveToDraft = (post: PostDisplay | PostListItem) => {
   const [draft, setDraft] = useState(post.draft);
   const moveToDraft = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    toast.promise(moveToDraftAction({ postId: post._id }), {
+    toast.promise(rpc.posts.moveToDraft({ postId: post._id }), {
       loading: "Loading...",
       success: () => {
         setDraft(true);
@@ -127,7 +119,7 @@ export const useArchiveDraft = (post: PostDisplay | PostListItem) => {
   const [archived, setArchived] = useState(false);
   const archivePost = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    toast.promise(archiveDraftAction({ postId: post._id }), {
+    toast.promise(rpc.posts.archiveDraft({ postId: post._id }), {
       loading: "Loading...",
       success: () => {
         setArchived(true);

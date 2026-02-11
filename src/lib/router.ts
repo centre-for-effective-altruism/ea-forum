@@ -3,6 +3,7 @@ import { bookmarksRouter } from "./bookmarks/bookmarksRouter";
 import { commentsRouter } from "./comments/commentsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
+import { postsRouter } from "./posts/postsRouter";
 import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
 import { recommendationsRouter } from "./recommendations/recommendationsRouter";
@@ -17,6 +18,7 @@ export const router = {
   comments: commentsRouter,
   lwEvents: lwEventRouter,
   notifications: notificationsRouter,
+  posts: postsRouter,
   readStatuses: readStatusesRouter,
   recentDiscussions: recentDiscussionsRouter,
   recommendations: recommendationsRouter,
