@@ -4,6 +4,7 @@ import { lwEventRouter } from "./lwEvents/lwEventsRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
 import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
+import { recommendationsRouter } from "./recommendations/recommendationsRouter";
 import { reportsRouter } from "./reports/reportsRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
 import { tagsRouter } from "./tags/tagsRouter";
@@ -16,6 +17,7 @@ export const router = {
   notifications: notificationsRouter,
   readStatuses: readStatusesRouter,
   recentDiscussions: recentDiscussionsRouter,
+  recommendations: recommendationsRouter,
   reports: reportsRouter,
   subscriptions: subscriptionsRouter,
   tags: tagsRouter,
