@@ -1,5 +1,6 @@
 import { useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { rpc } from "@/lib/rpc";
 import type { NotificationDisplay as TNotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import range from "lodash/range";
 import debounce from "lodash/debounce";
@@ -9,7 +10,6 @@ import InfiniteLoadTrigger from "../InfiniteLoadTrigger";
 import NotificationDisplay from "./NotificationDisplay";
 import Dropdown from "../Dropdown/Dropdown";
 import Type from "../Type";
-import { rpc } from "@/lib/rpc";
 
 const PAGE_SIZE = 20;
 
