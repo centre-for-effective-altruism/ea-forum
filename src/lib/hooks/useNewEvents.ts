@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { InsertLWEvent } from "../schema";
 import type { JsonRecord } from "../typeHelpers";
 import { v4 as uuid } from "uuid";
-import { createLWEventAction } from "../lwEvents/lwEventActions";
+import { rpc } from "../rpc";
 import type { CreateLWEvent } from "../lwEvents/lwEventHelpers";
 import omit from "lodash/omit";
 
@@ -33,7 +33,7 @@ export const useNewEvents = () => {
         setEvents({ ...events, eventId: event });
       }
 
-      void createLWEventAction(event);
+      void rpc.lwEvents.create(event);
       return eventId;
     },
     [events],
@@ -45,7 +45,7 @@ export const useNewEvents = () => {
       const currentTime = new Date();
       const startTime = (event.properties?.startTime as number) ?? 0;
 
-      void createLWEventAction({
+      void rpc.lwEvents.create({
         ...event,
         properties: {
           endTime: currentTime.valueOf(),
