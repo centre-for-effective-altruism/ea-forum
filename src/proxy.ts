@@ -21,6 +21,7 @@ const newSitePatterns = [
   /^\/posts\/[^/]+$/, // Post pages without slug: /posts/[id]
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
+  /^\/rpc\//, // All /rpc/* routes
   /^\/people-directory$/, // People directory page
   /^\/about$/, // About page
   /^\/intro$/, // Intro page
