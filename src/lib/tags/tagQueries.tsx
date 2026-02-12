@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { sql } from "drizzle-orm";
+import keyBy from "lodash/keyBy";
 import { db } from "@/lib/db";
 import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
@@ -31,6 +32,27 @@ export const fetchCoreTags = cache(() => {
 });
 
 export type CoreTag = Awaited<ReturnType<typeof fetchCoreTags>>[0];
+
+export const fetchTagsById = async (tagIds: string[]) => {
+  const result = await db.query.tags.findMany({
+    columns: {
+      _id: true,
+      name: true,
+      slug: true,
+      postCount: true,
+    },
+    extras: {
+      description: htmlSubstring(sql`"description"->>'html'`),
+    },
+    where: {
+      _id: { in: tagIds },
+      deleted: false,
+    },
+  });
+  return keyBy(result, "_id");
+};
+
+export type TagBase = Awaited<ReturnType<typeof fetchTagsById>>[string];
 
 export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core" | "postCount"> & {
   description: string | null;

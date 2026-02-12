@@ -1,7 +1,9 @@
 "use client";
 
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useEffect, useMemo, useState } from "react";
+import type { TagBase } from "@/lib/tags/tagQueries";
 import { useFilterSettings } from "@/lib/hooks/useFilterSettings";
+import { rpc } from "@/lib/rpc";
 import {
   defaultVisibilityTagById,
   FilterMode,
@@ -12,7 +14,11 @@ import {
 import EyeSlashIcon from "@heroicons/react/16/solid/EyeSlashIcon";
 import clsx from "clsx";
 import Tooltip from "../Tooltip";
+import Loading from "../Loading";
 import Type, { typeStyles } from "../Type";
+import TagBody from "../ContentStyles/TagBody";
+import Link from "../Link";
+import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 
 const Button: FC<{
   secondary?: boolean;
@@ -93,7 +99,7 @@ const FilterButton: FC<{
             />
             <OptionButton
               name="Default"
-              active={mode === "Default"}
+              active={mode === "Default" || mode === 0}
               description={
                 <Type style="bodySmall">
                   This topic will have default filtering and sorting.
@@ -163,11 +169,15 @@ const FilterModeIcon: FC<{ filterMode: FilterMode }> = ({ filterMode }) => {
   }
 };
 
-const TagFilterButton: FC<FilterTag> = ({ tagId, tagName, filterMode }) => {
+const TagFilterButton: FC<
+  FilterTag & {
+    tag: TagBase | null;
+  }
+> = ({ tag, tagId, tagName, filterMode }) => {
   if (filterMode === "TagDefault") {
     filterMode = defaultVisibilityTagById(tagId)?.filterMode ?? "Default";
   }
-
+  const url = tag ? tagGetPageUrl({ tag }) : "#";
   return (
     <FilterButton
       name={
@@ -176,7 +186,20 @@ const TagFilterButton: FC<FilterTag> = ({ tagId, tagName, filterMode }) => {
         </>
       }
       mode={filterMode}
-      description={<Type>TODO Tag description</Type>}
+      description={
+        tag ? (
+          <div>
+            <TagBody html={tag.description} isExcerpt className="mb-3" />
+            <Type style="bodyHeavy">
+              <Link href={url} className="text-primary hover:opacity-70">
+                View all {tag.postCount} posts
+              </Link>
+            </Type>
+          </div>
+        ) : (
+          <Loading />
+        )
+      }
       removable
     />
   );
@@ -187,17 +210,42 @@ export default function FilterSettingsEditor({
 }: Readonly<{
   className?: string;
 }>) {
+  const [tags, setTags] = useState<Record<string, TagBase>>({});
   const { showFilterSettings, filterSettings } = useFilterSettings();
+
+  const tagIdsToFetch = useMemo(
+    () =>
+      filterSettings.tags
+        .map(({ tagId }) => tagId)
+        .filter((tagId) => !(tagId in tags))
+        .sort(),
+    [tags, filterSettings],
+  );
+
+  useEffect(() => {
+    void (async () => {
+      if (showFilterSettings && tagIdsToFetch.length) {
+        const tags = await rpc.tags.byIds({ tagIds: tagIdsToFetch });
+        setTags((previousTags) => ({ ...previousTags, ...tags }));
+      }
+    })();
+  }, [showFilterSettings, tagIdsToFetch]);
+
   if (!showFilterSettings) {
     return null;
   }
+
   return (
     <div
       data-component="FilterSettingsEditor"
       className={clsx("flex items-center gap-1 flex-wrap", className)}
     >
       {filterSettings.tags?.map((filterTag) => (
-        <TagFilterButton key={filterTag.tagId} {...filterTag} />
+        <TagFilterButton
+          key={filterTag.tagId}
+          tag={tags[filterTag.tagId] ?? null}
+          {...filterTag}
+        />
       ))}
       <FilterButton
         name={

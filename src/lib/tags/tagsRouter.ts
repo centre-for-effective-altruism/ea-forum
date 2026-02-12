@@ -1,9 +1,13 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { db } from "../db";
+import { fetchTagsById } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 
 export const tagsRouter = {
+  byIds: os
+    .input(z.object({ tagIds: z.array(z.string()) }))
+    .handler(async ({ input: { tagIds } }) => fetchTagsById(tagIds)),
   diff: os
     .input(z.object({ revisionId: z.string().nonempty() }))
     .handler(async ({ input: { revisionId } }) => {
