@@ -4,6 +4,7 @@ import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { QuickTakesListProvider } from "../QuickTakes/QuickTakesListContext";
+import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
@@ -11,6 +12,8 @@ import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import QuickTakesCommunityToggle from "../QuickTakes/QuickTakesCommunityToggle";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
+import FilterSettingsToggle from "./FilterSettingsToggle";
+import FilterSettingsEditor from "./FilterSettingsEditor";
 import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import NewQuickTake from "../QuickTakes/NewQuickTake";
@@ -64,47 +67,44 @@ export default async function HomePageFeed({
         </>
       ) : (
         <>
-          <div className="mb-2 flex items-center justify-between">
-            <Type style="sectionTitleLarge">New &amp; upvoted</Type>
-            <div className="flex items-center gap-1">
-              <Type
-                style="loadMore"
-                As="button"
-                className="cursor-pointer text-gray-600 hover:text-gray-1000"
-              >
-                Customize feed
-              </Type>
-              <PostsListViewPicker />
+          <FilterSettingsProvider>
+            <div className="mb-2 flex items-center justify-between">
+              <Type style="sectionTitleLarge">New &amp; upvoted</Type>
+              <div className="flex items-center gap-1">
+                <FilterSettingsToggle />
+                <PostsListViewPicker />
+              </div>
             </div>
-          </div>
-          <div className="mb-2">
-            <ViewBasedPostsList
-              viewType="list"
-              hideLoadMore
-              view={{
-                view: "sticky",
-                limit: 5,
-              }}
-            />
-          </div>
-          <div className="mb-10">
-            <ViewBasedPostsList
-              viewType="fromContext"
-              maxOffset={200}
-              view={{
-                view: "frontpage",
-                limit: 11,
-                excludeTagId: communityTagId,
-              }}
-              bottomRightNode={
-                <Type style="loadMore">
-                  <Link href="/allPosts" className="text-primary hover:opacity-70">
-                    Advanced sorting & filtering
-                  </Link>
-                </Type>
-              }
-            />
-          </div>
+            <FilterSettingsEditor className="mb-2" />
+            <div className="mb-2">
+              <ViewBasedPostsList
+                viewType="list"
+                hideLoadMore
+                view={{
+                  view: "sticky",
+                  limit: 5,
+                }}
+              />
+            </div>
+            <div className="mb-10">
+              <ViewBasedPostsList
+                viewType="fromContext"
+                maxOffset={200}
+                view={{
+                  view: "frontpage",
+                  limit: 11,
+                  excludeTagId: communityTagId,
+                }}
+                bottomRightNode={
+                  <Type style="loadMore">
+                    <Link href="/allPosts" className="text-primary hover:opacity-70">
+                      Advanced sorting & filtering
+                    </Link>
+                  </Type>
+                }
+              />
+            </div>
+          </FilterSettingsProvider>
           {communityTagId && (
             <>
               <div className="flex justify-between item-center">

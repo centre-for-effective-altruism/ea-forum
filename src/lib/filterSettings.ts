@@ -7,13 +7,13 @@ export const FILTER_MODE_CHOICES = [
   "Reduced",
 ] as const;
 
-type FilterMode =
+export type FilterMode =
   | (typeof FILTER_MODE_CHOICES)[number]
   | "TagDefault"
   | number
   | `x${number}`;
 
-type FilterTag = {
+export type FilterTag = {
   tagId: string;
   tagName: string;
   filterMode: FilterMode;
@@ -24,13 +24,13 @@ export type FilterSettings = {
   tags: FilterTag[];
 };
 
-const defaultVisibilityTags = process.env.COMMUNITY_TAG_ID
+const defaultVisibilityTags: FilterTag[] = process.env.COMMUNITY_TAG_ID
   ? [
       {
         tagId: process.env.COMMUNITY_TAG_ID,
         tagName: "Community",
-        filterMode: "TagDefault",
-      } as const,
+        filterMode: "Hidden",
+      },
     ]
   : [];
 
@@ -44,6 +44,11 @@ export const getDefaultFilterSettings = (): FilterSettings => {
     tags: defaultVisibilityTags.map((tf) => ({ ...tf, filterMode: "TagDefault" })),
   };
 };
+
+export const defaultVisibilityTagById = (id: string) =>
+  defaultVisibilityTags.find(({ tagId }) => tagId === id) ?? null;
+
+export const subscribePower = 25;
 
 export const resolveFrontpageFilters = (filterSettings: FilterSettings) => {
   const tagsWithDefaults: FilterTag[] = filterSettings.tags.map((tag) =>
@@ -77,7 +82,7 @@ export const filterModeToAdditiveKarmaModifier = (mode: FilterMode): number => {
   if (typeof mode === "number" && (mode <= 0 || 1 <= mode)) {
     return mode;
   }
-  return mode === "Subscribed" ? 25 : 0;
+  return mode === "Subscribed" ? subscribePower : 0;
 };
 
 export const filterModeToMultiplicativeKarmaModifier = (
@@ -92,4 +97,45 @@ export const filterModeToMultiplicativeKarmaModifier = (
     return mode;
   }
   return mode === "Reduced" ? 0.5 : 1;
+};
+
+type FilterModeString =
+  | `${number}`
+  | `+${number}`
+  | `-${number}%`
+  | "Hidden"
+  | "Required"
+  | "Subscribed"
+  | "Reduced"
+  | "";
+
+export const filterModeToString = (mode: FilterMode): FilterModeString => {
+  if (typeof mode === "number") {
+    if (mode === 25) {
+      return "Subscribed";
+    }
+    if (Math.abs(0.5 - mode) < 0.000000001) {
+      return "Reduced";
+    }
+    if (mode >= 1) {
+      return `+${mode}`;
+    }
+    if (mode > 0) {
+      return `-${Math.round((1 - mode) * 100)}%`;
+    }
+    if (mode === 0) {
+      return "";
+    }
+    return `${mode}`;
+  }
+  switch (mode) {
+    case "Hidden":
+    case "Required":
+    case "Subscribed":
+    case "Reduced":
+      return mode;
+    case "Default":
+    default:
+      return "";
+  }
 };
