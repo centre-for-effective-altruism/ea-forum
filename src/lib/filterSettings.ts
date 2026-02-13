@@ -1,28 +1,38 @@
-/** TagDefault relies on there being a FilterMode on the tag */
-export const FILTER_MODE_CHOICES = [
+import { z } from "zod/v4";
+
+const filterModeSchema = z.union([
+  z.enum(["Hidden", "Default", "Required", "Subscribed", "Reduced", "TagDefault"]),
+  z.number(),
+  z.templateLiteral(["x", z.number()]),
+]);
+
+export type FilterMode = z.infer<typeof filterModeSchema>;
+
+const filterTagSchema = z.object({
+  tagId: z.string(),
+  tagName: z.string(),
+  filterMode: filterModeSchema,
+});
+
+export type FilterTag = z.infer<typeof filterTagSchema>;
+
+export const filterSettingsSchema = z.object({
+  tags: z.array(filterTagSchema).max(100),
+  personalBlog: filterModeSchema,
+});
+
+export type FilterSettings = z.infer<typeof filterSettingsSchema>;
+
+export const standardFilterModes: FilterMode[] = [
   "Hidden",
   "Default",
   "Required",
   "Subscribed",
   "Reduced",
-] as const;
-
-export type FilterMode =
-  | (typeof FILTER_MODE_CHOICES)[number]
-  | "TagDefault"
-  | number
-  | `x${number}`;
-
-export type FilterTag = {
-  tagId: string;
-  tagName: string;
-  filterMode: FilterMode;
-};
-
-export type FilterSettings = {
-  personalBlog: FilterMode;
-  tags: FilterTag[];
-};
+  0,
+  0.5,
+  25,
+];
 
 const defaultVisibilityTags: FilterTag[] = process.env.COMMUNITY_TAG_ID
   ? [

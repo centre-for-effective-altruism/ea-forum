@@ -1,6 +1,14 @@
 "use client";
 
-import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  FC,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { useFilterSettings } from "@/lib/hooks/useFilterSettings";
 import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
@@ -10,6 +18,7 @@ import {
   FilterMode,
   filterModeToString,
   FilterTag,
+  standardFilterModes,
   subscribePower,
 } from "@/lib/filterSettings";
 import EyeSlashIcon from "@heroicons/react/16/solid/EyeSlashIcon";
@@ -20,6 +29,8 @@ import Loading from "../Loading";
 import TagSelect from "../Tags/TagSelect";
 import TagBody from "../ContentStyles/TagBody";
 import Link from "../Link";
+
+const INPUT_PAUSE_MILLISECONDS = 1500;
 
 const Button: FC<{
   secondary?: boolean;
@@ -41,10 +52,23 @@ const Button: FC<{
 };
 
 const OptionButton: FC<{
-  name: ReactNode;
+  tagId?: string; // If undefined then this is personal
+  name: "Hidden" | "Reduced" | "Default" | "Subscribed" | "Remove";
   description?: ReactNode;
   active?: boolean;
-}> = ({ name, description, active }) => {
+}> = ({ tagId, name, description, active }) => {
+  const { updateFilterTag, removeFilterTag, updatePersonal } = useFilterSettings();
+  const onClick = useCallback(() => {
+    if (tagId) {
+      if (name === "Remove") {
+        removeFilterTag(tagId);
+      } else {
+        updateFilterTag(tagId, name);
+      }
+    } else if (name !== "Remove") {
+      updatePersonal(name);
+    }
+  }, [tagId, name, updateFilterTag, removeFilterTag, updatePersonal]);
   return (
     <Tooltip
       title={description}
@@ -52,6 +76,7 @@ const OptionButton: FC<{
       placement="bottom-start"
     >
       <Type
+        onClick={onClick}
         As="button"
         style="bodySmall"
         className={clsx(
@@ -68,17 +93,68 @@ const OptionButton: FC<{
 };
 
 const FilterButton: FC<{
+  tagId?: string; // If undefined then this is personal
   name: ReactNode;
   description: ReactNode;
   mode: FilterMode;
-  removable?: boolean;
-}> = ({ name, description, mode, removable }) => {
+}> = ({ tagId, name, description, mode }) => {
+  // When entering a standard value such as 0.5 for "reduced" or 25 for
+  // "subscribed" we want to select the button rather than show the input text.
+  // This makes it impossible to type, for instance, 0.55 or 250. To avoid this
+  // problem we delay for a small amount of time after the user inputs one of
+  // these values before we clear the input field in case they continue to type.
+  const [inputTime, setInputTime] = useState(0);
+  const { updateFilterTag, updatePersonal } = useFilterSettings();
+
+  const updateMode = useCallback(
+    (filterMode: FilterMode, inputTime = 0) => {
+      if (tagId) {
+        updateFilterTag(tagId, filterMode);
+      } else {
+        updatePersonal(filterMode);
+      }
+      setInputTime(inputTime);
+    },
+    [tagId, updateFilterTag, updatePersonal],
+  );
+
+  const onCustomInput = useCallback(
+    (ev: ChangeEvent<HTMLInputElement>) => {
+      const parsed = parseFloat(ev.target.value);
+      if (Number.isNaN(parsed)) {
+        updateMode(0);
+      } else {
+        const value =
+          parsed <= 0 || parsed >= 1
+            ? Math.round(parsed)
+            : Math.floor(parsed * 100) / 100;
+        const now = Date.now();
+        updateMode(value, now);
+        if (standardFilterModes.includes(value)) {
+          setTimeout(() => {
+            setInputTime((inputTime) => (inputTime === now ? 0 : inputTime));
+          }, INPUT_PAUSE_MILLISECONDS);
+        }
+      }
+    },
+    [updateMode],
+  );
+
+  const inputValue =
+    !standardFilterModes.includes(mode) || inputTime > 0 ? mode : "";
+
   return (
     <Tooltip
       title={
-        <div className="flex flex-col flex-wrap gap-3 p-3 border border-gray-200 rounded">
-          <div className="flex">
+        <div
+          className="
+            flex flex-col flex-wrap gap-3 p-3 border border-gray-200
+            rounded max-w-full
+          "
+        >
+          <div className="flex flex-wrap">
             <OptionButton
+              tagId={tagId}
               name="Hidden"
               active={mode === "Hidden"}
               description={
@@ -89,6 +165,7 @@ const FilterButton: FC<{
               }
             />
             <OptionButton
+              tagId={tagId}
               name="Reduced"
               active={mode === "Reduced"}
               description={
@@ -99,6 +176,7 @@ const FilterButton: FC<{
               }
             />
             <OptionButton
+              tagId={tagId}
               name="Default"
               active={mode === "Default" || mode === 0}
               description={
@@ -108,8 +186,9 @@ const FilterButton: FC<{
               }
             />
             <OptionButton
+              tagId={tagId}
               name="Subscribed"
-              active={mode === "Subscribed"}
+              active={mode === "Subscribed" || mode === subscribePower}
               description={
                 <Type style="bodySmall">
                   <em>+{subscribePower}.</em> These posts will be shown more often
@@ -117,7 +196,7 @@ const FilterButton: FC<{
                 </Type>
               }
             />
-            <div className="grow px-[2px]">
+            <div className="px-[2px]">
               <Tooltip
                 title={
                   <Type style="bodySmall">
@@ -129,6 +208,8 @@ const FilterButton: FC<{
                 tooltipClassName="w-[280px] max-w-full"
               >
                 <input
+                  value={inputValue}
+                  onChange={onCustomInput}
                   type="number"
                   placeholder="Other"
                   className={clsx(
@@ -138,7 +219,8 @@ const FilterButton: FC<{
                 />
               </Tooltip>
             </div>
-            {removable && <OptionButton name="Remove" />}
+            <div className="grow" />
+            {tagId && <OptionButton tagId={tagId} name="Remove" />}
           </div>
           {description}
         </div>
@@ -181,6 +263,7 @@ const TagFilterButton: FC<
   const url = tag ? tagGetPageUrl({ tag }) : "#";
   return (
     <FilterButton
+      tagId={tagId}
       name={
         <>
           {tagName} <FilterModeIcon filterMode={filterMode} />
@@ -201,7 +284,6 @@ const TagFilterButton: FC<
           <Loading />
         )
       }
-      removable
     />
   );
 };
@@ -212,7 +294,7 @@ export default function FilterSettingsEditor({
   className?: string;
 }>) {
   const [tags, setTags] = useState<Record<string, TagBase>>({});
-  const { showFilterSettings, filterSettings } = useFilterSettings();
+  const { showFilterSettings, filterSettings, addFilterTag } = useFilterSettings();
 
   const tagIdsToFetch = useMemo(
     () =>
@@ -233,11 +315,8 @@ export default function FilterSettingsEditor({
   }, [showFilterSettings, tagIdsToFetch]);
 
   const onSelectTag = useCallback(
-    (tag: { _id: string; name: string; slug: string }) => {
-      // TODO
-      console.warn("Selecting", tag);
-    },
-    [],
+    ({ _id, name }: { _id: string; name: string }) => addFilterTag(_id, name),
+    [addFilterTag],
   );
 
   if (!showFilterSettings) {
