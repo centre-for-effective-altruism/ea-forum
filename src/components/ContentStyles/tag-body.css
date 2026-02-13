@@ -8,19 +8,19 @@
 .tag-body h1 {
   font-family: var(--font-stack-sans);
   margin-top: 3rem;
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 600;
 }
 .tag-body h2 {
   font-family: var(--font-stack-sans);
   margin-top: 1.5rem;
-  font-size: 1.7rem;
+  font-size: 1.4rem;
   font-weight: 500;
 }
 .tag-body h3 {
   font-family: var(--font-stack-sans);
   margin-top: 1.5rem;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 500;
 }
 .tag-body h1:first-child,
