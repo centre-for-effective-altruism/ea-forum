@@ -1,6 +1,6 @@
 import type { CSSProperties, ElementType, MouseEvent, ReactNode } from "react";
 
-const styles = {
+export const typeStyles = {
   body: "font-sans text-[14px] font-[450]",
   bodyMedium: "font-sans text-[14px] font-[500]",
   bodyHeavy: "font-sans text-[14px] font-[600]",
@@ -20,7 +20,7 @@ const styles = {
   loadMore: "font-sans text-[14px] font-[600]",
 } as const satisfies Record<string, string>;
 
-export type TextStyle = keyof typeof styles;
+export type TextStyle = keyof typeof typeStyles;
 
 export default function Type({
   style = "body",
@@ -43,7 +43,7 @@ export default function Type({
     <As
       {...rest}
       style={cssStyle}
-      className={`${styles[style]} ${className}`}
+      className={`${typeStyles[style]} ${className}`}
       data-component="Type"
     >
       {children}

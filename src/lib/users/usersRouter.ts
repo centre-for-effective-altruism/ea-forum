@@ -7,6 +7,7 @@ import { db } from "../db";
 import { users } from "../schema";
 import { userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
+import { filterSettingsSchema } from "../filterSettings";
 import { approveNewUser } from "./userMutations";
 import {
   updateMailchimpSubscription,
@@ -108,4 +109,14 @@ export const usersRouter = {
       }
       await approveNewUser(currentUser, userId);
     }),
+  updateFilterSettings: os.input(filterSettingsSchema).handler(async ({ input }) => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Please login");
+    }
+    await db
+      .update(users)
+      .set({ frontpageFilterSettings: input })
+      .where(eq(users._id, currentUser._id));
+  }),
 };

@@ -1,6 +1,7 @@
 import "server-only";
 import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
+import type { FilterSettings } from "./filterSettings";
 import type { VoteType } from "./votes/voteHelpers";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
@@ -100,7 +101,7 @@ export const users = pgTable(
     hideNavigationSidebar: boolean(),
     hideHomeRHS: boolean().notNull().default(false),
     currentFrontpageFilter: text(),
-    frontpageFilterSettings: jsonb(),
+    frontpageFilterSettings: jsonb<FilterSettings>(),
     lastNotificationsCheck: timestamp(),
     expandedFrontpageSections: jsonb(),
     email: text(),
