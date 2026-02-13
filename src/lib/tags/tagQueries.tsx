@@ -11,14 +11,24 @@ export type TagFromProjection<TConfig extends TagRelationalProjection> = Awaited
   ReturnType<typeof db.query.tags.findMany<TConfig>>
 >[number];
 
-export const fetchCoreTags = cache(() => {
+const tagBaseProjection = {
+  columns: {
+    _id: true,
+    name: true,
+    shortName: true,
+    slug: true,
+    postCount: true,
+  },
+  extras: {
+    description: htmlSubstring(sql`"description"->>'html'`),
+  },
+} satisfies TagRelationalProjection;
+
+export type TagBase = TagFromProjection<typeof tagBaseProjection>;
+
+export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
   return db.query.tags.findMany({
-    columns: {
-      _id: true,
-      name: true,
-      shortName: true,
-      slug: true,
-    },
+    ...tagBaseProjection,
     where: {
       core: true,
       wikiOnly: false,
@@ -28,19 +38,15 @@ export const fetchCoreTags = cache(() => {
       defaultOrder: "desc",
       name: "asc",
     },
+    limit,
   });
 });
 
-export type CoreTag = Awaited<ReturnType<typeof fetchCoreTags>>[0];
-
-export const fetchTagsById = async (tagIds: string[]) => {
+export const fetchTagsById = async (
+  tagIds: string[],
+): Promise<Record<string, TagBase>> => {
   const result = await db.query.tags.findMany({
-    columns: {
-      _id: true,
-      name: true,
-      slug: true,
-      postCount: true,
-    },
+    ...tagBaseProjection,
     extras: {
       description: htmlSubstring(sql`"description"->>'html'`),
     },
@@ -51,8 +57,6 @@ export const fetchTagsById = async (tagIds: string[]) => {
   });
   return keyBy(result, "_id");
 };
-
-export type TagBase = Awaited<ReturnType<typeof fetchTagsById>>[string];
 
 export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core" | "postCount"> & {
   description: string | null;

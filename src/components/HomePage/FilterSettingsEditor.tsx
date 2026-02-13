@@ -1,8 +1,9 @@
 "use client";
 
-import { FC, ReactNode, useEffect, useMemo, useState } from "react";
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { useFilterSettings } from "@/lib/hooks/useFilterSettings";
+import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import { rpc } from "@/lib/rpc";
 import {
   defaultVisibilityTagById,
@@ -13,12 +14,12 @@ import {
 } from "@/lib/filterSettings";
 import EyeSlashIcon from "@heroicons/react/16/solid/EyeSlashIcon";
 import clsx from "clsx";
+import Type, { typeStyles } from "../Type";
 import Tooltip from "../Tooltip";
 import Loading from "../Loading";
-import Type, { typeStyles } from "../Type";
+import TagSelect from "../Tags/TagSelect";
 import TagBody from "../ContentStyles/TagBody";
 import Link from "../Link";
-import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 
 const Button: FC<{
   secondary?: boolean;
@@ -225,11 +226,19 @@ export default function FilterSettingsEditor({
   useEffect(() => {
     void (async () => {
       if (showFilterSettings && tagIdsToFetch.length) {
-        const tags = await rpc.tags.byIds({ tagIds: tagIdsToFetch });
+        const tags = await rpc.tags.listByIds({ tagIds: tagIdsToFetch });
         setTags((previousTags) => ({ ...previousTags, ...tags }));
       }
     })();
   }, [showFilterSettings, tagIdsToFetch]);
+
+  const onSelectTag = useCallback(
+    (tag: { _id: string; name: string; slug: string }) => {
+      // TODO
+      console.warn("Selecting", tag);
+    },
+    [],
+  );
 
   if (!showFilterSettings) {
     return null;
@@ -265,9 +274,11 @@ export default function FilterSettingsEditor({
           </Type>
         }
       />
-      <Tooltip title={<Type style="bodySmall">Add topic filter</Type>}>
-        <Button secondary>+</Button>
-      </Tooltip>
+      <TagSelect placement="bottom-end" onSelect={onSelectTag}>
+        <Tooltip title={<Type style="bodySmall">Add topic filter</Type>}>
+          <Button secondary>+</Button>
+        </Tooltip>
+      </TagSelect>
     </div>
   );
 }

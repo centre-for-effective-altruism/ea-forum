@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { CoreTag } from "@/lib/tags/tagQueries";
+import type { TagBase } from "@/lib/tags/tagQueries";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { sortedHomePageTags } from "@/lib/tags/homepageTags";
 import qs from "querystring";
@@ -20,13 +20,13 @@ export default function HomePageTagBarDisplay({
   coreTags,
   className,
 }: Readonly<{
-  coreTags: CoreTag[];
+  coreTags: TagBase[];
   className?: string;
 }>) {
   const tabsWindowRef = useRef<HTMLDivElement>(null);
   const topicsBarRef = useRef<HTMLDivElement>(null);
   // The currently selected tag, or null for the frontpage
-  const [activeTag, setActiveTag] = useState<CoreTag | null>(null);
+  const [activeTag, setActiveTag] = useState<TagBase | null>(null);
   const [leftArrowVisible, setLeftArrowVisible] = useState(false);
   const [rightArrowVisible, setRightArrowVisible] = useState(true);
   const { captureEvent } = useTracking();
@@ -131,7 +131,7 @@ export default function HomePageTagBarDisplay({
   }, [offsets]);
 
   const onClick = useCallback(
-    (tag: CoreTag | null) => {
+    (tag: TagBase | null) => {
       setActiveTag(tag);
       const query = Object.fromEntries(searchParams.entries());
       if (tag) {
