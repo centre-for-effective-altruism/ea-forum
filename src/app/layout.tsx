@@ -7,6 +7,7 @@ import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
+import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
@@ -61,6 +62,7 @@ export default function RootLayout({
           <main className="grow">{children}</main>
           <IntercomButton />
           <SiteToggle />
+          <DynamicCookieBanner />
           <Toaster position="bottom-center" />
         </Providers>
       </body>

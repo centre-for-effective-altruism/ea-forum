@@ -62,6 +62,7 @@ export default function Button({
       data-testid={testId}
       className={clsx(
         "min-w-[30px] text-[14px] font-[500] leading-[20px] px-3 py-2 rounded",
+        "active:opacity-90",
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         loading && "relative pointer-events-none",
         variants[variant],

@@ -352,15 +352,13 @@ export const isCookieAllowed = (
   if (cookie) {
     return cookieTypesAllowed.includes(cookie.type);
   }
-
   for (const cookieName in cookiesTable) {
     const cookie = cookiesTable[cookieName as CookieName];
     if (cookie.matches(name)) {
       return cookieTypesAllowed.includes(cookie.type);
     }
   }
-
-  console.error(`Unknown cookie: ${name}`);
+  console.warn("Unknown cookie:", name);
   return false;
 };
 
