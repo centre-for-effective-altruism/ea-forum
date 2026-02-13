@@ -6,7 +6,7 @@ import {
   filterModeToMultiplicativeKarmaModifier,
   FilterSettings,
   getDefaultFilterSettings,
-  resolveFrontpageFilters,
+  resolveFrontpageTagFilters,
 } from "../filterSettings";
 
 abstract class Feature {
@@ -155,7 +155,7 @@ class FrontpageFilterSettingsFeature extends Feature {
       (currentUser?.frontpageFilterSettings as FilterSettings) ??
       getDefaultFilterSettings();
     const { tagsRequired, tagsExcluded, tagsSoftFiltered } =
-      resolveFrontpageFilters(filterSettings);
+      resolveFrontpageTagFilters(filterSettings);
 
     for (const tag of tagsRequired) {
       this.filterClauses.push(

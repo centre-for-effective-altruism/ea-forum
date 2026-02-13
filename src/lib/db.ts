@@ -209,7 +209,7 @@ const createDb = () => {
   if (isAnyTest()) {
     return pgLiteDrizzle({
       relations,
-      logger: process.env.LOG_DRIZZLE_QUERIES === "true",
+      logger: false,
       // We supply a custom client here with extensions. Note this just makes the
       // extensions _available_ - we still have to manually install them. Some
       // extensions (such as cube) are not used directly, but are dependencies of

@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts, User } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
@@ -6,6 +6,12 @@ import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
 import { isNotTrue } from "../utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
+import {
+  filterModeToAdditiveKarmaModifier,
+  filterModeToMultiplicativeKarmaModifier,
+  resolveFrontpageTagFilters,
+  type FilterSettings,
+} from "../filterSettings";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -154,3 +160,110 @@ export const fetchPostDisplay = async (
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
+
+export const filterSettingsToSelector = (
+  filterSettings: FilterSettings,
+): {
+  filter: (postsTable: typeof posts) => SQL<unknown>;
+  score: (postsTable: typeof posts) => SQL<number>;
+} => {
+  const { tagsRequired, tagsExcluded, tagsSoftFiltered } =
+    resolveFrontpageTagFilters(filterSettings);
+  const { personalBlog } = filterSettings;
+
+  const filterClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [];
+  for (const tag of tagsRequired) {
+    filterClauses.push(
+      (posts) =>
+        sql`COALESCE((${posts}."tagRelevance"->${tag.tagId})::INTEGER, 0) >= 1`,
+    );
+  }
+  for (const tag of tagsExcluded) {
+    filterClauses.push(
+      (posts) =>
+        sql`COALESCE((${posts}."tagRelevance"->${tag.tagId})::INTEGER, 0) < 1`,
+    );
+  }
+
+  const addClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [
+    (posts) => sql`${posts}."score"`,
+  ];
+  const multClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [];
+  for (const tag of tagsSoftFiltered) {
+    const addModifier = filterModeToAdditiveKarmaModifier(tag.filterMode);
+    const multModifier = filterModeToMultiplicativeKarmaModifier(tag.filterMode);
+    if (addModifier !== 0) {
+      addClauses.push(
+        (posts) => sql`(
+          CASE WHEN
+            COALESCE((${posts}."tagRelevance"->${tag.tagId})::INTEGER, 0) > 0
+          THEN ${addModifier} ELSE 0 END
+        )`,
+      );
+    }
+    if (multModifier !== 1) {
+      multClauses.push(
+        (posts) => sql`(
+          CASE WHEN
+            COALESCE((${posts}."tagRelevance"->${tag.tagId})::INTEGER, 0) > 0
+          THEN ${multModifier}::DOUBLE PRECISION ELSE 1.0 END
+        )`,
+      );
+    }
+  }
+
+  switch (personalBlog) {
+    case "Hidden":
+      filterClauses.push((posts) => sql`${posts}."frontpageDate" IS NOT NULL`);
+      break;
+    case "Required":
+      filterClauses.push((posts) => sql`${posts}."frontpageDate" IS NULL`);
+      break;
+    default: {
+      const addModifier = filterModeToAdditiveKarmaModifier(personalBlog);
+      const multModifier = filterModeToMultiplicativeKarmaModifier(personalBlog);
+      if (addModifier !== 0) {
+        addClauses.push(
+          (posts) => sql`(
+            CASE WHEN ${posts}."frontpageDate" IS NULL
+            THEN ${addModifier} ELSE 0 END
+          )`,
+        );
+      }
+      if (multModifier !== 1) {
+        multClauses.push(
+          (posts) => sql`(
+            CASE WHEN ${posts}."frontpageDate" IS NULL
+            THEN ${multModifier}::DOUBLE PRECISION ELSE 1.0 END
+          )`,
+        );
+      }
+      break;
+    }
+  }
+
+  if (multClauses.length < 1) {
+    multClauses.push(() => sql`1`);
+  }
+
+  const filter = (postsTable: typeof posts) =>
+    filterClauses.length
+      ? sql.join(
+          filterClauses.map((clause) => clause(postsTable)),
+          sql` AND `,
+        )
+      : sql`TRUE`;
+  const score = (postsTable: typeof posts) =>
+    sql<number>`(
+      (${sql.join(
+        addClauses.map((clause) => clause(postsTable)),
+        sql`+`,
+      )}) *
+      (${sql.join(
+        multClauses.map((clause) => clause(postsTable)),
+        sql`*`,
+      )})
+    )`;
+
+  return { filter, score };
+};

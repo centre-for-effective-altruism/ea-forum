@@ -8,6 +8,7 @@ import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userIsInGroup } from "../users/userHelpers";
+import { filterSettingsSchema } from "../filterSettings";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -23,6 +24,7 @@ export const postsListViewSchema = z.object({
   limit: z.int().gt(0),
   excludeTagId: z.string().optional(),
   onlyTagId: z.string().optional(),
+  filterSettings: filterSettingsSchema.optional(),
 });
 
 export type PostsListView = z.infer<typeof postsListViewSchema>;

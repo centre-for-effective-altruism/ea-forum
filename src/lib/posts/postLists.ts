@@ -1,5 +1,6 @@
-import { sql } from "drizzle-orm";
+import { SQL, sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
+import type { FilterSettings } from "../filterSettings";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
@@ -15,6 +16,7 @@ import {
   currentUserIsSharedSelector,
   currentUserUsedLinkKeySelector,
   currentUserSuggestedCurationSelector,
+  filterSettingsToSelector,
 } from "./postQueries";
 
 const SCORE_BIAS = 2;
@@ -22,8 +24,8 @@ const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
 const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 
-// TODO: This should be a function that takes the current user and does permission
-// checks
+// TODO: Maybe this should be a function that takes the current user and does
+// permission checks
 export const viewablePostFilter = {
   draft: false,
   deletedDraft: false,
@@ -52,11 +54,13 @@ const getFrontpageCutoffDate = () =>
  * New and upvoted sorting: Calculate score from karma with bonuses for
  * frontpage/curated posts, then divide by a time decay factor.
  */
-const magicSort = (postsTable: typeof posts) => sql`
+const magicSort =
+  (scoreField = (postsTable: typeof posts) => sql`${postsTable}."score"`) =>
+  (postsTable: typeof posts) => sql`
   ${postsTable}."sticky" DESC,
   ${postsTable}."stickyPriority" DESC,
   (
-    ${postsTable}."baseScore"
+    ${scoreField(postsTable)}
       + (CASE WHEN ${postsTable}."frontpageDate" IS NOT NULL THEN 10 ELSE 0 END)
       + (CASE WHEN ${postsTable}."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)
   ) / POW(
@@ -200,25 +204,38 @@ export const fetchFrontpagePostsList = ({
   limit,
   onlyTagId,
   excludeTagId,
+  filterSettings,
 }: {
   currentUserId: string | null;
   offset?: number;
   limit: number;
   onlyTagId?: string;
   excludeTagId?: string;
+  filterSettings?: FilterSettings;
 }) => {
+  let scoreField: ((postsTable: typeof posts) => SQL) | undefined;
+  const filters: ((postsTable: typeof posts) => SQL)[] = [];
+  if (onlyTagId) {
+    filters.push(onlyTagFilter(onlyTagId));
+  }
+  if (excludeTagId) {
+    filters.push(excludeTagFilter(excludeTagId));
+  }
+  if (filterSettings) {
+    const { filter, score } = filterSettingsToSelector(filterSettings);
+    filters.push(filter);
+    scoreField = score;
+  }
   return fetchPostsList({
     currentUserId,
     where: {
-      ...(onlyTagId ? { RAW: onlyTagFilter(onlyTagId) } : null),
-      ...(excludeTagId ? { RAW: excludeTagFilter(excludeTagId) } : null),
       isEvent: false,
       sticky: false,
       groupId: { isNull: true },
-      frontpageDate: { gt: EPOCH_ISO_DATE },
       postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      AND: filters.map((filter) => ({ RAW: (posts) => filter(posts) })),
     },
-    orderBy: magicSort,
+    orderBy: magicSort(scoreField),
     offset,
     limit,
   });
@@ -305,7 +322,7 @@ export const fetchSidebarOpportunities = (limit: number) => {
       RAW: (postsTable: typeof posts) =>
         sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
     },
-    orderBy: magicSort,
+    orderBy: magicSort(),
     limit,
   });
 };
@@ -446,7 +463,7 @@ export const fetchRecentOpportunitiesPostsList = async ({
     where: {
       RAW: onlyTagFilter(process.env.OPPORTUNITIES_TAG_ID),
     },
-    orderBy: magicSort,
+    orderBy: magicSort(),
     limit,
   });
 };

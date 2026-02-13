@@ -60,7 +60,7 @@ export const defaultVisibilityTagById = (id: string) =>
 
 export const subscribePower = 25;
 
-export const resolveFrontpageFilters = (filterSettings: FilterSettings) => {
+export const resolveFrontpageTagFilters = (filterSettings: FilterSettings) => {
   const tagsWithDefaults: FilterTag[] = filterSettings.tags.map((tag) =>
     tag.filterMode === "TagDefault"
       ? {
