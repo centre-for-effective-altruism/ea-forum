@@ -9,6 +9,7 @@ import type { NextSearchParams } from "@/lib/typeHelpers";
 import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
+import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import QuickTakesCommunityToggle from "../QuickTakes/QuickTakesCommunityToggle";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 import PopularCommentsList from "./PopularCommentsList";
@@ -87,22 +88,7 @@ export default async function HomePageFeed({
               />
             </div>
             <div className="mb-10">
-              <ViewBasedPostsList
-                viewType="fromContext"
-                maxOffset={200}
-                view={{
-                  view: "frontpage",
-                  limit: 11,
-                  excludeTagId: communityTagId,
-                }}
-                bottomRightNode={
-                  <Type style="loadMore">
-                    <Link href="/allPosts" className="text-primary hover:opacity-70">
-                      Advanced sorting & filtering
-                    </Link>
-                  </Type>
-                }
-              />
+              <FrontpagePostsList />
             </div>
           </FilterSettingsProvider>
           {communityTagId && (

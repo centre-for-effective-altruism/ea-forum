@@ -6,6 +6,7 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { rpc } from "../rpc";
@@ -40,6 +41,12 @@ export const FilterSettingsProvider: FC<{ children: ReactNode }> = ({
     currentUser?.frontpageFilterSettings ?? getDefaultFilterSettings(),
   );
 
+  useEffect(() => {
+    setFilterSettings(
+      currentUser?.frontpageFilterSettings ?? getDefaultFilterSettings(),
+    );
+  }, [currentUser]);
+
   const toggleShowFilterSettings = useCallback(() => {
     setShowFilterSettings((show) => {
       const newShow = !show;
@@ -55,11 +62,13 @@ export const FilterSettingsProvider: FC<{ children: ReactNode }> = ({
     (update: (previousSettings: FilterSettings) => FilterSettings) => {
       setFilterSettings((previousSettings) => {
         const newSettings = update(previousSettings);
-        void rpc.users.updateFilterSettings(newSettings);
+        if (currentUser) {
+          void rpc.users.updateFilterSettings(newSettings);
+        }
         return newSettings;
       });
     },
-    [],
+    [currentUser],
   );
 
   const addFilterTag = useCallback(
