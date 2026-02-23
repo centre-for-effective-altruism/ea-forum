@@ -12,7 +12,7 @@ export default async function FrontpagePostsList() {
   const view = {
     view: "frontpage",
     limit: 11,
-    excludeTagId: process.env.COMMUNITY_TAG_ID,
+    excludeTagId: process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
     filterSettings:
       currentUser?.frontpageFilterSettings ?? getDefaultFilterSettings(),
   } as const;

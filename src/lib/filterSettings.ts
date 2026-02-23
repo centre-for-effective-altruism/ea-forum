@@ -34,10 +34,10 @@ export const standardFilterModes: FilterMode[] = [
   25,
 ];
 
-const defaultVisibilityTags: FilterTag[] = process.env.COMMUNITY_TAG_ID
+const defaultVisibilityTags: FilterTag[] = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
   ? [
       {
-        tagId: process.env.COMMUNITY_TAG_ID,
+        tagId: process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
         tagName: "Community",
         filterMode: "Hidden",
       },

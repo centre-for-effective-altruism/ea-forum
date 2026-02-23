@@ -430,7 +430,7 @@ export const fetchCuratedAndPopularPostsList = async ({
       where: {
         RAW: (postsTable) => sql`
           ${postsTable.frontpageDate} > NOW() - '7 days'::INTERVAL AND
-          ${excludeTagFilter(process.env.COMMUNITY_TAG_ID)(postsTable)}
+          ${excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID)(postsTable)}
         `,
         curatedDate: { isNull: true },
         groupId: { isNull: true },

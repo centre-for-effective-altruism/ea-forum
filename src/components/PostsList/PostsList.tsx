@@ -68,11 +68,10 @@ export default function PostsList({
   }, [loadMoreView, offset, maxOffset]);
 
   useEffect(() => {
-    if (displayedPosts.length === 0) {
+    if (displayedPosts.length === 0 && !loading && canLoadMore) {
       void onLoadMore();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [displayedPosts, loading, canLoadMore, onLoadMore]);
 
   return (
     <section className={clsx("max-w-full", className)} data-component="PostsList">

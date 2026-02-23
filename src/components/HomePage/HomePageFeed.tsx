@@ -30,7 +30,7 @@ export default async function HomePageFeed({
   const ssrPostView = isPostsListViewType(postViewCookie)
     ? postViewCookie
     : undefined;
-  const communityTagId = process.env.COMMUNITY_TAG_ID;
+  const communityTagId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   const activeTag =
     search.tab && typeof search.tab === "string"
       ? coreTags.find((tag) => tag.slug === search.tab)

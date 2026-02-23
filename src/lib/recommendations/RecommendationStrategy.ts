@@ -170,7 +170,7 @@ abstract class RecommendationStrategy {
    * tags.
    */
   protected getTagFilter() {
-    const community = process.env.COMMUNITY_TAG_ID;
+    const community = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
     const aprilFools = process.env.APRIL_FOOLS_TAG_ID;
     return {
       filter: sql`

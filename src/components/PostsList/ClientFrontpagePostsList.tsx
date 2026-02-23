@@ -21,9 +21,8 @@ export default function ClientFrontpagePostsList({
     () => ({ ...view, filterSettings }),
     [view, filterSettings],
   );
-  const stringifiedView = stringify(view);
   const stringifiedViewWithFilterSettings = stringify(viewWithFilterSettings);
-  const isInitialView = stringifiedView === stringifiedViewWithFilterSettings;
+  const isInitialView = stringify(view) === stringifiedViewWithFilterSettings;
   return (
     <PostsList
       key={stringifiedViewWithFilterSettings}

@@ -224,10 +224,12 @@ export const fetchFrontpageQuickTakes = ({
       shortformFrontpage: true,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
-      ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
+      ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
         ? {
             NOT: {
-              relevantTagIds: { arrayContains: [process.env.COMMUNITY_TAG_ID] },
+              relevantTagIds: {
+                arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
+              },
             },
           }
         : null),
@@ -289,7 +291,7 @@ const fetchPopularCommentsUncached = async ({
   recencyFactor = 250000,
   recencyBias = 60 * 60 * 2,
 }: PopularCommentsConfig): Promise<CommentsList[]> => {
-  const communityTopicId = process.env.COMMUNITY_TAG_ID;
+  const communityTopicId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id
     FROM (
