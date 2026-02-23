@@ -17,6 +17,9 @@ export default function TagTooltip({
   placement?: Placement;
   children: ReactNode;
 }>) {
+  // If this tag came from elasticsearch we need to manually trim the body
+  const description =
+    "_index" in tag ? tag.description?.slice(0, 350) + "..." : tag.description;
   return (
     <Tooltip
       interactable
@@ -24,7 +27,7 @@ export default function TagTooltip({
       tooltipClassName="bg-gray-0! text-gray-900! p-0! shadow w-[270px]"
       title={
         <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">
-          {tag.description && <TagBody html={tag.description} isExcerpt />}
+          {description && <TagBody html={description} isExcerpt />}
           <Type style="bodyHeavy">
             <Link
               href={tagGetPageUrl({ tag })}
