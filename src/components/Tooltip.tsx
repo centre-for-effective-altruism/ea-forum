@@ -47,7 +47,7 @@ export default function Tooltip({
     placement,
     open: isOpen,
     onOpenChange: setIsOpen,
-    middleware: [offset(10), flip(), shift()],
+    middleware: [offset(4), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
   const hover = useHover(context, {

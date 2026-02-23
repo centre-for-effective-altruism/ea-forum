@@ -185,7 +185,7 @@ const getPostCommunityFilter = (
   postsTable: typeof posts,
   currentUser: CurrentUser | null,
 ) => {
-  const tagId = process.env.COMMUNITY_TAG_ID;
+  const tagId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   // We default to hiding posts tagged with "Community" from Recent Discussions
   // if they have at least 10 comments, or if the current user has manually set
   // `hideCommunitySection` to true

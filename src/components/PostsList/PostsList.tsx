@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import type { PostListItem } from "@/lib/posts/postLists";
@@ -66,6 +66,12 @@ export default function PostsList({
       setLoading(false);
     }
   }, [loadMoreView, offset, maxOffset]);
+
+  useEffect(() => {
+    if (displayedPosts.length === 0 && !loading && canLoadMore) {
+      void onLoadMore();
+    }
+  }, [displayedPosts, loading, canLoadMore, onLoadMore]);
 
   return (
     <section className={clsx("max-w-full", className)} data-component="PostsList">

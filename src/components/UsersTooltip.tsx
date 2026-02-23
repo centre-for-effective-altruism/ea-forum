@@ -52,7 +52,7 @@ export default function UsersTooltip({
       title={
         <div
           data-component="UsersTooltip"
-          className="flex flex-col gap-3 p-3 border border-gray-200"
+          className="flex flex-col gap-3 p-3 border border-gray-200 rounded"
         >
           <div className="flex items-center gap-3">
             <UserProfileImage user={user} size={40} />
