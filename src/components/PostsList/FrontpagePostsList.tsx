@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { fetchPostsListFromView } from "@/lib/posts/postLists";
 import { getDefaultFilterSettings } from "@/lib/filterSettings";
 import { getCurrentUser } from "@/lib/users/currentUser";
@@ -21,17 +22,19 @@ export default async function FrontpagePostsList() {
     <Suspense
       fallback={<PostsListSkeleton count={view.limit} viewType="fromContext" />}
     >
-      <ClientFrontpagePostsList
-        posts={posts}
-        view={view}
-        bottomRightNode={
-          <Type style="loadMore">
-            <Link href="/allPosts" className="text-primary hover:opacity-70">
-              Advanced sorting & filtering
-            </Link>
-          </Type>
-        }
-      />
+      <AnalyticsContext listContext="latestPosts">
+        <ClientFrontpagePostsList
+          posts={posts}
+          view={view}
+          bottomRightNode={
+            <Type style="loadMore">
+              <Link href="/allPosts" className="text-primary hover:opacity-70">
+                Advanced sorting & filtering
+              </Link>
+            </Type>
+          }
+        />
+      </AnalyticsContext>
     </Suspense>
   );
 }
