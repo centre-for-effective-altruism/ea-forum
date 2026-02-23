@@ -6,7 +6,7 @@ import RecommendationService from "@/lib/recommendations/RecommendationService";
 // executed without throwing errors - in the future it'd be nice to actually test
 // their correctness.
 
-vi.stubEnv("COMMUNITY_TAG_ID", "community-test");
+vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", "community-test");
 vi.stubEnv("APRIL_FOOLS_TAG_ID", "april-fools-test");
 
 suite("Recommendations", () => {
