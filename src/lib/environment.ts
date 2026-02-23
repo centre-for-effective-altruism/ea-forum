@@ -1,4 +1,5 @@
 import Bowser from "bowser";
+import type { JsonRecord } from "./typeHelpers";
 
 export const isProduction = process.env.ENVIRONMENT === "prod";
 
@@ -27,6 +28,27 @@ const userAgent = new (class {
     // Platform type is one of: mobile, tablet, desktop, tv or bot
     return this.getBowser().getPlatformType() === "mobile";
   }
+
+  isTablet() {
+    // Platform type is one of: mobile, tablet, desktop, tv or bot
+    return this.getBowser().getPlatformType() === "tablet";
+  }
+
+  isChrome() {
+    return this.getBowser().getBrowserName() === "Chrome";
+  }
+
+  isFirefox() {
+    return this.getBowser().getBrowserName() === "Firefox";
+  }
+
+  isSafari() {
+    return this.getBowser().getBrowserName() === "Safari";
+  }
+
+  os() {
+    return this.getBowser().getOS().name ?? null;
+  }
 })();
 
 /**
@@ -40,3 +62,20 @@ const userAgent = new (class {
 export const isMobile = () => isClient && userAgent.isMobile();
 
 export const isAnyTest = () => process.env.VITEST === "true";
+
+export const getBrowserProperties = (): JsonRecord => {
+  if (!isClient || !window?.navigator?.userAgent) {
+    return {};
+  }
+  return {
+    userAgent: window?.navigator?.userAgent,
+    mobile: userAgent.isMobile(),
+    tablet: userAgent.isTablet(),
+    chrome: userAgent.isChrome(),
+    firefox: userAgent.isFirefox(),
+    safari: userAgent.isSafari(),
+    osname: userAgent.os(),
+    blocksGA: !window.ga?.create,
+    blocksGTM: !window.google_tag_manager,
+  };
+};

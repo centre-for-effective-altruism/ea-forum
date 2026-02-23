@@ -7,6 +7,7 @@ import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
+import PageLoadListener from "@/components/PageLoadListener";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
@@ -56,6 +57,7 @@ export default function RootLayout({
         )}
       >
         <Providers>
+          <PageLoadListener />
           <div id="tooltip-target" />
           <Header />
           <MobileNav />
