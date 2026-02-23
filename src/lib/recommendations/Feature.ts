@@ -1,13 +1,9 @@
 import { sql, SQL } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import type { RecommendationFeatureName } from "./RecommendationStrategy";
-import {
-  filterModeToAdditiveKarmaModifier,
-  filterModeToMultiplicativeKarmaModifier,
-  FilterSettings,
-  getDefaultFilterSettings,
-  resolveFrontpageTagFilters,
-} from "../filterSettings";
+import { FilterSettings, getDefaultFilterSettings } from "../filterSettings";
+import { filterSettingsToSelector } from "../posts/postQueries";
+import { posts } from "../schema";
 
 abstract class Feature {
   constructor(
@@ -145,7 +141,7 @@ class SubscribedTagPostsFeature extends Feature {
 }
 
 class FrontpageFilterSettingsFeature extends Feature {
-  private filterClauses: SQL[] = [];
+  private filter: SQL;
   private score: SQL;
 
   constructor(currentUser: CurrentUser | null, postId: string) {
@@ -154,64 +150,13 @@ class FrontpageFilterSettingsFeature extends Feature {
     const filterSettings: FilterSettings =
       (currentUser?.frontpageFilterSettings as FilterSettings) ??
       getDefaultFilterSettings();
-    const { tagsRequired, tagsExcluded, tagsSoftFiltered } =
-      resolveFrontpageTagFilters(filterSettings);
-
-    for (const tag of tagsRequired) {
-      this.filterClauses.push(
-        sql`COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) >= 1`,
-      );
-    }
-    for (const tag of tagsExcluded) {
-      this.filterClauses.push(
-        sql`COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) < 1`,
-      );
-    }
-
-    const addClauses: SQL[] = [sql`p."baseScore"`];
-    const multClauses: SQL[] = [sql`1`];
-    for (const tag of tagsSoftFiltered) {
-      addClauses.push(sql`(
-        CASE
-          WHEN COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) > 0
-          THEN ${filterModeToAdditiveKarmaModifier(tag.filterMode)}
-          ELSE 0
-        END
-      )`);
-      multClauses.push(sql`(
-        CASE
-          WHEN COALESCE((p."tagRelevance"->${tag.tagId})::INTEGER, 0) > 0
-          THEN ${filterModeToMultiplicativeKarmaModifier(tag.filterMode)}
-          ELSE 1
-        END
-      )`);
-    }
-
-    switch (filterSettings.personalBlog) {
-      case "Hidden":
-        this.filterClauses.push(sql`p."frontpageDate" IS NOT NULL`);
-        break;
-      case "Required":
-        this.filterClauses.push(sql`p."frontpageDate" IS NULL`);
-        break;
-      default:
-        addClauses.push(sql`(
-          CASE
-            WHEN p."frontpageDate" IS NULL
-            THEN 0
-            ELSE ${filterModeToAdditiveKarmaModifier(filterSettings.personalBlog)}
-          END
-        )`);
-        break;
-    }
-
-    const addClause = sql.join(addClauses, sql`+`);
-    const multClause = sql.join(multClauses, sql`*`);
-    this.score = sql`((${addClause}) * ${multClause})`;
+    const { filter, score } = filterSettingsToSelector(filterSettings);
+    this.filter = filter(posts);
+    this.score = score(posts);
   }
 
   getFilter() {
-    return sql.join(this.filterClauses, sql` AND `);
+    return this.filter;
   }
 
   getScore() {
