@@ -7,26 +7,33 @@ export default function TimeAgo({
   time,
   includeAgo,
   textStyle = "body",
+  tooltipPrefix,
   As,
   className,
 }: Readonly<{
   time: Date | string;
   includeAgo?: boolean;
   textStyle?: TextStyle;
+  tooltipPrefix?: string;
   As?: ElementType;
   className?: string;
 }>) {
   const date = new Date(time);
   return (
     <Tooltip
-      title={<Type style="bodySmall">{formatLongDateWithTime(date)}</Type>}
+      title={
+        <Type style="bodySmall">
+          {tooltipPrefix}
+          {formatLongDateWithTime(date)}
+        </Type>
+      }
       As={As}
       className={className}
     >
       <Type style={textStyle} As={As}>
         <time
           dateTime={date.toISOString()}
-          className="cursor-default"
+          className="cursor-inherit"
           data-component="TimeAgo"
         >
           {formatRelativeTime(date, { style: "short" })}

@@ -134,9 +134,23 @@ export default function PostsItem({
                         As="span"
                         textStyle="bodySmall"
                         time={post.postedAt}
+                        tooltipPrefix="Posted on "
                         includeAgo
                       />
                       <span className="px-1">·</span>
+                      {post.curatedDate && (
+                        <>
+                          <span>Curated </span>
+                          <TimeAgo
+                            As="span"
+                            textStyle="bodySmall"
+                            time={post.curatedDate}
+                            tooltipPrefix="Curated on "
+                            includeAgo
+                          />
+                          <span className="px-1">·</span>
+                        </>
+                      )}
                       <span>{readTime}m read</span>
                     </>
                   }
