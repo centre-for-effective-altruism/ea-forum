@@ -3,6 +3,7 @@ import {
   fetchFrontpageCuratedPostsList,
   fetchPostsListFromView,
 } from "@/lib/posts/postLists";
+import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { getDefaultFilterSettings } from "@/lib/filterSettings";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import ClientFrontpagePostsList from "./ClientFrontpagePostsList";
@@ -24,7 +25,7 @@ export default async function FrontpagePostsList() {
     fetchPostsListFromView(currentUser?._id ?? null, view),
   ]);
   return (
-    <>
+    <HideRepeatedPostsProvider>
       <AnalyticsContext listContext="curatedPosts">
         <PostsList posts={curatedPosts} viewType="fromContext" />
       </AnalyticsContext>
@@ -41,6 +42,6 @@ export default async function FrontpagePostsList() {
           }
         />
       </AnalyticsContext>
-    </>
+    </HideRepeatedPostsProvider>
   );
 }
