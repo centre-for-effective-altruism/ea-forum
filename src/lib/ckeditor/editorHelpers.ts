@@ -10,6 +10,9 @@ const editorTypeStringSchema = z.enum(["html", "markdown", "ckEditorMarkup"]);
 
 export type EditorTypeString = z.infer<typeof editorTypeStringSchema>;
 
+export const isEditorTypeString = (ty: string): ty is EditorTypeString =>
+  editorTypeStringSchema.safeParse(ty).success;
+
 /**
  * Contents of an editor, with `value` in the native format of the editor
  * (whichever editor that is).

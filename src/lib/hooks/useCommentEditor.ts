@@ -40,7 +40,7 @@ export const useCommentEditor = ({
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
   const [contents, setContents] = useState<EditorContents>({
-    type: "ckEditorMarkup",
+    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
     data: "",
   });
 
