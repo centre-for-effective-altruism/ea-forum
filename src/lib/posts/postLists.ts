@@ -6,6 +6,7 @@ import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
+import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
   RelationalFilter,
@@ -47,9 +48,6 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
 export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
 
-const getFrontpageCutoffDate = () =>
-  new Date(new Date().getTime() - CUTOFF_DAYS * 24 * 60 * 60 * 1000);
-
 /**
  * New and upvoted sorting: Calculate score from karma with bonuses for
  * frontpage/curated posts, then divide by a time decay factor.
@@ -59,11 +57,7 @@ const magicSort =
   (postsTable: typeof posts) => sql`
   ${postsTable}."sticky" DESC,
   ${postsTable}."stickyPriority" DESC,
-  (
-    ${scoreField(postsTable)}
-      + (CASE WHEN ${postsTable}."frontpageDate" IS NOT NULL THEN 10 ELSE 0 END)
-      + (CASE WHEN ${postsTable}."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)
-  ) / POW(
+  (${scoreField(postsTable)}) / POW(
     EXTRACT(EPOCH FROM NOW() - ${postsTable}."postedAt") / 3600000 + ${SCORE_BIAS},
     ${TIME_DECAY_FACTOR}
   ) DESC,
@@ -232,7 +226,7 @@ export const fetchFrontpagePostsList = ({
       isEvent: false,
       sticky: false,
       groupId: { isNull: true },
-      postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
       AND: filters.map((filter) => ({ RAW: (posts) => filter(posts) })),
     },
     orderBy: magicSort(scoreField),
@@ -247,16 +241,14 @@ export const fetchFrontpageCuratedPostsList = async (
   return fetchPostsList({
     currentUserId,
     where: {
-      curatedDate: { isNotNull: true },
-      isEvent: false,
-      groupId: { isNull: true },
+      curatedDate: { gte: nDaysAgo(5).toISOString() },
     },
     orderBy: {
       sticky: "desc",
       curatedDate: "desc",
       postedAt: "desc",
     },
-    limit: 3,
+    limit: currentUserId ? 3 : 2,
   });
 };
 
@@ -337,7 +329,7 @@ export const fetchSidebarOpportunities = (limit: number) => {
       sticky: false,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
       RAW: (postsTable: typeof posts) =>
         sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
     },
