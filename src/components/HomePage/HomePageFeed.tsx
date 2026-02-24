@@ -12,6 +12,7 @@ import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import QuickTakesCommunityToggle from "../QuickTakes/QuickTakesCommunityToggle";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
+import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import PopularCommentsList from "./PopularCommentsList";
 import FilterSettingsToggle from "./FilterSettingsToggle";
 import FilterSettingsEditor from "./FilterSettingsEditor";
@@ -88,7 +89,11 @@ export default async function HomePageFeed({
               />
             </div>
             <div className="mb-10">
-              <FrontpagePostsList />
+              <Suspense
+                fallback={<PostsListSkeleton count={12} viewType="fromContext" />}
+              >
+                <FrontpagePostsList />
+              </Suspense>
             </div>
           </FilterSettingsProvider>
           {communityTagId && (

@@ -1,10 +1,13 @@
-import { Suspense } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { fetchPostsListFromView } from "@/lib/posts/postLists";
+import {
+  fetchFrontpageCuratedPostsList,
+  fetchPostsListFromView,
+} from "@/lib/posts/postLists";
+import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { getDefaultFilterSettings } from "@/lib/filterSettings";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import PostsListSkeleton from "./PostsListSkeleton";
 import ClientFrontpagePostsList from "./ClientFrontpagePostsList";
+import PostsList from "./PostsList";
 import Type from "../Type";
 import Link from "../Link";
 
@@ -17,11 +20,15 @@ export default async function FrontpagePostsList() {
     filterSettings:
       currentUser?.frontpageFilterSettings ?? getDefaultFilterSettings(),
   } as const;
-  const posts = await fetchPostsListFromView(currentUser?._id ?? null, view);
+  const [curatedPosts, posts] = await Promise.all([
+    fetchFrontpageCuratedPostsList(currentUser?._id ?? null),
+    fetchPostsListFromView(currentUser?._id ?? null, view),
+  ]);
   return (
-    <Suspense
-      fallback={<PostsListSkeleton count={view.limit} viewType="fromContext" />}
-    >
+    <HideRepeatedPostsProvider>
+      <AnalyticsContext listContext="curatedPosts">
+        <PostsList posts={curatedPosts} viewType="fromContext" />
+      </AnalyticsContext>
       <AnalyticsContext listContext="latestPosts">
         <ClientFrontpagePostsList
           posts={posts}
@@ -35,6 +42,6 @@ export default async function FrontpagePostsList() {
           }
         />
       </AnalyticsContext>
-    </Suspense>
+    </HideRepeatedPostsProvider>
   );
 }
