@@ -113,7 +113,8 @@ const Editor = forwardRef<
   const { currentUser } = useCurrentUser();
   const [updateType, setUpdateType] = useState<EditorUpdateType>("minor");
   const [commitMessage, setCommitMessage] = useState("");
-  const [ckEditorReference, setCkEditorReference] = useState<TEditor | null>(null);
+  const [ckEditorRef, setCkEditorRef] = useState<TEditor | null>(null);
+  const plaintextRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(true);
   const [markdownImgErrors, setMarkdownImgErrors] = useState(false);
   const [editorWarning, setEditorWarning] = useState<string | undefined>();
@@ -161,12 +162,19 @@ const Editor = forwardRef<
   );
 
   useImperativeHandle(ref, () => ({
-    focus: () => ckEditorReference?.focus(),
-    clear: () => {
-      if (!ckEditorReference) {
-        throw new Error("Missing CKEditor reference");
+    focus: () => {
+      if (ckEditorRef) {
+        ckEditorRef?.focus();
+      } else if (plaintextRef.current) {
+        plaintextRef.current.focus();
       }
-      ckEditorReference.setData("");
+    },
+    clear: () => {
+      if (ckEditorRef) {
+        ckEditorRef.setData("");
+      } else {
+        setContents(value.type, "");
+      }
     },
     getSubmitData: async () => {
       let data: string;
@@ -178,12 +186,12 @@ const Editor = forwardRef<
           data = value.data;
           break;
         case "ckEditorMarkup":
-          if (!ckEditorReference) {
+          if (!ckEditorRef) {
             throw new Error("Missing CKEditor reference");
           }
-          data = ckEditorReference.getData();
-          if (ckEditorReference.plugins.has("TrackChangesData")) {
-            dataWithDiscardedSuggestions = await ckEditorReference.plugins
+          data = ckEditorRef.getData();
+          if (ckEditorRef.plugins.has("TrackChangesData")) {
+            dataWithDiscardedSuggestions = await ckEditorRef.plugins
               .get("TrackChangesData")
               // @ts-expect-error FIXME: Not sure why this isn't typed correctly
               .getDataWithDiscardedSuggestions();
@@ -239,7 +247,7 @@ const Editor = forwardRef<
                 isCollaborative={isCollaborative}
                 accessLevel={accessLevel}
                 onFocus={onFocus}
-                onReady={setCkEditorReference}
+                onReady={setCkEditorRef}
                 collectionName={collectionName}
                 fieldName="contents"
                 placeholder={placeholder}
@@ -253,6 +261,7 @@ const Editor = forwardRef<
                 onFocus={onFocus}
                 placeholder={placeholder}
                 setContents={setContents}
+                textareaRef={plaintextRef}
               />
             )}
           </div>

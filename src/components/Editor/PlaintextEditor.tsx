@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useCallback } from "react";
+import { ChangeEvent, RefObject, useCallback } from "react";
 import Type from "../Type";
 
 export default function PlaintextEditor({
@@ -10,6 +10,7 @@ export default function PlaintextEditor({
   onFocus,
   placeholder,
   setContents,
+  textareaRef,
 }: Readonly<{
   editorType: "html" | "markdown";
   markdownImgErrors?: boolean;
@@ -17,6 +18,7 @@ export default function PlaintextEditor({
   onFocus?: () => void;
   placeholder?: string;
   setContents: (editorType: "html" | "markdown", value: string) => void;
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
 }>) {
   const onChange = useCallback(
     (ev: ChangeEvent<HTMLTextAreaElement>) => {
@@ -28,11 +30,12 @@ export default function PlaintextEditor({
   return (
     <div data-component="PlaintextEditor">
       <textarea
+        ref={textareaRef}
         value={data}
         onChange={onChange}
         onFocus={onFocus}
         placeholder={placeholder}
-        className="w-full min-h-[150px] field-sizing-content outline-none resize-none"
+        className="w-full min-h-[130px] field-sizing-content outline-none resize-none"
       />
       {markdownImgErrors && editorType === "markdown" && (
         <Type style="bodySmall" className="text-error my-3">
