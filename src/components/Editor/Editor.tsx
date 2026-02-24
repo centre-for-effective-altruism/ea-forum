@@ -34,6 +34,7 @@ import FormLabel from "../Forms/FormLabel";
 import WarningBanner from "../WarningBanner";
 import Type from "../Type";
 import "./ckeditor-styles.css";
+import PlaintextEditor from "./PlaintextEditor";
 
 export type EditorOnChangeProps = {
   contents: EditorContents;
@@ -56,6 +57,7 @@ export type EditorOnChangeProps = {
 const Editor = forwardRef<
   EditorAPI | null,
   {
+    editorType?: EditorTypeString;
     label?: string;
     formVariant?: "default" | "grey";
     formType: "edit" | "new";
@@ -65,7 +67,7 @@ const Editor = forwardRef<
     formProps?: FormProps;
     value: EditorContents;
     onChange?: (props: EditorOnChangeProps) => void;
-    onFocus?: (event: EventInfo, editor: TEditor) => void;
+    onFocus?: (event?: EventInfo, editor?: TEditor) => void;
     placeholder?: string;
     commentStyles?: boolean;
     quickTakesStyles?: boolean;
@@ -113,7 +115,7 @@ const Editor = forwardRef<
   const [commitMessage, setCommitMessage] = useState("");
   const [ckEditorReference, setCkEditorReference] = useState<TEditor | null>(null);
   const [loading, setLoading] = useState(true);
-  const [markdownImgErrs, setMarkdownImgErrs] = useState(false);
+  const [markdownImgErrors, setMarkdownImgErrors] = useState(false);
   const [editorWarning, setEditorWarning] = useState<string | undefined>();
 
   useEffect(() => {
@@ -124,7 +126,7 @@ const Editor = forwardRef<
     debounce(() => {
       if (value.type === "markdown") {
         const httpImageRE = /!\[[^\]]*?\]\(http:/g;
-        setMarkdownImgErrs(httpImageRE.test(value.data));
+        setMarkdownImgErrors(httpImageRE.test(value.data));
       }
     }, validationIntervalMs),
   ).current;
@@ -230,18 +232,29 @@ const Editor = forwardRef<
         ) : (
           <div className="forum-editor">
             {editorWarning && <WarningBanner messageHtml={editorWarning} />}
-            <CkEditor
-              data={value.data}
-              document={document}
-              isCollaborative={isCollaborative}
-              accessLevel={accessLevel}
-              onFocus={onFocus}
-              onReady={setCkEditorReference}
-              collectionName={collectionName}
-              fieldName="contents"
-              placeholder={placeholder}
-              onChange={onEditorChange}
-            />
+            {value.type === "ckEditorMarkup" ? (
+              <CkEditor
+                data={value.data}
+                document={document}
+                isCollaborative={isCollaborative}
+                accessLevel={accessLevel}
+                onFocus={onFocus}
+                onReady={setCkEditorReference}
+                collectionName={collectionName}
+                fieldName="contents"
+                placeholder={placeholder}
+                onChange={onEditorChange}
+              />
+            ) : (
+              <PlaintextEditor
+                editorType={value.type}
+                data={value.data}
+                markdownImgErrors={markdownImgErrors}
+                onFocus={onFocus}
+                placeholder={placeholder}
+                setContents={setContents}
+              />
+            )}
           </div>
         )}
         {!isGrey &&
@@ -268,7 +281,7 @@ const Editor = forwardRef<
             />
           </Type>
         ))}
-      {markdownImgErrs && value.type === "markdown" && (
+      {markdownImgErrors && value.type === "markdown" && (
         <Type As="aside" style="bodySmall" className="text-error m-2">
           Your Markdown contains insecure HTTP image links
         </Type>
