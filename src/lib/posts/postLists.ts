@@ -241,6 +241,25 @@ export const fetchFrontpagePostsList = ({
   });
 };
 
+export const fetchFrontpageCuratedPostsList = async (
+  currentUserId: string | null,
+) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      curatedDate: { isNotNull: true },
+      isEvent: false,
+      groupId: { isNull: true },
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    limit: 3,
+  });
+};
+
 export type PostListItem = Awaited<
   ReturnType<typeof fetchFrontpagePostsList>
 >[number];
