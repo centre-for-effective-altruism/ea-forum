@@ -25,6 +25,7 @@ import {
   validationIntervalMs,
 } from "@/lib/ckeditor/editorHelpers";
 import debounce from "lodash/debounce";
+import PlaintextEditor from "./PlaintextEditor";
 import CommentEditor from "./CommentEditor";
 import PostEditor from "./PostEditor";
 import ContentStyles from "../ContentStyles/ContentStyles";
@@ -34,7 +35,6 @@ import FormLabel from "../Forms/FormLabel";
 import WarningBanner from "../WarningBanner";
 import Type from "../Type";
 import "./ckeditor-styles.css";
-import PlaintextEditor from "./PlaintextEditor";
 
 export type EditorOnChangeProps = {
   contents: EditorContents;
@@ -123,15 +123,6 @@ const Editor = forwardRef<
     setLoading(false);
   }, []);
 
-  const debouncedCheckMarkdownImgErrs = useRef(
-    debounce(() => {
-      if (value.type === "markdown") {
-        const httpImageRE = /!\[[^\]]*?\]\(http:/g;
-        setMarkdownImgErrors(httpImageRE.test(value.data));
-      }
-    }, validationIntervalMs),
-  ).current;
-
   const throttledSetCkEditor = useRef(
     debounce((getValue: () => string) => {
       setContents("ckEditorMarkup", getValue());
@@ -155,10 +146,10 @@ const Editor = forwardRef<
         autosave: true,
       });
       if (editorType === "markdown") {
-        debouncedCheckMarkdownImgErrs();
+        setMarkdownImgErrors(/!\[[^\]]*?\]\(http:/g.test(newValue));
       }
     },
-    [value, onChange, debouncedCheckMarkdownImgErrs],
+    [value, onChange],
   );
 
   useImperativeHandle(ref, () => ({
@@ -257,7 +248,6 @@ const Editor = forwardRef<
               <PlaintextEditor
                 editorType={value.type}
                 data={value.data}
-                markdownImgErrors={markdownImgErrors}
                 onFocus={onFocus}
                 placeholder={placeholder}
                 setContents={setContents}
@@ -292,7 +282,10 @@ const Editor = forwardRef<
         ))}
       {markdownImgErrors && value.type === "markdown" && (
         <Type As="aside" style="bodySmall" className="text-error m-2">
-          Your Markdown contains insecure HTTP image links
+          Your Markdown contains at least one link to an image served over an
+          insecure HTTP connection. You should update all links to images so that
+          they are served over a secure HTTPS connection (i.e. the links should start
+          with <em>https://</em>).
         </Type>
       )}
     </div>
