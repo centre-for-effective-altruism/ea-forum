@@ -44,6 +44,29 @@ export default function UserDropdownMenu({
         {
           title: "Write new",
           Icon: PencilSquareIcon,
+          submenu: [
+            {
+              title: "Post",
+              href: "/newPost",
+            },
+            {
+              title: "Question",
+              href: "/newPost?question=true",
+            },
+            {
+              title: "Quick take",
+              href: "#", // TODO
+            },
+            "divider",
+            {
+              title: "Event",
+              href: "/newPost?eventForm=true",
+            },
+            {
+              title: "Sequence",
+              href: "/sequencesnew",
+            },
+          ],
         },
         {
           title: "Theme",
