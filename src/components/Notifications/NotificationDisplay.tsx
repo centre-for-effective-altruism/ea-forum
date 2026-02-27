@@ -1,6 +1,7 @@
 import type { NotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { formatNotificationType } from "@/lib/notifications/notificationHelpers";
+import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/16/solid/ChatBubbleLeftIcon";
 import DocumentIcon from "@heroicons/react/16/solid/DocumentIcon";
 import GiftIcon from "@heroicons/react/16/solid/GiftIcon";
@@ -35,18 +36,19 @@ export default function NotificationDisplay({
     <AnalyticsContext pageSubSectionContext="notificationsPageItem">
       <PostsTooltip post={post ?? comment?.post} placement="left-start">
         <Link
+          data-component="NotificationDisplay"
           href={link ?? "#"}
-          className={`
+          className="
             flex gap-2 text-gray-600 p-[6px_8px] rounded
             cursor-pointer hover:bg-gray-100
-          `}
-          data-component="NotificationDisplay"
+          "
         >
           <div
-            className={`
-              flex items-center justify-center text-always-white rounded-full
-              w-[24px] min-w-[24px] h-[24px] ${icon.className}
-            `}
+            className={clsx(
+              "flex items-center justify-center text-always-white rounded-full",
+              "w-[24px] min-w-[24px] h-[24px]",
+              icon.className,
+            )}
           >
             <icon.Icon className="w-[14px] h-[14px] min-w-[14px] min-h-[14px]" />
           </div>
@@ -55,7 +57,7 @@ export default function NotificationDisplay({
               <Type style="bodySmall">{formatNotificationType(type)}</Type>
               <Type
                 style="bodySmall"
-                className={`text-black ${!viewed ? "font-[600]" : ""}`}
+                className={clsx("text-gray-1000", !viewed ? "font-[600]" : "")}
               >
                 {message}
               </Type>
@@ -63,10 +65,10 @@ export default function NotificationDisplay({
             <div className="flex gap-2">
               {!viewed && (
                 <div
-                  className={`
+                  className="
                     w-[10px] min-w-[10px] h-[10px] min-h-[10px] mt-[5px]
-                    rounded-full bg-(--color-primary)
-                  `}
+                    rounded-full bg-primary)
+                  "
                 />
               )}
               {createdAt && <TimeAgo time={createdAt} textStyle="bodySmall" />}

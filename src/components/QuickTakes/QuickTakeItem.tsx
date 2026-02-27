@@ -51,7 +51,7 @@ export default function QuickTakeItem({
           voteCount={voteCount}
           orientation="horizontal"
         />
-        <Type style="body" className="text-black font-[700]">
+        <Type style="body" className="text-gray-1000 font-[700]">
           {user ? (
             <InteractionWrapper>
               <Link href={userGetProfileUrl({ user })}>
@@ -68,7 +68,7 @@ export default function QuickTakeItem({
         <div className="grow" />
         <Type
           style="body"
-          className="flex flex-row gap-1 cursor-pointer hover:text-black"
+          className="flex flex-row gap-1 cursor-pointer hover:text-gray-1000"
         >
           <ChatBubbleLeftIcon className="w-[16px]" />
           {descendentCount}

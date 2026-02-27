@@ -24,12 +24,7 @@ export default function PostDisplaySkeleton() {
           <div className="h-3 w-36 rounded bg-gray-200" />
         </div>
       </div>
-      <div
-        className="
-          py-4 border-y border-(--color-posts-page-hr) text-gray-600
-          flex items-center
-        "
-      >
+      <div className="py-4 border-y border-posts-page-hr text-gray-600 flex items-center">
         <div className="flex items-center gap-4 grow">
           {/* Voting */}
           <div className="flex items-center gap-1">

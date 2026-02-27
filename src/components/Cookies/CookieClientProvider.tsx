@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
-import { CookiesProvider } from "react-cookie";
+import { useEffect, useMemo, type ReactNode } from "react";
+import { Cookies, CookiesProvider } from "react-cookie";
 import { initRecaptcha } from "@/lib/recaptcha";
 
 export default function CookieClientProvider({
+  initialCookies,
   children,
 }: Readonly<{
+  initialCookies?: Record<string, string>;
   children: ReactNode;
 }>) {
+  const cookies = useMemo(() => new Cookies(initialCookies), [initialCookies]);
+
   useEffect(() => {
     void initRecaptcha();
   }, []);
+
   return (
-    <CookiesProvider defaultSetOptions={{ path: "/" }}>{children}</CookiesProvider>
+    <CookiesProvider defaultSetOptions={{ path: "/" }} cookies={cookies}>
+      {children}
+    </CookiesProvider>
   );
 }

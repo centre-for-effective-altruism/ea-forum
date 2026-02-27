@@ -106,7 +106,7 @@ export default function PostsItem({
               <InteractionWrapper>
                 <PostIcons post={post} />
               </InteractionWrapper>
-              <Type style="postTitle" className="text-black truncate">
+              <Type style="postTitle" className="text-gray-900 truncate">
                 <PostsTooltip As="span" post={post}>
                   <Link
                     href={postLink}
@@ -171,7 +171,7 @@ export default function PostsItem({
           <InteractionWrapper>
             <button
               className={clsx(
-                "flex items-center gap-1 hover:text-black cursor-pointer",
+                "flex items-center gap-1 hover:text-gray-1000 cursor-pointer",
                 cardView && "mt-1 mr-2",
               )}
             >
