@@ -81,7 +81,7 @@ export default function Tooltip({
             style={floatingStyles}
             {...getFloatingProps()}
             className={clsx(
-              "absolute bg-(--color-tooltip-background) text-gray-50 rounded",
+              "absolute bg-tooltip-background text-tooltip-text rounded",
               "z-(--zindex-tooltip) px-2 py-1 overflow-hidden",
               tooltipClassName,
             )}

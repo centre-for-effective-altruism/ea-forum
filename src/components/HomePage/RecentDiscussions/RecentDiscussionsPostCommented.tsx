@@ -90,7 +90,7 @@ export default function RecentDiscussionsPostCommented({
             className="min-w-[33px]"
           />
           <div className="truncate grow">
-            <Type style="postTitle" className="text-black truncate">
+            <Type style="postTitle" className="text-gray-1000 truncate">
               <PostsTooltip As="span" post={post}>
                 <Link
                   href={postLink}
@@ -116,7 +116,7 @@ export default function RecentDiscussionsPostCommented({
           {!isEvent && (
             <Link
               href={commentsLink}
-              className="flex items-center gap-1 hover:text-black"
+              className="flex items-center gap-1 hover:text-gray-1000"
             >
               <ChatBubbleLeftIcon className="w-[18px]" />
               <Type>{commentCount}</Type>

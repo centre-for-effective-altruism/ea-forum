@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import clsx from "clsx";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
 import Tooltip from "@/components/Tooltip";
@@ -27,7 +28,7 @@ export default function NavItem({
   }
 
   const Icon = isSelected ? SelectedIcon : UnselectedIcon;
-  const className = isSelected ? "text-black font-[600]" : "text-gray-600";
+  const className = isSelected ? "text-gray-1000 font-[600]" : "text-gray-600";
   return (
     <Tooltip
       title={
@@ -41,7 +42,10 @@ export default function NavItem({
       <Type style="body" data-component="NavItem">
         <Link
           href={href}
-          className={`flex items-center gap-2 hover:text-black py-2 ${className}`}
+          className={clsx(
+            "flex items-center gap-2 hover:text-gray-1000 py-2",
+            className,
+          )}
         >
           <Icon className="w-5" /> {title}
         </Link>

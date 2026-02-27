@@ -3,7 +3,7 @@
   --ck-color-base-background: var(--color-editor-bg);
   --ck-color-annotation-wrapper-background: var(--color-editor-bg);
   --ck-color-comment-background: var(--color-editor-comment-bg);
-  --ck-color-widget-editable-focus-background: var(--color-editor-focus-background);
+  --ck-color-widget-editable-focus-background: var(--color-editor-focus-bg);
   --ck-color-comment-marker: var(--color-editor-comment-marker);
   --ck-color-comment-marker-active: var(--color-editor-comment-marker-active);
   --ck-color-comment-count: var(--color-editor-comment-count);

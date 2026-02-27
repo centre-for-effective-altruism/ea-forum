@@ -7,8 +7,8 @@ import clsx from "clsx";
 import Loading from "./Loading";
 
 const variants = {
-  primaryFilled: "text-white bg-(--color-primary) hover:bg-(--color-primary-dark)",
-  greyFilled: "text-black bg-gray-300 hover:bg-gray-400",
+  primaryFilled: "text-gray-0 bg-(--color-primary) hover:bg-(--color-primary-dark)",
+  greyFilled: "text-gray-1000 bg-gray-300 hover:bg-gray-400",
   greyOutlined: "border border-gray-400 hover:bg-(--color-outline-button-hover)",
 };
 

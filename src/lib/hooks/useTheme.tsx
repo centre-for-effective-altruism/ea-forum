@@ -6,6 +6,7 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { useCurrentUser } from "./useCurrentUser";
@@ -19,6 +20,12 @@ type ThemeContext = {
 };
 
 const themeContext = createContext<ThemeContext | null>(null);
+
+const themeClasses: Record<Theme, string> = {
+  auto: "theme-auto",
+  default: "theme-light",
+  dark: "theme-dark",
+};
 
 export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [cookies, setCookie] = useCookiesWithConsent(["theme"]);
@@ -36,9 +43,26 @@ export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
     },
     [currentUser, setCookie],
   );
+
+  useEffect(() => {
+    // We want to apply the theme classes to body, but we can't do that during
+    // SSR without delaying TTFP. To avoid this, we apply the classes first on
+    // the div below during SSR (which includes all the main page content, but
+    // not the page background or absolutely positioned elemnts attached to the
+    // body), and then add the class to the body after rendering in this useEffect.
+    // This is sufficient to prevent a flash of unstyled content.
+    const body = document.body;
+    if (body) {
+      body.classList.remove(...Object.values(themeClasses));
+      body.classList.add(themeClasses[theme]);
+    }
+  }, [theme]);
+
   return (
     <themeContext.Provider value={{ theme, updateTheme }}>
-      {children}
+      <div data-component="ThemeProvider" className={themeClasses[theme]}>
+        {children}
+      </div>
     </themeContext.Provider>
   );
 };

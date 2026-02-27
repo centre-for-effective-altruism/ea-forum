@@ -7,7 +7,7 @@
   content: "";
   pointer-events: none;
   z-index: 1;
-  background: linear-gradient(to right, var(--background), transparent);
+  background: linear-gradient(to right, var(--color-background), transparent);
 }
 .home-page-tag-bar-fade-right:after {
   position: absolute;
@@ -18,7 +18,7 @@
   content: "";
   pointer-events: none;
   z-index: 1;
-  background: linear-gradient(to left, var(--background), transparent);
+  background: linear-gradient(to left, var(--color-background), transparent);
 }
 .home-page-tag-bar-arrow {
   position: absolute;

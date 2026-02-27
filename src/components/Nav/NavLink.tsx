@@ -13,8 +13,10 @@ export default function NavLink({
   onClick?: () => void;
   isSelected: boolean;
 }>) {
-  const selectedClassName = isSelected ? "text-black font-[600]" : "text-gray-600";
-  const className = `block py-1 hover:text-black ${selectedClassName}`;
+  const className = clsx(
+    "block py-1 hover:text-gray-1000",
+    isSelected ? "text-gray-1000 font-[600]" : "text-gray-600",
+  );
   return (
     <Type style="bodySmall" data-component="NavLink">
       {href ? (
