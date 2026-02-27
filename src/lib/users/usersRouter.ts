@@ -22,6 +22,7 @@ import {
   fetchCurrentUserByHashedToken,
   getCurrentUser,
 } from "@/lib/users/currentUser";
+import { themeSchema } from "../themes";
 
 export const usersRouter = {
   // This handles user/password login. Google login redirects through auth0
@@ -119,4 +120,16 @@ export const usersRouter = {
       .set({ frontpageFilterSettings: input })
       .where(eq(users._id, currentUser._id));
   }),
+  updateTheme: os
+    .input(z.object({ theme: themeSchema }))
+    .handler(async ({ input: { theme } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await db
+        .update(users)
+        .set({ theme: { name: theme } })
+        .where(eq(users._id, currentUser._id));
+    }),
 };

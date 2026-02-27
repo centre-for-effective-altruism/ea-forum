@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
@@ -50,7 +50,7 @@ export default function RootLayout({
       </head>
       <body
         className={clsx(
-          "antialiased w-full min-h-screen flex flex-col",
+          "scheme-light-dark antialiased w-full min-h-screen flex flex-col",
           inter.variable,
           charis.variable,
         )}
