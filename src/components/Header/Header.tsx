@@ -53,7 +53,12 @@ export default function Header({
         disable={stayAtTop}
         className="headroom-root"
       >
-        <header className={`${HEADER_HEIGHT_CLASS} static bg-gray-50 shadow-xs`}>
+        <header
+          className={clsx(
+            "static bg-gray-50 shadow-xs text-gray-1000",
+            HEADER_HEIGHT_CLASS,
+          )}
+        >
           <Column As="nav" className="h-full px-1 sm:px-5 flex items-center">
             <button
               aria-label="Toggle navigation menu"

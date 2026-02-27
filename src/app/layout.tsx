@@ -63,7 +63,13 @@ export default function RootLayout({
           <IntercomButton />
           <SiteToggle />
           <DynamicCookieBanner />
-          <Toaster position="bottom-center" />
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: 100000000000,
+              className: "bg-gray-200! text-foreground! font-sans!",
+            }}
+          />
         </Providers>
       </body>
     </html>

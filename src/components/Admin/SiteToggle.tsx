@@ -23,7 +23,7 @@ export default function SiteToggle() {
     <div
       data-component="SiteToggle"
       className="
-        fixed left-5 bottom-5 z-[1000] bg-gray-100/80 rounded-lg shadow-md p-3
+        fixed left-5 bottom-5 z-[1000] bg-gray-200/90 rounded-lg shadow-md p-3
         flex flex-col gap-2.5 font-sans text-[13px] max-sm:hidden print:hidden
       "
     >
