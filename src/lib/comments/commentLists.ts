@@ -279,11 +279,7 @@ type PopularCommentsConfig = {
   recencyBias?: number;
 };
 
-/**
- * Fetch a list of popular comments for the homepage. Note that this is quite
- * slow so we actually use a cached version of this below.
- */
-const fetchPopularCommentsUncached = async ({
+export const fetchPopularComments = async ({
   currentUser,
   minScore = 12,
   offset = 0,
@@ -341,20 +337,4 @@ const fetchPopularCommentsUncached = async ({
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
   return sortBy(result, (c) => order[c._id] ?? Number.MAX_SAFE_INTEGER);
-};
-
-const popularCommentsCache = {
-  comments: [] as CommentsList[],
-  lastFetchedAt: new Date(0).getTime(),
-  maxAgeSeconds: 60,
-};
-
-export const fetchPopularComments = async (config: PopularCommentsConfig) => {
-  const now = new Date().getTime();
-  const maxAgeMs = popularCommentsCache.maxAgeSeconds * 1000;
-  if (now - maxAgeMs > popularCommentsCache.lastFetchedAt) {
-    popularCommentsCache.comments = await fetchPopularCommentsUncached(config);
-    popularCommentsCache.lastFetchedAt = now;
-  }
-  return popularCommentsCache.comments;
 };
