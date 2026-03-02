@@ -154,7 +154,7 @@
   --color-details-title: rgba(255, 255, 255, 0.3);
   --color-conditionally-visible: rgba(255, 255, 255, 0.2);
   --color-post-hr: rgba(255, 255, 255, 0.26);
-  --color-comment-border: rgba(255, 255, 255, 0.2);
+  --color-comment-border: #333;
   --color-comment-odd: #1c1c1c;
   --color-comment-even: #2d2d2d;
   --color-people-directory-row-hover: #242424;

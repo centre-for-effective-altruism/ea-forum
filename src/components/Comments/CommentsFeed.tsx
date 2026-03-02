@@ -65,6 +65,7 @@ export default function CommentsFeed({
           node={{ comment, depth: 0, children: [], isLocal: false }}
           showPreviewWhenCollapsed
           startCollapsed
+          className="bg-comment-odd!"
         />
       ))}
       {loading &&
