@@ -41,7 +41,7 @@ export default function QuickTakeItem({
       data-component="QuickTakeItem"
       onClick={onClick}
       className="
-        max-w-full rounded bg-gray-50 border border-gray-100 px-4 py-3
+        max-w-full rounded bg-comment-odd border border-comment-border px-4 py-3
         cursor-pointer
       "
     >

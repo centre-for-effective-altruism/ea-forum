@@ -1,8 +1,12 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { fetchCommentsListItem, fetchFrontpageQuickTakes } from "./commentLists";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
+import {
+  fetchCommentsListItem,
+  fetchFrontpageQuickTakes,
+  fetchPopularComments,
+} from "./commentLists";
 import {
   createPostComment,
   updateCommentPinnedOnProfile,
@@ -66,6 +70,21 @@ export const commentsRouter = {
         pinned,
       );
       return { isPinnedOnProfile };
+    }),
+  listPopular: os
+    .input(
+      z.object({
+        offset: z.number().min(0).optional(),
+        limit: z.number().min(0).max(50).optional(),
+      }),
+    )
+    .handler(async ({ input: { offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchPopularComments({
+        currentUser,
+        offset,
+        limit,
+      });
     }),
   listQuickTakes: os
     .input(

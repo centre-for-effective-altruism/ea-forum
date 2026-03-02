@@ -50,7 +50,8 @@ export default function RootLayout({
       </head>
       <body
         className={clsx(
-          "antialiased w-full min-h-screen flex flex-col",
+          "antialiased text-size-adjust-none w-full min-h-screen flex flex-col",
+          "bg-background text-foreground font-sans",
           inter.variable,
           charis.variable,
         )}
@@ -59,7 +60,9 @@ export default function RootLayout({
           <div id="tooltip-target" />
           <Header />
           <MobileNav />
-          <main className="grow">{children}</main>
+          <main className="grow bg-background text-foreground font-sans">
+            {children}
+          </main>
           <IntercomButton />
           <SiteToggle />
           <DynamicCookieBanner />
