@@ -1,7 +1,9 @@
 import "server-only";
 import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
+import type { FilterSettings } from "./filterSettings";
 import type { VoteType } from "./votes/voteHelpers";
+import type { Theme } from "./themes";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import { sql } from "drizzle-orm";
 import {
@@ -92,15 +94,13 @@ export const users = pgTable(
     banned: timestamp(),
     services: jsonb<Record<string, Json>>(),
     isAdmin: boolean().notNull().default(false),
-    theme: jsonb<{ name: "default" | "auto" | "dark" }>()
-      .notNull()
-      .default({ name: "default" }),
+    theme: jsonb<{ name: Theme }>().notNull().default({ name: "default" }),
     hideIntercom: boolean().notNull().default(false),
     acceptedTos: boolean().notNull().default(false),
     hideNavigationSidebar: boolean(),
     hideHomeRHS: boolean().notNull().default(false),
     currentFrontpageFilter: text(),
-    frontpageFilterSettings: jsonb(),
+    frontpageFilterSettings: jsonb<FilterSettings>(),
     lastNotificationsCheck: timestamp(),
     expandedFrontpageSections: jsonb(),
     email: text(),

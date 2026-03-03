@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
-import { fetchTagDiffAction } from "@/lib/tags/tagActions";
 import { useIsInView } from "@/lib/hooks/useIsInView";
 import type { RecentDiscussionRevision } from "@/lib/recentDiscussions/fetchRecentDiscussions";
 import RecentDiscussionsItem from "./RecentDiscussionsItem";
 import TagBody from "@/components/ContentStyles/TagBody";
 import UsersName from "@/components/UsersName";
 import Type from "@/components/Type";
+import { rpc } from "@/lib/rpc";
 
 export default function RecentDiscussionsTagRevised({
   revision,
@@ -24,10 +24,8 @@ export default function RecentDiscussionsTagRevised({
     if (revision.tag && isOnScreen && diff === null) {
       void (async () => {
         try {
-          const diff = await fetchTagDiffAction({ revisionId: revision._id });
-          if (diff.data) {
-            setDiff(diff.data);
-          }
+          const diff = await rpc.tags.diff({ revisionId: revision._id });
+          setDiff(diff);
         } catch (error) {
           console.error("Failed to fetch tag diff:", error);
           captureException(error);

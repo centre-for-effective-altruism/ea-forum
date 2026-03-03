@@ -1,13 +1,14 @@
-import { sql } from "drizzle-orm";
+import { SQL, sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
+import type { FilterSettings } from "../filterSettings";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
+import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
-  isNotTrue,
   RelationalFilter,
   RelationalOrderBy,
   RelationalProjection,
@@ -16,6 +17,7 @@ import {
   currentUserIsSharedSelector,
   currentUserUsedLinkKeySelector,
   currentUserSuggestedCurationSelector,
+  filterSettingsToSelector,
 } from "./postQueries";
 
 const SCORE_BIAS = 2;
@@ -23,17 +25,17 @@ const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
 const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 
-// TODO: This should be a function that takes the current user and does permission
-// checks
+// TODO: Maybe this should be a function that takes the current user and does
+// permission checks
 export const viewablePostFilter = {
-  draft: isNotTrue,
-  deletedDraft: isNotTrue,
-  isFuture: isNotTrue,
-  unlisted: isNotTrue,
-  shortform: isNotTrue,
-  rejected: isNotTrue,
-  authorIsUnreviewed: isNotTrue,
-  hiddenRelatedQuestion: isNotTrue,
+  draft: false,
+  deletedDraft: false,
+  isFuture: false,
+  unlisted: false,
+  shortform: false,
+  rejected: false,
+  authorIsUnreviewed: false,
+  hiddenRelatedQuestion: false,
   postedAt: { isNotNull: true },
   status: postStatuses.STATUS_APPROVED,
 } as const;
@@ -46,21 +48,16 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
 export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
 
-const getFrontpageCutoffDate = () =>
-  new Date(new Date().getTime() - CUTOFF_DAYS * 24 * 60 * 60 * 1000);
-
 /**
  * New and upvoted sorting: Calculate score from karma with bonuses for
  * frontpage/curated posts, then divide by a time decay factor.
  */
-const magicSort = (postsTable: typeof posts) => sql`
+const magicSort =
+  (scoreField = (postsTable: typeof posts) => sql`${postsTable}."score"`) =>
+  (postsTable: typeof posts) => sql`
   ${postsTable}."sticky" DESC,
   ${postsTable}."stickyPriority" DESC,
-  (
-    ${postsTable}."baseScore"
-      + (CASE WHEN ${postsTable}."frontpageDate" IS NOT NULL THEN 10 ELSE 0 END)
-      + (CASE WHEN ${postsTable}."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)
-  ) / POW(
+  (${scoreField(postsTable)}) / POW(
     EXTRACT(EPOCH FROM NOW() - ${postsTable}."postedAt") / 3600000 + ${SCORE_BIAS},
     ${TIME_DECAY_FACTOR}
   ) DESC,
@@ -201,27 +198,57 @@ export const fetchFrontpagePostsList = ({
   limit,
   onlyTagId,
   excludeTagId,
+  filterSettings,
 }: {
   currentUserId: string | null;
   offset?: number;
   limit: number;
   onlyTagId?: string;
   excludeTagId?: string;
+  filterSettings?: FilterSettings;
 }) => {
+  let scoreField: ((postsTable: typeof posts) => SQL) | undefined;
+  const filters: ((postsTable: typeof posts) => SQL)[] = [];
+  if (onlyTagId) {
+    filters.push(onlyTagFilter(onlyTagId));
+  }
+  if (excludeTagId) {
+    filters.push(excludeTagFilter(excludeTagId));
+  }
+  if (filterSettings) {
+    const { filter, score } = filterSettingsToSelector(filterSettings);
+    filters.push(filter);
+    scoreField = score;
+  }
   return fetchPostsList({
     currentUserId,
     where: {
-      ...(onlyTagId ? { RAW: onlyTagFilter(onlyTagId) } : null),
-      ...(excludeTagId ? { RAW: excludeTagFilter(excludeTagId) } : null),
-      isEvent: isNotTrue,
-      sticky: isNotTrue,
+      isEvent: false,
+      sticky: false,
       groupId: { isNull: true },
-      frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
+      AND: filters.map((filter) => ({ RAW: (posts) => filter(posts) })),
     },
-    orderBy: magicSort,
+    orderBy: magicSort(scoreField),
     offset,
     limit,
+  });
+};
+
+export const fetchFrontpageCuratedPostsList = async (
+  currentUserId: string | null,
+) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      curatedDate: { gte: nDaysAgo(5).toISOString() },
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    limit: currentUserId ? 3 : 2,
   });
 };
 
@@ -298,15 +325,15 @@ export const fetchSidebarOpportunities = (limit: number) => {
     },
     where: {
       ...viewablePostFilter,
-      isEvent: isNotTrue,
-      sticky: isNotTrue,
+      isEvent: false,
+      sticky: false,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
       RAW: (postsTable: typeof posts) =>
         sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
     },
-    orderBy: magicSort,
+    orderBy: magicSort(),
     limit,
   });
 };
@@ -373,9 +400,9 @@ export const fetchMoreFromAuthorPostsList = async ({
     where: {
       _id: { ne: postId },
       groupId: { isNull: true },
-      isEvent: isNotTrue,
+      isEvent: false,
       baseScore: { gte: minScore },
-      disableRecommendation: isNotTrue,
+      disableRecommendation: false,
       user: {
         _id: post.userId,
         deleted: false,
@@ -400,9 +427,9 @@ export const fetchCuratedAndPopularPostsList = async ({
       currentUserId,
       where: {
         RAW: (postsTable) =>
-          sql`NOW() - ${postsTable.curatedDate} < '7 days'::INTERVAL`,
-        disableRecommendation: isNotTrue,
-        readStatus: currentUserId ? { isRead: isNotTrue } : undefined,
+          sql`${postsTable.curatedDate} > NOW() - '7 days'::INTERVAL`,
+        disableRecommendation: false,
+        readStatus: currentUserId ? { isRead: false } : undefined,
       },
       orderBy: {
         curatedDate: "desc",
@@ -413,15 +440,15 @@ export const fetchCuratedAndPopularPostsList = async ({
       currentUserId,
       where: {
         RAW: (postsTable) => sql`
-          NOW() - ${postsTable.frontpageDate} < '7 days'::INTERVAL AND
-          ${excludeTagFilter(process.env.COMMUNITY_TAG_ID)(postsTable)}
+          ${postsTable.frontpageDate} > NOW() - '7 days'::INTERVAL AND
+          ${excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID)(postsTable)}
         `,
         curatedDate: { isNull: true },
         groupId: { isNull: true },
-        disableRecommendation: isNotTrue,
-        readStatus: currentUserId ? { isRead: isNotTrue } : undefined,
+        disableRecommendation: false,
+        readStatus: currentUserId ? { isRead: false } : undefined,
         user: {
-          deleted: isNotTrue,
+          deleted: false,
         },
       },
       orderBy: {
@@ -447,7 +474,7 @@ export const fetchRecentOpportunitiesPostsList = async ({
     where: {
       RAW: onlyTagFilter(process.env.OPPORTUNITIES_TAG_ID),
     },
-    orderBy: magicSort,
+    orderBy: magicSort(),
     limit,
   });
 };

@@ -1,13 +1,10 @@
 import { useCallback } from "react";
 import type { CommentsList } from "../comments/commentLists";
+import { rpc } from "../rpc";
 import { useCurrentUser } from "./useCurrentUser";
 import { useOptimisticState } from "./useOptimisticState";
 import { userCanDo, userOwns } from "../users/userHelpers";
 import { userCanPinCommentOnProfile } from "../comments/commentHelpers";
-import {
-  updateCommentPinnedOnProfileAction,
-  updateQuickTakeFrontpageAction,
-} from "../comments/commentActions";
 
 export const usePinCommentOnProfile = (comment: CommentsList) => {
   const { currentUser } = useCurrentUser();
@@ -17,7 +14,7 @@ export const usePinCommentOnProfile = (comment: CommentsList) => {
   } = useOptimisticState(
     { isPinnedOnProfile: comment.isPinnedOnProfile },
     ({ isPinnedOnProfile }) => ({ isPinnedOnProfile: !isPinnedOnProfile }),
-    updateCommentPinnedOnProfileAction,
+    rpc.comments.updatePinnedOnProfile,
   );
   const toggleIsPinnedOnProfile = useCallback(
     () => execute({ commentId: comment._id, pinned: !isPinnedOnProfile }),
@@ -39,7 +36,7 @@ export const useQuickTakeFrontpage = (comment: CommentsList) => {
   } = useOptimisticState(
     { shortformFrontpage: comment.shortformFrontpage },
     ({ shortformFrontpage }) => ({ shortformFrontpage: !shortformFrontpage }),
-    updateQuickTakeFrontpageAction,
+    rpc.comments.updateQuickTakeFrontpage,
   );
   const toggleQuickTakeFrontpage = useCallback(
     () => execute({ commentId: comment._id, frontpage: !shortformFrontpage }),

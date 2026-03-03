@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export const useOptimisticState = <Value, Props>(
   initialValue: Value,
   optimisticUpdate: (previous: Value, props: Props) => Value,
-  asyncUpdate: (props: Props) => Promise<{ data?: Value }>,
+  asyncUpdate: (props: Props) => Promise<Value | { data?: Value }>,
   onError: (error: Error) => void = (error) => toast.error(error.message),
 ) => {
   const [value, setValue] = useState(initialValue);
@@ -21,10 +21,15 @@ export const useOptimisticState = <Value, Props>(
         try {
           const result = await asyncUpdate(props);
           if (requestId === requestIdRef.current) {
-            if (!result.data) {
+            const resultWithData = result as { data?: Value };
+            if (result && "data" in resultWithData && resultWithData?.data) {
+              setValue(resultWithData.data);
+              return;
+            }
+            if (!result) {
               throw new Error("Async update missing data");
             }
-            setValue(result.data);
+            setValue(result as Value);
           }
         } catch (e) {
           if (requestId === requestIdRef.current) {

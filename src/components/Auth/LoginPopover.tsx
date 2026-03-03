@@ -4,7 +4,7 @@ import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useAuth0Client } from "@/lib/hooks/useAuth0Client";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { loginAction } from "@/lib/users/authActions";
+import { rpc } from "@/lib/rpc";
 import Image from "next/image";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import Popover from "../Popover";
@@ -95,7 +95,7 @@ export default function LoginPopover() {
 
       try {
         // TODO Handle signup with `isSignup`
-        const { data } = await loginAction({ email, password });
+        const data = await rpc.users.login({ email, password });
         if (data?.redirect) {
           window.location.href = data.redirect;
         } else if (!data?.ok || !data?.currentUser) {

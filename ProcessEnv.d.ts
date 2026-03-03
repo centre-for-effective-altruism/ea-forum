@@ -2,7 +2,7 @@ declare namespace NodeJS {
   export interface ProcessEnv {
     // General settings
     LOG_DRIZZLE_QUERIES?: "true" | "false";
-    ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple";
+    ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
@@ -50,14 +50,11 @@ declare namespace NodeJS {
     RECAPTCHA_PRIVATE_KEY: string;
     SENTRY_DSN: string;
 
-    // Site access protection (optional)
-    SITE_ACCESS_PASSWORD?: string;
-
     // Site config
     START_HERE_POST_ID: string;
     INTRO_POST_ID: string;
     CONTACT_POST_ID: string;
-    COMMUNITY_TAG_ID: string;
+    NEXT_PUBLIC_COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
     TRANSLATION_TAG_ID: string;
     APRIL_FOOLS_TAG_ID: string;

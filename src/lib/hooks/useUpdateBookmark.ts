@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
+import { rpc } from "../rpc";
 import { useTracking } from "../analyticsEvents";
-import { toggleBookmarkAction } from "../bookmarks/bookmarkActions";
 import { useCurrentUser } from "./useCurrentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useOptimisticState } from "@/lib/hooks/useOptimisticState";
@@ -26,7 +26,7 @@ export const useUpdateBookmark = (
       captureEvent("bookmarkToggle", { collectionName, documentId, bookmarked });
       return { bookmarked };
     },
-    toggleBookmarkAction,
+    rpc.bookmarks.toggle,
   );
 
   const toggleIsBookmarked = useCallback(async () => {

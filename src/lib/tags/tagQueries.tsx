@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { sql } from "drizzle-orm";
+import keyBy from "lodash/keyBy";
 import { db } from "@/lib/db";
 import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
@@ -10,14 +11,24 @@ export type TagFromProjection<TConfig extends TagRelationalProjection> = Awaited
   ReturnType<typeof db.query.tags.findMany<TConfig>>
 >[number];
 
-export const fetchCoreTags = cache(() => {
+const tagBaseProjection = {
+  columns: {
+    _id: true,
+    name: true,
+    shortName: true,
+    slug: true,
+    postCount: true,
+  },
+  extras: {
+    description: htmlSubstring(sql`"description"->>'html'`),
+  },
+} satisfies TagRelationalProjection;
+
+export type TagBase = TagFromProjection<typeof tagBaseProjection>;
+
+export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
   return db.query.tags.findMany({
-    columns: {
-      _id: true,
-      name: true,
-      shortName: true,
-      slug: true,
-    },
+    ...tagBaseProjection,
     where: {
       core: true,
       wikiOnly: false,
@@ -27,10 +38,25 @@ export const fetchCoreTags = cache(() => {
       defaultOrder: "desc",
       name: "asc",
     },
+    limit,
   });
 });
 
-export type CoreTag = Awaited<ReturnType<typeof fetchCoreTags>>[0];
+export const fetchTagsById = async (
+  tagIds: string[],
+): Promise<Record<string, TagBase>> => {
+  const result = await db.query.tags.findMany({
+    ...tagBaseProjection,
+    extras: {
+      description: htmlSubstring(sql`"description"->>'html'`),
+    },
+    where: {
+      _id: { in: tagIds },
+      deleted: false,
+    },
+  });
+  return keyBy(result, "_id");
+};
 
 export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core" | "postCount"> & {
   description: string | null;

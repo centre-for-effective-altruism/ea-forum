@@ -8,8 +8,8 @@ import {
   useMemo,
   useState,
 } from "react";
+import { rpc } from "../rpc";
 import type { CurrentUser } from "../users/currentUser";
-import { fetchCurrentUserAction } from "../users/userActions";
 
 type CurrentUserContext = {
   currentUser: CurrentUser | null;
@@ -30,7 +30,7 @@ export function CurrentUserProvider({
   const [currentUser, setCurrentUser] = useState(user);
 
   const refetchCurrentUser = useCallback(async (): Promise<CurrentUser | null> => {
-    const { data = null } = await fetchCurrentUserAction();
+    const data = await rpc.users.currentUser();
     setCurrentUser(data);
     return data;
   }, []);

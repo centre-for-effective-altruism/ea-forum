@@ -47,7 +47,7 @@ export default function Tooltip({
     placement,
     open: isOpen,
     onOpenChange: setIsOpen,
-    middleware: [offset(10), flip(), shift()],
+    middleware: [offset(4), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
   const hover = useHover(context, {
@@ -81,7 +81,7 @@ export default function Tooltip({
             style={floatingStyles}
             {...getFloatingProps()}
             className={clsx(
-              "absolute bg-(--color-tooltip-background) text-gray-50 rounded",
+              "absolute bg-tooltip-background text-tooltip-text rounded",
               "z-(--zindex-tooltip) px-2 py-1 overflow-hidden",
               tooltipClassName,
             )}

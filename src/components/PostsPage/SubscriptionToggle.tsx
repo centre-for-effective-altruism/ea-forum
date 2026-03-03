@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import { useSubscription } from "@/lib/hooks/useSubscriptions";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import type { SubscriptionType } from "@/lib/subscriptions/subscriptionTypes";
 import ArrowPathIcon from "@heroicons/react/24/solid/ArrowPathIcon";
 import DropdownItem from "../Dropdown/DropdownItem";
@@ -14,13 +16,19 @@ export default function SubscriptionToggle({
   documentId: string;
   type: SubscriptionType;
 }>) {
+  const { currentUser } = useCurrentUser();
+  const { onSignup } = useLoginPopoverContext();
   const { data, update, loading } = useSubscription(props);
   const onToggle = useCallback(() => {
-    const current = data?.subscribed;
-    if (typeof current === "boolean") {
-      update(!current);
+    if (currentUser) {
+      const current = data?.subscribed;
+      if (typeof current === "boolean") {
+        update(!current);
+      }
+    } else {
+      onSignup();
     }
-  }, [data, update]);
+  }, [currentUser, onSignup, data, update]);
   return (
     <DropdownItem
       title={title}
@@ -28,10 +36,10 @@ export default function SubscriptionToggle({
       className="whitespace-nowrap"
       afterNode={
         <div data-component="SubscriptionToggle" className="w-[28px] min-w-[28px]">
-          {loading || !data ? (
+          {currentUser && (loading || !data) ? (
             <ArrowPathIcon className="w-4 text-gray-600 animate-spin" />
           ) : (
-            <ToggleSwitch value={data.subscribed} As="div" />
+            <ToggleSwitch value={data?.subscribed ?? false} As="div" />
           )}
         </div>
       }

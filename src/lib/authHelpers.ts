@@ -1,9 +1,10 @@
-import { createHash, randomBytes } from "node:crypto";
-import { AuthenticationClient } from "auth0";
-import { db } from "@/lib/db";
-import { users } from "@/lib/schema";
 import { sql } from "drizzle-orm";
 import z from "zod/v4";
+import { createHash, randomBytes } from "node:crypto";
+import { AuthenticationClient } from "auth0";
+import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import { users } from "@/lib/schema";
+import { db } from "@/lib/db";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -140,4 +141,28 @@ export const loginUserFromIdToken = async (idToken: string) => {
       },
     },
   };
+};
+
+export const loginWithPassword = async (
+  cookieStore: ReadonlyRequestCookies,
+  email: string,
+  password: string,
+) => {
+  const { client, realm, scope } = getAuth0Client("original");
+  const grant = await client.oauth.passwordGrant({
+    username: email,
+    password,
+    realm,
+    scope,
+  });
+
+  const auth0AccessToken = grant.data?.access_token ?? null;
+  const auth0IdToken = grant.data?.id_token ?? null;
+  if (!auth0AccessToken || !auth0IdToken) {
+    throw new Error("Incorrect email or password");
+  }
+
+  const { hashedToken, cookie } = await loginUserFromIdToken(auth0IdToken);
+  cookieStore.set(cookie.name, cookie.value, cookie.options);
+  return hashedToken;
 };

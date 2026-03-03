@@ -9,7 +9,7 @@ import { getReactionMutuallyExclusivePartner } from "@/lib/votes/reactions";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useTracking } from "@/lib/analyticsEvents";
-import { onVoteAction } from "@/lib/votes/voteActions";
+import { rpc } from "@/lib/rpc";
 
 type VoteState = {
   baseScore: number;
@@ -20,7 +20,7 @@ type VoteState = {
   showVotingPatternWarning: boolean;
 };
 
-type VoteStateUpdate = Parameters<typeof onVoteAction>[0];
+type VoteStateUpdate = Parameters<typeof rpc.votes.create>[0];
 
 const getInitialVoteState = (document: PostDisplay | CommentsList): VoteState => ({
   baseScore: document.baseScore,
@@ -105,7 +105,7 @@ export const useVote = ({
   const { value, execute } = useOptimisticState<VoteState, VoteStateUpdate>(
     getInitialVoteState(document),
     doOptimisticVote.bind(null, currentUser?.karma ?? 0),
-    onVoteAction,
+    rpc.votes.create,
   );
 
   const onVote = useCallback(

@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useLoadMore } from "@/lib/hooks/useLoadMore";
-import { fetchQuickTakesAction } from "@/lib/comments/commentActions";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
+import { rpc } from "@/lib/rpc";
 import type { CommentsList } from "@/lib/comments/commentLists";
 import QuickTakesListSkeleton from "./QuickTakesListSkeleton";
 import QuickTakeItem from "./QuickTakeItem";
@@ -19,26 +19,22 @@ export default function QuickTakesList({
   const { showCommunity, localQuickTakes } = useQuickTakesListContext();
   const withoutCommunityProps = useLoadMore({
     initialItems: quickTakes,
-    fetchMore: async (limit, offset) => {
-      const { data = [] } = await fetchQuickTakesAction({
+    fetchMore: (limit, offset) =>
+      rpc.comments.listQuickTakes({
         limit,
         offset,
         includeCommunity: false,
-      });
-      return data;
-    },
+      }),
   });
   const withCommunityProps = useLoadMore({
     initialItems: [],
     limit: quickTakes.length,
-    fetchMore: async (limit, offset) => {
-      const { data = [] } = await fetchQuickTakesAction({
+    fetchMore: (limit, offset) =>
+      rpc.comments.listQuickTakes({
         limit,
         offset,
         includeCommunity: true,
-      });
-      return data;
-    },
+      }),
   });
 
   const { items, loading, limit, canLoadMore, onLoadMore } = showCommunity

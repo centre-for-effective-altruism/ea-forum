@@ -6,7 +6,7 @@ import { createTestPost } from "./testHelpers";
 import { fetchRecentDiscussions } from "@/lib/recentDiscussions/fetchRecentDiscussions";
 
 vi.stubEnv("TRANSLATION_TAG_ID", "translation-test");
-vi.stubEnv("COMMUNITY_TAG_ID", "community-test");
+vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", "community-test");
 
 suite("Recent discussions permissions", () => {
   beforeEach(async () => {

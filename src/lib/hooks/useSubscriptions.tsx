@@ -17,14 +17,11 @@ import type { CurrentUser } from "../users/currentUser";
 import { useCurrentUser } from "./useCurrentUser";
 import { userGetDisplayName } from "../users/userHelpers";
 import {
-  fetchSubscriptionAction,
-  updateSubscriptionAction,
-} from "../subscriptions/subscriptionActions";
-import {
   SubscriptionType,
   subscriptionTypes,
 } from "../subscriptions/subscriptionTypes";
 import SubscriptionToggle from "@/components/PostsPage/SubscriptionToggle";
+import { rpc } from "../rpc";
 
 type SubscriptionId = {
   collectionName: string;
@@ -66,45 +63,48 @@ export const SubscriptionProvider = ({
     setStore({});
   }, [currentUser]);
 
-  const fetchIfNeeded = useCallback(async (id: SubscriptionId) => {
-    const key = cacheKey(id);
-    const existing = storeRef.current[key];
-    if (existing?.loading || existing?.data) {
-      return;
-    }
-
-    setStore((prev) => ({
-      ...prev,
-      [key]: {
-        data: null,
-        loading: true,
-      },
-    }));
-
-    try {
-      const { data } = await fetchSubscriptionAction(id);
-      if (!data) {
-        throw new Error("Failed to fetch subscription");
+  const fetchIfNeeded = useCallback(
+    async (id: SubscriptionId) => {
+      const key = cacheKey(id);
+      const existing = storeRef.current[key];
+      if (!currentUser || existing?.loading || existing?.data) {
+        return;
       }
+
       setStore((prev) => ({
         ...prev,
         [key]: {
-          ...prev[key],
-          loading: false,
-          data,
+          data: null,
+          loading: true,
         },
       }));
-    } catch (error) {
-      setStore((prev) => ({
-        ...prev,
-        [key]: {
-          ...prev[key],
-          loading: false,
-          error,
-        },
-      }));
-    }
-  }, []);
+
+      try {
+        const data = await rpc.subscriptions.fetch(id);
+        if (!data) {
+          throw new Error("Failed to fetch subscription");
+        }
+        setStore((prev) => ({
+          ...prev,
+          [key]: {
+            ...prev[key],
+            loading: false,
+            data,
+          },
+        }));
+      } catch (error) {
+        setStore((prev) => ({
+          ...prev,
+          [key]: {
+            ...prev[key],
+            loading: false,
+            error,
+          },
+        }));
+      }
+    },
+    [currentUser],
+  );
 
   const listen = useCallback(
     (id: SubscriptionId) => {
@@ -133,7 +133,7 @@ export const SubscriptionProvider = ({
           data: value,
         },
       }));
-      await updateSubscriptionAction({ ...id, ...value });
+      await rpc.subscriptions.update({ ...id, ...value });
     },
     [],
   );

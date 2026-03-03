@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
+import { useHideRepeatedPosts } from "@/lib/hooks/useHideRepeatedPosts";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import {
@@ -61,6 +62,15 @@ export default function PostsItem({
   });
   const description = cardView ? getPostPlaintextDescription(post) : null;
   const imageUrl = getPostSocialImageUrl(post);
+
+  const { isPostRepeated, addPost } = useHideRepeatedPosts();
+  const isRepeated = isPostRepeated(post._id);
+  if (isRepeated) {
+    return null;
+  } else {
+    addPost(post._id);
+  }
+
   return (
     <AnalyticsContext
       pageElementContext="postItem"
@@ -96,7 +106,7 @@ export default function PostsItem({
               <InteractionWrapper>
                 <PostIcons post={post} />
               </InteractionWrapper>
-              <Type style="postTitle" className="text-black truncate">
+              <Type style="postTitle" className="text-gray-900 truncate">
                 <PostsTooltip As="span" post={post}>
                   <Link
                     href={postLink}
@@ -134,9 +144,23 @@ export default function PostsItem({
                         As="span"
                         textStyle="bodySmall"
                         time={post.postedAt}
+                        tooltipPrefix="Posted on "
                         includeAgo
                       />
                       <span className="px-1">·</span>
+                      {post.curatedDate && (
+                        <>
+                          <span>Curated </span>
+                          <TimeAgo
+                            As="span"
+                            textStyle="bodySmall"
+                            time={post.curatedDate}
+                            tooltipPrefix="Curated on "
+                            includeAgo
+                          />
+                          <span className="px-1">·</span>
+                        </>
+                      )}
                       <span>{readTime}m read</span>
                     </>
                   }
@@ -147,7 +171,7 @@ export default function PostsItem({
           <InteractionWrapper>
             <button
               className={clsx(
-                "flex items-center gap-1 hover:text-black cursor-pointer",
+                "flex items-center gap-1 hover:text-gray-1000 cursor-pointer",
                 cardView && "mt-1 mr-2",
               )}
             >

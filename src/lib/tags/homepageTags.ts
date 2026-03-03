@@ -1,5 +1,5 @@
 import { filterNonNull } from "../typeHelpers";
-import { CoreTag } from "./tagQueries";
+import { TagBase } from "./tagQueries";
 
 /**
  * The order in which the topics are displayed in the homepage tag bar is
@@ -22,7 +22,7 @@ const homePageTagBarOrder = [
   "aJnrnnobcBNWRsfAw", // Forecasting & estimation
 ];
 
-export const sortedHomePageTags = (tags: CoreTag[]) =>
+export const sortedHomePageTags = (tags: TagBase[]) =>
   filterNonNull(
     homePageTagBarOrder.map((topicId) => tags.find((t) => t._id === topicId)),
   );

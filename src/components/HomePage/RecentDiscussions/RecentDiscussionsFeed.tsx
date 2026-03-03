@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
+import { rpc } from "@/lib/rpc";
 import type { RecentDiscussionsData } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { fetchRecentDiscussionsAction } from "@/lib/recentDiscussions/recentDiscussionsActions";
 import InfiniteLoadTrigger from "@/components/InfiniteLoadTrigger";
 import RecentDiscussionsItemSkeleton from "./RecentDiscussionsItemSkeleton";
 import RecentDiscussionsPostCommented from "./RecentDiscussionsPostCommented";
@@ -31,7 +31,7 @@ export default function RecentDiscussionsFeed({
       const cutoff = displayedData.cutoff
         ? new Date(displayedData.cutoff)
         : undefined;
-      const { data: response } = await fetchRecentDiscussionsAction({
+      const response = await rpc.recentDiscussions.list({
         limit,
         cutoff,
         offset: displayedData.endOffset,

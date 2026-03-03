@@ -1,7 +1,9 @@
 import { ReactNode, useCallback } from "react";
+import { useTheme } from "@/lib/hooks/useTheme";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
-import { logoutAction } from "@/lib/users/authActions";
+import { rpc } from "@/lib/rpc";
+import CheckIcon from "@heroicons/react/24/solid/CheckIcon";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import BookmarkIcon from "@heroicons/react/24/outline/BookmarkIcon";
@@ -10,19 +12,27 @@ import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import DropdownMenu from "./DropdownMenu";
 import UserProfileImage from "../UserProfileImage";
 
+const Check = () => <CheckIcon className="w-4 text-primary" />;
+
 export default function UserDropdownMenu({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
   const { currentUser } = useCurrentUser();
+  const { theme, updateTheme } = useTheme();
 
   const ProfileImageIcon = useCallback(() => {
     return <UserProfileImage user={currentUser} size={24} />;
   }, [currentUser]);
 
+  const onCreateQuickTake = useCallback(() => {
+    // TODO
+    console.warn("TODO: Creating quick takes from user menu");
+  }, []);
+
   const onLogout = useCallback(async () => {
-    await logoutAction();
+    await rpc.users.logout();
     window.location.reload();
   }, []);
 
@@ -44,10 +54,50 @@ export default function UserDropdownMenu({
         {
           title: "Write new",
           Icon: PencilSquareIcon,
+          submenu: [
+            {
+              title: "Post",
+              href: "/newPost",
+            },
+            {
+              title: "Question",
+              href: "/newPost?question=true",
+            },
+            {
+              title: "Quick take",
+              onClick: onCreateQuickTake,
+            },
+            "divider",
+            {
+              title: "Event",
+              href: "/newPost?eventForm=true",
+            },
+            {
+              title: "Sequence",
+              href: "/sequencesnew",
+            },
+          ],
         },
         {
           title: "Theme",
           Icon: SunIcon,
+          submenu: [
+            {
+              title: "Auto",
+              onClick: updateTheme.bind(null, "auto"),
+              afterNode: theme === "auto" ? <Check /> : undefined,
+            },
+            {
+              title: "Light",
+              onClick: updateTheme.bind(null, "default"),
+              afterNode: theme === "default" ? <Check /> : undefined,
+            },
+            {
+              title: "Dark",
+              onClick: updateTheme.bind(null, "dark"),
+              afterNode: theme === "dark" ? <Check /> : undefined,
+            },
+          ],
         },
         {
           title: "Saved & read",

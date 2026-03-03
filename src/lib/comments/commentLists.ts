@@ -224,10 +224,12 @@ export const fetchFrontpageQuickTakes = ({
       shortformFrontpage: true,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
-      ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
+      ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
         ? {
             NOT: {
-              relevantTagIds: { arrayContains: [process.env.COMMUNITY_TAG_ID] },
+              relevantTagIds: {
+                arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
+              },
             },
           }
         : null),
@@ -277,11 +279,7 @@ type PopularCommentsConfig = {
   recencyBias?: number;
 };
 
-/**
- * Fetch a list of popular comments for the homepage. Note that this is quite
- * slow so we actually use a cached version of this below.
- */
-const fetchPopularCommentsUncached = async ({
+export const fetchPopularComments = async ({
   currentUser,
   minScore = 12,
   offset = 0,
@@ -289,7 +287,7 @@ const fetchPopularCommentsUncached = async ({
   recencyFactor = 250000,
   recencyBias = 60 * 60 * 2,
 }: PopularCommentsConfig): Promise<CommentsList[]> => {
-  const communityTopicId = process.env.COMMUNITY_TAG_ID;
+  const communityTopicId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id
     FROM (
@@ -339,20 +337,4 @@ const fetchPopularCommentsUncached = async ({
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
   return sortBy(result, (c) => order[c._id] ?? Number.MAX_SAFE_INTEGER);
-};
-
-const popularCommentsCache = {
-  comments: [] as CommentsList[],
-  lastFetchedAt: new Date(0).getTime(),
-  maxAgeSeconds: 60,
-};
-
-export const fetchPopularComments = async (config: PopularCommentsConfig) => {
-  const now = new Date().getTime();
-  const maxAgeMs = popularCommentsCache.maxAgeSeconds * 1000;
-  if (now - maxAgeMs > popularCommentsCache.lastFetchedAt) {
-    popularCommentsCache.comments = await fetchPopularCommentsUncached(config);
-    popularCommentsCache.lastFetchedAt = now;
-  }
-  return popularCommentsCache.comments;
 };

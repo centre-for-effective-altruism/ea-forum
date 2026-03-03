@@ -1,9 +1,6 @@
 import { MouseEvent, useCallback } from "react";
 import { useObserver } from "./useObserver";
-import {
-  clickRecommendationAction,
-  observeRecommendationAction,
-} from "../recommendations/recommendationActions";
+import { rpc } from "../rpc";
 
 export const useRecommendationAnalytics = <
   ObservedElement extends HTMLElement = HTMLDivElement,
@@ -15,7 +12,7 @@ export const useRecommendationAnalytics = <
 ) => {
   const onObserve = useCallback(() => {
     if (!disableAnalytics) {
-      void observeRecommendationAction({ postId });
+      void rpc.recommendations.observe({ postId });
     }
   }, [postId, disableAnalytics]);
 
@@ -27,7 +24,7 @@ export const useRecommendationAnalytics = <
   const onClick = useCallback(
     (e: MouseEvent<ClickedElement>) => {
       if (!disableAnalytics) {
-        void clickRecommendationAction({ postId });
+        void rpc.recommendations.click({ postId });
       }
       onClickHandler?.(e);
     },

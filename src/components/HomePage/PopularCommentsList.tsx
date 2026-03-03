@@ -1,6 +1,6 @@
 import { fetchPopularComments } from "@/lib/comments/commentLists";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import CommentItem from "../Comments/CommentItem";
+import ClientPopularCommentsList from "./ClientPopularCommentsList";
 
 export default async function PopularCommentsList({
   initialLimit,
@@ -15,15 +15,9 @@ export default async function PopularCommentsList({
     limit: initialLimit,
   });
   return (
-    <section data-component="PopularCommentsList" className={className}>
-      {popularComments.map((comment) => (
-        <CommentItem
-          key={comment._id}
-          node={{ comment, depth: 0, children: [], isLocal: false }}
-          showPreviewWhenCollapsed
-          startCollapsed
-        />
-      ))}
-    </section>
+    <ClientPopularCommentsList
+      initialComments={popularComments}
+      className={className}
+    />
   );
 }

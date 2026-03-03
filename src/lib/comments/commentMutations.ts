@@ -1,5 +1,4 @@
 import "server-only";
-import type { EditorData } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
@@ -15,6 +14,7 @@ import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
+import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
 import { MINIMUM_APPROVAL_KARMA, userCanDo, userOwns } from "../users/userHelpers";
 import { userCanPinCommentOnProfile } from "./commentHelpers";
 import { logFieldChanges } from "../fieldChanges";
@@ -49,7 +49,7 @@ export const createPostComment = async ({
   }
 
   const { originalContents } = editorData;
-  if (originalContents.type !== "ckEditorMarkup") {
+  if (!isEditorTypeString(originalContents.type)) {
     throw new Error("Invalid editor type");
   }
   if (!originalContents.data) {

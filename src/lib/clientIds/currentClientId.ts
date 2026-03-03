@@ -1,11 +1,11 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { CLIENT_ID_COOKIE } from "./clientIdHelpers";
 
 const getCurrentClientIdUnchached = async (): Promise<string> => {
   const cookieStore = await cookies();
-  // TODO: Handle case where client ID doesn't exists (should never happen?)
-  return cookieStore.get("clientId")?.value ?? "";
+  return cookieStore.get(CLIENT_ID_COOKIE)?.value ?? "";
 };
 
 export const getCurrentClientId = cache(getCurrentClientIdUnchached);

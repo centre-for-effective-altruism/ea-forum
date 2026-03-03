@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
+import { rpc } from "../rpc";
 import { useItemsRead } from "./useItemsRead";
 import { useCurrentUser } from "./useCurrentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
-import { updatePostReadStatusAction } from "../readStatuses/readStatusActions";
 
 export const useUpdateReadStatus = (postId: string, initialIsRead: boolean) => {
   const { postsRead, setPostRead } = useItemsRead();
@@ -19,7 +19,7 @@ export const useUpdateReadStatus = (postId: string, initialIsRead: boolean) => {
     }
     const newIsRead = !isRead;
     setPostRead(postId, newIsRead);
-    void updatePostReadStatusAction({ postId, isRead: newIsRead });
+    void rpc.readStatuses.update({ postId, isRead: newIsRead });
   }, [currentUser, onSignup, setPostRead, postId, isRead]);
 
   return { isRead, toggleIsRead };

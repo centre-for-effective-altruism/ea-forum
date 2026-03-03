@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 // TODO: We can get a small performance boost here by using
 // fm_get_user_by_login_token but it's hard to use that in drizzle while
 // keeping typesafety.
-export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
+export const fetchCurrentUserByHashedToken = cache(async (hashedToken: string) => {
   const user = await db.query.users.findFirst({
     columns: {
       _id: true,
@@ -48,18 +48,20 @@ export const fetchCurrentUserByHashedToken = async (hashedToken: string) => {
     },
   });
   return user ?? null;
+});
+
+export const getCurrentUserByLoginToken = async (loginToken: string) => {
+  return loginToken
+    ? await fetchCurrentUserByHashedToken(hashLoginToken(loginToken))
+    : null;
 };
 
 export type CurrentUser = NonNullable<
   Awaited<ReturnType<typeof fetchCurrentUserByHashedToken>>
 >;
 
-const getCurrentUserUncached = async (): Promise<CurrentUser | null> => {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const cookieStore = await cookies();
   const loginToken = cookieStore.get(LOGIN_TOKEN_COOKIE_NAME)?.value;
-  return loginToken
-    ? await fetchCurrentUserByHashedToken(hashLoginToken(loginToken))
-    : null;
-};
-
-export const getCurrentUser = cache(getCurrentUserUncached);
+  return loginToken ? await getCurrentUserByLoginToken(loginToken) : null;
+});

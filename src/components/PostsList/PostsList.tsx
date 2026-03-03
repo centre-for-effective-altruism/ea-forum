@@ -1,11 +1,11 @@
 "use client";
 
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
-import { fetchPostsListAction } from "@/lib/posts/postActions";
+import { rpc } from "@/lib/rpc";
 import { usePostsListView } from "@/lib/hooks/usePostsListView";
 import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListView";
 import clsx from "clsx";
@@ -50,7 +50,7 @@ export default function PostsList({
     setLoading(true);
 
     try {
-      const { data = [] } = await fetchPostsListAction({
+      const data = await rpc.posts.list({
         ...loadMoreView,
         offset: offset_,
       });
@@ -66,6 +66,12 @@ export default function PostsList({
       setLoading(false);
     }
   }, [loadMoreView, offset, maxOffset]);
+
+  useEffect(() => {
+    if (displayedPosts.length === 0 && !loading && canLoadMore) {
+      void onLoadMore();
+    }
+  }, [displayedPosts, loading, canLoadMore, onLoadMore]);
 
   return (
     <section className={clsx("max-w-full", className)} data-component="PostsList">

@@ -25,7 +25,7 @@ export default function LoginInput({
   return (
     <div
       className={`
-        flex items-center gap-3 w-full rounded bg-(--color-login-input) px-[17px]
+        flex items-center gap-3 w-full rounded bg-login-input px-[17px]
       `}
     >
       <input
@@ -37,7 +37,7 @@ export default function LoginInput({
         data-testid={testId}
         autoFocus={autoFocus}
         className={`
-          grow py-[15px] text-black text-[14px] font-sans font-[500]
+          grow py-[15px] text-gray-1000 text-[14px] font-sans font-[500]
           placeholder:text-gray-600 outline-none
         `}
       />
