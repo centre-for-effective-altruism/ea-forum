@@ -56,6 +56,16 @@ export const usersRouter = {
     cookieStore.delete(LOGIN_TOKEN_COOKIE_NAME);
   }),
   currentUser: os.handler(getCurrentUser),
+  hideDigestAd: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Please login");
+    }
+    await db
+      .update(users)
+      .set({ hideSubscribePoke: true })
+      .where(eq(users._id, currentUser._id));
+  }),
   subscribeToDigest: os
     .input(z.object({ email: z.string().optional() }))
     .handler(async ({ input: { email } }) => {

@@ -12,6 +12,7 @@ import PostTableOfContents from "./PostTableOfContents";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
 import UserProfileImage from "../UserProfileImage";
+import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
@@ -130,6 +131,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           )}
         </PostColumn>
       </ReadProgress>
+      <DigestPopup />
     </PostDisplayProvider>
   );
 }

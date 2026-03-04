@@ -15,7 +15,7 @@ export default function SiteToggle() {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
+  if (!mounted || !showAdminToggle) {
     return null;
   }
 
@@ -23,22 +23,21 @@ export default function SiteToggle() {
     <div
       data-component="SiteToggle"
       className="
-        fixed left-5 bottom-5 z-[1000] bg-gray-200/90 rounded-lg shadow-md p-3
-        flex flex-col gap-2.5 font-sans text-[13px] max-sm:hidden print:hidden
+        fixed left-5 bottom-5 z-(--zindex-site-toggle) bg-gray-200/90 rounded-lg
+        shadow-md p-3 flex flex-col gap-2.5 font-sans text-[13px]
+        max-sm:hidden print:hidden
       "
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium text-gray-900">Prefer new site</span>
         <ToggleSwitch value={preferNewSite} onChange={setPreferNewSite} />
       </div>
-      {showAdminToggle && (
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-medium text-gray-900">
-            Admin {isAdmin ? "on" : "off"}
-          </span>
-          <ToggleSwitch value={isAdmin} onChange={setAdmin} />
-        </div>
-      )}
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-gray-900">
+          Admin {isAdmin ? "on" : "off"}
+        </span>
+        <ToggleSwitch value={isAdmin} onChange={setAdmin} />
+      </div>
     </div>,
     document.body,
   );
