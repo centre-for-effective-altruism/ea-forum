@@ -36,7 +36,7 @@ export default function Score({
           </div>
         }
       >
-        <Type style="bodySmall" className="text-gray-600">
+        <Type style="bodySmall" className="text-gray-600 cursor-inherit">
           {baseScore}
         </Type>
       </Tooltip>
