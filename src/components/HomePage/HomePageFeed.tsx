@@ -6,7 +6,6 @@ import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { QuickTakesListProvider } from "../QuickTakes/QuickTakesListContext";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
 import type { NextSearchParams } from "@/lib/typeHelpers";
-import Type from "../Type";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
@@ -18,7 +17,9 @@ import FilterSettingsToggle from "./FilterSettingsToggle";
 import FilterSettingsEditor from "./FilterSettingsEditor";
 import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
+import HomePageCommunitySection from "./HomePageCommunitySection";
 import NewQuickTake from "../QuickTakes/NewQuickTake";
+import Type from "../Type";
 import Link from "../Link";
 
 export default async function HomePageFeed({
@@ -97,32 +98,17 @@ export default async function HomePageFeed({
             </div>
           </FilterSettingsProvider>
           {communityTagId && (
-            <>
-              <div className="flex justify-between item-center">
-                <Type className="mb-2" style="sectionTitleLarge">
-                  Posts tagged community
-                </Type>
-                <Type style="loadMore">
-                  <Link
-                    href="/topics/community"
-                    className="text-gray-600 hover:text-gray-1000"
-                  >
-                    View more
-                  </Link>
-                </Type>
-              </div>
-              <div className="mb-10">
-                <ViewBasedPostsList
-                  viewType="fromContext"
-                  hideLoadMore
-                  view={{
-                    view: "frontpage",
-                    limit: 5,
-                    onlyTagId: communityTagId,
-                  }}
-                />
-              </div>
-            </>
+            <HomePageCommunitySection className="mb-10">
+              <ViewBasedPostsList
+                viewType="fromContext"
+                hideLoadMore
+                view={{
+                  view: "frontpage",
+                  limit: 5,
+                  onlyTagId: communityTagId,
+                }}
+              />
+            </HomePageCommunitySection>
           )}
           <QuickTakesListProvider>
             <div className="flex justify-between item-center">

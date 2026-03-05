@@ -8,7 +8,9 @@ import { users } from "../schema";
 import { userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
+import { updateExpandedSection } from "./userQueries";
 import { approveNewUser } from "./userMutations";
+import { themeSchema } from "../themes";
 import {
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
@@ -22,7 +24,6 @@ import {
   fetchCurrentUserByHashedToken,
   getCurrentUser,
 } from "@/lib/users/currentUser";
-import { themeSchema } from "../themes";
 
 export const usersRouter = {
   // This handles user/password login. Google login redirects through auth0
@@ -131,5 +132,14 @@ export const usersRouter = {
         .update(users)
         .set({ theme: { name: theme } })
         .where(eq(users._id, currentUser._id));
+    }),
+  updateExpandedSection: os
+    .input(z.object({ section: z.string(), expanded: z.boolean() }))
+    .handler(async ({ input: { section, expanded } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateExpandedSection(currentUser._id, section, expanded);
     }),
 };
