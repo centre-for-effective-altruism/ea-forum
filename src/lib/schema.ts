@@ -102,7 +102,7 @@ export const users = pgTable(
     currentFrontpageFilter: text(),
     frontpageFilterSettings: jsonb<FilterSettings>(),
     lastNotificationsCheck: timestamp(),
-    expandedFrontpageSections: jsonb(),
+    expandedFrontpageSections: jsonb<Record<string, boolean>>(),
     email: text(),
     emails: jsonb<{ address: string; verified: boolean }[]>().array(),
     noindex: boolean().notNull().default(false),

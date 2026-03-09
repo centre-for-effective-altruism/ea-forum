@@ -1,6 +1,6 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { posts } from "../schema";
+import { posts, users } from "../schema";
 import type { RelationalProjection } from "../utils/queryHelpers";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
@@ -85,3 +85,21 @@ export const fetchUserForReview = (userId: string) =>
 export type UserForReview = NonNullable<
   Awaited<ReturnType<typeof fetchUserForReview>>
 >;
+
+export const updateExpandedSection = async (
+  currentUserId: string,
+  section: string,
+  expanded: boolean,
+) => {
+  await db
+    .update(users)
+    .set({
+      expandedFrontpageSections: sql`
+        COALESCE("expandedFrontpageSections", '{}'::JSONB) || fm_build_nested_jsonb(
+          ('{' || ${section} || '}')::TEXT[],
+          ${expanded}::JSONB
+        )
+      `,
+    })
+    .where(eq(users._id, currentUserId));
+};
