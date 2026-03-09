@@ -14,6 +14,7 @@ import PopularCommentsList from "./PopularCommentsList";
 import FilterSettingsToggle from "./FilterSettingsToggle";
 import FilterSettingsEditor from "./FilterSettingsEditor";
 import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
+import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
 import HomePageCommunitySection from "./HomePageCommunitySection";
@@ -113,14 +114,11 @@ export default async function HomePageFeed({
               <FrontpageQuickTakesList initialLimit={5} />
             </Suspense>
           </HomePageQuickTakesSection>
-          <Type className="mb-2" style="sectionTitleLarge">
-            Popular comments
-          </Type>
-          <div className="mb-10">
+          <HomePagePopularCommentsSection className="mb-10">
             <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
               <PopularCommentsList initialLimit={3} />
             </Suspense>
-          </div>
+          </HomePagePopularCommentsSection>
           <Type className="mb-2" style="sectionTitleLarge">
             Recent discussion
           </Type>
