@@ -22,6 +22,7 @@ import CommentBody from "../ContentStyles/CommentBody";
 import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
+import EditComment from "./EditComment";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
@@ -171,7 +172,7 @@ export default function CommentItem({
         )}
         {expanded &&
           (isEditing ? (
-            <div>EDITING</div>
+            <EditComment commentId={comment._id} />
           ) : (
             <>
               {promotedBy?.displayName && (

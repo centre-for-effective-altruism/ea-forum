@@ -12,6 +12,7 @@ import {
   updateCommentPinnedOnProfile,
   updateQuickTakeFrontpage,
 } from "./commentMutations";
+import { fetchCommentToEdit } from "./commentQueries";
 
 export const commentsRouter = {
   create: os
@@ -52,6 +53,15 @@ export const commentsRouter = {
         });
       },
     ),
+  fetchToEdit: os
+    .input(z.object({ commentId: z.string() }))
+    .handler(async ({ input: { commentId } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await fetchCommentToEdit(user, commentId);
+    }),
   updatePinnedOnProfile: os
     .input(
       z.object({

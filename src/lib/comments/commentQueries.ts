@@ -1,7 +1,10 @@
 import { sql } from "drizzle-orm";
-import { DbOrTransaction } from "../db";
+import { db, DbOrTransaction } from "../db";
+import type { CurrentUser } from "../users/currentUser";
+import type { EditorData } from "../ckeditor/editorHelpers";
+import { userCanEditComment } from "./commentHelpers";
 
-export const getCommentAncestorIds = async (
+export const fetchCommentAncestorIds = async (
   txn: DbOrTransaction,
   commentId: string,
 ): Promise<string[]> => {
@@ -28,7 +31,7 @@ export const getCommentAncestorIds = async (
 };
 
 /** Fetches a post, returning just the fields needed to create a comment on it */
-export const getPostForCommentCreation = ({
+export const fetchPostForCommentCreation = ({
   txn,
   postId,
   shortform,
@@ -68,5 +71,34 @@ export const getPostForCommentCreation = ({
   });
 
 export type PostForCommentCreation = NonNullable<
-  Awaited<ReturnType<typeof getPostForCommentCreation>>
+  Awaited<ReturnType<typeof fetchPostForCommentCreation>>
 >;
+
+export const fetchCommentToEdit = async (
+  currentUser: CurrentUser,
+  commentId: string,
+) => {
+  const comment = await db.query.comments.findFirst({
+    columns: {
+      _id: true,
+      userId: true,
+      shortform: true,
+    },
+    extras: {
+      originalContents: (comments) =>
+        sql<EditorData>`${comments}."contents"->'originalContents'`,
+    },
+    where: {
+      _id: commentId,
+    },
+  });
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+  if (!userCanEditComment(currentUser, comment)) {
+    throw new Error("You do not have permission to edit this comment");
+  }
+  return comment;
+};
+
+export type CommentToEdit = Awaited<ReturnType<typeof fetchCommentToEdit>>;

@@ -11,6 +11,7 @@ import {
 import toast from "react-hot-toast";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
+import type { CommentToEdit } from "../comments/commentQueries";
 import type { CommentsList } from "../comments/commentLists";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useCurrentUser } from "./useCurrentUser";
@@ -20,19 +21,34 @@ type UseCommentEditorDocument =
   | {
       postId: string;
       shortform?: false;
+      comment?: never;
     }
   | {
       postId?: never;
       shortform: true;
+      comment?: never;
+    }
+  | {
+      postId?: never;
+      shortform?: never;
+      comment: CommentToEdit | null;
     };
 
 type UseCommentEditorProps = UseCommentEditorDocument & {
   onSuccess?: (comment: CommentsList) => void;
 };
 
+const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {
+  if (comment !== undefined) {
+    return comment?.shortform ? "Edit quick take..." : "Edit comment...";
+  }
+  return shortform ? "Write a new quick take..." : "Write a new comment...";
+};
+
 export const useCommentEditor = ({
   postId,
   shortform,
+  comment,
   onSuccess,
 }: UseCommentEditorProps) => {
   const { currentUser } = useCurrentUser();
@@ -66,6 +82,10 @@ export const useCommentEditor = ({
       const data = await editorApi.getSubmitData();
       startTransition(async () => {
         try {
+          if (comment) {
+            // TODO
+            throw new Error("Not implemented");
+          }
           const newComment = await rpc.comments.create({
             postId,
             shortform,
@@ -85,7 +105,7 @@ export const useCommentEditor = ({
         }
       });
     },
-    [currentUser, onSignup, postId, shortform, onSuccess],
+    [currentUser, onSignup, postId, shortform, comment, onSuccess],
   );
 
   const onKeyDown = useCallback(
@@ -99,6 +119,8 @@ export const useCommentEditor = ({
   );
 
   return {
+    formType: comment ? ("edit" as const) : ("new" as const),
+    placeholder: choosePlaceholder(shortform, comment),
     contents,
     editorRef,
     loading,

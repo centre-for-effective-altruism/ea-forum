@@ -8,7 +8,7 @@ import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision } from "../revisions/revisionHelpers";
 import { htmlToPingbacks } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
-import { getPostForCommentCreation } from "./commentQueries";
+import { fetchPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
@@ -61,7 +61,7 @@ export const createPostComment = async ({
 
   // eslint-disable-next-line prefer-const
   let [post, parentComment] = await Promise.all([
-    getPostForCommentCreation({ txn: db, postId, shortform, userId: user._id }),
+    fetchPostForCommentCreation({ txn: db, postId, shortform, userId: user._id }),
     parentCommentId
       ? db.query.comments.findFirst({
           columns: {
@@ -84,7 +84,7 @@ export const createPostComment = async ({
       throw new Error("Post not found");
     }
     await createShortformPost(user);
-    post = await getPostForCommentCreation({
+    post = await fetchPostForCommentCreation({
       txn: db,
       postId,
       shortform,
