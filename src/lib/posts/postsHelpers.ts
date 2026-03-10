@@ -167,7 +167,7 @@ export const userIsSharedOnPost = (
  * Whether the user can make updates to the post document (including both the
  * main post body and most other post fields)
  */
-export const canUserEditPostMetadata = (
+export const userCanEditPostMetadata = (
   currentUser: CurrentUser | null,
   post: PostDisplay | PostListItem,
 ): boolean => {
@@ -239,7 +239,7 @@ export const userCanSuggestPostForCurated = (
   );
 };
 
-export const canUserArchivePost = (
+export const userCanArchivePost = (
   user: CurrentUser | null,
   post: PostDisplay | PostListItem,
 ) => {
