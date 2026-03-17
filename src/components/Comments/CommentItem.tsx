@@ -78,6 +78,7 @@ export default function CommentItem({
   }, [comment]);
 
   const onEdit = useCallback(() => setIsEditing(true), []);
+  const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
   const { _id, user, html, postedAt, post, promoted, promotedBy, moderatorHat } =
     comment;
@@ -172,7 +173,7 @@ export default function CommentItem({
         )}
         {expanded &&
           (isEditing ? (
-            <EditComment commentId={comment._id} />
+            <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
           ) : (
             <>
               {promotedBy?.displayName && (

@@ -16,18 +16,22 @@ import type { CommentsList } from "../comments/commentLists";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
+import { CurrentUser } from "../users/currentUser";
 
 type UseCommentEditorDocument =
+  // Creating a post comment
   | {
       postId: string;
       shortform?: false;
       comment?: never;
     }
+  // Creating a quick take
   | {
       postId?: never;
       shortform: true;
       comment?: never;
     }
+  // Editing a comment or quick take
   | {
       postId?: never;
       shortform?: never;
@@ -45,6 +49,15 @@ const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) 
   return shortform ? "Write a new quick take..." : "Write a new comment...";
 };
 
+const getInitialContents = (
+  currentUser: CurrentUser | null,
+  comment?: CommentToEdit | null,
+): EditorContents =>
+  comment?.originalContents ?? {
+    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
+    data: "",
+  };
+
 export const useCommentEditor = ({
   postId,
   shortform,
@@ -55,10 +68,7 @@ export const useCommentEditor = ({
   const { onSignup } = useLoginPopoverContext();
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState<EditorContents>({
-    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
-    data: "",
-  });
+  const [contents, setContents] = useState(getInitialContents(currentUser, comment));
 
   const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
     setContents(contents);
@@ -82,16 +92,17 @@ export const useCommentEditor = ({
       const data = await editorApi.getSubmitData();
       startTransition(async () => {
         try {
-          if (comment) {
-            // TODO
-            throw new Error("Not implemented");
-          }
-          const newComment = await rpc.comments.create({
-            postId,
-            shortform,
-            parentCommentId: null,
-            editorData: data,
-          });
+          const newComment = comment
+            ? await rpc.comments.edit({
+                commentId: comment._id,
+                editorData: data,
+              })
+            : await rpc.comments.create({
+                postId,
+                shortform,
+                parentCommentId: null,
+                editorData: data,
+              });
           if (!newComment) {
             throw new Error("Something went wrong");
           }

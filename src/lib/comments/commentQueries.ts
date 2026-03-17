@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
 import type { CurrentUser } from "../users/currentUser";
-import type { EditorData } from "../ckeditor/editorHelpers";
+import type { EditorContents } from "../ckeditor/editorHelpers";
 import { userCanEditComment } from "./commentHelpers";
 
 export const fetchCommentAncestorIds = async (
@@ -86,7 +86,7 @@ export const fetchCommentToEdit = async (
     },
     extras: {
       originalContents: (comments) =>
-        sql<EditorData>`${comments}."contents"->'originalContents'`,
+        sql<EditorContents>`${comments}."contents"->'originalContents'`,
     },
     where: {
       _id: commentId,
