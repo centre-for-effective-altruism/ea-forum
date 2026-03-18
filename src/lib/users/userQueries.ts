@@ -1,6 +1,7 @@
-import { eq, sql } from "drizzle-orm";
-import { db } from "../db";
+import { and, eq, ne, sql } from "drizzle-orm";
+import { db, DbOrTransaction } from "../db";
 import { posts, users } from "../schema";
+import type { CurrentUser } from "./currentUser";
 import type { RelationalProjection } from "../utils/queryHelpers";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
@@ -102,4 +103,24 @@ export const updateExpandedSection = async (
       `,
     })
     .where(eq(users._id, currentUserId));
+};
+
+export const isDisplayNameTaken = async (
+  currentUser: CurrentUser,
+  displayName: string,
+  txn: DbOrTransaction = db,
+): Promise<boolean> => {
+  const result = await txn
+    .select({
+      isTaken: sql<boolean>`COUNT(*) > 0`,
+    })
+    .from(users)
+    .where(
+      and(
+        sql`fm_normalize_display_name(${users.displayName}) =
+          fm_normalize_display_name(${displayName})`,
+        ne(users._id, currentUser._id),
+      ),
+    );
+  return !!result[0]?.isTaken;
 };

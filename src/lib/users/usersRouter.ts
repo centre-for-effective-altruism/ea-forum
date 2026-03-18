@@ -8,8 +8,8 @@ import { users } from "../schema";
 import { userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
-import { updateExpandedSection } from "./userQueries";
-import { approveNewUser } from "./userMutations";
+import { isDisplayNameTaken, updateExpandedSection } from "./userQueries";
+import { approveNewUser, completeUserProfile } from "./userMutations";
 import { themeSchema } from "../themes";
 import {
   updateMailchimpSubscription,
@@ -141,5 +141,28 @@ export const usersRouter = {
         throw new Error("Please login");
       }
       await updateExpandedSection(currentUser._id, section, expanded);
+    }),
+  completeUserProfile: os
+    .input(
+      z.object({
+        name: z.string(),
+        acceptedTos: z.boolean(),
+      }),
+    )
+    .handler(async ({ input: { name, acceptedTos } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await completeUserProfile(currentUser, name, acceptedTos);
+    }),
+  isDisplayNameTaken: os
+    .input(z.object({ displayName: z.string().nonempty() }))
+    .handler(async ({ input: { displayName } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await isDisplayNameTaken(currentUser, displayName);
     }),
 };

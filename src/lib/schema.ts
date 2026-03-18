@@ -149,6 +149,7 @@ export const users = pgTable(
     sunshineFlagged: boolean().notNull().default(false),
     sunshineSnoozed: boolean().notNull().default(false),
     reviewedAt: timestamp(),
+    usernameUnset: boolean().notNull().default(false),
 
     /*
   "profile" JSONB,
@@ -282,7 +283,6 @@ export const users = pgTable(
   "hideWalledGardenUI" BOOL,
   "walledGardenPortalOnboarded" BOOL,
   "taggingDashboardCollapsed" BOOL,
-  "usernameUnset" BOOL NOT NULL DEFAULT FALSE,
   "paymentEmail" TEXT,
   "paymentInfo" TEXT,
   "profileUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',
