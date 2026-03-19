@@ -8,7 +8,11 @@ import { users } from "../schema";
 import { userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
-import { isDisplayNameTaken, updateExpandedSection } from "./userQueries";
+import {
+  fetchOnboardingUsers,
+  isDisplayNameTaken,
+  updateExpandedSection,
+} from "./userQueries";
 import { approveNewUser, completeUserProfile } from "./userMutations";
 import { themeSchema } from "../themes";
 import {
@@ -165,4 +169,5 @@ export const usersRouter = {
       }
       return await isDisplayNameTaken(currentUser, displayName);
     }),
+  fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
 };

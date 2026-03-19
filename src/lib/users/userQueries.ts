@@ -3,6 +3,8 @@ import { db, DbOrTransaction } from "../db";
 import { posts, users } from "../schema";
 import type { CurrentUser } from "./currentUser";
 import type { RelationalProjection } from "../utils/queryHelpers";
+import { filterNonNull } from "../typeHelpers";
+import keyBy from "lodash/keyBy";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
 
@@ -124,3 +126,39 @@ export const isDisplayNameTaken = async (
     );
   return !!result[0]?.isTaken;
 };
+
+export const fetchOnboardingUsers = async () => {
+  const _ids = [
+    "9Fg4woeMPHoGa6kDA", // Holden Karnofsky
+    "kBZnCSYFXGowSD8mD", // Katja Grace
+    "b4mnJTtwXMkqkv3Yq", // Laura Duffy
+    "DkFp3vmyWxPmDqNcp", // Richard Y Chappell
+    "H3tBLXCQEMqkyJiMJ", // Kelsey Piper
+    "LMgZyi4w3XoYz3tM5", // sauilius
+    "R4mvcEPhmLiBahN4H", // Toby Ord
+    "JBx8HXhshWMMKpafM", // Jacob_Peacock
+    "Ng9dxDSsc5uK4Zsmx", // CarlShulman
+    "J8rxnfpHSTCbDNC2j", // Joe_Carlsmith
+  ];
+  const users = await db.query.users.findMany({
+    columns: {
+      _id: true,
+      displayName: true,
+      profileImageId: true,
+      karma: true,
+      jobTitle: true,
+      organization: true,
+    },
+    where: {
+      _id: { in: _ids },
+      deleted: false,
+      banned: { isNull: true },
+    },
+  });
+  const byId = keyBy(users, "_id");
+  return filterNonNull(_ids.map((id) => byId[id]));
+};
+
+export type OnboardingUser = Awaited<
+  ReturnType<typeof fetchOnboardingUsers>
+>[number];

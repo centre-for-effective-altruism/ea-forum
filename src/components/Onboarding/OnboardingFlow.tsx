@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { OnboardingProvider } from "./useOnboarding";
 import Popover from "../Popover";
 import OnboardingUserStage from "./OnboardingUserStage";
-// import OnboardingSubscribeStage from "./OnboardingSubscribeStage";
+import OnboardingSubscribeStage from "./OnboardingSubscribeStage";
 // import OnboardingWorkStage from "./OnboardingWorkStage";
 // import OnboardingThankYouStage from "./OnboardingThankYouStage";
 
@@ -48,7 +48,7 @@ export default function OnboardingFlow({
       <OnboardingProvider
         stages={{
           user: <OnboardingUserStage />,
-          // subscribe: <OnboardingSubscribeStage />,
+          subscribe: <OnboardingSubscribeStage />,
           // work: <OnboardingWorkStage />,
           // thankYou: <OnboardingThankYouStage />,
         }}

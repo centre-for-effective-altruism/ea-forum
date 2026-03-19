@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { db } from "../db";
-import { fetchCoreTags, fetchTagsById } from "./tagQueries";
+import { fetchCoreTags, fetchOnboardingTags, fetchTagsById } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 
 export const tagsRouter = {
@@ -51,4 +51,5 @@ export const tagsRouter = {
       });
       return diffHtml(before?.html ?? "", after.html ?? "", true);
     }),
+  fetchOnboardingTags: os.handler(fetchOnboardingTags),
 };
