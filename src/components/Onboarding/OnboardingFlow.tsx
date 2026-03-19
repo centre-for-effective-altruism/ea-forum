@@ -6,7 +6,7 @@ import { OnboardingProvider } from "./useOnboarding";
 import Popover from "../Popover";
 import OnboardingUserStage from "./OnboardingUserStage";
 import OnboardingSubscribeStage from "./OnboardingSubscribeStage";
-// import OnboardingWorkStage from "./OnboardingWorkStage";
+import OnboardingWorkStage from "./OnboardingWorkStage";
 // import OnboardingThankYouStage from "./OnboardingThankYouStage";
 
 export default function OnboardingFlow({
@@ -49,7 +49,7 @@ export default function OnboardingFlow({
         stages={{
           user: <OnboardingUserStage />,
           subscribe: <OnboardingSubscribeStage />,
-          // work: <OnboardingWorkStage />,
+          work: <OnboardingWorkStage />,
           // thankYou: <OnboardingThankYouStage />,
         }}
         onOnboardingComplete={onOnboardingComplete}

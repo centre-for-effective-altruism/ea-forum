@@ -124,7 +124,7 @@ export default function OnboardingStage({
                 style="bodyHeavy"
                 As="a"
                 onClick={onSkip}
-                className="no-underline hover:underline"
+                className="no-underline hover:underline cursor-pointer"
               >
                 Skip for now
               </Type>
@@ -136,7 +136,7 @@ export default function OnboardingStage({
                 loading={nextStageIsLoading}
                 className="
                   min-w-[128px] h-[44px] whitespace-nowrap px-6 py-3 max-xs:w-full
-                  flex items-center gap-2 text-always-white1
+                  flex items-center gap-2 text-always-white!
                 "
               >
                 Continue <ArrowRightIcon className="w-4" />

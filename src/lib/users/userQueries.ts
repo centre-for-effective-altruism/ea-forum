@@ -2,6 +2,7 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
 import { posts, users } from "../schema";
 import type { CurrentUser } from "./currentUser";
+import type { CareerStageValue } from "./userHelpers";
 import type { RelationalProjection } from "../utils/queryHelpers";
 import { filterNonNull } from "../typeHelpers";
 import keyBy from "lodash/keyBy";
@@ -125,6 +126,17 @@ export const isDisplayNameTaken = async (
       ),
     );
   return !!result[0]?.isTaken;
+};
+
+export const updateWork = async (
+  currentUser: CurrentUser,
+  values: {
+    jobTitle?: string | null;
+    organization?: string | null;
+    careerStage?: CareerStageValue[] | null;
+  },
+) => {
+  await db.update(users).set(values).where(eq(users._id, currentUser._id));
 };
 
 export const fetchOnboardingUsers = async () => {

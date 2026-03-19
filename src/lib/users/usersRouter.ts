@@ -5,13 +5,14 @@ import { cookies } from "next/headers";
 import { captureException } from "@sentry/nextjs";
 import { db } from "../db";
 import { users } from "../schema";
-import { userIsInGroup } from "./userHelpers";
+import { careerStageValuesSchema, userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
 import {
   fetchOnboardingUsers,
   isDisplayNameTaken,
   updateExpandedSection,
+  updateWork,
 } from "./userQueries";
 import { approveNewUser, completeUserProfile } from "./userMutations";
 import { themeSchema } from "../themes";
@@ -168,6 +169,21 @@ export const usersRouter = {
         throw new Error("Please login");
       }
       return await isDisplayNameTaken(currentUser, displayName);
+    }),
+  updateWork: os
+    .input(
+      z.object({
+        jobTitle: z.string().nullable().optional(),
+        organization: z.string().nullable().optional(),
+        careerStage: z.array(careerStageValuesSchema).nullable().optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await updateWork(currentUser, input);
     }),
   fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
 };
