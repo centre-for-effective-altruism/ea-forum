@@ -1,11 +1,14 @@
 import md5 from "md5";
+import { z } from "zod/v4";
 import { db } from "./db";
 import { users } from "./schema";
 import { userGetLocation } from "./users/userHelpers";
 import { updateWithFieldChanges } from "./fieldChanges";
 import type { CurrentUser } from "./users/currentUser";
 
-type MailchimpList = "digest";
+export const mailchimpListSchema = z.enum(["digest", "newsletter"]);
+
+type MailchimpList = z.infer<typeof mailchimpListSchema>;
 
 type MailchimpStatus = "subscribed" | "unsubscribed";
 
@@ -24,11 +27,12 @@ export const updateMailchimpSubscription = async ({
 }) => {
   const listIds: Record<MailchimpList, string | undefined> = {
     digest: process.env.MAILCHIMP_DIGEST_LIST_ID,
+    newsletter: process.env.MAILCHIMP_EA_NEWSLETTER_LIST_ID,
   };
 
   const listId = listIds[list];
   if (!listId) {
-    throw new Error("Digest list id not configured");
+    throw new Error("Mailchimp list id not configured");
   }
 
   const apiKey = process.env.MAILCHIMP_API_KEY;

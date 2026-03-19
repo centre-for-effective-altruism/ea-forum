@@ -150,6 +150,7 @@ export const users = pgTable(
     sunshineSnoozed: boolean().notNull().default(false),
     reviewedAt: timestamp(),
     usernameUnset: boolean().notNull().default(false),
+    sendMarketingEmails: boolean().notNull().default(true),
 
     /*
   "profile" JSONB,
@@ -246,7 +247,6 @@ export const users = pgTable(
   "karmaChangeBatchStart" TIMESTAMPTZ,
   "emailSubscribedToCurated" BOOL,
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
-  "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,

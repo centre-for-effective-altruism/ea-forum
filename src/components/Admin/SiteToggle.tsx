@@ -29,14 +29,14 @@ export default function SiteToggle() {
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium text-gray-900">Prefer new site</span>
-        <ToggleSwitch value={preferNewSite} onChange={setPreferNewSite} />
+        <ToggleSwitch value={preferNewSite} setValue={setPreferNewSite} />
       </div>
       {showAdminToggle && (
         <div className="flex items-center justify-between gap-2">
           <span className="font-medium text-gray-900">
             Admin {isAdmin ? "on" : "off"}
           </span>
-          <ToggleSwitch value={isAdmin} onChange={setAdmin} />
+          <ToggleSwitch value={isAdmin} setValue={setAdmin} />
         </div>
       )}
     </div>,

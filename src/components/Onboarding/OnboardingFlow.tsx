@@ -7,7 +7,7 @@ import Popover from "../Popover";
 import OnboardingUserStage from "./OnboardingUserStage";
 import OnboardingSubscribeStage from "./OnboardingSubscribeStage";
 import OnboardingWorkStage from "./OnboardingWorkStage";
-// import OnboardingThankYouStage from "./OnboardingThankYouStage";
+import OnboardingThankYouStage from "./OnboardingThankYouStage";
 
 export default function OnboardingFlow({
   viewAsAdmin,
@@ -50,7 +50,7 @@ export default function OnboardingFlow({
           user: <OnboardingUserStage />,
           subscribe: <OnboardingSubscribeStage />,
           work: <OnboardingWorkStage />,
-          // thankYou: <OnboardingThankYouStage />,
+          thankYou: <OnboardingThankYouStage />,
         }}
         onOnboardingComplete={onOnboardingComplete}
         viewAsAdmin={viewAsAdmin}

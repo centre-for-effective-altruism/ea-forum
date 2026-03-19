@@ -17,6 +17,7 @@ import {
 import { approveNewUser, completeUserProfile } from "./userMutations";
 import { themeSchema } from "../themes";
 import {
+  mailchimpListSchema,
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
 } from "../mailchimp";
@@ -62,11 +63,16 @@ export const usersRouter = {
     cookieStore.delete(LOGIN_TOKEN_COOKIE_NAME);
   }),
   currentUser: os.handler(getCurrentUser),
-  subscribeToDigest: os
-    .input(z.object({ email: z.string().optional() }))
-    .handler(async ({ input: { email } }) => {
-      const list = "digest";
-      const status = "subscribed";
+  subscribeToList: os
+    .input(
+      z.object({
+        list: mailchimpListSchema,
+        email: z.string().optional(),
+        subscribed: z.boolean().optional(),
+      }),
+    )
+    .handler(async ({ input: { list, email, subscribed = true } }) => {
+      const status = subscribed ? "subscribed" : "unsubscribed";
       const currentUser = await getCurrentUser();
       if (currentUser) {
         await updateUserMailchimpSubscription({
@@ -146,6 +152,17 @@ export const usersRouter = {
         throw new Error("Please login");
       }
       await updateExpandedSection(currentUser._id, section, expanded);
+    }),
+  updateSendMarketingEmails: os
+    .input(z.object({ value: z.boolean() }))
+    .handler(async ({ input: { value } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateWithFieldChanges(db, currentUser, users, currentUser._id, {
+        sendMarketingEmails: value,
+      });
     }),
   completeUserProfile: os
     .input(
