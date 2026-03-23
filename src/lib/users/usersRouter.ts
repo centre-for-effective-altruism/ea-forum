@@ -24,6 +24,7 @@ import {
 import {
   LOGIN_TOKEN_COOKIE_NAME,
   loginWithPassword,
+  signupWithPassword,
   UserIsBannedError,
 } from "../authHelpers";
 import {
@@ -39,12 +40,15 @@ export const usersRouter = {
       z.object({
         email: z.string().nonempty(),
         password: z.string().nonempty(),
+        isSignup: z.boolean().optional(),
       }),
     )
-    .handler(async ({ input: { email, password } }) => {
+    .handler(async ({ input: { email, password, isSignup } }) => {
       try {
         const cookieStore = await cookies();
-        const hashedToken = await loginWithPassword(cookieStore, email, password);
+        const hashedToken = isSignup
+          ? await signupWithPassword(cookieStore, email, password)
+          : await loginWithPassword(cookieStore, email, password);
         const currentUser = await fetchCurrentUserByHashedToken(hashedToken);
         return { ok: true, currentUser };
       } catch (e) {

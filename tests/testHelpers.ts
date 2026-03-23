@@ -39,6 +39,7 @@ export const createTestUser = async (data?: Partial<InsertUser>): Promise<User> 
     email: testUsername + "@effectivealtruism.org",
     reviewedByUserId: "fakeuserid",
     acceptedTos: true,
+    abTestKey: randomId(),
     ...data,
   };
   const result = await db.insert(users).values(insertValues).returning();

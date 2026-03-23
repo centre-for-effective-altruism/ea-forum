@@ -10,6 +10,7 @@ import IntercomButton from "@/components/Intercom/IntercomButton";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
+import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -63,6 +64,7 @@ export default function RootLayout({
           <main className="grow bg-background text-foreground font-sans">
             {children}
           </main>
+          <OnboardingFlow />
           <IntercomButton />
           <SiteToggle />
           <DynamicCookieBanner />

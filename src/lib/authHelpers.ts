@@ -1,10 +1,13 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { captureException } from "@sentry/nextjs";
 import z from "zod/v4";
 import { createHash, randomBytes } from "node:crypto";
 import { AuthenticationClient } from "auth0";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { users } from "@/lib/schema";
 import { db } from "@/lib/db";
+import { createUser } from "./users/userMutations";
+import { getCurrentClientId } from "./clientIds/currentClientId";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -54,6 +57,27 @@ export class UserIsBannedError extends Error {
   }
 }
 
+const getAllUsersByEmail = async (email: string) => {
+  const results = await db.execute<{
+    _id: string;
+    banned: string | null;
+    email: string | null;
+  }>(sql`
+    SELECT "_id", "banned", "email"
+    FROM "Users"
+    WHERE LOWER("email") = LOWER(${email})
+    UNION
+    SELECT "_id", "banned", "email"
+    FROM "Users"
+    WHERE "_id" IN (
+      SELECT "_id"
+      FROM "Users", UNNEST("emails") AS unnested
+      WHERE unnested->>'address' = ${email}
+    )
+  `);
+  return results.rows;
+};
+
 const auth0IdTokenToProfile = (idToken: string) => {
   const { iss, aud, iat, exp, ...rawProfile } = parseJwt(idToken);
   const auth0UserId: string = rawProfile.sub;
@@ -80,10 +104,30 @@ const auth0IdTokenToProfile = (idToken: string) => {
 
 type Auth0UserProfile = ReturnType<typeof auth0IdTokenToProfile>;
 
-const getOrCreateUser = async (profile: Auth0UserProfile) => {
-  const user = await db.query.users.findFirst({
+const saveAuth0Profile = async (userId: string, profile: Auth0UserProfile) => {
+  await db
+    .update(users)
+    .set({
+      services: sql`
+        JSONB_SET(
+          COALESCE("services", '{}'::JSONB),
+          '{auth0}',
+          ${JSON.stringify(profile)}::JSONB,
+          TRUE
+        )
+      `,
+    })
+    .where(eq(users._id, userId));
+};
+
+export const getOrCreateUser = async (
+  clientId: string,
+  profile: Auth0UserProfile,
+) => {
+  let user = await db.query.users.findFirst({
     columns: {
       _id: true,
+      email: true,
       banned: true,
     },
     where: {
@@ -91,20 +135,53 @@ const getOrCreateUser = async (profile: Auth0UserProfile) => {
         sql`${users.services}->'auth0'->>'id' = ${profile.id}`,
     },
   });
+
+  const email = profile.emails?.[0]?.value;
+  const matchingUsers = email ? await getAllUsersByEmail(email) : [];
+
   if (!user) {
-    // TODO: Create user - see getOrCreateForumUser in ForumMagnum
-    throw new Error("TODO: Create user");
+    if (!email) {
+      // Users who signup with Facebook may not have an email associated with their
+      // account. We no longer allow signup or login with Facebook so I don't think
+      // we should ever reach this case, but we should guard against in just in case.
+      throw new Error("User does not have an email, please contact support");
+    }
+    switch (matchingUsers.length) {
+      case 0:
+        user = await createUser({
+          clientId,
+          displayName: profile.displayName || email,
+          email,
+          emailVerified: !!profile._json.email_verified,
+          services: { auth0: profile },
+        });
+        break;
+      case 1:
+        user = matchingUsers[0];
+        await saveAuth0Profile(user._id, profile);
+        break;
+      default:
+        throw new Error(
+          `Multiple existing users found with email ${email}, please contact support`,
+        );
+    }
   }
-  // user = await syncOAuthUser(user, profile) // TODO
+
+  if (!user) {
+    throw new Error("Couldn't find or create user");
+  }
+
   if (user.banned && new Date(user.banned) > new Date()) {
     throw new UserIsBannedError();
   }
+
   return user;
 };
 
 export const loginUserFromIdToken = async (idToken: string) => {
   const profile = auth0IdTokenToProfile(idToken);
-  const user = await getOrCreateUser(profile);
+  const clientId = await getCurrentClientId();
+  const user = await getOrCreateUser(clientId, profile);
   if (!user) {
     throw new Error("User not found");
   }
@@ -165,4 +242,32 @@ export const loginWithPassword = async (
   const { hashedToken, cookie } = await loginUserFromIdToken(auth0IdToken);
   cookieStore.set(cookie.name, cookie.value, cookie.options);
   return hashedToken;
+};
+
+export const signupWithPassword = async (
+  cookieStore: ReadonlyRequestCookies,
+  email: string,
+  password: string,
+) => {
+  const existingUsers = await getAllUsersByEmail(email);
+  if (existingUsers.length) {
+    throw new Error("A user with this email already exists");
+  }
+
+  try {
+    const { client, realm } = getAuth0Client("original");
+    await client.database.signUp({
+      email,
+      password,
+      connection: realm,
+    });
+  } catch (e) {
+    captureException(e);
+    console.error("Failed to signup new user:", e);
+    const err = e as Error & { error_description?: string };
+    const message = err?.error_description || err?.message || "Something went wrong";
+    throw new Error(message, { cause: err });
+  }
+
+  return await loginWithPassword(cookieStore, email, password);
 };

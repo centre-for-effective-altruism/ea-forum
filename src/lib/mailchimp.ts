@@ -6,9 +6,15 @@ import { userGetLocation } from "./users/userHelpers";
 import { updateWithFieldChanges } from "./fieldChanges";
 import type { CurrentUser } from "./users/currentUser";
 
-export const mailchimpListSchema = z.enum(["digest", "newsletter"]);
+export const mailchimpListSchema = z.enum(["eaForum", "digest", "newsletter"]);
 
 type MailchimpList = z.infer<typeof mailchimpListSchema>;
+
+const listIds: Record<MailchimpList, string | undefined> = {
+  eaForum: process.env.MAILCHIMP_EA_FORUM_LIST_ID,
+  digest: process.env.MAILCHIMP_DIGEST_LIST_ID,
+  newsletter: process.env.MAILCHIMP_EA_NEWSLETTER_LIST_ID,
+};
 
 type MailchimpStatus = "subscribed" | "unsubscribed";
 
@@ -25,11 +31,6 @@ export const updateMailchimpSubscription = async ({
   displayName?: string;
   location?: { longitude: number; latitude: number };
 }) => {
-  const listIds: Record<MailchimpList, string | undefined> = {
-    digest: process.env.MAILCHIMP_DIGEST_LIST_ID,
-    newsletter: process.env.MAILCHIMP_EA_NEWSLETTER_LIST_ID,
-  };
-
   const listId = listIds[list];
   if (!listId) {
     throw new Error("Mailchimp list id not configured");
