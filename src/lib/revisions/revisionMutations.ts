@@ -23,6 +23,7 @@ export const createRevision = async (
     fieldName: string;
     draft?: boolean;
     googleDocMetadata?: Json;
+    version?: string;
   },
 ): Promise<Revision> => {
   const editorType = originalContents.type;
@@ -38,7 +39,7 @@ export const createRevision = async (
       ...data,
       _id: randomId(),
       userId: user._id,
-      version: data.draft ? "0.1.0" : "1.0.0",
+      version: data.version ?? (data.draft ? "0.1.0" : "1.0.0"),
       updateType: updateType ?? "initial",
       html,
       wordCount,

@@ -255,7 +255,7 @@ export const userCanDo = (
 type HasUserIdType = { userId: string | null };
 type HasUserType = { user?: { _id: string } | null };
 
-type OwnableDocument = HasUserIdType | HasUserType | User;
+export type OwnableDocument = HasUserIdType | HasUserType | User;
 
 /**
  * Check if a user owns a document

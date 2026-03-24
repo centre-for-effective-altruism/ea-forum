@@ -84,8 +84,13 @@ export const commentsToCommentTree = <T extends ThreadableComment>(
    */
   localComments: T[] = [],
 ): CommentTreeNode<T>[] => {
+  // Remove any comments that are overwritten by local comments - this happens,
+  // for instance, when a pre-existing comment is edited
+  const filteredComments = comments.filter(
+    ({ _id }) => !localComments.find((localComment) => localComment._id === _id),
+  );
   const commentTreeNodes: CommentTreeNode<T>[] = [
-    ...comments.map((comment) => ({
+    ...filteredComments.map((comment) => ({
       comment,
       depth: 0,
       isLocal: false,

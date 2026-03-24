@@ -11,38 +11,64 @@ import {
 import toast from "react-hot-toast";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
+import type { CommentToEdit } from "../comments/commentQueries";
 import type { CommentsList } from "../comments/commentLists";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
+import { CurrentUser } from "../users/currentUser";
 
 type UseCommentEditorDocument =
+  // Creating a post comment
   | {
       postId: string;
       shortform?: false;
+      comment?: never;
     }
+  // Creating a quick take
   | {
       postId?: never;
       shortform: true;
+      comment?: never;
+    }
+  // Editing a comment or quick take
+  | {
+      postId?: never;
+      shortform?: never;
+      comment: CommentToEdit | null;
     };
 
 type UseCommentEditorProps = UseCommentEditorDocument & {
   onSuccess?: (comment: CommentsList) => void;
 };
 
+const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {
+  if (comment !== undefined) {
+    return comment?.shortform ? "Edit quick take..." : "Edit comment...";
+  }
+  return shortform ? "Write a new quick take..." : "Write a new comment...";
+};
+
+const getInitialContents = (
+  currentUser: CurrentUser | null,
+  comment?: CommentToEdit | null,
+): EditorContents =>
+  comment?.originalContents ?? {
+    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
+    data: "",
+  };
+
 export const useCommentEditor = ({
   postId,
   shortform,
+  comment,
   onSuccess,
 }: UseCommentEditorProps) => {
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState<EditorContents>({
-    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
-    data: "",
-  });
+  const [contents, setContents] = useState(getInitialContents(currentUser, comment));
 
   const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
     setContents(contents);
@@ -66,12 +92,17 @@ export const useCommentEditor = ({
       const data = await editorApi.getSubmitData();
       startTransition(async () => {
         try {
-          const newComment = await rpc.comments.create({
-            postId,
-            shortform,
-            parentCommentId: null,
-            editorData: data,
-          });
+          const newComment = comment
+            ? await rpc.comments.edit({
+                commentId: comment._id,
+                editorData: data,
+              })
+            : await rpc.comments.create({
+                postId,
+                shortform,
+                parentCommentId: null,
+                editorData: data,
+              });
           if (!newComment) {
             throw new Error("Something went wrong");
           }
@@ -85,7 +116,7 @@ export const useCommentEditor = ({
         }
       });
     },
-    [currentUser, onSignup, postId, shortform, onSuccess],
+    [currentUser, onSignup, postId, shortform, comment, onSuccess],
   );
 
   const onKeyDown = useCallback(
@@ -99,6 +130,8 @@ export const useCommentEditor = ({
   );
 
   return {
+    formType: comment ? ("edit" as const) : ("new" as const),
+    placeholder: choosePlaceholder(shortform, comment),
     contents,
     editorRef,
     loading,
