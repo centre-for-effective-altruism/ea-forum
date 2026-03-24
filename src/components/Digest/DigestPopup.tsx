@@ -4,9 +4,9 @@ import type { FC, RefObject } from "react";
 import { AnalyticsContext, AnalyticsInViewTracker } from "@/lib/analyticsEvents";
 import { getLocalPostsReadCount } from "@/lib/hooks/useRecordPostView";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { digestSubscribeURL, useDigestAd } from "./useDigestAd";
-import clsx from "clsx";
+import { DigestAdProps, digestSubscribeURL, useDigestAd } from "./useDigestAd";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
+import clsx from "clsx";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
@@ -31,29 +31,15 @@ const Input: FC<{
   />
 );
 
-const DigestPopupForm: FC = () => {
+const DigestPopupForm: FC<Omit<DigestAdProps, "showDigestAd">> = ({
+  showForm,
+  emailRef,
+  onDismiss,
+  onSubscribe,
+  loading,
+  subscribeClicked,
+}) => {
   const { currentUser } = useCurrentUser();
-  const {
-    showDigestAd,
-    emailRef,
-    showForm,
-    loading,
-    subscribeClicked,
-    onDismiss,
-    onSubscribe,
-  } = useDigestAd();
-
-  // We only show this after the client has viewed a few posts
-  if (!showDigestAd || getLocalPostsReadCount() < 10) {
-    return null;
-  }
-
-  const dismissNode = (
-    <Button variant="greyFilled" onClick={onDismiss} disabled={loading}>
-      No thanks
-    </Button>
-  );
-
   // If logged out, show the form to submit to Mailchimp directly
   if (showForm && !currentUser) {
     return (
@@ -67,7 +53,9 @@ const DigestPopupForm: FC = () => {
           <Button type="submit" onClick={onSubscribe} disabled={loading}>
             Sign up
           </Button>
-          {dismissNode}
+          <Button variant="greyFilled" onClick={onDismiss} disabled={loading}>
+            No thanks
+          </Button>
         </div>
       </form>
     );
@@ -100,17 +88,22 @@ const DigestPopupForm: FC = () => {
         <Button type="submit" onClick={onSubscribe} disabled={loading}>
           Sign up
         </Button>
-        {dismissNode}
+        <Button variant="greyFilled" onClick={onDismiss} disabled={loading}>
+          No thanks
+        </Button>
       </div>
     </div>
   );
 };
 
 export default function DigestPopup() {
-  const formNode = <DigestPopupForm />;
-  if (!formNode) {
+  const { showDigestAd, ...formProps } = useDigestAd();
+
+  // We only show this after the client has viewed a few posts
+  if (!showDigestAd || getLocalPostsReadCount() < 10) {
     return null;
   }
+
   return (
     <AnalyticsContext pageSubSectionContext="digestAd">
       <AnalyticsInViewTracker eventProps={{ inViewType: "stickyDigestAd" }}>
@@ -131,7 +124,7 @@ export default function DigestPopup() {
               A curated reading list of Forum posts, every Wednesday
             </Type>
           </div>
-          {formNode}
+          <DigestPopupForm {...formProps} />
         </section>
       </AnalyticsInViewTracker>
     </AnalyticsContext>

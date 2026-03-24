@@ -106,3 +106,5 @@ export const useDigestAd = () => {
     onSubscribe,
   };
 };
+
+export type DigestAdProps = ReturnType<typeof useDigestAd>;
