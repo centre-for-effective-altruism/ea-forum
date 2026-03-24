@@ -149,3 +149,7 @@ export const filterModeToString = (mode: FilterMode): FilterModeString => {
       return "";
   }
 };
+
+export const filterModeIsSubscribed = (filterMode: FilterMode) =>
+  filterMode === "Subscribed" ||
+  (typeof filterMode === "number" && filterMode >= 25);

@@ -16,12 +16,14 @@ import {
 export default function Popover({
   open,
   onClose,
+  noCloseOnOutsideClick,
   background = "dim",
   className,
   children,
 }: Readonly<{
   open: boolean;
   onClose: () => void;
+  noCloseOnOutsideClick?: boolean;
   background?: "dim" | "blurred";
   className?: string;
   children: ReactNode;
@@ -37,7 +39,7 @@ export default function Popover({
     },
   });
   const dismiss = useDismiss(context, {
-    outsidePress: true,
+    outsidePress: !noCloseOnOutsideClick,
     escapeKey: true,
   });
   const role = useRole(context, { role: "dialog" });
@@ -63,7 +65,9 @@ export default function Popover({
             ref={refs.setFloating}
             {...getFloatingProps()}
             data-component="Popover"
-            className={clsx("p-0 border-0 bg-transparent max-w-full max-h-screen")}
+            className="
+              p-0 border-0 bg-transparent max-w-full max-h-screen outline-none
+            "
           >
             <div
               className={clsx(

@@ -5,7 +5,12 @@ import type { FilterSettings } from "./filterSettings";
 import type { VoteType } from "./votes/voteHelpers";
 import type { Theme } from "./themes";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
-import { sql } from "drizzle-orm";
+import {
+  bothChannelsEnabledNotificationTypeSettings,
+  debateCommentsNotificationTypeSettings,
+  defaultNotificationTypeSettings,
+  dialogueChecksNotificationTypeSettings,
+} from "./notifications/notificationHelpers";
 import {
   pgTable,
   index,
@@ -20,6 +25,7 @@ import {
   pgMaterializedView,
   customType,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 /**
  * This file contains the postgres schemas for all tables.
@@ -71,7 +77,7 @@ export const users = pgTable(
     displayName: text().notNull(),
     previousDisplayName: text(),
     slug: text().notNull(),
-    oldSlugs: text().array().default([""]).notNull(),
+    oldSlugs: text().array().default([]).notNull(),
     profileImageId: text(),
     jobTitle: text(),
     organization: text(),
@@ -102,7 +108,7 @@ export const users = pgTable(
     currentFrontpageFilter: text(),
     frontpageFilterSettings: jsonb<FilterSettings>(),
     lastNotificationsCheck: timestamp(),
-    expandedFrontpageSections: jsonb(),
+    expandedFrontpageSections: jsonb<Record<string, boolean>>(),
     email: text(),
     emails: jsonb<{ address: string; verified: boolean }[]>().array(),
     noindex: boolean().notNull().default(false),
@@ -149,28 +155,128 @@ export const users = pgTable(
     sunshineFlagged: boolean().notNull().default(false),
     sunshineSnoozed: boolean().notNull().default(false),
     reviewedAt: timestamp(),
+    usernameUnset: boolean().notNull().default(false),
+    sendMarketingEmails: boolean().notNull().default(true),
+    abTestKey: text().notNull(),
+    abTestOverrides: jsonb(),
+    profile: jsonb(),
+    lwWikiImport: boolean(),
+    lastUsedTimezone: text(),
+    legacy: boolean().notNull().default(false),
+    whenConfirmationEmailSent: timestamp(),
+    commentSorting: text(),
+    sortDraftsBy: text(),
+    reactPaletteStyle: text().notNull().default("listView"),
+    noKibitz: boolean(),
+    showHideKarmaOption: boolean(),
+    showPostAuthorCard: boolean(),
+    hideElicitPredictions: boolean().notNull().default(false),
+    hideAFNonMemberInitialWarning: boolean().notNull().default(false),
+    noSingleLineComments: boolean().notNull().default(false),
+    noCollapseCommentsPosts: boolean().notNull().default(false),
+    noCollapseCommentsFrontpage: boolean().notNull().default(false),
+    hidePostsRecommendations: boolean().notNull().default(false),
+    petrovOptOut: boolean().notNull().default(false),
+    optedOutOfSurveys: boolean(),
+    keywordAlerts: text().array().notNull().default([]),
+    notificationCommentsOnSubscribedPost: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationShortformContent: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationRepliesToMyComments: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationRepliesToSubscribedComments: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationSubscribedUserPost: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationSubscribedUserComment: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationPostsInGroups: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationSubscribedTagPost: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationSubscribedSequencePost: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationPrivateMessage: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationSharedWithMe: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationAlignmentSubmissionApproved: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationEventInRadius: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationKarmaPowersGained: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationRSVPs: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationGroupAdministration: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationCommentsOnDraft: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationPostsNominatedReview: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationSubforumUnread: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationNewMention: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationNewPingback: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationPollClosingSoon: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationPollClosed: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationDialogueMessages: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationPublishedDialogueMessages: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationAddedAsCoauthor: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationKeywordAlert: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationDebateCommentsOnSubscribedPost: jsonb()
+      .notNull()
+      .default(debateCommentsNotificationTypeSettings),
+    notificationDebateReplies: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
+    notificationDialogueMatch: jsonb()
+      .notNull()
+      .default(bothChannelsEnabledNotificationTypeSettings),
+    notificationNewDialogueChecks: jsonb()
+      .notNull()
+      .default(dialogueChecksNotificationTypeSettings),
+    notificationYourTurnMatchForm: jsonb()
+      .notNull()
+      .default(defaultNotificationTypeSettings),
 
     /*
-  "profile" JSONB,
-  "lwWikiImport" BOOL,
-  "lastUsedTimezone" TEXT,
-  "whenConfirmationEmailSent" TIMESTAMPTZ,
-  "legacy" BOOL NOT NULL DEFAULT FALSE,
-  "commentSorting" TEXT,
-  "sortDraftsBy" TEXT,
-  "reactPaletteStyle" TEXT NOT NULL DEFAULT 'listView',
-  "noKibitz" BOOL,
-  "showHideKarmaOption" BOOL,
-  "showPostAuthorCard" BOOL,
-  "hideElicitPredictions" BOOL NOT NULL DEFAULT FALSE,
-  "hideAFNonMemberInitialWarning" BOOL NOT NULL DEFAULT FALSE,
-  "noSingleLineComments" BOOL NOT NULL DEFAULT FALSE,
-  "noCollapseCommentsPosts" BOOL NOT NULL DEFAULT FALSE,
-  "noCollapseCommentsFrontpage" BOOL NOT NULL DEFAULT FALSE,
-  "hidePostsRecommendations" BOOL NOT NULL DEFAULT FALSE,
-  "keywordAlerts" TEXT[] NOT NULL DEFAULT '{}',
-  "petrovOptOut" BOOL NOT NULL DEFAULT FALSE,
-  "optedOutOfSurveys" BOOL,
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
   "generateJargonForDrafts" BOOL NOT NULL DEFAULT FALSE,
   "generateJargonForPublishedPosts" BOOL NOT NULL DEFAULT TRUE,
@@ -202,36 +308,6 @@ export const users = pgTable(
   "auto_subscribe_to_my_posts" BOOL NOT NULL DEFAULT TRUE,
   "auto_subscribe_to_my_comments" BOOL NOT NULL DEFAULT TRUE,
   "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
-  "notificationCommentsOnSubscribedPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationShortformContent" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationRepliesToMyComments" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationRepliesToSubscribedComments" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationSubscribedUserPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationSubscribedUserComment" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationPostsInGroups" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationSubscribedTagPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationSubscribedSequencePost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationPrivateMessage" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationSharedWithMe" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationAlignmentSubmissionApproved" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationEventInRadius" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationKarmaPowersGained" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationRSVPs" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationGroupAdministration" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationCommentsOnDraft" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationPostsNominatedReview" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationSubforumUnread" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"daily","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationNewMention" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationNewPingback" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationDialogueMessages" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationPublishedDialogueMessages" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationAddedAsCoauthor" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationKeywordAlert" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationDebateCommentsOnSubscribedPost" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"daily","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationDebateReplies" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationDialogueMatch" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationNewDialogueChecks" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
-  "notificationYourTurnMatchForm" JSONB NOT NULL DEFAULT '{"onsite":{"enabled":true,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"},"email":{"enabled":false,"batchingFrequency":"realtime","timeOfDayGMT":12,"dayOfWeekGMT":"Monday"}}'::JSONB,
   "hideDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
   "revealChecksToAdmins" BOOL NOT NULL DEFAULT FALSE,
   "optedInToDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
@@ -245,7 +321,6 @@ export const users = pgTable(
   "karmaChangeBatchStart" TIMESTAMPTZ,
   "emailSubscribedToCurated" BOOL,
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
-  "sendMarketingEmails" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
   "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -276,13 +351,10 @@ export const users = pgTable(
   "signUpReCaptchaRating" DOUBLE PRECISION,
   "noExpandUnreadCommentsReview" BOOL NOT NULL DEFAULT FALSE,
   "tagRevisionCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "abTestKey" TEXT NOT NULL,
-  "abTestOverrides" JSONB,
   "walledGardenInvite" BOOL,
   "hideWalledGardenUI" BOOL,
   "walledGardenPortalOnboarded" BOOL,
   "taggingDashboardCollapsed" BOOL,
-  "usernameUnset" BOOL NOT NULL DEFAULT FALSE,
   "paymentEmail" TEXT,
   "paymentInfo" TEXT,
   "profileUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',

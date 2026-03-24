@@ -4,7 +4,7 @@ import type { CurrentUser } from "../users/currentUser";
 import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { postGetPageUrl } from "../posts/postsHelpers";
 import { akismetCheckComment } from "../akismet";
-import { getCommentAncestorIds, PostForCommentCreation } from "./commentQueries";
+import { fetchCommentAncestorIds, PostForCommentCreation } from "./commentQueries";
 import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
 import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 import { captureEvent } from "../analytics/captureEvent";
@@ -96,7 +96,7 @@ export const updateDescendentCommentCounts = async (
   if (!comment.parentCommentId) {
     return;
   }
-  const ancestorIds = await getCommentAncestorIds(txn, comment._id);
+  const ancestorIds = await fetchCommentAncestorIds(txn, comment._id);
   await Promise.all([
     txn
       .update(comments)

@@ -5,24 +5,32 @@ import { cookies } from "next/headers";
 import { captureException } from "@sentry/nextjs";
 import { db } from "../db";
 import { users } from "../schema";
-import { userIsInGroup } from "./userHelpers";
+import { careerStageValuesSchema, userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
-import { approveNewUser } from "./userMutations";
 import {
+  fetchOnboardingUsers,
+  isDisplayNameTaken,
+  updateExpandedSection,
+  updateWork,
+} from "./userQueries";
+import { approveNewUser, completeUserProfile } from "./userMutations";
+import { themeSchema } from "../themes";
+import {
+  mailchimpListSchema,
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
 } from "../mailchimp";
 import {
   LOGIN_TOKEN_COOKIE_NAME,
   loginWithPassword,
+  signupWithPassword,
   UserIsBannedError,
 } from "../authHelpers";
 import {
   fetchCurrentUserByHashedToken,
   getCurrentUser,
 } from "@/lib/users/currentUser";
-import { themeSchema } from "../themes";
 
 export const usersRouter = {
   // This handles user/password login. Google login redirects through auth0
@@ -32,12 +40,15 @@ export const usersRouter = {
       z.object({
         email: z.string().nonempty(),
         password: z.string().nonempty(),
+        isSignup: z.boolean().optional(),
       }),
     )
-    .handler(async ({ input: { email, password } }) => {
+    .handler(async ({ input: { email, password, isSignup } }) => {
       try {
         const cookieStore = await cookies();
-        const hashedToken = await loginWithPassword(cookieStore, email, password);
+        const hashedToken = isSignup
+          ? await signupWithPassword(cookieStore, email, password)
+          : await loginWithPassword(cookieStore, email, password);
         const currentUser = await fetchCurrentUserByHashedToken(hashedToken);
         return { ok: true, currentUser };
       } catch (e) {
@@ -66,11 +77,16 @@ export const usersRouter = {
       .set({ hideSubscribePoke: true })
       .where(eq(users._id, currentUser._id));
   }),
-  subscribeToDigest: os
-    .input(z.object({ email: z.string().optional() }))
-    .handler(async ({ input: { email } }) => {
-      const list = "digest";
-      const status = "subscribed";
+  subscribeToList: os
+    .input(
+      z.object({
+        list: mailchimpListSchema,
+        email: z.string().optional(),
+        subscribed: z.boolean().optional(),
+      }),
+    )
+    .handler(async ({ input: { list, email, subscribed = true } }) => {
+      const status = subscribed ? "subscribed" : "unsubscribed";
       const currentUser = await getCurrentUser();
       if (currentUser) {
         await updateUserMailchimpSubscription({
@@ -142,4 +158,63 @@ export const usersRouter = {
         .set({ theme: { name: theme } })
         .where(eq(users._id, currentUser._id));
     }),
+  updateExpandedSection: os
+    .input(z.object({ section: z.string(), expanded: z.boolean() }))
+    .handler(async ({ input: { section, expanded } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateExpandedSection(currentUser._id, section, expanded);
+    }),
+  updateSendMarketingEmails: os
+    .input(z.object({ value: z.boolean() }))
+    .handler(async ({ input: { value } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateWithFieldChanges(db, currentUser, users, currentUser._id, {
+        sendMarketingEmails: value,
+      });
+    }),
+  completeUserProfile: os
+    .input(
+      z.object({
+        name: z.string(),
+        acceptedTos: z.boolean(),
+      }),
+    )
+    .handler(async ({ input: { name, acceptedTos } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await completeUserProfile(currentUser, name, acceptedTos);
+    }),
+  isDisplayNameTaken: os
+    .input(z.object({ displayName: z.string().nonempty() }))
+    .handler(async ({ input: { displayName } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await isDisplayNameTaken(currentUser, displayName);
+    }),
+  updateWork: os
+    .input(
+      z.object({
+        jobTitle: z.string().nullable().optional(),
+        organization: z.string().nullable().optional(),
+        careerStage: z.array(careerStageValuesSchema).nullable().optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await updateWork(currentUser, input);
+    }),
+  fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
 };

@@ -31,6 +31,7 @@
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
   --color-login-input: #efefef;
+  --color-login-input-hover: #e4e4e4;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
   --color-tooltip-text: #ffffff;
@@ -152,6 +153,7 @@
   --color-postitemhover: #202020;
   --color-postitemhover-border: #282828;
   --color-login-input: #3d3d3d;
+  --color-login-input-hover: #3f3f3f;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
   --color-tooltip-background: rgba(75, 75, 75, 0.94);
   --color-tooltip-text: #ffffff;

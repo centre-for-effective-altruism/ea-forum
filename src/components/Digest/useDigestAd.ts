@@ -64,7 +64,7 @@ export const useDigestAd = () => {
     if (currentUser) {
       try {
         const email = emailRef.current?.value;
-        await rpc.users.subscribeToDigest({ email });
+        await rpc.users.subscribeToList({ list: "digest", email });
       } catch (e) {
         console.error(e);
         setSubscribeClicked(false);

@@ -1,8 +1,9 @@
 import type { CurrentUser } from "../users/currentUser";
-import type { Comment } from "../schema";
 import type { CommentsList } from "./commentLists";
+import type { Comment } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
 import { TagCommentType, tagGetCommentLink } from "../tags/tagHelpers";
+import { OwnableDocument, userCanDo, userOwns } from "../users/userHelpers";
 
 export const commentGetPageUrlFromIds = ({
   commentId,
@@ -84,3 +85,8 @@ export const userCanPinCommentOnProfile = (
   }
   return user._id === comment.userId;
 };
+
+export const userCanEditComment = (
+  user: CurrentUser | null,
+  comment: OwnableDocument,
+) => userCanDo(user, "comments.edit.all") || userOwns(user, comment);

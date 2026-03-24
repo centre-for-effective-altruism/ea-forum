@@ -22,6 +22,7 @@ import CommentBody from "../ContentStyles/CommentBody";
 import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
+import EditComment from "./EditComment";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
@@ -52,6 +53,7 @@ export default function CommentItem({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(!startCollapsed);
   const toggleExpanded = useCallback(() => {
     setExpanded((expanded) => {
@@ -74,6 +76,9 @@ export default function CommentItem({
       toast.error("Something went wrong");
     }
   }, [comment]);
+
+  const onEdit = useCallback(() => setIsEditing(true), []);
+  const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
   const { _id, user, html, postedAt, post, promoted, promotedBy, moderatorHat } =
     comment;
@@ -154,26 +159,34 @@ export default function CommentItem({
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>
-          {currentUser && <CommentTripleDotMenu comment={comment} />}
+          {currentUser && (
+            <CommentTripleDotMenu
+              comment={comment}
+              onEdit={isEditing ? undefined : onEdit}
+            />
+          )}
         </div>
         {!expanded && showPreviewWhenCollapsed && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
             <CommentBody html={html} />
           </div>
         )}
-        {expanded && (
-          <>
-            {promotedBy?.displayName && (
-              <Type
-                style="bodySmall"
-                className="text-promoted-comment cursor-default mb-2"
-              >
-                Promoted by {promotedBy.displayName}
-              </Type>
-            )}
-            <CommentBody html={html} className="cursor-default" />
-          </>
-        )}
+        {expanded &&
+          (isEditing ? (
+            <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
+          ) : (
+            <>
+              {promotedBy?.displayName && (
+                <Type
+                  style="bodySmall"
+                  className="text-promoted-comment cursor-default mb-2"
+                >
+                  Promoted by {promotedBy.displayName}
+                </Type>
+              )}
+              <CommentBody html={html} className="cursor-default" />
+            </>
+          ))}
       </article>
       {expanded && children.length > 0 && (
         <div>

@@ -4,8 +4,8 @@ import { db } from "../db";
 import { posts, users } from "../schema";
 import { randomId } from "../utils/random";
 import {
-  canUserArchivePost,
-  canUserEditPostMetadata,
+  userCanArchivePost,
+  userCanEditPostMetadata,
   postStatuses,
   userCanSuggestPostForCurated,
 } from "./postsHelpers";
@@ -208,7 +208,7 @@ export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
   if (!post) {
     throw new Error("Post not found");
   }
-  if (!canUserEditPostMetadata(currentUser, post)) {
+  if (!userCanEditPostMetadata(currentUser, post)) {
     throw new Error("Permission denied");
   }
   await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
@@ -220,7 +220,7 @@ export const archiveDraft = async (currentUser: CurrentUser, postId: string) => 
   if (!post) {
     throw new Error("Post not found");
   }
-  if (!canUserArchivePost(currentUser, post)) {
+  if (!userCanArchivePost(currentUser, post)) {
     throw new Error("Permission denied");
   }
   await updateWithFieldChanges(db, currentUser, posts, postId, {

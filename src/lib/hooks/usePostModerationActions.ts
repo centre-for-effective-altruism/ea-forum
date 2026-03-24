@@ -4,8 +4,8 @@ import { useCurrentUser } from "./useCurrentUser";
 import { userCanDo } from "../users/userHelpers";
 import { rpc } from "../rpc";
 import {
-  canUserArchivePost,
-  canUserEditPostMetadata,
+  userCanArchivePost,
+  userCanEditPostMetadata,
   userCanSuggestPostForCurated,
 } from "../posts/postsHelpers";
 import type { PostDisplay } from "@/lib/posts/postQueries";
@@ -109,7 +109,7 @@ export const useMoveToDraft = (post: PostDisplay | PostListItem) => {
       error: "Something went wrong",
     });
   }, [post._id]);
-  return !draft && currentUser && canUserEditPostMetadata(currentUser, post)
+  return !draft && currentUser && userCanEditPostMetadata(currentUser, post)
     ? moveToDraft
     : null;
 };
@@ -128,5 +128,5 @@ export const useArchiveDraft = (post: PostDisplay | PostListItem) => {
       error: "Something went wrong",
     });
   }, [post._id]);
-  return !archived && canUserArchivePost(currentUser, post) ? archivePost : null;
+  return !archived && userCanArchivePost(currentUser, post) ? archivePost : null;
 };

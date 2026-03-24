@@ -2,6 +2,7 @@ import urlJoin from "url-join";
 import type { CurrentUser } from "./currentUser";
 import type { Localgroup, Post, User } from "../schema";
 import { allUserGroupsByName } from "./userGroups";
+import { z } from "zod/v4";
 import uniq from "lodash/uniq";
 import flatten from "lodash/flatten";
 import intersection from "lodash/intersection";
@@ -22,19 +23,22 @@ export const userGetProfileUrl = ({
 export const userGetStatsUrl = ({ slug }: Pick<CurrentUser, "slug">) =>
   `/users/${slug}/stats`;
 
-type CareerStageValue =
-  | "highSchool"
-  | "associateDegree"
-  | "undergradDegree"
-  | "professionalDegree"
-  | "graduateDegree"
-  | "doctoralDegree"
-  | "otherDegree"
-  | "earlyCareer"
-  | "midCareer"
-  | "lateCareer"
-  | "seekingWork"
-  | "retired";
+export const careerStageValuesSchema = z.enum([
+  "highSchool",
+  "associateDegree",
+  "undergradDegree",
+  "professionalDegree",
+  "graduateDegree",
+  "doctoralDegree",
+  "otherDegree",
+  "earlyCareer",
+  "midCareer",
+  "lateCareer",
+  "seekingWork",
+  "retired",
+]);
+
+export type CareerStageValue = z.infer<typeof careerStageValuesSchema>;
 
 type EAGCareerStage =
   | "Student (high school)"
@@ -252,7 +256,7 @@ export const userCanDo = (
 type HasUserIdType = { userId: string | null };
 type HasUserType = { user?: { _id: string } | null };
 
-type OwnableDocument = HasUserIdType | HasUserType | User;
+export type OwnableDocument = HasUserIdType | HasUserType | User;
 
 /**
  * Check if a user owns a document

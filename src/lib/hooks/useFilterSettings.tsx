@@ -9,11 +9,13 @@ import {
   useEffect,
   useState,
 } from "react";
+import type { Tag } from "../schema";
 import { rpc } from "../rpc";
 import { useTracking } from "../analyticsEvents";
 import { useCurrentUser } from "./useCurrentUser";
 import {
   FilterMode,
+  filterModeIsSubscribed,
   FilterSettings,
   getDefaultFilterSettings,
 } from "../filterSettings";
@@ -139,4 +141,30 @@ export const useFilterSettings = () => {
     throw new Error("No filter settings provider found");
   }
   return ctx;
+};
+
+/**
+ * A simple wrapper on top of useFilterSettings focused on a single tag
+ * subscription
+ */
+export const useSubscribeToTag = (tag: Pick<Tag, "_id" | "name">) => {
+  const { filterSettings, addFilterTag, removeFilterTag } = useFilterSettings();
+
+  const setting = filterSettings.tags.find(
+    (filter) => tag && filter.tagId === tag._id,
+  );
+  const isSubscribed = !!(setting && filterModeIsSubscribed(setting.filterMode));
+
+  const updateSubscribed = useCallback(
+    (newSubscribed: boolean) => {
+      if (newSubscribed) {
+        addFilterTag(tag._id, tag.name);
+      } else {
+        removeFilterTag(tag._id);
+      }
+    },
+    [tag, addFilterTag, removeFilterTag],
+  );
+
+  return { isSubscribed, updateSubscribed };
 };
