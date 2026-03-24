@@ -94,8 +94,7 @@ export default function LoginPopover() {
       }
 
       try {
-        // TODO Handle signup with `isSignup`
-        const data = await rpc.users.login({ email, password });
+        const data = await rpc.users.login({ email, password, isSignup });
         if (data?.redirect) {
           window.location.href = data.redirect;
         } else if (!data?.ok || !data?.currentUser) {

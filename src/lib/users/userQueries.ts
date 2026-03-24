@@ -1,7 +1,11 @@
-import { eq, sql } from "drizzle-orm";
-import { db } from "../db";
+import { and, eq, ne, sql } from "drizzle-orm";
+import { db, DbOrTransaction } from "../db";
 import { posts, users } from "../schema";
+import type { CurrentUser } from "./currentUser";
+import type { CareerStageValue } from "./userHelpers";
 import type { RelationalProjection } from "../utils/queryHelpers";
+import { filterNonNull } from "../typeHelpers";
+import keyBy from "lodash/keyBy";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
 
@@ -103,3 +107,70 @@ export const updateExpandedSection = async (
     })
     .where(eq(users._id, currentUserId));
 };
+
+export const isDisplayNameTaken = async (
+  currentUser: CurrentUser,
+  displayName: string,
+  txn: DbOrTransaction = db,
+): Promise<boolean> => {
+  const result = await txn
+    .select({
+      isTaken: sql<boolean>`COUNT(*) > 0`,
+    })
+    .from(users)
+    .where(
+      and(
+        sql`fm_normalize_display_name(${users.displayName}) =
+          fm_normalize_display_name(${displayName})`,
+        ne(users._id, currentUser._id),
+      ),
+    );
+  return !!result[0]?.isTaken;
+};
+
+export const updateWork = async (
+  currentUser: CurrentUser,
+  values: {
+    jobTitle?: string | null;
+    organization?: string | null;
+    careerStage?: CareerStageValue[] | null;
+  },
+) => {
+  await db.update(users).set(values).where(eq(users._id, currentUser._id));
+};
+
+export const fetchOnboardingUsers = async () => {
+  const _ids = [
+    "9Fg4woeMPHoGa6kDA", // Holden Karnofsky
+    "kBZnCSYFXGowSD8mD", // Katja Grace
+    "b4mnJTtwXMkqkv3Yq", // Laura Duffy
+    "DkFp3vmyWxPmDqNcp", // Richard Y Chappell
+    "H3tBLXCQEMqkyJiMJ", // Kelsey Piper
+    "LMgZyi4w3XoYz3tM5", // sauilius
+    "R4mvcEPhmLiBahN4H", // Toby Ord
+    "JBx8HXhshWMMKpafM", // Jacob_Peacock
+    "Ng9dxDSsc5uK4Zsmx", // CarlShulman
+    "J8rxnfpHSTCbDNC2j", // Joe_Carlsmith
+  ];
+  const users = await db.query.users.findMany({
+    columns: {
+      _id: true,
+      displayName: true,
+      profileImageId: true,
+      karma: true,
+      jobTitle: true,
+      organization: true,
+    },
+    where: {
+      _id: { in: _ids },
+      deleted: false,
+      banned: { isNull: true },
+    },
+  });
+  const byId = keyBy(users, "_id");
+  return filterNonNull(_ids.map((id) => byId[id]));
+};
+
+export type OnboardingUser = Awaited<
+  ReturnType<typeof fetchOnboardingUsers>
+>[number];

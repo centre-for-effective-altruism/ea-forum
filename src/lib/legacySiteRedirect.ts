@@ -30,6 +30,8 @@ const newSitePatterns = [
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
+  /^\/admin$/, // Admin
+  /^\/admin\/onboarding$/, // Admin onboarding test
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
