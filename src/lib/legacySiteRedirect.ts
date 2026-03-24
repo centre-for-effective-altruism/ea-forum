@@ -24,6 +24,7 @@ const newSitePatterns = [
   /^\/people-directory$/, // People directory page
   /^\/about$/, // About page
   /^\/intro$/, // Intro page
+  /^\/moderation$/, // Moderation log page
   /^\/contact$/, // Contact page
   /^\/copyright$/, // Copyright page
   /^\/cookie-policy$/, // Cookie policy

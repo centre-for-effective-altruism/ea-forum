@@ -32,6 +32,8 @@ export default function CommentItem({
   startCollapsed,
   showPreviewWhenCollapsed,
   borderless,
+  showPermalink = true,
+  showMenu = true,
   className,
 }: Readonly<{
   node: CommentTreeNode<CommentsList>;
@@ -49,6 +51,8 @@ export default function CommentItem({
    * component.
    */
   borderless?: boolean;
+  showPermalink?: boolean;
+  showMenu?: boolean;
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
@@ -151,10 +155,12 @@ export default function CommentItem({
           <div className="grow">
             <CommentTags comment={comment} />
           </div>
-          <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
-            <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
-          </Link>
-          {currentUser && <CommentTripleDotMenu comment={comment} />}
+          {showPermalink && (
+            <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
+              <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
+            </Link>
+          )}
+          {showMenu && currentUser && <CommentTripleDotMenu comment={comment} />}
         </div>
         {!expanded && showPreviewWhenCollapsed && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
