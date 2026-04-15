@@ -18,6 +18,7 @@ export default function Popover({
   onClose,
   noCloseOnOutsideClick,
   background = "dim",
+  noPadding,
   className,
   children,
 }: Readonly<{
@@ -25,6 +26,7 @@ export default function Popover({
   onClose: () => void;
   noCloseOnOutsideClick?: boolean;
   background?: "dim" | "blurred";
+  noPadding?: boolean;
   className?: string;
   children: ReactNode;
 }>) {
@@ -71,8 +73,9 @@ export default function Popover({
           >
             <div
               className={clsx(
-                "max-h-[90vh] max-w-full overflow-auto bg-gray-0 p-8 rounded",
+                "max-h-[90vh] max-w-full overflow-auto bg-gray-0 rounded",
                 "border-1 border-gray-200",
+                !noPadding && "p-8",
                 className,
               )}
             >
