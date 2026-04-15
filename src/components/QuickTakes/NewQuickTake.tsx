@@ -60,6 +60,7 @@ export default function NewQuickTake({
           ref={editorRef}
           className="w-full grow"
         />
+        {/* TODO: Add topics to quick takes */}
         <div
           className={clsx("flex items-center justify-end gap-2", !open && "hidden")}
         >
