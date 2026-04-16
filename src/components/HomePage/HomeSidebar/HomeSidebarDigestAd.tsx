@@ -112,7 +112,7 @@ export default function HomeSidebarDigestAd({
     <AnalyticsContext pageSubSectionContext="digestAd">
       <AnalyticsInViewTracker eventProps={{ inViewType: "sidebarDigestAd" }}>
         <div
-          className={`bg-gray-200 px-4 py-3 rounded ${className}`}
+          className={clsx("bg-gray-200 px-4 py-3 rounded", className)}
           data-component="HomeSidebarDigestAd"
         >
           <Type className="font-[600] text-[16px] mb-2">
