@@ -90,7 +90,7 @@
   --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
-  --zindex-digest-popup: 1000;
+  --zindex-digest-popup: 1050;
   --zindex-site-toggle: 1100;
   --zindex-headroom: 1300;
   --zindex-read-progress: 1302;
