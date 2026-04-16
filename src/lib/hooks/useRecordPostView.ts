@@ -7,11 +7,17 @@ import { rpc } from "../rpc";
 import { useCurrentUser } from "./useCurrentUser";
 import { useItemsRead } from "./useItemsRead";
 import { useNewEvents } from "./useNewEvents";
+import { getBrowserLocalStorage } from "../localStorage";
 
 type ViewablePost = Pick<
   RecentDiscussionPost,
   "_id" | "title" | "draft" | "readStatus"
 >;
+
+export const getLocalPostsReadCount = () => {
+  const ls = getBrowserLocalStorage();
+  return ls ? parseInt(ls.getItem("postReadCount") ?? "0") : 0;
+};
 
 export const useRecordPostView = (post: ViewablePost) => {
   const { recordEvent } = useNewEvents();
@@ -39,6 +45,8 @@ export const useRecordPostView = (post: ViewablePost) => {
         if (!postsRead[post._id]) {
           setPostRead(post._id, true);
           void rpc.posts.incrementViewCount({ postId: post._id });
+          const ls = getBrowserLocalStorage();
+          ls?.setItem("postReadCount", `${getLocalPostsReadCount() + 1}`);
         }
 
         // Register page-visit event

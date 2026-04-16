@@ -90,6 +90,8 @@
   --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
+  --zindex-digest-popup: 1050;
+  --zindex-site-toggle: 1100;
   --zindex-headroom: 1300;
   --zindex-read-progress: 1302;
   --zindex-popover: 1304;
@@ -101,7 +103,6 @@
   --buzzsprout-opacity: 1;
 
   --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
-
   @keyframes bounce-delay {
     0%,
     80%,
@@ -110,6 +111,16 @@
     }
     40% {
       transform: scale(1);
+    }
+  }
+
+  --animate-fade-in: fade-in 0.3s ease-in-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
 }

@@ -194,7 +194,7 @@ export default function LoginPopover() {
             onClick={onClose}
             className="cursor-pointer w-[20px] text-gray-600 absolute right-0 top-0"
           />
-          <LightbulbIcon className="w-[52px] text-(--color-primary-dark)" />
+          <LightbulbIcon className="w-[52px] text-primary-dark" />
           <Type className="text-[24px] font-[600]">{title}</Type>
           <form action={onSubmit} className="flex flex-col gap-2 w-full">
             <LoginInput
@@ -215,7 +215,7 @@ export default function LoginPopover() {
               onToggleRevealed={toggleShowPassword}
             />
             {!isSignup && !isResettingPassword && (
-              <Type className="mt-1 mb-2 font-[600] text-(--color-primary)">
+              <Type className="mt-1 mb-2 font-[600] text-primary">
                 <a className="cursor-pointer" onClick={onForgotPassword}>
                   Forgot password?
                 </a>
@@ -271,10 +271,10 @@ export default function LoginPopover() {
               Already have an account?{" "}
               <a
                 onClick={onLinkToLogin}
-                className={`
-                  text-(--color-primary) hover:text-(--color-primary-dark)
+                className="
+                  text-primary hover:text-primary-dark
                   font-[700] cursor-pointer select-none
-                `}
+                "
               >
                 Login
               </a>
@@ -284,10 +284,10 @@ export default function LoginPopover() {
               Don&apos;t have an account?{" "}
               <a
                 onClick={onLinkToSignup}
-                className={`
-                  text-(--color-primary) hover:text-(--color-primary-dark)
+                className="
+                  text-primary hover:text-primary-dark
                   font-[700] cursor-pointer select-none
-                `}
+                "
               >
                 Sign up
               </a>
