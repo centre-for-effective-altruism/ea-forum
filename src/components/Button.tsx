@@ -59,6 +59,7 @@ export default function Button({
     <button
       type={type}
       onClick={onClick}
+      data-component="Button"
       data-testid={testId}
       className={clsx(
         "min-w-[30px] text-[14px] font-[500] leading-[20px] px-3 py-2 rounded",

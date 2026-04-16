@@ -98,12 +98,9 @@ const DigestPopupForm: FC<Omit<DigestAdProps, "showDigestAd">> = ({
 
 export default function DigestPopup() {
   const { showDigestAd, ...formProps } = useDigestAd();
-
-  // We only show this after the client has viewed a few posts
   if (!showDigestAd || getLocalPostsReadCount() < 10) {
     return null;
   }
-
   return (
     <AnalyticsContext pageSubSectionContext="digestAd">
       <AnalyticsInViewTracker eventProps={{ inViewType: "stickyDigestAd" }}>
