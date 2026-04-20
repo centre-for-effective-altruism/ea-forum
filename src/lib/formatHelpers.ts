@@ -12,3 +12,6 @@ export const formatRole = (
   jobTitle && organization
     ? `${jobTitle} @ ${organization}`
     : ((jobTitle || organization) ?? "");
+
+export const formatPostItemHiddenAuthors = (count: number, totalShown: number) =>
+  totalShown === 0 ? `${count} authors` : `+ ${count} more`;

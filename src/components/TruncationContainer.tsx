@@ -18,7 +18,7 @@ export default function TruncationContainer({
   canShowMore,
   hiddenItemsTooltip,
   afterNodeTextStyle,
-  afterNodeFormat = (count) => `${count} more`,
+  afterNodeFormat = (count, _totalShown) => `${count} more`,
   finalNode,
   className,
   tooltipClassName,
@@ -34,7 +34,7 @@ export default function TruncationContainer({
   /** Text style for the "n more" text  */
   afterNodeTextStyle?: TextStyle;
   /** Format the "n more" text */
-  afterNodeFormat?: (count: number) => string;
+  afterNodeFormat?: (count: number, totalShown: number) => string;
   /** Node to appear after the "n more" text - this will never be hidden */
   finalNode?: ReactNode;
   /** Class applied to the root of this component  */
@@ -75,7 +75,7 @@ export default function TruncationContainer({
 
     // Add 8px of leeway
     let width = itemNodeWidths[0] + gap + afterNodeWidth + finalNodeWidth + 8;
-    let total = 1;
+    let total = 0;
     while (total < itemNodeWidths.length) {
       const nextItemWidth = itemNodeWidths[total];
       const nextWidth = width + gap + nextItemWidth;
@@ -117,7 +117,7 @@ export default function TruncationContainer({
         className="inline-flex items-center text-gray-600 pl-1 cursor-pointer"
         {...(canShowMore ? { onClick: showAll, role: "button" } : {})}
       >
-        {afterNodeFormat(items.length - numShown)}
+        {afterNodeFormat(items.length - numShown, numShown)}
       </Type>
     </Tooltip>
   );

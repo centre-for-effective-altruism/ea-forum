@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
+import { formatPostItemHiddenAuthors } from "@/lib/formatHelpers";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { useHideRepeatedPosts } from "@/lib/hooks/useHideRepeatedPosts";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
@@ -137,7 +138,7 @@ export default function PostsItem({
                   gap={0}
                   hiddenItemsTooltip
                   afterNodeTextStyle="bodySmall"
-                  afterNodeFormat={(count) => `+ ${count} more`}
+                  afterNodeFormat={formatPostItemHiddenAuthors}
                   finalNode={
                     <>
                       <span className="px-1">·</span>
