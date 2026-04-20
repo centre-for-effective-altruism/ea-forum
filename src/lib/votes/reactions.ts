@@ -107,3 +107,12 @@ export const getReactionMutuallyExclusivePartner = (reactionName: string) => {
       return undefined;
   }
 };
+
+export const getReactionsForKarmaChanges = (showNegative: boolean) => ({
+  publicEmojis: publicReactionPalette
+    .filter(({ isNegative }) => showNegative || !isNegative)
+    .map(({ name }) => name),
+  privateEmojis: anonymousReactionPalette
+    .filter(({ isNegative }) => showNegative || !isNegative)
+    .map(({ name }) => name),
+});

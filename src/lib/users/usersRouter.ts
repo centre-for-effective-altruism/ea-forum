@@ -8,6 +8,7 @@ import { users } from "../schema";
 import { careerStageValuesSchema, userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
+import { calculateKarmaChanges } from "./karmaChanges";
 import {
   fetchOnboardingUsers,
   isDisplayNameTaken,
@@ -217,4 +218,18 @@ export const usersRouter = {
       return await updateWork(currentUser, input);
     }),
   fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
+  karmaChanges: os
+    .input(
+      z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .handler(async ({ input: { startDate, endDate } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await calculateKarmaChanges(currentUser, startDate, endDate);
+    }),
 };

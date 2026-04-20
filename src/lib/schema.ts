@@ -1,9 +1,13 @@
 import "server-only";
-import type { Json, JsonRecord } from "./typeHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
+import type { Json, JsonRecord } from "./typeHelpers";
 import type { VoteType } from "./votes/voteHelpers";
 import type { Theme } from "./themes";
+import {
+  KarmaChangeSettings,
+  defaultKarmaChangeSettings,
+} from "./users/karmaChangesTypes";
 import { DenormalizedRevision } from "./revisions/revisionHelpers";
 import {
   bothChannelsEnabledNotificationTypeSettings,
@@ -275,6 +279,11 @@ export const users = pgTable(
     notificationYourTurnMatchForm: jsonb()
       .notNull()
       .default(defaultNotificationTypeSettings),
+    karmaChangeNotifierSettings: jsonb<KarmaChangeSettings>()
+      .notNull()
+      .default(defaultKarmaChangeSettings),
+    karmaChangeLastOpened: timestamp(),
+    karmaChangeBatchStart: timestamp(),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -316,9 +325,6 @@ export const users = pgTable(
   "showMatches" BOOL NOT NULL DEFAULT TRUE,
   "showRecommendedPartners" BOOL NOT NULL DEFAULT TRUE,
   "hideActiveDialogueUsers" BOOL NOT NULL DEFAULT FALSE,
-  "karmaChangeNotifierSettings" JSONB NOT NULL DEFAULT '{"updateFrequency":"daily","timeOfDayGMT":11,"dayOfWeekGMT":"Saturday","showNegativeKarma":false}'::JSONB,
-  "karmaChangeLastOpened" TIMESTAMPTZ,
-  "karmaChangeBatchStart" TIMESTAMPTZ,
   "emailSubscribedToCurated" BOOL,
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,

@@ -161,3 +161,5 @@ export const addTime = (date: Date, length: number, unit: TimeInterval): Date =>
 
 export const subtractTime = (date: Date, length: number, unit: TimeInterval): Date =>
   addTime(date, -length, unit);
+
+export const earliest = (a: Date, b: Date) => (a < b ? a : b);
