@@ -76,7 +76,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           </div>
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
-              <PostVoteButtons />
+              <PostVoteButtons hideReacts />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">

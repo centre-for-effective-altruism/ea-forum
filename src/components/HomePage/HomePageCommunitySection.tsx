@@ -24,7 +24,7 @@ export default function HomePageCommunitySection({
     <ExpandableSection
       title="Posts tagged community"
       rightNode={
-        <Type style="loadMore">
+        <Type style="loadMore" className="max-md:hidden">
           <Link
             href="/topics/community"
             className="text-gray-600 hover:text-gray-1000"
@@ -38,6 +38,16 @@ export default function HomePageCommunitySection({
       className={className}
     >
       {children}
+      <div className="md:hidden mt-1 flex flex-row-reverse">
+        <Type style="loadMore">
+          <Link
+            href="/topics/community"
+            className="text-gray-600 hover:text-gray-1000"
+          >
+            View more
+          </Link>
+        </Type>
+      </div>
     </ExpandableSection>
   );
 }

@@ -83,18 +83,16 @@ export default function ReactButtons({
   extendedScore,
   extendedVoteType,
   onReact,
-  className,
 }: Readonly<{
   reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
-  className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
   const reactions = countCurrentReactions(extendedScore);
   return (
-    <div className={clsx("flex items-center gap-[2px]", className)}>
+    <>
       {reactions.map(({ reaction, score, anonymous }) => {
         const isSelected = isReactionSelected(extendedVoteType, reaction);
         return (
@@ -138,6 +136,6 @@ export default function ReactButtons({
           </ReactionButton>
         </Tooltip>
       </Dropdown>
-    </div>
+    </>
   );
 }

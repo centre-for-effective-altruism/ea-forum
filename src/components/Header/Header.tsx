@@ -59,7 +59,7 @@ export default function Header({
             HEADER_HEIGHT_CLASS,
           )}
         >
-          <Column As="nav" className="h-full px-1 sm:px-5 flex items-center">
+          <Column As="nav" className="h-full px-2 sm:px-5 flex items-center">
             <button
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
@@ -121,7 +121,11 @@ export default function Header({
                   <Button variant="greyFilled" onClick={onLogin}>
                     Login
                   </Button>
-                  <Button variant="primaryFilled" onClick={onSignup}>
+                  <Button
+                    variant="primaryFilled"
+                    onClick={onSignup}
+                    className="max-sm:hidden"
+                  >
                     Sign up
                   </Button>
                   <LoginPopover />

@@ -129,7 +129,7 @@ export default function TruncationContainer({
         data-component="TruncationContainer"
         style={{ gap: `${gap}px` }}
         ref={containerRef}
-        className={clsx("flex items-center", className)}
+        className={clsx("flex items-center whitespace-nowrap", className)}
       >
         {shownItems.map((item, i) => (
           <Fragment key={i}>{item}</Fragment>
@@ -140,7 +140,10 @@ export default function TruncationContainer({
       {/* Hidden container for measuring hidden nodes */}
       <div
         ref={measureRef}
-        className="absolute flex invisible h-0 overflow-hidden pointer-events-none"
+        className="
+          absolute flex invisible h-0 overflow-hidden pointer-events-none
+          whitespace-nowrap
+        "
         aria-hidden="true"
         inert
       >
