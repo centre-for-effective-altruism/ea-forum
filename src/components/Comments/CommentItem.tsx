@@ -108,53 +108,55 @@ export default function CommentItem({
         className={borderless ? undefined : "pr-3 mb-2"}
       >
         <div className="mb-2 flex items-center gap-2">
-          {!borderless && (
-            <ChevronDownIcon
-              className={clsx(
-                "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
-                "transition-transform",
-                !expanded && "-rotate-90",
-              )}
-              role="button"
-              onClick={toggleExpanded}
-            />
-          )}
-          <UsersTooltip user={user}>
-            <Type className="font-[600]">
-              {user && user.slug && (
-                <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
-              )}
-            </Type>
-          </UsersTooltip>
-          {isPostAuthor && (
-            <Tooltip
-              title={<Type style="bodySmall">Post author</Type>}
-              placement="bottom"
-            >
-              <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
-            </Tooltip>
-          )}
-          {user && userIsNew(user) && (
-            <Tooltip
-              title={
-                <Type style="bodySmall">
-                  {user?.displayName} is either new on the EA Forum or doesn&apos;t
-                  have much karma yet
-                </Type>
-              }
-              placement="bottom-start"
-              tooltipClassName="max-w-[300px]"
-            >
-              <SproutIcon className="text-new-user-sprout" />
-            </Tooltip>
-          )}
-          <CommentDate comment={comment} />
-          {comment.moderatorHat && (
-            <Type className="text-gray-600 cursor-default">Moderator comment</Type>
-          )}
-          <CommentVoteButtons comment={comment} />
-          <div className="grow">
-            <CommentTags comment={comment} />
+          <div className="flex items-center gap-2 flex-wrap">
+            {!borderless && (
+              <ChevronDownIcon
+                className={clsx(
+                  "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
+                  "transition-transform",
+                  !expanded && "-rotate-90",
+                )}
+                role="button"
+                onClick={toggleExpanded}
+              />
+            )}
+            <UsersTooltip user={user}>
+              <Type className="font-[600]">
+                {user && user.slug && (
+                  <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
+                )}
+              </Type>
+            </UsersTooltip>
+            {isPostAuthor && (
+              <Tooltip
+                title={<Type style="bodySmall">Post author</Type>}
+                placement="bottom"
+              >
+                <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
+              </Tooltip>
+            )}
+            {user && userIsNew(user) && (
+              <Tooltip
+                title={
+                  <Type style="bodySmall">
+                    {user?.displayName} is either new on the EA Forum or doesn&apos;t
+                    have much karma yet
+                  </Type>
+                }
+                placement="bottom-start"
+                tooltipClassName="max-w-[300px]"
+              >
+                <SproutIcon className="text-new-user-sprout" />
+              </Tooltip>
+            )}
+            <CommentDate comment={comment} />
+            {comment.moderatorHat && (
+              <Type className="text-gray-600 cursor-default">Moderator comment</Type>
+            )}
+            <CommentVoteButtons comment={comment} />
+            <div className="grow">
+              <CommentTags comment={comment} />
+            </div>
           </div>
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
+import { formatPostItemHiddenAuthors } from "@/lib/formatHelpers";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { useHideRepeatedPosts } from "@/lib/hooks/useHideRepeatedPosts";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
@@ -67,9 +68,8 @@ export default function PostsItem({
   const isRepeated = isPostRepeated(post._id);
   if (isRepeated) {
     return null;
-  } else {
-    addPost(post._id);
   }
+  addPost(post._id);
 
   return (
     <AnalyticsContext
@@ -79,19 +79,20 @@ export default function PostsItem({
       isSticky={sticky}
     >
       <article
+        data-component="PostsItem"
         className={clsx(
           "w-full max-w-full rounded bg-gray-50 border border-gray-100",
-          "flex flex-col justify-between hover:bg-(--color-postitemhover)",
-          "hover:border-(--color-postitemhover-border)",
-          cardView ? "h-[144px]" : "h-[60px]",
+          "flex flex-col justify-between hover:bg-postitemhover",
+          "hover:border-postitemhover-border",
+          !cardView && "md:h-[60px]",
         )}
-        data-component="PostsItem"
       >
         <div
           onClick={onClick}
           className={clsx(
             "cursor-pointer w-full max-w-full px-3 py-2 text-gray-600",
-            "grid grid-cols-[min-content_1fr_min-content_min-content] gap-3",
+            "grid gap-3 grid-cols-[min-content_1fr]",
+            "md:grid-cols-[min-content_1fr_min-content_min-content]",
             cardView ? "items-start" : "items-center",
           )}
         >
@@ -99,29 +100,30 @@ export default function PostsItem({
             baseScore={baseScore}
             voteCount={voteCount}
             orientation="vertical"
-            className={clsx("min-w-[33px]", cardView && "mt-[10px]")}
+            className={clsx("min-w-[24px] md:min-w-[33px]", cardView && "mt-[10px]")}
           />
-          <div className={clsx("truncate", cardView && "mt-1")}>
-            <div className="flex items-center">
-              <InteractionWrapper>
+          <div className={clsx("min-w-0 grow md:truncate", cardView && "mt-1")}>
+            <Type
+              style="postTitle"
+              className="text-gray-900 mb-[2px] max-md:line-clamp-2 md:truncate"
+            >
+              <InteractionWrapper className="inline">
                 <PostIcons post={post} />
               </InteractionWrapper>
-              <Type style="postTitle" className="text-gray-900 truncate">
-                <PostsTooltip As="span" post={post}>
-                  <Link
-                    href={postLink}
-                    className={clsx(
-                      "hover:opacity-60",
-                      isRead && "visited:text-gray-700",
-                    )}
-                  >
-                    {title}
-                  </Link>
-                </PostsTooltip>
-              </Type>
-            </div>
-            <Type style="bodySmall">
-              <InteractionWrapper>
+              <PostsTooltip As="span" post={post}>
+                <Link
+                  href={postLink}
+                  className={clsx(
+                    "hover:opacity-60",
+                    isRead && "visited:text-gray-700",
+                  )}
+                >
+                  {title}
+                </Link>
+              </PostsTooltip>
+            </Type>
+            <Type style="bodySmall" className="min-w-0 flex">
+              <InteractionWrapper className="grow">
                 <TruncationContainer
                   items={[
                     <UsersName key="author" user={user} />,
@@ -136,7 +138,7 @@ export default function PostsItem({
                   gap={0}
                   hiddenItemsTooltip
                   afterNodeTextStyle="bodySmall"
-                  afterNodeFormat={(count) => `+ ${count} more`}
+                  afterNodeFormat={formatPostItemHiddenAuthors}
                   finalNode={
                     <>
                       <span className="px-1">·</span>
@@ -147,9 +149,9 @@ export default function PostsItem({
                         tooltipPrefix="Posted on "
                         includeAgo
                       />
-                      <span className="px-1">·</span>
                       {post.curatedDate && (
-                        <>
+                        <span className="max-md:hidden">
+                          <span className="px-1">·</span>
                           <span>Curated </span>
                           <TimeAgo
                             As="span"
@@ -158,17 +160,33 @@ export default function PostsItem({
                             tooltipPrefix="Curated on "
                             includeAgo
                           />
-                          <span className="px-1">·</span>
-                        </>
+                        </span>
                       )}
-                      <span>{readTime}m read</span>
+                      <span className="max-md:hidden">
+                        <span className="px-1">·</span>
+                        <span>{readTime}m read</span>
+                      </span>
                     </>
                   }
                 />
               </InteractionWrapper>
+              <InteractionWrapper className="md:hidden">
+                <button
+                  className="
+                    flex items-center gap-1 hover:text-gray-1000 cursor-pointer
+                    w-[44px] ml-5
+                  "
+                >
+                  <ChatBubbleLeftIcon className="w-[16px]" />
+                  <Type style="bodySmall">{commentCount}</Type>
+                </button>
+              </InteractionWrapper>
+              <InteractionWrapper className="flex items-center md:hidden">
+                <PostTripleDotMenu post={post} orientation="vertical" />
+              </InteractionWrapper>
             </Type>
           </div>
-          <InteractionWrapper>
+          <InteractionWrapper className="max-md:hidden">
             <button
               className={clsx(
                 "flex items-center gap-1 hover:text-gray-1000 cursor-pointer",
@@ -179,12 +197,12 @@ export default function PostsItem({
               <Type>{commentCount}</Type>
             </button>
           </InteractionWrapper>
-          <InteractionWrapper className="flex items-center">
+          <InteractionWrapper className="flex items-center max-md:hidden">
             <PostTripleDotMenu post={post} orientation="vertical" />
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-8 items-end pl-[56px] pr-5 pb-4 -mt-4">
+          <div className="flex gap-8 items-end pl-[56px] pr-5 pb-4">
             <Type
               style="postDescription"
               className="text-gray-600 line-clamp-3 overflow-hidden"
@@ -192,10 +210,11 @@ export default function PostsItem({
               {description}
             </Type>
             <div
-              className="
-                w-[160px] min-w-[160px] h-[80px] min-h-[80px] overflow-hidden
-                rounded relative
-              "
+              className={clsx(
+                "w-[100px] min-w-[100px] md:w-[160px] md:min-w-[160px]",
+                "overflow-hidden rounded relative",
+                imageUrl && "h-[80px] min-h-[80px]",
+              )}
             >
               {imageUrl && (
                 <Image src={imageUrl} alt="" fill className="object-cover" />
