@@ -84,7 +84,7 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-gray-50 border border-gray-100",
           "flex flex-col justify-between hover:bg-postitemhover",
           "hover:border-postitemhover-border",
-          cardView ? "h-[144px]" : "md:h-[60px]",
+          !cardView && "md:h-[60px]",
         )}
       >
         <div
@@ -202,7 +202,7 @@ export default function PostsItem({
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-8 items-end pl-[56px] pr-5 pb-4 -mt-4">
+          <div className="flex gap-8 items-end pl-[56px] pr-5 pb-4">
             <Type
               style="postDescription"
               className="text-gray-600 line-clamp-3 overflow-hidden"
@@ -210,10 +210,11 @@ export default function PostsItem({
               {description}
             </Type>
             <div
-              className="
-                w-[160px] min-w-[160px] h-[80px] min-h-[80px] overflow-hidden
-                rounded relative
-              "
+              className={clsx(
+                "w-[100px] min-w-[100px] md:w-[160px] md:min-w-[160px]",
+                "overflow-hidden rounded relative",
+                imageUrl && "h-[80px] min-h-[80px]",
+              )}
             >
               {imageUrl && (
                 <Image src={imageUrl} alt="" fill className="object-cover" />
