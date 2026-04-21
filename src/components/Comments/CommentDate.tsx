@@ -1,4 +1,4 @@
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { formatLongDateWithTime, formatRelativeTime } from "@/lib/timeUtils";
 import Tooltip from "../Tooltip";
@@ -8,7 +8,7 @@ import Link from "../Link";
 export default function CommentDate({
   comment,
 }: Readonly<{
-  comment: CommentsList;
+  comment: CommentListItem;
 }>) {
   const { postedAt, lastEditedAt } = comment;
   const isEdited = !!lastEditedAt && lastEditedAt !== postedAt;

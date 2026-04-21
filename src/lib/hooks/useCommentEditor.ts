@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
 import type { CommentToEdit } from "../comments/commentQueries";
-import type { CommentsList } from "../comments/commentLists";
+import type { CommentListItem } from "../comments/commentLists";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
@@ -39,7 +39,7 @@ type UseCommentEditorDocument =
     };
 
 type UseCommentEditorProps = UseCommentEditorDocument & {
-  onSuccess?: (comment: CommentsList) => void;
+  onSuccess?: (comment: CommentListItem) => void;
 };
 
 const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {

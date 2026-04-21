@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userCanModeratePost } from "@/lib/posts/postsHelpers";
 import {
   usePinCommentOnProfile,
@@ -23,7 +23,7 @@ export default function CommentTripleDotMenu({
   onEdit,
   small,
 }: Readonly<{
-  comment: CommentsList;
+  comment: CommentListItem;
   onEdit?: () => void;
   small?: boolean;
 }>) {

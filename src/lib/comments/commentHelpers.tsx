@@ -1,5 +1,5 @@
 import type { CurrentUser } from "../users/currentUser";
-import type { CommentsList } from "./commentLists";
+import type { CommentListItem } from "./commentLists";
 import type { Comment } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
 import { TagCommentType, tagGetCommentLink } from "../tags/tagHelpers";
@@ -72,7 +72,7 @@ export const commentGetPageUrl = ({
 
 export const userCanPinCommentOnProfile = (
   user: CurrentUser | null,
-  comment: Pick<Comment, "userId"> | CommentsList,
+  comment: Pick<Comment, "userId"> | CommentListItem,
 ) => {
   if (!user) {
     return false;

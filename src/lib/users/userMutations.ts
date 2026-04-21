@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import type { CurrentUser } from "./currentUser";
 import type { JsonRecord } from "../typeHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
@@ -126,4 +127,27 @@ export const approveNewUser = async (
     snoozedUntilContentCount: null,
   });
   void elasticSyncDocument("Users", userIdToApprove);
+};
+
+export const userCheckNotifications = async ({
+  currentUser,
+  hasKarmaChanges,
+  openedAt,
+  endDate,
+}: {
+  currentUser: CurrentUser;
+  hasKarmaChanges: boolean;
+  openedAt: Date;
+  endDate: Date;
+}) => {
+  await db
+    .update(users)
+    .set({
+      lastNotificationsCheck: openedAt.toISOString(),
+      ...(hasKarmaChanges && {
+        karmaChangeBatchStart: openedAt.toISOString(),
+        karmaChangeLastOpened: endDate.toISOString(),
+      }),
+    })
+    .where(eq(users._id, currentUser._id));
 };

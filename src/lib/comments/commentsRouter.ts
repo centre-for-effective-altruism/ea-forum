@@ -16,6 +16,15 @@ import {
 } from "./commentMutations";
 
 export const commentsRouter = {
+  listById: os
+    .input(z.object({ _id: z.string() }))
+    .handler(async ({ input: { _id } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchCommentsListItem({
+        currentUser,
+        commentId: _id,
+      });
+    }),
   create: os
     .input(
       z.object({

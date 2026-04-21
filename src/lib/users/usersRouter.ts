@@ -8,13 +8,18 @@ import { users } from "../schema";
 import { careerStageValuesSchema, userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
+import { calculateKarmaChanges } from "./karmaChanges";
 import {
   fetchOnboardingUsers,
   isDisplayNameTaken,
   updateExpandedSection,
   updateWork,
 } from "./userQueries";
-import { approveNewUser, completeUserProfile } from "./userMutations";
+import {
+  approveNewUser,
+  completeUserProfile,
+  userCheckNotifications,
+} from "./userMutations";
 import { themeSchema } from "../themes";
 import {
   mailchimpListSchema,
@@ -217,4 +222,38 @@ export const usersRouter = {
       return await updateWork(currentUser, input);
     }),
   fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
+  karmaChanges: os
+    .input(
+      z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .handler(async ({ input: { startDate, endDate } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await calculateKarmaChanges(currentUser, startDate, endDate);
+    }),
+  checkNotifications: os
+    .input(
+      z.object({
+        hasKarmaChanges: z.boolean(),
+        openedAt: z.date(),
+        endDate: z.date(),
+      }),
+    )
+    .handler(async ({ input: { hasKarmaChanges, openedAt, endDate } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await userCheckNotifications({
+        currentUser,
+        hasKarmaChanges,
+        openedAt,
+        endDate,
+      });
+    }),
 };
