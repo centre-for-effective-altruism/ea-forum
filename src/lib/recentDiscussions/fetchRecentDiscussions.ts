@@ -205,10 +205,6 @@ const buildRecentDiscussionsSubqueries = (
   currentUser: CurrentUser | null,
 ): RecentDiscussionsSubquery[] => {
   const currentUserId = currentUser?._id ?? null;
-  const postProjection = getPostProjection({
-    currentUserId,
-    excludeTopLevel: true,
-  });
   const postSelector: PostsFilter = {
     ...viewablePostFilter,
     baseScore: { gt: 0 },
@@ -227,7 +223,10 @@ const buildRecentDiscussionsSubqueries = (
       getSortKey: (post) => new Date(post.lastCommentedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
-          ...postProjection,
+          ...getPostProjection({
+            currentUserId,
+            excludeTopLevel: false,
+          }),
           where: {
             ...postSelector,
             shortform: isNotTrue,
@@ -268,7 +267,10 @@ const buildRecentDiscussionsSubqueries = (
       getSortKey: (post) => new Date(post.lastCommentReplyAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
-          ...postProjection,
+          ...getPostProjection({
+            currentUserId,
+            excludeTopLevel: true,
+          }),
           where: {
             ...postSelector,
             shortform: true,
