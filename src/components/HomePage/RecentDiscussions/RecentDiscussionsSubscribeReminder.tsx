@@ -32,7 +32,7 @@ export default function RecentDiscussionsSubscribeReminder() {
       if (currentUser || email) {
         setLoading(true);
         try {
-          await rpc.users.subscribeToDigest({ email });
+          await rpc.users.subscribeToList({ list: "digest", email });
           await refetchCurrentUser();
           setSuccess(true);
           captureEvent("subscribeReminderButtonClicked", {

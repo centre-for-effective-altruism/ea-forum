@@ -1,12 +1,12 @@
 import { useCallback } from "react";
-import type { CommentsList } from "../comments/commentLists";
+import type { CommentListItem } from "../comments/commentLists";
 import { rpc } from "../rpc";
 import { useCurrentUser } from "./useCurrentUser";
 import { useOptimisticState } from "./useOptimisticState";
 import { userCanDo, userOwns } from "../users/userHelpers";
 import { userCanPinCommentOnProfile } from "../comments/commentHelpers";
 
-export const usePinCommentOnProfile = (comment: CommentsList) => {
+export const usePinCommentOnProfile = (comment: CommentListItem) => {
   const { currentUser } = useCurrentUser();
   const {
     value: { isPinnedOnProfile },
@@ -28,7 +28,7 @@ export const usePinCommentOnProfile = (comment: CommentsList) => {
   };
 };
 
-export const useQuickTakeFrontpage = (comment: CommentsList) => {
+export const useQuickTakeFrontpage = (comment: CommentListItem) => {
   const { currentUser } = useCurrentUser();
   const {
     value: { shortformFrontpage },

@@ -59,7 +59,7 @@
 .content-base h5,
 .content-base h6 {
   color: var(--color-gray-1000);
-  font-family: var(--font-stack-serif);
+  font-family: var(--font-stack-sans);
 }
 .content-base h1,
 .content-base h2,

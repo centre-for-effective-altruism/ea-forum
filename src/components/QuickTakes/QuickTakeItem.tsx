@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
@@ -18,7 +18,7 @@ import Link from "../Link";
 export default function QuickTakeItem({
   quickTake,
 }: Readonly<{
-  quickTake: CommentsList;
+  quickTake: CommentListItem;
 }>) {
   const { currentUser } = useCurrentUser();
   const [expanded, setExpanded] = useState(false);

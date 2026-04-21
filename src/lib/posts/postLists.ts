@@ -308,6 +308,22 @@ export const fetchPostsListByIds = async (
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
 };
 
+export const fetchPingbackPosts = async (
+  currentUserId: string | null,
+  postId: string,
+) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      baseScore: { gt: 0 },
+      RAW: (posts) =>
+        sql`(${posts}."pingbacks"->'Posts') @> ${`"${postId}"`}::JSONB`,
+    },
+    orderBy: {
+      baseScore: "desc",
+    },
+  });
+
 export const fetchSidebarOpportunities = (limit: number) => {
   const tagId = process.env.OPPORTUNITIES_TAG_ID;
   if (!tagId) {

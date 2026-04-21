@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
@@ -22,6 +22,7 @@ import CommentBody from "../ContentStyles/CommentBody";
 import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
+import EditComment from "./EditComment";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
@@ -34,7 +35,7 @@ export default function CommentItem({
   borderless,
   className,
 }: Readonly<{
-  node: CommentTreeNode<CommentsList>;
+  node: CommentTreeNode<CommentListItem>;
   onToggleExpanded?: (expanded: boolean) => void;
   /** If true, the comment initially renders un-collapsed */
   startCollapsed?: boolean;
@@ -52,6 +53,7 @@ export default function CommentItem({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(!startCollapsed);
   const toggleExpanded = useCallback(() => {
     setExpanded((expanded) => {
@@ -74,6 +76,9 @@ export default function CommentItem({
       toast.error("Something went wrong");
     }
   }, [comment]);
+
+  const onEdit = useCallback(() => setIsEditing(true), []);
+  const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
   const { _id, user, html, postedAt, post, promoted, promotedBy, moderatorHat } =
     comment;
@@ -102,78 +107,88 @@ export default function CommentItem({
         data-depth={depth}
         className={borderless ? undefined : "pr-3 mb-2"}
       >
-        <div className="mb-2 flex items-center gap-2">
-          {!borderless && (
-            <ChevronDownIcon
-              className={clsx(
-                "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
-                "transition-transform",
-                !expanded && "-rotate-90",
-              )}
-              role="button"
-              onClick={toggleExpanded}
-            />
-          )}
-          <UsersTooltip user={user}>
-            <Type className="font-[600]">
-              {user && user.slug && (
-                <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
-              )}
-            </Type>
-          </UsersTooltip>
-          {isPostAuthor && (
-            <Tooltip
-              title={<Type style="bodySmall">Post author</Type>}
-              placement="bottom"
-            >
-              <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
-            </Tooltip>
-          )}
-          {user && userIsNew(user) && (
-            <Tooltip
-              title={
-                <Type style="bodySmall">
-                  {user?.displayName} is either new on the EA Forum or doesn&apos;t
-                  have much karma yet
-                </Type>
-              }
-              placement="bottom-start"
-              tooltipClassName="max-w-[300px]"
-            >
-              <SproutIcon className="text-new-user-sprout" />
-            </Tooltip>
-          )}
-          <CommentDate comment={comment} />
-          {comment.moderatorHat && (
-            <Type className="text-gray-600 cursor-default">Moderator comment</Type>
-          )}
-          <CommentVoteButtons comment={comment} />
-          <div className="grow">
-            <CommentTags comment={comment} />
+        <div className="mb-2 flex items-start gap-2">
+          <div className="flex items-center gap-2 flex-wrap grow">
+            {!borderless && (
+              <ChevronDownIcon
+                className={clsx(
+                  "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
+                  "transition-transform",
+                  !expanded && "-rotate-90",
+                )}
+                role="button"
+                onClick={toggleExpanded}
+              />
+            )}
+            <UsersTooltip user={user}>
+              <Type className="font-[600]">
+                {user && user.slug && (
+                  <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
+                )}
+              </Type>
+            </UsersTooltip>
+            {isPostAuthor && (
+              <Tooltip
+                title={<Type style="bodySmall">Post author</Type>}
+                placement="bottom"
+              >
+                <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
+              </Tooltip>
+            )}
+            {user && userIsNew(user) && (
+              <Tooltip
+                title={
+                  <Type style="bodySmall">
+                    {user?.displayName} is either new on the EA Forum or doesn&apos;t
+                    have much karma yet
+                  </Type>
+                }
+                placement="bottom-start"
+                tooltipClassName="max-w-[300px]"
+              >
+                <SproutIcon className="text-new-user-sprout" />
+              </Tooltip>
+            )}
+            <CommentDate comment={comment} />
+            {comment.moderatorHat && (
+              <Type className="text-gray-600 cursor-default">Moderator comment</Type>
+            )}
+            <CommentVoteButtons comment={comment} />
+            <div className="grow">
+              <CommentTags comment={comment} />
+            </div>
           </div>
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
           </Link>
-          {currentUser && <CommentTripleDotMenu comment={comment} />}
+          {currentUser && (
+            <CommentTripleDotMenu
+              comment={comment}
+              onEdit={isEditing ? undefined : onEdit}
+            />
+          )}
         </div>
         {!expanded && showPreviewWhenCollapsed && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
             <CommentBody html={html} />
           </div>
         )}
-        {expanded && (
-          <>
-            {promotedBy?.displayName && (
-              <Type
-                style="bodySmall"
-                className="text-promoted-comment cursor-default mb-2"
-              >
-                Promoted by {promotedBy.displayName}
-              </Type>
-            )}
-            <CommentBody html={html} className="cursor-default" />
-          </>
-        )}
+        {expanded &&
+          (isEditing ? (
+            <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
+          ) : (
+            <>
+              {promotedBy?.displayName && (
+                <Type
+                  style="bodySmall"
+                  className="text-promoted-comment cursor-default mb-2"
+                >
+                  Promoted by {promotedBy.displayName}
+                </Type>
+              )}
+              <CommentBody html={html} className="cursor-default" />
+            </>
+          ))}
       </article>
       {expanded && children.length > 0 && (
         <div>

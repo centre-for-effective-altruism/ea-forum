@@ -1,12 +1,14 @@
-import { useCallback, useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import { useCallback, useRef, useState } from "react";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userCanModeratePost } from "@/lib/posts/postsHelpers";
 import {
   usePinCommentOnProfile,
   useQuickTakeFrontpage,
 } from "@/lib/hooks/useCommentModerationActions";
+import { userCanEditComment } from "@/lib/comments/commentHelpers";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
@@ -18,11 +20,14 @@ import clsx from "clsx";
 
 export default function CommentTripleDotMenu({
   comment,
+  onEdit,
   small,
 }: Readonly<{
-  comment: CommentsList;
+  comment: CommentListItem;
+  onEdit?: () => void;
   small?: boolean;
 }>) {
+  const dismissRef = useRef<() => void>(null);
   const { currentUser } = useCurrentUser();
   const [reportOpen, setReportOpen] = useState(false);
   const openReport = useCallback(() => setReportOpen(true), []);
@@ -32,18 +37,33 @@ export default function CommentTripleDotMenu({
     comment._id,
     comment.bookmarks?.[0]?.active ?? false,
   );
+  const canEdit = userCanEditComment(currentUser, comment) && !!onEdit;
   const { isPinnedOnProfile, toggleIsPinnedOnProfile } =
     usePinCommentOnProfile(comment);
   const { isQuickTakeFrontpage, toggleQuickTakeFrontpage } =
     useQuickTakeFrontpage(comment);
+
+  const editComment = useCallback(() => {
+    if (canEdit) {
+      onEdit();
+      dismissRef.current?.();
+    }
+  }, [canEdit, onEdit]);
 
   return (
     <>
       <DropdownMenu
         placement="bottom-end"
         className="text-gray-900"
+        dismissRef={dismissRef}
         items={[
-          // TODO Edit comment
+          canEdit
+            ? {
+                title: "Edit",
+                Icon: PencilIcon,
+                onClick: editComment,
+              }
+            : null,
           toggleIsPinnedOnProfile
             ? {
                 title: isPinnedOnProfile

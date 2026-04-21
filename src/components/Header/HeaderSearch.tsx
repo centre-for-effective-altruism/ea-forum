@@ -93,7 +93,9 @@ export default function HeaderSearch({
         onChange={onChange}
         ref={inputRef}
         placeholder="Search here..."
-        className="w-[220px] outline-none font-sans text-[14px]"
+        className="
+          w-[100px] sm:w-[160px] md:w-[220px] outline-none font-sans text-[14px]
+        "
       />
       <button
         onClick={onClose}

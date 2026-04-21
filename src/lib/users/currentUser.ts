@@ -23,6 +23,7 @@ export const fetchCurrentUserByHashedToken = cache(async (hashedToken: string) =
       acceptedTos: true,
       hideNavigationSidebar: true,
       hideHomeRHS: true,
+      usernameUnset: true,
       currentFrontpageFilter: true,
       frontpageFilterSettings: true,
       lastNotificationsCheck: true,
@@ -39,6 +40,9 @@ export const fetchCurrentUserByHashedToken = cache(async (hashedToken: string) =
       subscribedToDigest: true,
       hideSubscribePoke: true,
       mongoLocation: true,
+      karmaChangeNotifierSettings: true,
+      karmaChangeLastOpened: true,
+      karmaChangeBatchStart: true,
     },
     where: {
       RAW: (users, { sql }) => sql`

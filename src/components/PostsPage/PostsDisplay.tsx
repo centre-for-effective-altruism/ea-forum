@@ -12,11 +12,13 @@ import PostTableOfContents from "./PostTableOfContents";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
 import UserProfileImage from "../UserProfileImage";
+import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
+import PostPingbacks from "./PostPingbacks";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
 import PostTags from "../Tags/PostTags";
@@ -74,7 +76,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           </div>
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
-              <PostVoteButtons />
+              <PostVoteButtons hideReacts />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">
@@ -121,6 +123,13 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               </div>
             </div>
           )}
+          <Suspense>
+            <PostPingbacks
+              postId={postId}
+              currentUser={currentUser}
+              className="mb-12"
+            />
+          </Suspense>
           {showRecommendations && (
             <Suspense
               fallback={<div className="rounded bg-gray-100 w-full h-[182px]" />}
@@ -130,6 +139,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           )}
         </PostColumn>
       </ReadProgress>
+      <DigestPopup />
     </PostDisplayProvider>
   );
 }

@@ -3,11 +3,11 @@ import type { PostDisplay } from "../posts/postQueries";
 import type { PostListItem } from "../posts/postLists";
 import { useCurrentUser } from "./useCurrentUser";
 import { userIsPodcaster } from "../users/userHelpers";
-import { canUserEditPostMetadata, userIsSharedOnPost } from "../posts/postsHelpers";
+import { userCanEditPostMetadata, userIsSharedOnPost } from "../posts/postsHelpers";
 
 export const usePostEditLink = (post: PostDisplay | PostListItem): string | null => {
   const { currentUser } = useCurrentUser();
-  const isEditor = canUserEditPostMetadata(currentUser, post);
+  const isEditor = userCanEditPostMetadata(currentUser, post);
   const isPodcaster = userIsPodcaster(currentUser);
   const isShared = userIsSharedOnPost(currentUser, post);
   if (!isEditor && !isPodcaster && !isShared) {
@@ -22,7 +22,7 @@ export const usePostAnalyticsLink = (
   post: PostDisplay | PostListItem,
 ): string | null => {
   const { currentUser } = useCurrentUser();
-  return canUserEditPostMetadata(currentUser, post)
+  return userCanEditPostMetadata(currentUser, post)
     ? `/postAnalytics?${qs.stringify({ postId: post._id })}`
     : null;
 };
@@ -31,7 +31,7 @@ export const useDuplicateEventLink = (
   post: PostDisplay | PostListItem,
 ): string | null => {
   const { currentUser } = useCurrentUser();
-  return canUserEditPostMetadata(currentUser, post) && post.isEvent
+  return userCanEditPostMetadata(currentUser, post) && post.isEvent
     ? `/newPost?${qs.stringify({ eventForm: post.isEvent, templateId: post._id })}`
     : null;
 };

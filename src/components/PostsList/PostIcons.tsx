@@ -44,7 +44,10 @@ export default function PostIcons({
   const amaRelevance =
     post.tags?.find((tag) => tag._id === amaTagid)?.baseScore ?? 0;
   return (
-    <div data-component="PostIcons" className="flex items-center">
+    <div
+      data-component="PostIcons"
+      className="inline-flex items-center [&>:last-child]:mr-[2px]"
+    >
       {post.sticky && (
         <PostIcon
           href={postGetPageUrl({ post })}
@@ -73,7 +76,12 @@ export default function PostIcons({
         </PostIcon>
       )}
       {post.url && (
-        <PostIcon href={post.url} openInNewTab Icon={LinkIcon}>
+        <PostIcon
+          href={post.url}
+          openInNewTab
+          Icon={LinkIcon}
+          className="translate-y-[2px]"
+        >
           Link post
           <br />
           <em>(click to see linked content)</em>

@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { commentsToCommentTree, CommentTreeNode } from "@/lib/comments/CommentTree";
 import {
   CommentSorting,
@@ -16,8 +16,9 @@ import {
 } from "@/lib/comments/commentSortings";
 
 type CommentsListContext = {
-  comments: CommentTreeNode<CommentsList>[];
-  addTopLevelComment: (comment: CommentsList) => void;
+  comments: CommentTreeNode<CommentListItem>[];
+  addTopLevelComment: (comment: CommentListItem) => void;
+  updateComment: (comment: CommentListItem) => void;
   containsCommentWithId: (commentId: string) => boolean;
   commentSorting: CommentSorting;
   setCommentSorting: (sorting: CommentSorting) => void;
@@ -29,17 +30,23 @@ export const CommentsListProvider = ({
   comments,
   children,
 }: Readonly<{
-  comments: CommentsList[];
+  comments: CommentListItem[];
   children: ReactNode;
 }>) => {
   const [commentSorting, setCommentSorting] = useState(defaultCommentSorting);
-  const [localComments, setLocalComments] = useState<CommentsList[]>([]);
+  const [localComments, setLocalComments] = useState<CommentListItem[]>([]);
   const tree = useMemo(
     () => commentsToCommentTree(commentSorting, comments, localComments),
     [commentSorting, comments, localComments],
   );
-  const addTopLevelComment = useCallback((comment: CommentsList) => {
+  const addTopLevelComment = useCallback((comment: CommentListItem) => {
     setLocalComments((comments) => [...comments, comment]);
+  }, []);
+  const updateComment = useCallback((comment: CommentListItem) => {
+    setLocalComments((comments) => [
+      ...comments.filter(({ _id }) => _id !== comment._id),
+      comment,
+    ]);
   }, []);
   const containsCommentWithId = useCallback(
     (commentId: string) => {
@@ -53,6 +60,7 @@ export const CommentsListProvider = ({
       value={{
         comments: tree,
         addTopLevelComment,
+        updateComment,
         containsCommentWithId,
         commentSorting,
         setCommentSorting,

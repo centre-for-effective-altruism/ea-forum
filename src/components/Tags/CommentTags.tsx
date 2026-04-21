@@ -1,4 +1,4 @@
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import clsx from "clsx";
 import TruncationContainer from "../TruncationContainer";
 import TagChip from "../Tags/TagChip";
@@ -7,7 +7,7 @@ export default function CommentTags({
   comment,
   className,
 }: Readonly<{
-  comment: CommentsList;
+  comment: CommentListItem;
   className?: string;
 }>) {
   if (!comment.tags?.length) {

@@ -5,23 +5,22 @@ import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useMobileNav } from "@/lib/hooks/useMobileNav";
 import clsx from "clsx";
+import Image from "next/image";
 import Bars3Icon from "@heroicons/react/24/solid/Bars3Icon";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
-import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
-import Image from "next/image";
+import NotificationsHeaderButton from "../Notifications/NotificationsHeaderButton";
+import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
 import LoginPopover from "@/components/Auth/LoginPopover";
+import UserProfileImage from "../UserProfileImage";
+import HeaderButton from "./HeaderButton";
+import HeaderSearch from "./HeaderSearch";
 import Column from "@/components/Column";
+import Button from "@/components/Button";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
-import Button from "@/components/Button";
 import Headroom from "./Headroom";
-import HeaderButton from "./HeaderButton";
-import UserProfileImage from "../UserProfileImage";
-import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
-import NotificationsDropdown from "../Notifications/NotificationsDropdown";
-import HeaderSearch from "./HeaderSearch";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
@@ -59,7 +58,7 @@ export default function Header({
             HEADER_HEIGHT_CLASS,
           )}
         >
-          <Column As="nav" className="h-full px-1 sm:px-5 flex items-center">
+          <Column As="nav" className="h-full px-2 sm:px-5 flex items-center">
             <button
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
@@ -98,9 +97,7 @@ export default function Header({
               )}
               {currentUser ? (
                 <>
-                  <NotificationsDropdown>
-                    <HeaderButton Icon={BellIcon} description="Notifications" />
-                  </NotificationsDropdown>
+                  <NotificationsHeaderButton />
                   <Link href="/inbox" className="hover:opacity-100!">
                     <HeaderButton Icon={EnvelopeIcon} description="Messages" />
                   </Link>
@@ -121,7 +118,11 @@ export default function Header({
                   <Button variant="greyFilled" onClick={onLogin}>
                     Login
                   </Button>
-                  <Button variant="primaryFilled" onClick={onSignup}>
+                  <Button
+                    variant="primaryFilled"
+                    onClick={onSignup}
+                    className="max-sm:hidden"
+                  >
                     Sign up
                   </Button>
                   <LoginPopover />

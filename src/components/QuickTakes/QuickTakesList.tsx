@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useLoadMore } from "@/lib/hooks/useLoadMore";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
 import { rpc } from "@/lib/rpc";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import QuickTakesListSkeleton from "./QuickTakesListSkeleton";
 import QuickTakeItem from "./QuickTakeItem";
 import Type from "../Type";
@@ -13,7 +13,7 @@ export default function QuickTakesList({
   quickTakes,
   className,
 }: Readonly<{
-  quickTakes: CommentsList[];
+  quickTakes: CommentListItem[];
   className?: string;
 }>) {
   const { showCommunity, localQuickTakes } = useQuickTakesListContext();

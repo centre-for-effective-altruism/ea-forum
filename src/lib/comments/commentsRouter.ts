@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
+import { fetchCommentToEdit } from "./commentQueries";
 import {
   fetchCommentsListItem,
   fetchFrontpageQuickTakes,
@@ -9,11 +10,21 @@ import {
 } from "./commentLists";
 import {
   createPostComment,
+  updateComment,
   updateCommentPinnedOnProfile,
   updateQuickTakeFrontpage,
 } from "./commentMutations";
 
 export const commentsRouter = {
+  listById: os
+    .input(z.object({ _id: z.string() }))
+    .handler(async ({ input: { _id } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchCommentsListItem({
+        currentUser,
+        commentId: _id,
+      });
+    }),
   create: os
     .input(
       z.object({
@@ -52,6 +63,37 @@ export const commentsRouter = {
         });
       },
     ),
+  edit: os
+    .input(
+      z.object({
+        commentId: z.string(),
+        editorData: editorDataSchema,
+      }),
+    )
+    .handler(async ({ input: { commentId, editorData } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("You must be logged in to comment");
+      }
+      await updateComment({
+        user,
+        commentId,
+        editorData,
+      });
+      return await fetchCommentsListItem({
+        currentUser: user,
+        commentId,
+      });
+    }),
+  fetchToEdit: os
+    .input(z.object({ commentId: z.string() }))
+    .handler(async ({ input: { commentId } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await fetchCommentToEdit(user, commentId);
+    }),
   updatePinnedOnProfile: os
     .input(
       z.object({
