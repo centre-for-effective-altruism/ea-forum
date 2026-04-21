@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useState } from "react";
 import type { CommentToEdit } from "@/lib/comments/commentQueries";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { useCommentsList } from "./useCommentsList";
 import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import { rpc } from "@/lib/rpc";
@@ -16,7 +16,7 @@ const EditCommentInner: FC<{
 }> = ({ comment, onFinishEdit }) => {
   const { updateComment } = useCommentsList();
   const onSuccess = useCallback(
-    (updatedComment: CommentsList) => {
+    (updatedComment: CommentListItem) => {
       updateComment(updatedComment);
       onFinishEdit?.();
     },

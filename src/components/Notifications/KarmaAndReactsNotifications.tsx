@@ -9,6 +9,7 @@ import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import Type from "../Type";
 import Link from "../Link";
 import clsx from "clsx";
+import KarmaChangeList from "./KarmaChangeList";
 
 const settingsNudgeMap: Record<KarmaChangeUpdateFrequency, string> = {
   realtime: "appear in real time",
@@ -29,9 +30,11 @@ export default function KarmaAndReactsNotifications({
   const hasNewKarmaChanges = useMemo(
     () =>
       !!karmaChanges &&
-      (karmaChanges.posts?.length ||
+      !!(
+        karmaChanges.posts?.length ||
         karmaChanges.comments?.length ||
-        karmaChanges.tagRevisions?.length),
+        karmaChanges.tagRevisions?.length
+      ),
     [karmaChanges],
   );
 
@@ -39,9 +42,11 @@ export default function KarmaAndReactsNotifications({
   const hasKarmaChangesToday = useMemo(
     () =>
       !!todaysKarmaChanges &&
-      (todaysKarmaChanges.posts?.length ||
+      !!(
+        todaysKarmaChanges.posts?.length ||
         todaysKarmaChanges.comments?.length ||
-        todaysKarmaChanges.tagRevisions?.length),
+        todaysKarmaChanges.tagRevisions?.length
+      ),
     [todaysKarmaChanges],
   );
 
@@ -49,9 +54,11 @@ export default function KarmaAndReactsNotifications({
   const hasKarmaChangesThisWeek = useMemo(
     () =>
       !!thisWeeksKarmaChanges &&
-      (thisWeeksKarmaChanges.posts?.length ||
+      !!(
+        thisWeeksKarmaChanges.posts?.length ||
         thisWeeksKarmaChanges.comments?.length ||
-        thisWeeksKarmaChanges.tagRevisions?.length),
+        thisWeeksKarmaChanges.tagRevisions?.length
+      ),
     [thisWeeksKarmaChanges],
   );
 
@@ -66,13 +73,33 @@ export default function KarmaAndReactsNotifications({
   return (
     <section
       data-component="KarmaAndReactsNotifications"
-      className={clsx("flex flex-col gap-3", className)}
+      className={clsx("flex flex-col gap-4", className)}
     >
       <Type style="sectionTitleSmall">Karma & reacts</Type>
       {!hasNewKarmaChanges && !hasKarmaChangesToday && !hasKarmaChangesThisWeek && (
         <Type style="bodySmall" className="italic text-gray-600">
           No new karma or reacts
         </Type>
+      )}
+      {hasNewKarmaChanges && <KarmaChangeList karmaChanges={karmaChanges} />}
+      {hasKarmaChangesToday && (
+        <div>
+          <Type style="bodySmall" className="font-[600]! text-gray-600 mb-[6px]">
+            Today
+          </Type>
+          <KarmaChangeList karmaChanges={todaysKarmaChanges} truncateAt={3} />
+        </div>
+      )}
+      {hasKarmaChangesThisWeek && (
+        <div>
+          <Type style="bodySmall" className="font-[600]! text-gray-600 mb-[6px]">
+            This week
+          </Type>
+          <KarmaChangeList
+            karmaChanges={thisWeeksKarmaChanges ?? undefined}
+            truncateAt={2}
+          />
+        </div>
       )}
       <Type style="bodySmall" className="text-gray-600">
         Notifications {settingsNudgeMap[updateFrequency]}.{" "}

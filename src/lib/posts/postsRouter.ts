@@ -5,7 +5,7 @@ import { db } from "../db";
 import { posts } from "../schema";
 import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
-import { fetchPostsListFromView } from "./postLists";
+import { fetchPostsListById, fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
 import {
   archiveDraft,
@@ -27,6 +27,12 @@ export const postsRouter = {
     }
     return fetchPostsListFromView(currentUser?._id ?? null, view);
   }),
+  listById: os
+    .input(z.object({ _id: z.string() }))
+    .handler(async ({ input: { _id } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchPostsListById(currentUser?._id ?? null, _id);
+    }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))
     .handler(async ({ input: { postId } }) => {

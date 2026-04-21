@@ -17,7 +17,7 @@ export type CommentRelationalProjection = RelationalProjection<
 export type CommentFromProjection<TConfig extends CommentRelationalProjection> =
   Awaited<ReturnType<typeof db.query.comments.findMany<TConfig>>>[number];
 
-export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
+export type CommentListItem = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
 type CommentsFilter = NonNullable<
   Parameters<typeof db.query.comments.findMany>[0]
@@ -286,7 +286,7 @@ export const fetchPopularComments = async ({
   limit = 3,
   recencyFactor = 250000,
   recencyBias = 60 * 60 * 2,
-}: PopularCommentsConfig): Promise<CommentsList[]> => {
+}: PopularCommentsConfig): Promise<CommentListItem[]> => {
   const communityTopicId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id

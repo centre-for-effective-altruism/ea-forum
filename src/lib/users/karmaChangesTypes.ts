@@ -1,8 +1,12 @@
-type ReactionChange = {
-  _id: string;
-  displayName: string;
-  slug: string;
-};
+import type { TagCommentType } from "../tags/tagHelpers";
+
+export type ReactionChange =
+  | number
+  | {
+      _id: string;
+      displayName: string;
+      slug: string;
+    }[];
 
 export type PostKarmaChange = {
   _id: string;
@@ -11,7 +15,7 @@ export type PostKarmaChange = {
   postId: string;
   title: string | null;
   slug: string;
-  addedReacts: Record<string, ReactionChange[]>;
+  addedReacts: Record<string, ReactionChange>;
 };
 
 export type CommentKarmaChange = {
@@ -25,9 +29,9 @@ export type CommentKarmaChange = {
   postSlug: string | null;
   tagSlug: string | null;
   tagName: string | null;
-  tagCommentType: string | null;
+  tagCommentType: TagCommentType | null;
   tagId: string | null;
-  addedReacts: Record<string, ReactionChange[]>;
+  addedReacts: Record<string, ReactionChange>;
 };
 
 export type RevisionsKarmaChange = {
@@ -37,7 +41,7 @@ export type RevisionsKarmaChange = {
   tagId: string | null;
   tagSlug: string | null;
   tagName: string | null;
-  addedReacts: Record<string, ReactionChange[]>;
+  addedReacts: Record<string, ReactionChange>;
 };
 
 export type AnyKarmaChange =

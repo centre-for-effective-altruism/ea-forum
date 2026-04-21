@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
@@ -35,7 +35,7 @@ export default function CommentItem({
   borderless,
   className,
 }: Readonly<{
-  node: CommentTreeNode<CommentsList>;
+  node: CommentTreeNode<CommentListItem>;
   onToggleExpanded?: (expanded: boolean) => void;
   /** If true, the comment initially renders un-collapsed */
   startCollapsed?: boolean;
@@ -107,8 +107,8 @@ export default function CommentItem({
         data-depth={depth}
         className={borderless ? undefined : "pr-3 mb-2"}
       >
-        <div className="mb-2 flex items-center gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="mb-2 flex items-start gap-2">
+          <div className="flex items-center gap-2 flex-wrap grow">
             {!borderless && (
               <ChevronDownIcon
                 className={clsx(

@@ -1,4 +1,4 @@
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { getVoteDownStrength, getVoteUpStrength } from "@/lib/votes/voteHelpers";
 import { useVote } from "./useVote";
 import ReactButtons from "./ReactButtons";
@@ -8,7 +8,7 @@ import Type from "../Type";
 
 export default function CommentVoteButtons({
   comment,
-}: Readonly<{ comment: CommentsList }>) {
+}: Readonly<{ comment: CommentListItem }>) {
   const {
     onVote,
     onReact,

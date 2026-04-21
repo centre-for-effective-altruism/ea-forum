@@ -2,14 +2,14 @@
 
 import { useCallback } from "react";
 import { rpc } from "@/lib/rpc";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import CommentsFeed from "../Comments/CommentsFeed";
 
 export default function ClientPopularCommentsList({
   initialComments,
   className,
 }: Readonly<{
-  initialComments: CommentsList[];
+  initialComments: CommentListItem[];
   className?: string;
 }>) {
   const loadMore = useCallback(

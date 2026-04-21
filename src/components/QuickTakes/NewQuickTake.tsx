@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import Editor from "../Editor/Editor";
@@ -19,7 +19,7 @@ export default function NewQuickTake({
   const onFocus = useCallback(() => setOpen(true), []);
   const onCancel = useCallback(() => setOpen(false), []);
   const onSuccess = useCallback(
-    (quickTake: CommentsList) => {
+    (quickTake: CommentListItem) => {
       addLocalQuickTake(quickTake);
       toast.success("Quick take published");
     },
