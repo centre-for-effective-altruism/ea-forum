@@ -15,7 +15,11 @@ import {
   updateExpandedSection,
   updateWork,
 } from "./userQueries";
-import { approveNewUser, completeUserProfile } from "./userMutations";
+import {
+  approveNewUser,
+  completeUserProfile,
+  userCheckNotifications,
+} from "./userMutations";
 import { themeSchema } from "../themes";
 import {
   mailchimpListSchema,
@@ -231,5 +235,25 @@ export const usersRouter = {
         throw new Error("Please login");
       }
       return await calculateKarmaChanges(currentUser, startDate, endDate);
+    }),
+  checkNotifications: os
+    .input(
+      z.object({
+        hasKarmaChanges: z.boolean(),
+        openedAt: z.date(),
+        endDate: z.date(),
+      }),
+    )
+    .handler(async ({ input: { hasKarmaChanges, openedAt, endDate } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await userCheckNotifications({
+        currentUser,
+        hasKarmaChanges,
+        openedAt,
+        endDate,
+      });
     }),
 };

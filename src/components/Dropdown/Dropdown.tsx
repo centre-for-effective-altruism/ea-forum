@@ -1,6 +1,12 @@
 "use client";
 
-import { ReactNode, RefObject, useImperativeHandle, useState } from "react";
+import {
+  ReactNode,
+  RefObject,
+  useCallback,
+  useImperativeHandle,
+  useState,
+} from "react";
 import {
   autoUpdate,
   flip,
@@ -21,16 +27,26 @@ export default function Dropdown({
   placement,
   menu,
   dismissRef,
+  onToggleOpen,
   className,
   children,
 }: Readonly<{
   placement?: Placement;
   menu: ReactNode;
   dismissRef?: RefObject<(() => void) | null>;
+  onToggleOpen?: (open: boolean) => void;
   className?: string;
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const onOpenChange = useCallback(
+    (open: boolean) => {
+      onToggleOpen?.(open);
+      setIsOpen(open);
+    },
+    [onToggleOpen],
+  );
 
   const nodeId = useFloatingNodeId();
   const {
@@ -40,7 +56,7 @@ export default function Dropdown({
   } = useFloating({
     nodeId,
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange,
     middleware: [flip(), shift()],
     whileElementsMounted: autoUpdate,
     placement,

@@ -85,12 +85,26 @@ export default function NotificationsDropdown({
 
   useEffect(() => () => loadMore.cancel(), [loadMore]);
 
+  const onToggleOpen = useCallback(
+    (open: boolean) => {
+      if (open) {
+        void rpc.users.checkNotifications({
+          hasKarmaChanges: !!karmaChanges,
+          openedAt: new Date(),
+          endDate: karmaChanges?.endDate ?? new Date(),
+        });
+      }
+    },
+    [karmaChanges],
+  );
+
   const isAnyLoading = pages.some((item) => !item);
 
   return (
     <AnalyticsContext pageSectionContext="notificationsPopover">
       <Dropdown
         className={className}
+        onToggleOpen={onToggleOpen}
         placement="bottom"
         menu={
           <div
