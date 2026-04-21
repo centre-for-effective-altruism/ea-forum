@@ -14,8 +14,10 @@ import Type from "../Type";
 const PAGE_SIZE = 20;
 
 export default function NotificationsDropdown({
+  className,
   children,
 }: Readonly<{
+  className?: string;
   children: ReactNode;
 }>) {
   const [pages, setPages] = useState<(TNotificationDisplay[] | null)[]>([]);
@@ -82,14 +84,15 @@ export default function NotificationsDropdown({
   return (
     <AnalyticsContext pageSectionContext="notificationsPopover">
       <Dropdown
+        className={className}
         placement="bottom"
         menu={
           <div
             data-component="NotificationsDropdown"
-            className={`
+            className="
               bg-gray-0 rounded shadow px-1 py-2 border border-gray-100
               w-[400px] max-w-full max-h-[90vh] overflow-y-auto
-            `}
+            "
           >
             <div className="px-2">
               <Type className="text-[24px] font-[600] mb-6">Notifications</Type>

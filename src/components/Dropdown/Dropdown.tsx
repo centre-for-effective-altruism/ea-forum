@@ -15,16 +15,19 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
+import clsx from "clsx";
 
 export default function Dropdown({
   placement,
   menu,
   dismissRef,
+  className,
   children,
 }: Readonly<{
   placement?: Placement;
   menu: ReactNode;
   dismissRef?: RefObject<(() => void) | null>;
+  className?: string;
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,7 +59,7 @@ export default function Dropdown({
   return (
     <FloatingTree>
       <div
-        className="inline-block"
+        className={clsx("inline-block", className)}
         ref={setReference}
         {...getReferenceProps()}
         data-component="Dropdown"

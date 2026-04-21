@@ -1,6 +1,7 @@
 import urlJoin from "url-join";
 import type { CurrentUser } from "./currentUser";
 import type { Localgroup, Post, User } from "../schema";
+import type { UserKarmaChanges } from "./karmaChangesTypes";
 import { allUserGroupsByName } from "./userGroups";
 import { z } from "zod/v4";
 import uniq from "lodash/uniq";
@@ -356,3 +357,21 @@ export const userGetLocation = (
 
 export const userIsPodcaster = (user: UserPermissions | null): boolean =>
   userIsInGroup(user, "podcasters");
+
+export const userHasKarmaChange = (
+  currentUser: CurrentUser | null,
+  karmaChanges: UserKarmaChanges | null,
+) => {
+  if (!currentUser || !karmaChanges) {
+    return false;
+  }
+  const { updateFrequency, endDate, posts, comments, tagRevisions } = karmaChanges;
+  if (
+    !(posts?.length || comments?.length || tagRevisions?.length) ||
+    updateFrequency === "disabled"
+  ) {
+    return false;
+  }
+  const lastOpened = currentUser.karmaChangeLastOpened ?? new Date(0);
+  return lastOpened < (endDate ?? new Date(0)) || updateFrequency === "realtime";
+};

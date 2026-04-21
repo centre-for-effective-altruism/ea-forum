@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { NotificationDisplay } from "./notificationDisplayTypes";
+import { CurrentUser } from "../users/currentUser";
 
 // This should return an object of type `NotificationDisplayUser`
 const buildNotificationUser = (prefix: string) =>
@@ -211,4 +212,25 @@ export const fetchNotificationDisplays = async ({
     OFFSET ${offset}
   `);
   return result.rows;
+};
+
+export const fetchUnreadNotificationCount = async (user: CurrentUser) => {
+  const result = await db.query.notifications.findFirst({
+    columns: {},
+    extras: {
+      count: sql<number>`COUNT(*)`,
+    },
+    where: {
+      userId: user._id,
+      type: { ne: "newMessage" },
+      viewed: { ne: true },
+      deleted: { ne: true },
+      emailed: { ne: true },
+      waitingForBatch: { ne: true },
+      ...(user.lastNotificationsCheck && {
+        createdAt: { gt: user.lastNotificationsCheck },
+      }),
+    },
+  });
+  return result?.count ?? 0;
 };

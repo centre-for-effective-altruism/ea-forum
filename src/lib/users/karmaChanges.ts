@@ -10,6 +10,7 @@ import {
   KarmaChangeSettings,
   PostKarmaChange,
   RevisionsKarmaChange,
+  UserKarmaChanges,
 } from "./karmaChangesTypes";
 
 const dayOfWeekMap: Record<KarmaChangeSettings["dayOfWeekGMT"], number> = {
@@ -307,7 +308,7 @@ export const calculateKarmaChanges = async (
   user: CurrentUser,
   startDate?: Date,
   endDate?: Date,
-) => {
+): Promise<UserKarmaChanges | null> => {
   const settings = user.karmaChangeNotifierSettings;
   const now = new Date();
 

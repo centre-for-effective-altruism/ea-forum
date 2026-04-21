@@ -71,3 +71,13 @@ export const defaultKarmaChangeSettings: KarmaChangeSettings = {
   dayOfWeekGMT: "Saturday",
   showNegativeKarma: false,
 };
+
+export type UserKarmaChanges = KarmaChanges & {
+  totalChange: number;
+  startDate: Date;
+  endDate: Date;
+  nextBatchDate: Date | null;
+  updateFrequency: KarmaChangeSettings["updateFrequency"];
+  todaysKarmaChanges: KarmaChanges | null;
+  thisWeeksKarmaChanges: KarmaChanges | null;
+};

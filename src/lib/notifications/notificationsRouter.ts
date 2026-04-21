@@ -1,7 +1,10 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { fetchNotificationDisplays } from "./fetchNotificationDisplays";
+import {
+  fetchNotificationDisplays,
+  fetchUnreadNotificationCount,
+} from "./fetchNotificationDisplays";
 
 export const notificationsRouter = {
   list: os
@@ -22,4 +25,11 @@ export const notificationsRouter = {
         limit,
       });
     }),
+  countUnread: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Please login");
+    }
+    return await fetchUnreadNotificationCount(currentUser);
+  }),
 };
