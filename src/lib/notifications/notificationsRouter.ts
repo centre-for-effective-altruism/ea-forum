@@ -4,6 +4,7 @@ import { getCurrentUser } from "../users/currentUser";
 import {
   fetchNotificationDisplays,
   fetchUnreadNotificationCount,
+  markAllAsRead,
 } from "./fetchNotificationDisplays";
 
 export const notificationsRouter = {
@@ -31,5 +32,12 @@ export const notificationsRouter = {
       throw new Error("Please login");
     }
     return await fetchUnreadNotificationCount(currentUser);
+  }),
+  markAllAsRead: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Please login");
+    }
+    return await markAllAsRead(currentUser);
   }),
 };

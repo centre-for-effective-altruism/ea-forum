@@ -57,7 +57,7 @@ export default function NotificationDisplay({
               <Type style="bodySmall">{formatNotificationType(type)}</Type>
               <Type
                 style="bodySmall"
-                className={clsx("text-gray-1000", !viewed ? "font-[600]" : "")}
+                className={clsx("text-gray-1000", !viewed && "font-[600]")}
               >
                 {message}
               </Type>
@@ -67,7 +67,7 @@ export default function NotificationDisplay({
                 <div
                   className="
                     w-[10px] min-w-[10px] h-[10px] min-h-[10px] mt-[5px]
-                    rounded-full bg-primary)
+                    rounded-full bg-primary
                   "
                 />
               )}

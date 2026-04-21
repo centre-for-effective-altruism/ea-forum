@@ -1,7 +1,8 @@
-import { sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { NotificationDisplay } from "./notificationDisplayTypes";
 import { CurrentUser } from "../users/currentUser";
+import { notifications } from "../schema";
 
 // This should return an object of type `NotificationDisplayUser`
 const buildNotificationUser = (prefix: string) =>
@@ -233,4 +234,13 @@ export const fetchUnreadNotificationCount = async (user: CurrentUser) => {
     },
   });
   return result?.count ?? 0;
+};
+
+export const markAllAsRead = async (user: CurrentUser) => {
+  await db
+    .update(notifications)
+    .set({ viewed: true })
+    .where(
+      and(eq(notifications.userId, user._id), ne(notifications.type, "newMessage")),
+    );
 };

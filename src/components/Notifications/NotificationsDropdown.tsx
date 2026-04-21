@@ -8,12 +8,14 @@ import type { NotificationDisplay as TNotificationDisplay } from "@/lib/notifica
 import range from "lodash/range";
 import debounce from "lodash/debounce";
 import toast from "react-hot-toast";
+import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
+import KarmaAndReactsNotifications from "./KarmaAndReactsNotifications";
 import NotificationDisplaySkeleton from "./NotificationDisplaySkeleton";
 import InfiniteLoadTrigger from "../InfiniteLoadTrigger";
 import NotificationDisplay from "./NotificationDisplay";
+import DropdownMenu from "../Dropdown/DropdownMenu";
 import Dropdown from "../Dropdown/Dropdown";
 import Type from "../Type";
-import KarmaAndReactsNotifications from "./KarmaAndReactsNotifications";
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +28,7 @@ export default function NotificationsDropdown({
   className?: string;
   children: ReactNode;
 }>) {
+  const [markAsReadLoading, setMarkAsReadLoading] = useState(false);
   const [pages, setPages] = useState<(TNotificationDisplay[] | null)[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
@@ -98,6 +101,13 @@ export default function NotificationsDropdown({
     [karmaChanges],
   );
 
+  const markAllAsRead = useCallback(async () => {
+    setMarkAsReadLoading(true);
+    await rpc.notifications.markAllAsRead();
+    setMarkAsReadLoading(false);
+    setPages([]);
+  }, []);
+
   const isAnyLoading = pages.some((item) => !item);
 
   return (
@@ -115,7 +125,32 @@ export default function NotificationsDropdown({
             "
           >
             <div className="px-2">
-              <Type className="text-[24px] font-[600] mb-6">Notifications</Type>
+              <div className="flex items-center">
+                <Type className="text-[24px] font-[600] mb-6 grow">
+                  Notifications
+                </Type>
+                <DropdownMenu
+                  items={[
+                    {
+                      title: "Mark all as read",
+                      onClick: markAllAsRead,
+                      loading: markAsReadLoading,
+                    },
+                    {
+                      title: "Keyword alerts",
+                      href: "/keywords",
+                    },
+                    {
+                      title: "Notification settings",
+                      href: "/account?highlightField=auto_subscribe_to_my_posts",
+                    },
+                  ]}
+                >
+                  <button className="cursor-pointer">
+                    <EllipsisVerticalIcon className="w-6" />
+                  </button>
+                </DropdownMenu>
+              </div>
               <KarmaAndReactsNotifications
                 karmaChanges={karmaChanges}
                 className="mb-6"
