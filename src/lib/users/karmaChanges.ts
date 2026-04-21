@@ -11,9 +11,11 @@ import {
   PostKarmaChange,
   RevisionsKarmaChange,
   UserKarmaChanges,
+  KarmaChangeDayOfWeek,
+  KarmaChangeUpdateFrequency,
 } from "./karmaChangesTypes";
 
-const dayOfWeekMap: Record<KarmaChangeSettings["dayOfWeekGMT"], number> = {
+const dayOfWeekMap: Record<KarmaChangeDayOfWeek, number> = {
   Sunday: 0,
   Monday: 1,
   Tuesday: 2,
@@ -241,7 +243,7 @@ const calculateOverallKarmaChanges = async ({
 
 // "Today" is only relevant for realtime notifications.
 const hasTodaysKarmaChanges = (
-  updateFrequency: KarmaChangeSettings["updateFrequency"],
+  updateFrequency: KarmaChangeUpdateFrequency,
   startDate: Date,
   yesterday: Date,
 ) => updateFrequency === "realtime" && startDate > yesterday;
@@ -261,7 +263,7 @@ const calculateTodaysKarmaChanges = async ({
   userId: string;
   startDate: Date;
   showNegative?: boolean;
-  updateFrequency: KarmaChangeSettings["updateFrequency"];
+  updateFrequency: KarmaChangeUpdateFrequency;
 }) => {
   const yesterday = nDaysAgo(1);
   if (hasTodaysKarmaChanges(updateFrequency, startDate, yesterday)) {
@@ -285,7 +287,7 @@ const calculateThisWeeksKarmaChanges = async ({
   userId: string;
   startDate: Date;
   showNegative?: boolean;
-  updateFrequency: KarmaChangeSettings["updateFrequency"];
+  updateFrequency: KarmaChangeUpdateFrequency;
 }) => {
   const lastWeek = nDaysAgo(7);
   // "This week" is only relevant for realtime and daily notifications.

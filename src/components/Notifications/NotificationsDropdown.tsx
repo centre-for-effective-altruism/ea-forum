@@ -1,6 +1,9 @@
+"use client";
+
 import { useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
+import type { UserKarmaChanges } from "@/lib/users/karmaChangesTypes";
 import type { NotificationDisplay as TNotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import range from "lodash/range";
 import debounce from "lodash/debounce";
@@ -10,13 +13,16 @@ import InfiniteLoadTrigger from "../InfiniteLoadTrigger";
 import NotificationDisplay from "./NotificationDisplay";
 import Dropdown from "../Dropdown/Dropdown";
 import Type from "../Type";
+import KarmaAndReactsNotifications from "./KarmaAndReactsNotifications";
 
 const PAGE_SIZE = 20;
 
 export default function NotificationsDropdown({
+  karmaChanges,
   className,
   children,
 }: Readonly<{
+  karmaChanges: UserKarmaChanges | null;
   className?: string;
   children: ReactNode;
 }>) {
@@ -96,9 +102,10 @@ export default function NotificationsDropdown({
           >
             <div className="px-2">
               <Type className="text-[24px] font-[600] mb-6">Notifications</Type>
-              <Type style="sectionTitleSmall" className="mb-4">
-                Karma & reacts
-              </Type>
+              <KarmaAndReactsNotifications
+                karmaChanges={karmaChanges}
+                className="mb-6"
+              />
               <Type style="sectionTitleSmall" className="mb-4">
                 Posts & comments
               </Type>

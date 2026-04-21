@@ -51,17 +51,25 @@ export type KarmaChanges = {
   tagRevisions: RevisionsKarmaChange[];
 };
 
+export type KarmaChangeUpdateFrequency =
+  | "disabled"
+  | "daily"
+  | "weekly"
+  | "realtime";
+
+export type KarmaChangeDayOfWeek =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
+
 export type KarmaChangeSettings = {
-  updateFrequency: "disabled" | "daily" | "weekly" | "realtime";
+  updateFrequency: KarmaChangeUpdateFrequency;
   timeOfDayGMT: number;
-  dayOfWeekGMT:
-    | "Monday"
-    | "Tuesday"
-    | "Wednesday"
-    | "Thursday"
-    | "Friday"
-    | "Saturday"
-    | "Sunday";
+  dayOfWeekGMT: KarmaChangeDayOfWeek;
   showNegativeKarma: boolean;
 };
 
@@ -77,7 +85,7 @@ export type UserKarmaChanges = KarmaChanges & {
   startDate: Date;
   endDate: Date;
   nextBatchDate: Date | null;
-  updateFrequency: KarmaChangeSettings["updateFrequency"];
+  updateFrequency: KarmaChangeUpdateFrequency;
   todaysKarmaChanges: KarmaChanges | null;
   thisWeeksKarmaChanges: KarmaChanges | null;
 };
