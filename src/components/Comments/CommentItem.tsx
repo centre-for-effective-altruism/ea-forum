@@ -5,6 +5,7 @@ import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useOptionalCommentsList } from "./useCommentsList";
 import {
   userGetProfileUrl,
   userIsNew,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/users/userHelpers";
 import toast from "react-hot-toast";
 import clsx from "clsx";
+import ArrowTurnLeftUpIcon from "@heroicons/react/16/solid/ArrowTurnLeftUpIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
 import SproutIcon from "../Icons/SproutIcon";
@@ -27,6 +29,11 @@ import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
 
+/**
+ * Render a comment. While you can use this directly, it's often better to instead
+ * create a `CommentsListProvider` and then place a `CommentsList` inside it, as
+ * this will enable more dynamic features such as loading parent comments.
+ */
 export default function CommentItem({
   node: { comment, depth, children },
   onToggleExpanded,
@@ -53,6 +60,7 @@ export default function CommentItem({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const commentsListContext = useOptionalCommentsList();
   const [isEditing, setIsEditing] = useState(false);
   const [expanded, setExpanded] = useState(!startCollapsed);
   const toggleExpanded = useCallback(() => {
@@ -80,12 +88,28 @@ export default function CommentItem({
   const onEdit = useCallback(() => setIsEditing(true), []);
   const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
-  const { _id, user, html, postedAt, post, promoted, promotedBy, moderatorHat } =
-    comment;
+  const {
+    _id,
+    user,
+    html,
+    postedAt,
+    parentCommentId,
+    post,
+    promoted,
+    promotedBy,
+    moderatorHat,
+  } = comment;
   const isPostAuthor = userIsPostAuthor(user, post);
   const isNew =
     !!post?.readStatus?.[0]?.lastUpdated &&
     new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
+
+  const loadParent = useCallback(() => {
+    if (commentsListContext && parentCommentId) {
+      commentsListContext.loadParentComment(parentCommentId);
+    }
+  }, [commentsListContext, parentCommentId]);
+
   return (
     <div
       data-component="CommentItem"
@@ -109,10 +133,17 @@ export default function CommentItem({
       >
         <div className="mb-2 flex items-start gap-2">
           <div className="flex items-center gap-2 flex-wrap grow">
+            {commentsListContext && parentCommentId && (
+              <ArrowTurnLeftUpIcon
+                role="button"
+                className="w-3 cursor-pointer text-gray-600 hover:opacity-70"
+                onClick={loadParent}
+              />
+            )}
             {!borderless && (
               <ChevronDownIcon
                 className={clsx(
-                  "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
+                  "w-4 cursor-pointer text-gray-600 hover:opacity-70",
                   "transition-transform",
                   !expanded && "-rotate-90",
                 )}

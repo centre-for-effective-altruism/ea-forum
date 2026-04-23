@@ -5,7 +5,8 @@ import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import range from "lodash/range";
 import type { CommentListItem } from "@/lib/comments/commentLists";
-import CommentItem from "./CommentItem";
+import { CommentsListProvider } from "./useCommentsList";
+import CommentsList from "./CommentsList";
 import Type from "../Type";
 
 /**
@@ -59,15 +60,9 @@ export default function CommentsFeed({
 
   return (
     <section data-component="CommentsFeed" className={className}>
-      {displayedComments.map((comment) => (
-        <CommentItem
-          key={comment._id}
-          node={{ comment, depth: 0, children: [], isLocal: false }}
-          showPreviewWhenCollapsed
-          startCollapsed
-          className="bg-comment-odd!"
-        />
-      ))}
+      <CommentsListProvider comments={displayedComments}>
+        <CommentsList compact commentItemClassName="bg-comment-odd!" />
+      </CommentsListProvider>
       {loading &&
         range(loadMoreLimit).map((i) => (
           <div key={i} className="w-full h-[80px] bg-gray-200 rounded mb-1" />

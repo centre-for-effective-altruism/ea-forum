@@ -9,10 +9,14 @@ import CommentItem from "./CommentItem";
 
 export default function CommentsList({
   borderless,
+  compact,
   className,
+  commentItemClassName,
 }: Readonly<{
   borderless?: boolean;
+  compact?: boolean;
   className?: string;
+  commentItemClassName?: string;
 }>) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,7 +36,7 @@ export default function CommentsList({
 
   return (
     <section
-      className={clsx("flex flex-col gap-4", className)}
+      className={clsx("flex flex-col", !compact && "gap-4", className)}
       data-component="CommentsList"
     >
       {comments.length === 0 && (
@@ -42,7 +46,12 @@ export default function CommentsList({
         </div>
       )}
       {comments.map((node) => (
-        <CommentItem node={node} borderless={borderless} key={node.comment._id} />
+        <CommentItem
+          node={node}
+          borderless={borderless}
+          key={node.comment._id}
+          className={commentItemClassName}
+        />
       ))}
     </section>
   );

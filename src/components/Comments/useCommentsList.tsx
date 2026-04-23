@@ -18,6 +18,7 @@ import {
 type CommentsListContext = {
   comments: CommentTreeNode<CommentListItem>[];
   addTopLevelComment: (comment: CommentListItem) => void;
+  loadParentComment: (parentCommentId: string) => void;
   updateComment: (comment: CommentListItem) => void;
   containsCommentWithId: (commentId: string) => boolean;
   commentSorting: CommentSorting;
@@ -42,6 +43,9 @@ export const CommentsListProvider = ({
   const addTopLevelComment = useCallback((comment: CommentListItem) => {
     setLocalComments((comments) => [...comments, comment]);
   }, []);
+  const loadParentComment = useCallback((parentCommentId: string) => {
+    console.warn("p", parentCommentId);
+  }, []);
   const updateComment = useCallback((comment: CommentListItem) => {
     setLocalComments((comments) => [
       ...comments.filter(({ _id }) => _id !== comment._id),
@@ -60,6 +64,7 @@ export const CommentsListProvider = ({
       value={{
         comments: tree,
         addTopLevelComment,
+        loadParentComment,
         updateComment,
         containsCommentWithId,
         commentSorting,
@@ -78,3 +83,6 @@ export const useCommentsList = (): CommentsListContext => {
   }
   return value;
 };
+
+export const useOptionalCommentsList = (): CommentsListContext | null =>
+  useContext(commentsListContext);
