@@ -73,8 +73,8 @@ export default function Popover({
           >
             <div
               className={clsx(
-                "max-h-[90vh] max-w-full overflow-auto bg-gray-0 rounded",
-                "border-1 border-gray-200",
+                "max-h-[90vh] max-w-full bg-gray-0 rounded",
+                "border-1 border-gray-200 overflow-x-hidden overflow-y-auto",
                 !noPadding && "p-8",
                 className,
               )}
