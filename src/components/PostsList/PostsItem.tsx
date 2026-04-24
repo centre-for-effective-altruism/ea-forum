@@ -102,22 +102,21 @@ export default function PostsItem({
             orientation="vertical"
             className={clsx("min-w-[24px] md:min-w-[33px]", cardView && "mt-[10px]")}
           />
-          <div className={clsx("min-w-0 grow md:truncate", cardView && "mt-1")}>
+          <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
             <Type
               style="postTitle"
-              className="text-gray-900 mb-[2px] max-md:line-clamp-2 md:truncate"
+              className={clsx(
+                "mb-[2px] max-md:line-clamp-2 md:truncate",
+                "visited:text-grey-700 hover:opacity-70",
+                isRead ? "text-grey-700" : "text-grey-900",
+              )}
             >
               <InteractionWrapper className="inline">
                 <PostIcons post={post} />
               </InteractionWrapper>
               <PostsTooltip As="span" post={post}>
-                <Link
-                  href={postLink}
-                  className={clsx(
-                    "hover:opacity-60",
-                    isRead && "visited:text-gray-700",
-                  )}
-                >
+                {/* Adding an empty class here removes the default hover styles */}
+                <Link href={postLink} className="">
                   {title}
                 </Link>
               </PostsTooltip>
