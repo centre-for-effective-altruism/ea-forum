@@ -93,7 +93,7 @@ export default function PostsItem({
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
             "md:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start py-2" : "items-center -translate-y-px",
+            cardView ? "items-start py-2" : "items-center",
           )}
         >
           <Score
