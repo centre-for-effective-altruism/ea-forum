@@ -1,4 +1,5 @@
 import { fetchSidebarOpportunities } from "@/lib/posts/postLists";
+import { getCurrentUser } from "@/lib/users/currentUser";
 import HomeSidebarPost from "./HomeSidebarPost";
 
 export default async function HomeSidebarOpportunitiesList({
@@ -6,7 +7,11 @@ export default async function HomeSidebarOpportunitiesList({
 }: Readonly<{
   count: number;
 }>) {
-  const opportunities = await fetchSidebarOpportunities(count);
+  const currentUser = await getCurrentUser();
+  const opportunities = await fetchSidebarOpportunities(
+    currentUser?._id ?? null,
+    count,
+  );
   return (
     <>
       {opportunities.map((post) => (

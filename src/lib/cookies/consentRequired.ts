@@ -35,8 +35,8 @@ const GDPR_COUNTRY_CODES: string[] = [
 const getCountryCodeFromLocalStorage = (): string | null => {
   const ls = getBrowserLocalStorage();
 
-  const cachedCountryCode = ls?.getItem("countryCode");
-  const cachedTimestamp = ls?.getItem("countryCodeTimestamp");
+  const cachedCountryCode = ls?.getItem?.("countryCode");
+  const cachedTimestamp = ls?.getItem?.("countryCodeTimestamp");
 
   if (!cachedCountryCode || !cachedTimestamp) {
     return null;

@@ -82,18 +82,18 @@ export default function PostsItem({
         data-component="PostsItem"
         className={clsx(
           "w-full max-w-full rounded bg-gray-50 border border-gray-100",
-          "flex flex-col justify-between hover:bg-postitemhover",
+          "flex flex-col hover:bg-postitemhover",
           "hover:border-postitemhover-border",
-          !cardView && "md:h-[60px]",
+          cardView ? "justify-between" : "justify-center md:h-[60px]",
         )}
       >
         <div
           onClick={onClick}
           className={clsx(
-            "cursor-pointer w-full max-w-full px-3 py-2 text-gray-600",
+            "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
             "md:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start" : "items-center",
+            cardView ? "items-start py-2" : "items-center",
           )}
         >
           <Score
@@ -202,7 +202,7 @@ export default function PostsItem({
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-8 items-end pl-[56px] pr-5 pb-4">
+          <div className="flex gap-2 sm:gap-4 md:gap-8 items-end pl-[56px] pr-5 pb-4">
             <Type
               style="postDescription"
               className="text-gray-600 line-clamp-3 overflow-hidden"
