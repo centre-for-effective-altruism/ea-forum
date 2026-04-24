@@ -16,7 +16,6 @@ import LoginPopover from "@/components/Auth/LoginPopover";
 import UserProfileImage from "../UserProfileImage";
 import HeaderButton from "./HeaderButton";
 import HeaderSearch from "./HeaderSearch";
-import Column from "@/components/Column";
 import Button from "@/components/Button";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
@@ -54,11 +53,11 @@ export default function Header({
       >
         <header
           className={clsx(
-            "static bg-gray-50 shadow-xs text-gray-1000",
+            "static bg-gray-50 shadow-xs text-gray-1000 w-full",
             HEADER_HEIGHT_CLASS,
           )}
         >
-          <Column As="nav" className="h-full px-2 sm:px-5 flex items-center">
+          <nav className="w-full mx-auto h-full px-2 sm:px-5 flex items-center">
             <button
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
@@ -129,7 +128,7 @@ export default function Header({
                 </>
               )}
             </div>
-          </Column>
+          </nav>
         </header>
       </Headroom>
     </div>
