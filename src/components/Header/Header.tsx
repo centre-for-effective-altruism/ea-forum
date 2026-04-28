@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
+import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useMobileNav } from "@/lib/hooks/useMobileNav";
 import clsx from "clsx";
@@ -71,7 +72,7 @@ export default function Header({
             <Type style="logo" className="grow flex items-center">
               <Link href="/" className="inline-flex items-center gap-1">
                 <Image
-                  src="/ea-logo-square.png"
+                  src={getSiteLogoUrl(100)}
                   alt="Effective Altruism Forum"
                   width={34}
                   height={34}

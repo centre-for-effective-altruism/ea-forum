@@ -2,15 +2,16 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Charis_SIL, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
+import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
-import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -42,10 +43,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href={getSiteLogoUrl(96)} sizes="96x96" />
+        <link rel="apple-touch-icon" href={getSiteLogoUrl(180)} sizes="180x180" />
+        <link rel="shortcut icon" href={getSiteLogoUrl(50)} />
         <meta name="apple-mobile-web-app-title" content="EA Forum" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
