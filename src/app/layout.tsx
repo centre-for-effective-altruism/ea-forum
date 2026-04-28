@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Charis_SIL, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
-import { getFaviconUrl } from "@/lib/cloudinary/cloudinaryHelpers";
+import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
@@ -43,9 +43,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href={getFaviconUrl(96)} sizes="96x96" />
-        <link rel="apple-touch-icon" href={getFaviconUrl(180)} sizes="180x180" />
-        <link rel="shortcut icon" href={getFaviconUrl(50)} />
+        <link rel="icon" type="image/png" href={getSiteLogoUrl(96)} sizes="96x96" />
+        <link rel="apple-touch-icon" href={getSiteLogoUrl(180)} sizes="180x180" />
+        <link rel="shortcut icon" href={getSiteLogoUrl(50)} />
         <meta name="apple-mobile-web-app-title" content="EA Forum" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
