@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
@@ -13,10 +14,12 @@ import {
   getPostReadTimeMinutes,
   getPostSocialImageUrl,
   postGetPageUrl,
+  postHasNewUnreadComments,
 } from "@/lib/posts/postsHelpers";
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
+import PostsItemNewComments from "./PostsItemNewComments";
 import TruncationContainer from "../TruncationContainer";
 import PostsTooltip from "../PostsTooltip";
 import UsersName from "../UsersName";
@@ -25,8 +28,6 @@ import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
-import { useCallback, useState } from "react";
-import PostsItemNewComments from "./PostsItemNewComments";
 
 export default function PostsItem({
   post,
@@ -67,11 +68,15 @@ export default function PostsItem({
   const imageUrl = getPostSocialImageUrl(post);
 
   const [showNewComments, setShowNewComments] = useState(false);
+  const [everShownNewComments, setEverShownNewComments] = useState(false);
 
-  const toggleShowNewComments = useCallback(
-    () => setShowNewComments((value) => !value),
-    [],
-  );
+  const toggleShowNewComments = useCallback(() => {
+    setShowNewComments((value) => !value);
+    setEverShownNewComments(true);
+  }, []);
+
+  const hasNewUnreadComments =
+    !everShownNewComments && postHasNewUnreadComments(post);
 
   const { isPostRepeated, addPost } = useHideRepeatedPosts();
   const isRepeated = isPostRepeated(post._id);
@@ -79,6 +84,24 @@ export default function PostsItem({
     return null;
   }
   addPost(post._id);
+
+  const commentsNode = (
+    <button
+      onClick={toggleShowNewComments}
+      className={clsx(
+        "flex items-center gap-1 hover:text-gray-1000 cursor-pointer w-[44px] ml-5",
+        hasNewUnreadComments ? "text-gray-900" : "text-gray-600",
+      )}
+    >
+      <ChatBubbleLeftIcon className="w-[16px]" />
+      <Type
+        style="bodySmall"
+        className={clsx(hasNewUnreadComments && "font-[600]!")}
+      >
+        {commentCount}
+      </Type>
+    </button>
+  );
 
   return (
     <AnalyticsContext
@@ -181,16 +204,7 @@ export default function PostsItem({
                 />
               </InteractionWrapper>
               <InteractionWrapper className="md:hidden">
-                <button
-                  onClick={toggleShowNewComments}
-                  className="
-                    flex items-center gap-1 hover:text-gray-1000 cursor-pointer
-                    w-[44px] ml-5
-                  "
-                >
-                  <ChatBubbleLeftIcon className="w-[16px]" />
-                  <Type style="bodySmall">{commentCount}</Type>
-                </button>
+                {commentsNode}
               </InteractionWrapper>
               <InteractionWrapper className="flex items-center md:hidden">
                 <PostTripleDotMenu post={post} orientation="vertical" />
@@ -198,16 +212,7 @@ export default function PostsItem({
             </Type>
           </div>
           <InteractionWrapper className="max-md:hidden">
-            <button
-              onClick={toggleShowNewComments}
-              className={clsx(
-                "flex items-center gap-1 hover:text-gray-1000 cursor-pointer",
-                cardView && "mt-1 mr-2",
-              )}
-            >
-              <ChatBubbleLeftIcon className="w-[18px]" />
-              <Type>{commentCount}</Type>
-            </button>
+            {commentsNode}
           </InteractionWrapper>
           <InteractionWrapper className="flex items-center max-md:hidden">
             <PostTripleDotMenu post={post} orientation="vertical" />

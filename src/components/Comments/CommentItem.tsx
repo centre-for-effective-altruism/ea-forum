@@ -45,7 +45,7 @@ export default function CommentItem({
 }: Readonly<{
   node: CommentTreeNode<CommentListItem>;
   onToggleExpanded?: (expanded: boolean) => void;
-  /** If true, the comment initially renders un-collapsed */
+  /** If true, the comment initially renders collapsed */
   startCollapsed?: boolean;
   /**
    * By default, the body of an un-expanded comment is completely hidden. When
