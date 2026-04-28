@@ -25,6 +25,8 @@ import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
+import { useCallback, useState } from "react";
+import PostsItemNewComments from "./PostsItemNewComments";
 
 export default function PostsItem({
   post,
@@ -64,6 +66,13 @@ export default function PostsItem({
   const description = cardView ? getPostPlaintextDescription(post) : null;
   const imageUrl = getPostSocialImageUrl(post);
 
+  const [showNewComments, setShowNewComments] = useState(false);
+
+  const toggleShowNewComments = useCallback(
+    () => setShowNewComments((value) => !value),
+    [],
+  );
+
   const { isPostRepeated, addPost } = useHideRepeatedPosts();
   const isRepeated = isPostRepeated(post._id);
   if (isRepeated) {
@@ -84,7 +93,8 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-gray-50 border border-gray-100",
           "flex flex-col hover:bg-postitemhover",
           "hover:border-postitemhover-border",
-          cardView ? "justify-between" : "justify-center md:h-[60px]",
+          cardView ? "justify-between" : "justify-center",
+          !cardView && !showNewComments && "md:h-[60px]",
         )}
       >
         <div
@@ -94,6 +104,7 @@ export default function PostsItem({
             "grid gap-3 grid-cols-[min-content_1fr]",
             "md:grid-cols-[min-content_1fr_min-content_min-content]",
             cardView ? "items-start py-2" : "items-center",
+            showNewComments && !cardView && "py-[6px]",
           )}
         >
           <Score
@@ -171,6 +182,7 @@ export default function PostsItem({
               </InteractionWrapper>
               <InteractionWrapper className="md:hidden">
                 <button
+                  onClick={toggleShowNewComments}
                   className="
                     flex items-center gap-1 hover:text-gray-1000 cursor-pointer
                     w-[44px] ml-5
@@ -187,6 +199,7 @@ export default function PostsItem({
           </div>
           <InteractionWrapper className="max-md:hidden">
             <button
+              onClick={toggleShowNewComments}
               className={clsx(
                 "flex items-center gap-1 hover:text-gray-1000 cursor-pointer",
                 cardView && "mt-1 mr-2",
@@ -220,6 +233,11 @@ export default function PostsItem({
               )}
             </div>
           </div>
+        )}
+        {showNewComments && (
+          <InteractionWrapper>
+            <PostsItemNewComments postId={_id} className="px-3 py-2" />
+          </InteractionWrapper>
         )}
       </article>
     </AnalyticsContext>
