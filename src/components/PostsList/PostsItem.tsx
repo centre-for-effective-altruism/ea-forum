@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
@@ -13,10 +14,12 @@ import {
   getPostReadTimeMinutes,
   getPostSocialImageUrl,
   postGetPageUrl,
+  postHasNewUnreadComments,
 } from "@/lib/posts/postsHelpers";
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
+import PostsItemNewComments from "./PostsItemNewComments";
 import TruncationContainer from "../TruncationContainer";
 import PostsTooltip from "../PostsTooltip";
 import UsersName from "../UsersName";
@@ -64,12 +67,41 @@ export default function PostsItem({
   const description = cardView ? getPostPlaintextDescription(post) : null;
   const imageUrl = getPostSocialImageUrl(post);
 
+  const [showNewComments, setShowNewComments] = useState(false);
+  const [everShownNewComments, setEverShownNewComments] = useState(false);
+
+  const toggleShowNewComments = useCallback(() => {
+    setShowNewComments((value) => !value);
+    setEverShownNewComments(true);
+  }, []);
+
+  const hasNewUnreadComments =
+    !everShownNewComments && postHasNewUnreadComments(post);
+
   const { isPostRepeated, addPost } = useHideRepeatedPosts();
   const isRepeated = isPostRepeated(post._id);
   if (isRepeated) {
     return null;
   }
   addPost(post._id);
+
+  const commentsNode = (
+    <button
+      onClick={toggleShowNewComments}
+      className={clsx(
+        "flex items-center gap-1 hover:text-gray-1000 cursor-pointer w-[44px] ml-5",
+        hasNewUnreadComments ? "text-gray-900" : "text-gray-600",
+      )}
+    >
+      <ChatBubbleLeftIcon className="w-[16px]" />
+      <Type
+        style="bodySmall"
+        className={clsx(hasNewUnreadComments && "font-[600]!")}
+      >
+        {commentCount}
+      </Type>
+    </button>
+  );
 
   return (
     <AnalyticsContext
@@ -84,7 +116,8 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-gray-50 border border-gray-100",
           "flex flex-col hover:bg-postitemhover",
           "hover:border-postitemhover-border",
-          cardView ? "justify-between" : "justify-center md:h-[60px]",
+          cardView ? "justify-between" : "justify-center",
+          !cardView && !showNewComments && "md:h-[60px]",
         )}
       >
         <div
@@ -94,6 +127,7 @@ export default function PostsItem({
             "grid gap-3 grid-cols-[min-content_1fr]",
             "md:grid-cols-[min-content_1fr_min-content_min-content]",
             cardView ? "items-start py-2" : "items-center",
+            showNewComments && !cardView && "py-[6px]",
           )}
         >
           <Score
@@ -170,15 +204,7 @@ export default function PostsItem({
                 />
               </InteractionWrapper>
               <InteractionWrapper className="md:hidden">
-                <button
-                  className="
-                    flex items-center gap-1 hover:text-gray-1000 cursor-pointer
-                    w-[44px] ml-5
-                  "
-                >
-                  <ChatBubbleLeftIcon className="w-[16px]" />
-                  <Type style="bodySmall">{commentCount}</Type>
-                </button>
+                {commentsNode}
               </InteractionWrapper>
               <InteractionWrapper className="flex items-center md:hidden">
                 <PostTripleDotMenu post={post} orientation="vertical" />
@@ -186,15 +212,7 @@ export default function PostsItem({
             </Type>
           </div>
           <InteractionWrapper className="max-md:hidden">
-            <button
-              className={clsx(
-                "flex items-center gap-1 hover:text-gray-1000 cursor-pointer",
-                cardView && "mt-1 mr-2",
-              )}
-            >
-              <ChatBubbleLeftIcon className="w-[18px]" />
-              <Type>{commentCount}</Type>
-            </button>
+            {commentsNode}
           </InteractionWrapper>
           <InteractionWrapper className="flex items-center max-md:hidden">
             <PostTripleDotMenu post={post} orientation="vertical" />
@@ -220,6 +238,11 @@ export default function PostsItem({
               )}
             </div>
           </div>
+        )}
+        {showNewComments && (
+          <InteractionWrapper>
+            <PostsItemNewComments post={post} className="px-3 py-2" />
+          </InteractionWrapper>
         )}
       </article>
     </AnalyticsContext>

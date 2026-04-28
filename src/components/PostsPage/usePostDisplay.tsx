@@ -47,7 +47,7 @@ export const PostDisplayProvider: FC<{
 
   useEffect(() => {
     void recordPostView({
-      post: post,
+      post,
       extraEventProperties: {
         // TODO: Set sequence ID if viewing from the sequences UI
         sequenceId: null,

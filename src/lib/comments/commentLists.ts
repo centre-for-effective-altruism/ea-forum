@@ -9,6 +9,7 @@ import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+import { CurrentUser } from "../users/currentUser";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -263,6 +264,21 @@ export const fetchFrontpageQuickTakes = ({
       _id: "desc",
     },
     offset,
+    limit,
+  });
+};
+
+export const fetchNewComments = async (
+  currentUser: CurrentUser | null,
+  postId: string,
+  limit: number,
+) => {
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      postId,
+    },
+    orderBy: { postedAt: "desc" },
     limit,
   });
 };
