@@ -241,7 +241,7 @@ export default function PostsItem({
         )}
         {showNewComments && (
           <InteractionWrapper>
-            <PostsItemNewComments postId={_id} className="px-3 py-2" />
+            <PostsItemNewComments post={post} className="px-3 py-2" />
           </InteractionWrapper>
         )}
       </article>

@@ -3,32 +3,45 @@
 import { useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import { CommentsListProvider } from "../Comments/useCommentsList";
+import { useRecordPostView } from "@/lib/hooks/useRecordPostView";
 import { rpc } from "@/lib/rpc";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import type { PostListItem } from "@/lib/posts/postLists";
 import CommentsList from "../Comments/CommentsList";
 import Loading from "../Loading";
 import Type from "../Type";
 
 export default function PostsItemNewComments({
-  postId,
+  post,
   className,
 }: Readonly<{
-  postId: string;
+  post: PostListItem;
   className?: string;
 }>) {
+  const { recordPostView } = useRecordPostView(post);
   const [comments, setComments] = useState<CommentListItem[] | null>(null);
 
   useEffect(() => {
     void (async () => {
       try {
-        const comments = await rpc.comments.listNew({ postId });
+        const comments = await rpc.comments.listNew({ postId: post._id });
         setComments(comments);
       } catch (e) {
         console.error(e);
         captureException(e);
       }
     })();
-  }, [postId]);
+  }, [post]);
+
+  useEffect(() => {
+    void recordPostView({
+      post,
+      extraEventProperties: {
+        type: "toggleComments",
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div data-component="PostsItemNewComments" className={className}>
