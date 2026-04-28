@@ -25,6 +25,7 @@ import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
+import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
@@ -62,9 +63,10 @@ export default function CommentItem({
   const { currentUser } = useCurrentUser();
   const commentsListContext = useOptionalCommentsList();
   const [isEditing, setIsEditing] = useState(false);
-  const [expanded, setExpanded] = useState(!startCollapsed);
+  const [isExpanded, setIsExpanded] = useState(!startCollapsed);
+  const [isLoadingParent, setIsLoadingParent] = useState(false);
   const toggleExpanded = useCallback(() => {
-    setExpanded((expanded) => {
+    setIsExpanded((expanded) => {
       const newExpanded = !expanded;
       onToggleExpanded?.(newExpanded);
       return newExpanded;
@@ -104,11 +106,21 @@ export default function CommentItem({
     !!post?.readStatus?.[0]?.lastUpdated &&
     new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
 
+  const canLoadParent =
+    !!commentsListContext &&
+    !!parentCommentId &&
+    !isLoadingParent &&
+    !commentsListContext.commentIsLoaded(parentCommentId);
+
   const loadParent = useCallback(() => {
-    if (commentsListContext && parentCommentId) {
-      commentsListContext.loadParentComment(parentCommentId);
+    if (canLoadParent) {
+      setIsLoadingParent(true);
+      void (async () => {
+        await commentsListContext.loadParentComment(parentCommentId);
+        setIsLoadingParent(false);
+      })();
     }
-  }, [commentsListContext, parentCommentId]);
+  }, [canLoadParent, commentsListContext, parentCommentId]);
 
   return (
     <div
@@ -133,19 +145,22 @@ export default function CommentItem({
       >
         <div className="mb-2 flex items-start gap-2">
           <div className="flex items-center gap-2 flex-wrap grow">
-            {commentsListContext && parentCommentId && (
-              <ArrowTurnLeftUpIcon
-                role="button"
-                className="w-3 cursor-pointer text-gray-600 hover:opacity-70"
-                onClick={loadParent}
-              />
+            {canLoadParent && (
+              <Tooltip title={<Type style="bodySmall">Show parent comment</Type>}>
+                <ArrowTurnLeftUpIcon
+                  role="button"
+                  className="w-3 cursor-pointer text-gray-600 hover:opacity-70"
+                  onClick={loadParent}
+                />
+              </Tooltip>
             )}
+            {isLoadingParent && <Loading />}
             {!borderless && (
               <ChevronDownIcon
                 className={clsx(
                   "w-4 cursor-pointer text-gray-600 hover:opacity-70",
                   "transition-transform",
-                  !expanded && "-rotate-90",
+                  !isExpanded && "-rotate-90",
                 )}
                 role="button"
                 onClick={toggleExpanded}
@@ -199,12 +214,12 @@ export default function CommentItem({
             />
           )}
         </div>
-        {!expanded && showPreviewWhenCollapsed && (
+        {!isExpanded && showPreviewWhenCollapsed && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
             <CommentBody html={html} />
           </div>
         )}
-        {expanded &&
+        {isExpanded &&
           (isEditing ? (
             <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
           ) : (
@@ -221,7 +236,7 @@ export default function CommentItem({
             </>
           ))}
       </article>
-      {expanded && children.length > 0 && (
+      {isExpanded && children.length > 0 && (
         <div>
           {children.map((node) => (
             <CommentItem node={node} key={node.comment._id} />

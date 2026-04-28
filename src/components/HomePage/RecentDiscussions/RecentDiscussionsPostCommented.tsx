@@ -1,7 +1,6 @@
 "use client";
 
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { defaultCommentSorting } from "@/lib/comments/commentSortings";
 import RecentDiscussionsItem, {
   RecentDiscussionItemProps,
 } from "./RecentDiscussionsItem";
@@ -10,16 +9,16 @@ import {
   postGetCommentsUrl,
   postGetPageUrl,
 } from "@/lib/posts/postsHelpers";
-import { commentsToCommentTree } from "@/lib/comments/CommentTree";
+import { CommentsListProvider } from "@/components/Comments/useCommentsList";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import LinkPostMessage from "@/components/PostsPage/LinkPostMessage";
+import CommentsList from "@/components/Comments/CommentsList";
+import PostBody from "@/components/ContentStyles/PostBody";
+import PostsTooltip from "@/components/PostsTooltip";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Score from "@/components/Score";
 import Type from "@/components/Type";
-import PostsTooltip from "@/components/PostsTooltip";
-import LinkPostMessage from "@/components/PostsPage/LinkPostMessage";
-import CommentItem from "@/components/Comments/CommentItem";
-import PostBody from "@/components/ContentStyles/PostBody";
 import Link from "@/components/Link";
 
 const getItemProps = (post: RecentDiscussionPost): RecentDiscussionItemProps => {
@@ -68,10 +67,6 @@ export default function RecentDiscussionsPostCommented({
     // If we get here it usually means a spam comment was deleted
     return null;
   }
-  const nestedComments = commentsToCommentTree(
-    defaultCommentSorting,
-    comments ?? [],
-  );
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
   const commentsLink = postGetCommentsUrl({ post });
@@ -130,9 +125,9 @@ export default function RecentDiscussionsPostCommented({
             Continue reading
           </Link>
         </Type>
-        {nestedComments.map((comment) => (
-          <CommentItem key={comment.comment._id} node={comment} />
-        ))}
+        <CommentsListProvider comments={comments}>
+          <CommentsList />
+        </CommentsListProvider>
       </div>
     </RecentDiscussionsItem>
   );
