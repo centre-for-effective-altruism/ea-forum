@@ -13,27 +13,30 @@ import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
 import type { CommentToEdit } from "../comments/commentQueries";
 import type { CommentListItem } from "../comments/commentLists";
+import type { CurrentUser } from "../users/currentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
-import { CurrentUser } from "../users/currentUser";
 
 type UseCommentEditorDocument =
   // Creating a post comment
   | {
       postId: string;
+      parentCommentId?: string;
       shortform?: false;
       comment?: never;
     }
   // Creating a quick take
   | {
       postId?: never;
+      parentCommentId?: never;
       shortform: true;
       comment?: never;
     }
   // Editing a comment or quick take
   | {
       postId?: never;
+      parentCommentId?: never;
       shortform?: never;
       comment: CommentToEdit | null;
     };
@@ -60,6 +63,7 @@ const getInitialContents = (
 
 export const useCommentEditor = ({
   postId,
+  parentCommentId,
   shortform,
   comment,
   onSuccess,
@@ -99,8 +103,8 @@ export const useCommentEditor = ({
               })
             : await rpc.comments.create({
                 postId,
+                parentCommentId,
                 shortform,
-                parentCommentId: null,
                 editorData: data,
               });
           if (!newComment) {
@@ -116,7 +120,7 @@ export const useCommentEditor = ({
         }
       });
     },
-    [currentUser, onSignup, postId, shortform, comment, onSuccess],
+    [currentUser, onSignup, postId, parentCommentId, shortform, comment, onSuccess],
   );
 
   const onKeyDown = useCallback(

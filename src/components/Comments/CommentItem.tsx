@@ -25,10 +25,12 @@ import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
+import NewComment from "./NewComment";
 import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
+import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 
 /**
  * Render a comment. While you can use this directly, it's often better to instead
@@ -61,10 +63,13 @@ export default function CommentItem({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const { onSignup } = useLoginPopoverContext();
   const commentsListContext = useOptionalCommentsList();
   const [isEditing, setIsEditing] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(!startCollapsed);
   const [isLoadingParent, setIsLoadingParent] = useState(false);
+
   const toggleExpanded = useCallback(() => {
     setIsExpanded((expanded) => {
       const newExpanded = !expanded;
@@ -72,6 +77,16 @@ export default function CommentItem({
       return newExpanded;
     });
   }, [onToggleExpanded]);
+
+  const onClickReply = useCallback(() => {
+    if (currentUser) {
+      setIsReplying(true);
+    } else {
+      onSignup();
+    }
+  }, [currentUser, onSignup]);
+
+  const onReplySuccess = useCallback(() => setIsReplying(false), []);
 
   const copyLink = useCallback(async () => {
     try {
@@ -235,6 +250,26 @@ export default function CommentItem({
               <CommentBody html={html} className="cursor-default" />
             </>
           ))}
+        {isExpanded && post && (
+          <div>
+            <Type
+              onClick={onClickReply}
+              As="button"
+              className="text-gray-500 font-[600]! cursor-pointer mt-[2px]"
+            >
+              Reply
+            </Type>
+            {isReplying && (
+              <div className="bg-gray-0 rounded mt-2">
+                <NewComment
+                  postId={post._id}
+                  parentCommentId={_id}
+                  onSuccess={onReplySuccess}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </article>
       {isExpanded && children.length > 0 && (
         <div>
