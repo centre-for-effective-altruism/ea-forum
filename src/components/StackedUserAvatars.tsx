@@ -14,12 +14,10 @@ type StackedUser = {
 export default function StackedUserAvatars({
   users,
   size,
-  maxVisible = 3,
   className,
 }: Readonly<{
   users: ReadonlyArray<StackedUser | null | undefined>;
   size: number;
-  maxVisible?: number;
   className?: string;
 }>) {
   const present = users.filter((u): u is StackedUser => !!u);
@@ -30,9 +28,6 @@ export default function StackedUserAvatars({
     return <UserProfileImage user={present[0]} size={size} className={className} />;
   }
 
-  const fitsAll = present.length <= maxVisible;
-  const visible = fitsAll ? present : present.slice(0, maxVisible - 1);
-  const overflow = present.length - visible.length;
   const overlap = Math.round(size / 3);
 
   return (
@@ -40,13 +35,13 @@ export default function StackedUserAvatars({
       className={clsx("flex items-center", className)}
       data-component="StackedUserAvatars"
     >
-      {visible.map((user, i) => (
+      {present.map((user, i) => (
         <div
           key={user._id}
           className="relative"
           style={{
             marginLeft: i > 0 ? -overlap : undefined,
-            zIndex: visible.length - i,
+            zIndex: present.length - i,
           }}
         >
           <Tooltip title={<Type style="bodySmall">{user.displayName ?? ""}</Type>}>
@@ -58,21 +53,6 @@ export default function StackedUserAvatars({
           </Tooltip>
         </div>
       ))}
-      {overflow > 0 && (
-        <div
-          className="relative rounded-full bg-gray-200 ring-2 ring-background flex items-center justify-center"
-          style={{
-            width: size,
-            height: size,
-            marginLeft: -overlap,
-            zIndex: visible.length + 1,
-          }}
-        >
-          <Type style="bodySmall" className="text-gray-800">
-            +{overflow}
-          </Type>
-        </div>
-      )}
     </div>
   );
 }

@@ -60,7 +60,6 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             <StackedUserAvatars
               users={[post.user, ...(post.coauthors ?? [])]}
               size={36}
-              maxVisible={3}
             />
             <div>
               <Type style="bodyMedium">
