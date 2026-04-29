@@ -127,14 +127,14 @@
 }
 
 @utility dark-mode {
-  --color-background: #282828;
+  --color-background: #141414;
   --color-foreground: rgba(255, 255, 255, 0.87);
 
-  --color-gray-0: #141414;
-  --color-gray-50: #141414;
-  --color-gray-100: #282828;
-  --color-gray-200: #333333;
-  --color-gray-300: #464646;
+  --color-gray-0: #1f1f1f;
+  --color-gray-50: #1f1f1f;
+  --color-gray-100: #2a2a2a;
+  --color-gray-200: #363636;
+  --color-gray-300: #454545;
   --color-gray-400: #6f6f6f;
   --color-gray-500: #8f8f8f;
   --color-gray-600: #b3b3b3;
@@ -151,39 +151,39 @@
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #202020;
-  --color-postitemhover-border: #282828;
-  --color-login-input: #3d3d3d;
-  --color-login-input-hover: #3f3f3f;
+  --color-postitemhover: #2a2a2a;
+  --color-postitemhover-border: #363636;
+  --color-login-input: #2e2e2e;
+  --color-login-input-hover: #363636;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
-  --color-tooltip-background: rgba(75, 75, 75, 0.94);
+  --color-tooltip-background: rgba(95, 95, 95, 0.96);
   --color-tooltip-text: #ffffff;
-  --color-posts-page-hr: #464646;
+  --color-posts-page-hr: #454545;
   --color-visited-link: #9b71be;
   --color-table-border: #7a7a7a;
   --color-table-cell-border: #4f4f4f;
-  --color-table-header-bg: #202020;
+  --color-table-header-bg: #2a2a2a;
   --color-spoiler-hover: rgba(255, 255, 255, 0.12);
   --color-metaculus-preview: #2c3947;
   --color-details-title: rgba(255, 255, 255, 0.3);
   --color-conditionally-visible: rgba(255, 255, 255, 0.2);
   --color-post-hr: rgba(255, 255, 255, 0.26);
-  --color-comment-border: #333;
-  --color-comment-odd: #1c1c1c;
-  --color-comment-even: #2d2d2d;
-  --color-people-directory-row-hover: #242424;
+  --color-comment-border: #363636;
+  --color-comment-odd: #1f1f1f;
+  --color-comment-even: #262626;
+  --color-people-directory-row-hover: #2a2a2a;
   --color-popover-dim: rgba(0, 0, 0, 0.65);
   --color-diff-added: #008800;
   --color-diff-removed: #880000;
   --color-moderator-comment: #202719;
 
-  --color-editor-bg: #333;
-  --color-editor-comment-bg: #282828;
-  --color-editor-focus-bg: #191919;
+  --color-editor-bg: #2a2a2a;
+  --color-editor-comment-bg: #333333;
+  --color-editor-focus-bg: #262626;
   --color-editor-comment-marker: #80792e;
   --color-editor-comment-marker-active: #cbc14f;
   --color-editor-table-cell-border: #4f4f4f;
-  --color-editor-table-header-bg: #202020;
+  --color-editor-table-header-bg: #2e2e2e;
   --color-editor-figcaption: rgba(255, 255, 255, 0.54);
   --color-editor-hr: rgba(255, 255, 255, 0.26);
   --color-editor-secondary-text: rgba(255, 255, 255, 0.54);
