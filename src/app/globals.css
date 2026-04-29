@@ -82,6 +82,7 @@
   --color-always-black: #000;
 
   --color-surface-floating: #ffffff;
+  --color-surface-floating-hover: #f5f5f5;
   --color-card-tinted: #eeeeee;
 
   --spacing: 4px;
@@ -192,7 +193,8 @@
   --color-editor-secondary-text: rgba(255, 255, 255, 0.54);
   --color-editor-comment-border: rgba(255, 255, 255, 0.15);
 
-  --color-surface-floating: #404040;
+  --color-surface-floating: #353535;
+  --color-surface-floating-hover: #4a4a4a;
   --color-card-tinted: #1f1f1f;
 }
 
