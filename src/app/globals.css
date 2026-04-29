@@ -24,6 +24,7 @@
   --color-primary-light: #00b2be;
   --color-primary-dark: #085d6c;
 
+  --color-panel-background: #fff;
   --color-error: #e04e4b;
   --color-error-light: #cb5e3c;
   --color-warning: #832013;
@@ -59,6 +60,10 @@
   --color-moderator-comment: #ecf2ed;
   --color-promoted-comment: #137283;
   --color-karma-star: #ffad08;
+  --color-mentions-hover: #e6e6e6;
+  --color-mentions-selected: #198cf0;
+  --color-mentions-selected-hover: #0e7fe1;
+  --color-mentions-border: #c4c4c4;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -147,6 +152,7 @@
   --color-primary-light: #0c869b;
   --color-primary-dark: #00adb9;
 
+  --color-panel-background: #191919;
   --color-error: #9b5e5e;
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
@@ -176,6 +182,10 @@
   --color-diff-added: #008800;
   --color-diff-removed: #880000;
   --color-moderator-comment: #202719;
+  --color-mentions-hover: #333;
+  --color-mentions-selected: #0c70c7;
+  --color-mentions-selected-hover: #0b62ae;
+  --color-mentions-border: #212121;
 
   --color-editor-bg: #333;
   --color-editor-comment-bg: #282828;
@@ -301,6 +311,19 @@
 .ck-powered-by,
 .ck-powered-by-balloon {
   display: none !important;
+}
+
+/**
+ * Styles for the ckeditor mentions popup
+ */
+.ck-mentions-balloon {
+  --ck-color-list-background: var(--color-panel-background);
+  --ck-color-panel-background: var(--color-panel-background);
+  --ck-color-panel-border: var(--color-mentions-border);
+  --ck-color-text: var(--color-gray-1000);
+  --ck-color-list-button-hover-background: var(--color-mentions-hover);
+  --ck-color-list-button-on-background: var(--color-mentions-selected);
+  --ck-color-list-button-on-background-focus: var(--color-mentions-selected-hover);
 }
 
 /**
