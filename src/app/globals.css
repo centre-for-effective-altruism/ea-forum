@@ -133,8 +133,8 @@
   --color-background: #141414;
   --color-foreground: rgba(255, 255, 255, 0.87);
 
-  --color-gray-0: #1c1c1c;
-  --color-gray-50: #1c1c1c;
+  --color-gray-0: #1e1e1e;
+  --color-gray-50: #1e1e1e;
   --color-gray-100: #2a2a2a;
   --color-gray-200: #363636;
   --color-gray-300: #454545;
@@ -192,7 +192,7 @@
   --color-editor-secondary-text: rgba(255, 255, 255, 0.54);
   --color-editor-comment-border: rgba(255, 255, 255, 0.15);
 
-  --color-surface-floating: #525252;
+  --color-surface-floating: #4a4a4a;
   --color-card-tinted: #1f1f1f;
 }
 
