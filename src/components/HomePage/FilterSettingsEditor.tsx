@@ -225,7 +225,7 @@ const FilterButton: FC<{
           {description}
         </div>
       }
-      tooltipClassName="bg-gray-0! text-gray-900! p-0! shadow w-[460px] max-w-full"
+      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[460px] max-w-full"
       placement="bottom-start"
       interactable
     >

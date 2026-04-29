@@ -24,7 +24,7 @@ export default function DropdownMenuItems({
     <div
       data-component="DropdownMenuItems"
       className={clsx(
-        "bg-gray-0 rounded shadow p-2 border border-gray-100 min-w-[200px]",
+        "bg-surface-floating rounded shadow p-2 border border-gray-100 min-w-[200px]",
         className,
       )}
     >
