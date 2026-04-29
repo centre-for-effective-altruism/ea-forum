@@ -81,6 +81,8 @@
   --color-always-white: #fff;
   --color-always-black: #000;
 
+  --color-surface-floating: #ffffff;
+
   --spacing: 4px;
 
   --radius-sm: 6px;
@@ -151,8 +153,8 @@
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #383838;
-  --color-postitemhover-border: #4a4a4a;
+  --color-postitemhover: #2a2a2a;
+  --color-postitemhover-border: #363636;
   --color-login-input: #2e2e2e;
   --color-login-input-hover: #363636;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
@@ -188,6 +190,8 @@
   --color-editor-hr: rgba(255, 255, 255, 0.26);
   --color-editor-secondary-text: rgba(255, 255, 255, 0.54);
   --color-editor-comment-border: rgba(255, 255, 255, 0.15);
+
+  --color-surface-floating: #404040;
 }
 
 .theme-light {
