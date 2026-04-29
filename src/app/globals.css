@@ -151,8 +151,8 @@
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #303030;
-  --color-postitemhover-border: #404040;
+  --color-postitemhover: #383838;
+  --color-postitemhover-border: #4a4a4a;
   --color-login-input: #2e2e2e;
   --color-login-input-hover: #363636;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
