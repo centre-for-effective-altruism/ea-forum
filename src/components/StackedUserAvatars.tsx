@@ -46,7 +46,7 @@ export default function StackedUserAvatars({
           className="relative"
           style={{
             marginLeft: i > 0 ? -overlap : undefined,
-            zIndex: visible.length - i + (overflow > 0 ? 1 : 0),
+            zIndex: visible.length - i,
           }}
         >
           <Tooltip title={<Type style="bodySmall">{user.displayName ?? ""}</Type>}>
@@ -65,7 +65,7 @@ export default function StackedUserAvatars({
             width: size,
             height: size,
             marginLeft: -overlap,
-            zIndex: 0,
+            zIndex: visible.length + 1,
           }}
         >
           <Type style="bodySmall" className="text-gray-800">
