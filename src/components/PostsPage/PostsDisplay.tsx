@@ -11,7 +11,7 @@ import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
-import UserProfileImage from "../UserProfileImage";
+import StackedUserAvatars from "../StackedUserAvatars";
 import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
@@ -57,7 +57,11 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             {post.title}
           </Type>
           <div className="flex gap-3 mb-6">
-            <UserProfileImage user={post.user} size={36} />
+            <StackedUserAvatars
+              users={[post.user, ...(post.coauthors ?? [])]}
+              size={36}
+              maxVisible={3}
+            />
             <div>
               <Type style="bodyMedium">
                 <UsersName user={post.user} pageSectionContext="post_header" />
