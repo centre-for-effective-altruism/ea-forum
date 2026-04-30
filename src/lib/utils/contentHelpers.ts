@@ -6,17 +6,17 @@ const tryToFixUrl = (oldUrl: string, newUrl: string) => {
     // Only return the edited version if this actually fixed the problem
     new URL(newUrl);
     return newUrl;
-  } catch (_e) {
+  } catch {
     return oldUrl;
   }
-}
+};
 
 export const validateUrl = (url: string) => {
   try {
     // This will validate the URL - importantly, it will fail if the
     // protocol is missing
     new URL(url);
-  } catch (_e) {
+  } catch {
     if (url.search(/[^@]+@[^.]+\.[^\n\r\f]+$/) === 0) {
       // Add mailto: to email addresses
       return tryToFixUrl(url, `mailto:${url}`);
@@ -31,7 +31,7 @@ export const validateUrl = (url: string) => {
   }
 
   return url;
-}
+};
 
 /**
  * Mapping from HTML attribute names as they appear in HTML, to attribute names as React
@@ -40,33 +40,34 @@ export const validateUrl = (url: string) => {
  *   ```Invalid DOM property `allowfullscreen`. Did you mean `allowFullScreen`?```
  * Which don't break anything important but are spammy.
  */
-const mapAttributeNames: Record<string,string> = {
-  "srcset": "srcSet",
-  "class": "className",
-  "colspan": "colSpan",
-  "columnspan": "columnSpan",
-  "rowspan": "rowSpan",
-  "allowfullscreen": "allowFullScreen",
-  "for": "htmlFor",
-}
+const mapAttributeNames: Record<string, string> = {
+  srcset: "srcSet",
+  class: "className",
+  colspan: "colSpan",
+  columnspan: "columnSpan",
+  rowspan: "rowSpan",
+  allowfullscreen: "allowFullScreen",
+  for: "htmlFor",
+};
 
 const camelCaseCssAttribute = (input: string) =>
   input.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 
 const parseInlineStyle = (input: string): CSSProperties => {
-  return input.split(';').reduce((obj, kv) => {
-    let [key, val] = kv.split(':')
-    key = key?.trim()
-    val = val?.trim()
+  return input.split(";").reduce((obj, kv) => {
+    let [key, val] = kv.split(":");
+    key = key?.trim();
+    val = val?.trim();
     if (key && val) {
       // @ts-expect-error This is tricky to type
       obj[camelCaseCssAttribute(key) as keyof CSSProperties] = val;
     }
-    return obj
-  }, {} as CSSProperties)
-}
+    return obj;
+  }, {} as CSSProperties);
+};
 
-type TranslatedAttribs = Record<string, string | CSSProperties | Function>;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+export type TranslatedAttribs = Record<string, string | CSSProperties | Function>;
 
 /**
  * Translate an attributes-dict from parsed HTML into something that can be
@@ -81,31 +82,35 @@ type TranslatedAttribs = Record<string, string | CSSProperties | Function>;
 export const translateAttribs = (
   attribs: Record<string, string>,
 ): TranslatedAttribs => {
-  const attribsCopy: TranslatedAttribs = {...attribs};
-  if ('style' in attribsCopy) {
+  const attribsCopy: TranslatedAttribs = { ...attribs };
+  if ("style" in attribsCopy) {
     attribsCopy.style = parseInlineStyle(attribs.style);
   }
 
   // These two are used in the custom Bayes Rule Guide html.
   // Using `new Function` seemed safer than `eval`.
-  if ('onclick' in attribsCopy) {
+  if ("onclick" in attribsCopy) {
     try {
       attribsCopy.onClick = new Function(attribsCopy.onclick as string);
       delete attribsCopy.onclick;
     } catch (e) {
       const err = e as Error;
-      captureException(`Error parsing onclick attribute in ContentItemBody.  Original function string: ${attribsCopy.onclick}.  Error: ${err.message}`);
-      console.error('Error parsing onclick attribute', e);
+      captureException(
+        `Error parsing onclick attribute in ContentItemBody.  Original function string: ${attribsCopy.onclick}.  Error: ${err.message}`,
+      );
+      console.error("Error parsing onclick attribute", e);
     }
   }
-  if ('onchange' in attribsCopy) {
+  if ("onchange" in attribsCopy) {
     try {
       attribsCopy.onChange = new Function(attribsCopy.onchange as string);
       delete attribsCopy.onchange;
     } catch (e) {
       const err = e as Error;
-      captureException(`Error parsing onchange attribute in ContentItemBody.  Original function string: ${attribsCopy.onchange}.  Error: ${err.message}`);
-      console.error('Error parsing onchange attribute', e);
+      captureException(
+        `Error parsing onchange attribute in ContentItemBody.  Original function string: ${attribsCopy.onchange}.  Error: ${err.message}`,
+      );
+      console.error("Error parsing onchange attribute", e);
     }
   }
 
@@ -116,4 +121,4 @@ export const translateAttribs = (
     }
   }
   return attribsCopy;
-}
+};

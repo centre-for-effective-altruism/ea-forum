@@ -232,9 +232,11 @@
  */
 .no-scrollbars {
   scrollbar-width: none;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 .no-scrollbars::-webkit-scrollbar {
   height: 0;
+  display: none;
 }
 
 .text-size-adjust-none {
