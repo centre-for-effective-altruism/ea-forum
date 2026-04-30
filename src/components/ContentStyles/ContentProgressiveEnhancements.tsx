@@ -6,6 +6,7 @@ import type { ChildNode } from "domhandler";
 import { captureEvent } from "@/lib/analyticsEvents";
 import { translateAttribs, validateUrl } from "@/lib/utils/contentHelpers";
 import MaybeHorizScrollBlock from "../MaybeHorizScrollBlock";
+import CollapsedFootnotes from "./CollapsedFootnotes";
 
 const HtmlNode: FC<{
   node: ChildNode;
@@ -28,15 +29,13 @@ const HtmlNode: FC<{
       ));
 
       if (classNames.includes("footnotes")) {
-        /*
-      return (
-        <CollapsedFootnotes
-          TagName={As}
-          attributes={attribs}
-          footnoteElements={mappedChildren}
-        />
-      );
-       */
+        return (
+          <CollapsedFootnotes
+            As={As}
+            attribs={attribs}
+            footnoteElements={mappedChildren}
+          />
+        );
       }
 
       let result: ReactNode | ReactNode[] = mappedChildren;
@@ -84,9 +83,9 @@ const HtmlNode: FC<{
         // If the element already has an ID, create a wrapper span with the added ID.
         // Otherwise add it to the element.
         // TODO: The previous implementation of this also checked the document for
-        // elements with the same ID, which is not implemented here (and is complicated
-        // significantly by render timings). I'm not sure whether that's actually
-        // important.
+        // elements with the same ID, which is not implemented here (and is
+        // complicated significantly by render timings). I'm not sure whether that's
+        // actually important.
         if (attribs.id) {
           result = <span id={attribs["data-internal-id"] as string}>{result}</span>;
         } else {
@@ -130,8 +129,8 @@ const HtmlNode: FC<{
 
     case HtmlElementType.Style: {
       // Embedded style tag. This can appear in posts/etc if they were last edited
-      // by an admin (otherwise the validator will have stripped it out). All children
-      // must be text nodes.
+      // by an admin (otherwise the validator will have stripped it out). All
+      // children must be text nodes.
       const styleText: string = node.childNodes
         .map((c) => (c.type === HtmlElementType.Text ? c.data : ""))
         .join("");

@@ -122,3 +122,9 @@ export const translateAttribs = (
   }
   return attribsCopy;
 };
+
+export const locationHashIsFootnote = (hash: string) =>
+  hash.startsWith("#fn") && !hash.startsWith("#fnref");
+
+export const locationHashIsFootnoteBackreference = (hash: string) =>
+  hash.startsWith("#fnref");
