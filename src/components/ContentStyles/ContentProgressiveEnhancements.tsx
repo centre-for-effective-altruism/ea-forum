@@ -7,6 +7,7 @@ import { captureEvent } from "@/lib/analyticsEvents";
 import { translateAttribs, validateUrl } from "@/lib/utils/contentHelpers";
 import MaybeHorizScrollBlock from "../MaybeHorizScrollBlock";
 import CollapsedFootnotes from "./CollapsedFootnotes";
+import HoverPreviewLink from "./HoverPreviewLink";
 
 const HtmlNode: FC<{
   node: ChildNode;
@@ -100,17 +101,11 @@ const HtmlNode: FC<{
           </MaybeHorizScrollBlock>
         );
       } else if (As === "a") {
-        /*
-      return (
-        <HoverPreviewLink
-          href={attribs.href}
-          {...passedThroughProps}
-          {...attribs}
-        >
-          {result}
-        </HoverPreviewLink>
-      );
-       */
+        return (
+          <HoverPreviewLink href={attribs.href as string} {...attribs}>
+            {result}
+          </HoverPreviewLink>
+        );
       } else if (node.childNodes.length > 0) {
         return <As {...attribs}>{result}</As>;
       }
