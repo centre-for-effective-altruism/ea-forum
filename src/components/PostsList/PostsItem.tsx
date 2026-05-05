@@ -141,8 +141,8 @@ export default function PostsItem({
               style="postTitle"
               className={clsx(
                 "mb-[2px] max-md:line-clamp-2 md:truncate",
-                "visited:text-grey-700 hover:opacity-70",
-                isRead ? "text-grey-700" : "text-grey-900",
+                "visited:text-gray-700 hover:opacity-70",
+                isRead ? "text-gray-700" : "text-gray-900",
               )}
             >
               <InteractionWrapper className="inline">
