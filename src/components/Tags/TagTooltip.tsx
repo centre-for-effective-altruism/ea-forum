@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import type { Placement } from "@floating-ui/react";
 import type { CommentTag, PostTag, TagBase } from "@/lib/tags/tagQueries";
 import type { SearchTag } from "@/lib/search/searchDocuments";
@@ -11,10 +11,14 @@ import Link from "../Link";
 export default function TagTooltip({
   tag,
   placement,
+  As = "div",
+  className,
   children,
 }: Readonly<{
   tag: TagBase | SearchTag | PostTag | CommentTag;
   placement?: Placement;
+  As?: ElementType;
+  className?: string;
   children: ReactNode;
 }>) {
   // If this tag came from elasticsearch we need to manually trim the body
@@ -24,6 +28,8 @@ export default function TagTooltip({
     <Tooltip
       interactable
       placement={placement}
+      As={As}
+      className={className}
       tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
       title={
         <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">

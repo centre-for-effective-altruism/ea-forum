@@ -22,11 +22,13 @@ export default function UsersTooltip({
   user,
   placement = "bottom-start",
   As = "div",
+  className,
   children,
 }: Readonly<{
   user: UserBase | null;
   placement?: Placement;
   As?: ElementType;
+  className?: string;
   children: ReactNode;
 }>) {
   if (!user) {
@@ -48,6 +50,7 @@ export default function UsersTooltip({
     <Tooltip
       placement={placement}
       As={As}
+      className={className}
       tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
       title={
         <div
