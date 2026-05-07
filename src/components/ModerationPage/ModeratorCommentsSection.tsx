@@ -1,12 +1,12 @@
 "use client";
 
 import CommentItem from "@/components/Comments/CommentItem";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 
 export default function ModeratorCommentsSection({
   comments,
 }: {
-  comments: CommentsList[];
+  comments: CommentListItem[];
 }) {
   return (
     <div

@@ -5,7 +5,7 @@ import { createRawSqlArray } from "@/lib/utils/queryHelpers";
 import {
   commentListProjection,
   viewableCommentFilter,
-  type CommentsList,
+  type CommentListItem,
 } from "@/lib/comments/commentLists";
 import { viewablePostFilter } from "@/lib/posts/postLists";
 import type { User } from "@/lib/schema";
@@ -73,7 +73,7 @@ export const fetchModeratorComments = async ({
   currentUser: Pick<User, "_id" | "isAdmin" | "groups" | "banned"> | null;
   offset: number;
   limit: number;
-}): Promise<{ comments: CommentsList[]; count: number }> => {
+}): Promise<{ comments: CommentListItem[]; count: number }> => {
   const currentUserId = currentUser?._id ?? null;
   const currentUserIsModerator = userIsModOrAdmin(currentUser);
   const publicPostVisibilityCondition = sql`(
@@ -148,7 +148,7 @@ export const fetchModeratorComments = async ({
   );
   const count = Number(countResult.rows[0]?.count ?? 0);
 
-  return { comments: comments as CommentsList[], count };
+  return { comments: comments as CommentListItem[], count };
 };
 
 export const fetchDeletedComments = async ({

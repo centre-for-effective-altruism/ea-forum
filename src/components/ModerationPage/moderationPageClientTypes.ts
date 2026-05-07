@@ -1,4 +1,4 @@
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import type {
   AutoRateLimitRow,
   DeletedCommentRow,
@@ -38,7 +38,7 @@ export type UserMappedRowsState<T> = ModerationRowsState<T> & {
 
 export type ModerationPageInitialData = {
   canViewModeratorActions: boolean;
-  moderatorComments: CommentsList[];
+  moderatorComments: CommentListItem[];
   moderatorCommentsTotalCount: number;
   autoRateLimits: AutoRateLimitRow[];
   autoRateLimitsTotalCount: number;

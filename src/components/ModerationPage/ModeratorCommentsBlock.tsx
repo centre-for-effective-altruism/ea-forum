@@ -6,7 +6,7 @@ import { MODERATOR_COMMENTS_PAGE_SIZE } from "@/lib/moderation/moderationTransfo
 import ModeratorCommentsSection from "./ModeratorCommentsSection";
 import { SectionStatus, TablePagination } from "./moderationPageClientUtils";
 import type { ModerationRowsState } from "./moderationPageClientTypes";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 
 export default function ModeratorCommentsBlock({
   state,
@@ -14,7 +14,7 @@ export default function ModeratorCommentsBlock({
   onPrev,
   onNext,
 }: {
-  state: ModerationRowsState<CommentsList>;
+  state: ModerationRowsState<CommentListItem>;
   page: number;
   onPrev: () => void;
   onNext: () => void;

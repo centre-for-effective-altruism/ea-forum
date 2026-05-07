@@ -1,6 +1,6 @@
 import { os } from "@orpc/server";
 import { z } from "zod/v4";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import type {
   AutoRateLimitRow,
   DeletedCommentRow,
@@ -51,7 +51,7 @@ export const moderationRouter = {
     async ({
       input: { page },
     }): Promise<{
-      comments: CommentsList[];
+      comments: CommentListItem[];
       count: number;
     }> => {
       const currentUser = await getCurrentUser();

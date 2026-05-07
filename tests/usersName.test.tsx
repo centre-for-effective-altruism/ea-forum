@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import UsersName from "@/components/UsersName";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import type { CurrentUser } from "@/lib/users/currentUser";
+import { defaultKarmaChangeSettings } from "@/lib/users/karmaChangesTypes";
 
 const createCurrentUser = (overrides: Partial<CurrentUser> = {}): CurrentUser => ({
   _id: "viewer",
@@ -18,6 +19,7 @@ const createCurrentUser = (overrides: Partial<CurrentUser> = {}): CurrentUser =>
   acceptedTos: true,
   hideNavigationSidebar: false,
   hideHomeRHS: false,
+  usernameUnset: false,
   currentFrontpageFilter: null,
   frontpageFilterSettings: null,
   lastNotificationsCheck: null,
@@ -34,6 +36,9 @@ const createCurrentUser = (overrides: Partial<CurrentUser> = {}): CurrentUser =>
   subscribedToDigest: false,
   hideSubscribePoke: false,
   mongoLocation: null,
+  karmaChangeNotifierSettings: defaultKarmaChangeSettings,
+  karmaChangeLastOpened: null,
+  karmaChangeBatchStart: null,
   ...overrides,
 });
 
