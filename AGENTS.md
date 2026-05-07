@@ -97,8 +97,18 @@ Server boundaries and data access:
   `os.input(...).handler(...)` under `src/lib/*Router.ts`, register them in
   `src/lib/router.ts`, and call them from the client via `rpc` in `src/lib/rpc.ts`.
 - Use `getCurrentUser()` (`src/lib/users/currentUser.ts`) for auth context.
+- Admin pages live under `src/app/admin/**` and inherit the `notFound()` gate
+  from `src/app/admin/layout.tsx`. New admin `page.tsx` files should rely on
+  that inherited check rather than re-asserting `currentUser?.isAdmin` per page;
+  duplicated checks tend to drift.
 - For oRPC procedures, enforce auth and permission checks inside the handler rather
   than relying on client visibility or route-handler wrappers.
+- Treat the input schemas of oRPC handlers (`os.input(schema)`) and `ApiRoute`
+  endpoints with `access: "all"` as public, unauthenticated contracts. Widening
+  or adding a field there is effectively a public API change: apply bounded zod
+  constraints (`.max()`, `.min()`, enum literals) to anything user-controllable
+  to limit DoS amplification, and avoid leaking internal IDs unless they're
+  already publicly observable.
 - Enforce authorization at the server boundary (actions/routes), not just in UI
   visibility checks, so data access remains protected regardless of client code.
 - Apply least-privilege checks for each new read/write path.
@@ -110,6 +120,20 @@ Server boundaries and data access:
   the duplication tightly localized and obvious.
 - If you intentionally deviate from these defaults, explain why before
   implementation.
+
+Routes and the legacy proxy:
+
+- New public-facing routes under `src/app/**` must be registered in
+  `src/lib/legacySiteRedirect.ts` under `newSitePatterns`. Routes not in that
+  list are proxied to the legacy v2 site, which won't have them and will 404.
+  This failure mode is invisible to typecheck and lint.
+- Use a strict regex anchored with `^` and `$` (for example
+  `/^\/admin\/org-updates-test$/`) and add a brief trailing comment matching
+  neighboring entries.
+- The owned-routes payload is shipped to the legacy site as a cookie; the file
+  has a static check that throws in dev if `newSitePatterns` approaches the 4KB
+  cookie limit. If the check fires, prune or group patterns rather than
+  relaxing the threshold.
 
 Utilities and abstractions:
 
