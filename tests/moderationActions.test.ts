@@ -324,14 +324,16 @@ suite("moderationRouter", () => {
     const withNewIds = new Set(withNewUsers.rows.map((row) => row.userId));
     expect(withNewIds.has(newUser._id)).toBe(true);
 
-    const expiredOnly = await call(moderationRouter.listAutoRateLimits, {
+    const includingExpired = await call(moderationRouter.listAutoRateLimits, {
       page: 1,
       showExpiredRateLimits: true,
       showNewUserRateLimits: true,
     });
-    const expiredIds = new Set(expiredOnly.rows.map((row) => row.userId));
-    expect(expiredIds.has(expiredUser._id)).toBe(true);
-    expect(expiredIds.has(establishedUser._id)).toBe(false);
+    const includingExpiredIds = new Set(
+      includingExpired.rows.map((row) => row.userId),
+    );
+    expect(includingExpiredIds.has(expiredUser._id)).toBe(true);
+    expect(includingExpiredIds.has(establishedUser._id)).toBe(true);
   });
 
   test("globally banned users respects showExpiredBans filter", async () => {

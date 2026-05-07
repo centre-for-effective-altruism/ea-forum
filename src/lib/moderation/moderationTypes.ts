@@ -5,11 +5,6 @@ export type UserSummary = {
   deleted?: boolean | null;
 };
 
-export type LinkableUser = Pick<
-  UserSummary,
-  "_id" | "slug" | "displayName" | "deleted"
->;
-
 export type PostSummary = {
   _id: string;
   slug: string | null;
@@ -48,7 +43,7 @@ export type AutoRateLimitRow = {
   mostRecentActivation: Date;
   rateLimits: RateLimitEntry[];
   user:
-    | (LinkableUser & {
+    | (UserSummary & {
         createdAt: Date | null;
         karma: number | null;
         postCount: number | null;
@@ -63,7 +58,7 @@ export type DeletedCommentRow = {
   deletedDate?: Date | string | null;
   deletedReason?: string | null;
   deletedByUserId?: string | null;
-  user?: LinkableUser | null;
+  user?: UserSummary | null;
 };
 
 export type ModeratorActionRow = {
@@ -73,7 +68,7 @@ export type ModeratorActionRow = {
   endedAt: Date | string | null;
 };
 
-export type GloballyBannedUserRow = LinkableUser & {
+export type GloballyBannedUserRow = UserSummary & {
   karma: number | null;
   postCount: number | null;
   commentCount: number | null;

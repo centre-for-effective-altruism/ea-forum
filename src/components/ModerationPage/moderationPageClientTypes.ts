@@ -3,7 +3,7 @@ import type {
   AutoRateLimitRow,
   DeletedCommentRow,
   GloballyBannedUserRow,
-  LinkableUser,
+  UserSummary,
   ModeratorActionRow,
   PostSummary,
 } from "@/lib/moderation/moderationTypes";
@@ -29,11 +29,11 @@ export type ModerationRowsState<T> = SectionState & {
 
 export type DeletedCommentsSectionState = ModerationRowsState<DeletedCommentRow> & {
   postMap: Record<string, PostSummary>;
-  deletedByUsersMap: Record<string, LinkableUser>;
+  deletedByUsersMap: Record<string, UserSummary>;
 };
 
 export type UserMappedRowsState<T> = ModerationRowsState<T> & {
-  usersMap: Record<string, LinkableUser>;
+  usersMap: Record<string, UserSummary>;
 };
 
 export type ModerationPageInitialData = {
@@ -45,13 +45,13 @@ export type ModerationPageInitialData = {
   deletedComments: DeletedCommentRow[];
   deletedCommentsTotalCount: number;
   deletedCommentPosts: Record<string, PostSummary>;
-  deletedCommentDeletedByUsers: Record<string, LinkableUser>;
+  deletedCommentDeletedByUsers: Record<string, UserSummary>;
   moderatorActions: ModeratorActionRow[];
   moderatorActionsTotalCount: number;
-  moderatorActionUsers: Record<string, LinkableUser>;
+  moderatorActionUsers: Record<string, UserSummary>;
   globallyBannedUsers: GloballyBannedUserRow[];
   globallyBannedUsersTotalCount: number;
   manualRateLimits: ModeratorActionRow[];
   manualRateLimitsTotalCount: number;
-  manualRateLimitUsers: Record<string, LinkableUser>;
+  manualRateLimitUsers: Record<string, UserSummary>;
 };

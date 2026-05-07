@@ -1,6 +1,7 @@
 "use client";
 
 import type { Placement } from "@floating-ui/react";
+import type { ReactNode } from "react";
 import type { UserBase } from "@/lib/users/userQueries";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userIsModOrAdmin, userGetProfileUrl } from "@/lib/users/userHelpers";
@@ -26,6 +27,12 @@ const isUserBase = (user: UsersNameUser): user is UserBase =>
   "postCount" in user &&
   "commentCount" in user;
 
+const DeletedAccountTooltip = ({ children }: { children: ReactNode }) => (
+  <Tooltip As="span" title={<Type>This user account has been deleted</Type>}>
+    {children}
+  </Tooltip>
+);
+
 export default function UsersName({
   user,
   pageSectionContext,
@@ -38,9 +45,10 @@ export default function UsersName({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const viewerIsMod = userIsModOrAdmin(currentUser);
 
-  if (!user) {
-    return <span>[anonymous]</span>;
+  if (!user || (user.deleted && !viewerIsMod)) {
+    return <DeletedAccountTooltip>[anonymous]</DeletedAccountTooltip>;
   }
 
   let profileUrl = userGetProfileUrl({ user });
@@ -49,16 +57,8 @@ export default function UsersName({
   }
 
   if (user.deleted) {
-    if (!userIsModOrAdmin(currentUser)) {
-      return (
-        <Tooltip As="span" title={<Type>This user account has been deleted</Type>}>
-          [anonymous]
-        </Tooltip>
-      );
-    }
-
     return (
-      <Tooltip As="span" title={<Type>This user account has been deleted</Type>}>
+      <DeletedAccountTooltip>
         <span className={clsx("group inline-flex", className)}>
           <span className="group-hover:hidden group-focus-within:hidden">
             [anonymous]
@@ -70,7 +70,7 @@ export default function UsersName({
             {user.displayName}
           </Link>
         </span>
-      </Tooltip>
+      </DeletedAccountTooltip>
     );
   }
 

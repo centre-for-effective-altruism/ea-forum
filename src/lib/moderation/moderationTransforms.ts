@@ -1,5 +1,6 @@
 import type {
   AutoRateLimitRow,
+  DeletedCommentRow,
   RateLimitEntry,
   RateLimitRow,
 } from "./moderationTypes";
@@ -7,7 +8,7 @@ import type {
 export const MODERATION_PAGE_SIZE = 20;
 export const MODERATOR_COMMENTS_PAGE_SIZE = 10;
 
-export const uniqueIds = (values: Array<string | null | undefined>) => [
+export const uniqueIds = (values: ReadonlyArray<string | null | undefined>) => [
   ...new Set(values.filter((value): value is string => Boolean(value))),
 ];
 
@@ -24,6 +25,18 @@ export const parseRateLimits = (value: unknown): RateLimitEntry[] => {
   }
   return [];
 };
+
+export const redactDeletedCommentsForViewer = <T extends DeletedCommentRow>(
+  comments: T[],
+  canViewModeratorActions: boolean,
+): T[] =>
+  canViewModeratorActions
+    ? comments
+    : comments.map((comment) => ({
+        ...comment,
+        deletedByUserId: null,
+        deletedReason: null,
+      }));
 
 export const toRateLimitDisplay = (rows: RateLimitRow[]): AutoRateLimitRow[] =>
   rows.map((row) => ({

@@ -1,7 +1,14 @@
-import keyBy from "lodash/keyBy";
 import { os } from "@orpc/server";
 import { z } from "zod/v4";
-import type { GloballyBannedUserRow } from "./moderationTypes";
+import type { CommentsList } from "@/lib/comments/commentLists";
+import type {
+  AutoRateLimitRow,
+  DeletedCommentRow,
+  GloballyBannedUserRow,
+  ModeratorActionRow,
+  PostSummary,
+  UserSummary,
+} from "./moderationTypes";
 import {
   fetchAutoRateLimits,
   fetchDeletedComments,
@@ -15,8 +22,8 @@ import {
 import {
   MODERATION_PAGE_SIZE,
   MODERATOR_COMMENTS_PAGE_SIZE,
+  redactDeletedCommentsForViewer,
   toRateLimitDisplay,
-  uniqueIds,
 } from "./moderationTransforms";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { userIsModOrAdmin } from "@/lib/users/userHelpers";
@@ -40,9 +47,13 @@ const canCurrentUserViewModeratorActions = async () => {
 };
 
 export const moderationRouter = {
-  listModeratorComments: os
-    .input(paginationSchema)
-    .handler(async ({ input: { page } }) => {
+  listModeratorComments: os.input(paginationSchema).handler(
+    async ({
+      input: { page },
+    }): Promise<{
+      comments: CommentsList[];
+      count: number;
+    }> => {
       const currentUser = await getCurrentUser();
       const offset = (page - 1) * MODERATOR_COMMENTS_PAGE_SIZE;
       const data = await fetchModeratorComments({
@@ -55,7 +66,8 @@ export const moderationRouter = {
         comments: data.comments,
         count: data.count,
       };
-    }),
+    },
+  ),
   listAutoRateLimits: os
     .input(
       paginationSchema.extend({
@@ -64,7 +76,12 @@ export const moderationRouter = {
       }),
     )
     .handler(
-      async ({ input: { page, showExpiredRateLimits, showNewUserRateLimits } }) => {
+      async ({
+        input: { page, showExpiredRateLimits, showNewUserRateLimits },
+      }): Promise<{
+        rows: AutoRateLimitRow[];
+        count: number;
+      }> => {
         const offset = (page - 1) * MODERATION_PAGE_SIZE;
         const data = await fetchAutoRateLimits({
           offset,
@@ -79,33 +96,48 @@ export const moderationRouter = {
         };
       },
     ),
-  listDeletedComments: os
-    .input(paginationSchema)
-    .handler(async ({ input: { page } }) => {
+  listDeletedComments: os.input(paginationSchema).handler(
+    async ({
+      input: { page },
+    }): Promise<{
+      comments: DeletedCommentRow[];
+      count: number;
+      postMap: Record<string, PostSummary>;
+      deletedByUsersMap: Record<string, UserSummary>;
+    }> => {
       const canViewModeratorActions = await canCurrentUserViewModeratorActions();
       const offset = (page - 1) * MODERATION_PAGE_SIZE;
       const data = await fetchDeletedComments({
         offset,
         limit: MODERATION_PAGE_SIZE,
       });
-      const [postsMap, deletedByUsersMap] = await Promise.all([
-        fetchPostsByIds(uniqueIds(data.comments.map((comment) => comment.postId))),
+      const [postMap, deletedByUsersMap] = await Promise.all([
+        fetchPostsByIds(data.comments.map((comment) => comment.postId)),
         fetchUsersByIds(
-          uniqueIds(data.comments.map((comment) => comment.deletedByUserId)),
+          data.comments.map((comment) => comment.deletedByUserId),
           { includeDeleted: canViewModeratorActions },
         ),
       ]);
 
       return {
-        comments: data.comments,
+        comments: redactDeletedCommentsForViewer(
+          data.comments,
+          canViewModeratorActions,
+        ),
         count: data.count,
-        postMap: keyBy([...postsMap.values()], "_id"),
-        deletedByUsersMap: keyBy([...deletedByUsersMap.values()], "_id"),
+        postMap,
+        deletedByUsersMap,
       };
-    }),
-  listModeratorActions: os
-    .input(paginationSchema)
-    .handler(async ({ input: { page } }) => {
+    },
+  ),
+  listModeratorActions: os.input(paginationSchema).handler(
+    async ({
+      input: { page },
+    }): Promise<{
+      actions: ModeratorActionRow[];
+      count: number;
+      usersMap: Record<string, UserSummary>;
+    }> => {
       await moderationRoleGuard();
 
       const offset = (page - 1) * MODERATION_PAGE_SIZE;
@@ -114,40 +146,53 @@ export const moderationRouter = {
         limit: MODERATION_PAGE_SIZE,
       });
       const usersMap = await fetchUsersByIds(
-        uniqueIds(data.actions.map((action) => action.userId)),
+        data.actions.map((action) => action.userId),
         { includeDeleted: true },
       );
 
       return {
         actions: data.actions,
         count: data.count,
-        usersMap: keyBy([...usersMap.values()], "_id"),
+        usersMap,
       };
-    }),
+    },
+  ),
   listGloballyBannedUsers: os
     .input(
       paginationSchema.extend({
         showExpiredBans: z.boolean().default(false),
       }),
     )
-    .handler(async ({ input: { page, showExpiredBans } }) => {
-      await moderationRoleGuard();
+    .handler(
+      async ({
+        input: { page, showExpiredBans },
+      }): Promise<{
+        users: GloballyBannedUserRow[];
+        count: number;
+      }> => {
+        await moderationRoleGuard();
 
-      const offset = (page - 1) * MODERATION_PAGE_SIZE;
-      const data = await fetchGloballyBannedUsers({
-        offset,
-        limit: MODERATION_PAGE_SIZE,
-        showExpiredBans,
-      });
+        const offset = (page - 1) * MODERATION_PAGE_SIZE;
+        const data = await fetchGloballyBannedUsers({
+          offset,
+          limit: MODERATION_PAGE_SIZE,
+          showExpiredBans,
+        });
 
-      return {
-        users: data.users as GloballyBannedUserRow[],
-        count: data.count,
-      };
-    }),
-  listManualRateLimits: os
-    .input(paginationSchema)
-    .handler(async ({ input: { page } }) => {
+        return {
+          users: data.users,
+          count: data.count,
+        };
+      },
+    ),
+  listManualRateLimits: os.input(paginationSchema).handler(
+    async ({
+      input: { page },
+    }): Promise<{
+      actions: ModeratorActionRow[];
+      count: number;
+      usersMap: Record<string, UserSummary>;
+    }> => {
       await moderationRoleGuard();
 
       const offset = (page - 1) * MODERATION_PAGE_SIZE;
@@ -156,14 +201,15 @@ export const moderationRouter = {
         limit: MODERATION_PAGE_SIZE,
       });
       const usersMap = await fetchUsersByIds(
-        uniqueIds(data.actions.map((action) => action.userId)),
+        data.actions.map((action) => action.userId),
         { includeDeleted: true },
       );
 
       return {
         actions: data.actions,
         count: data.count,
-        usersMap: keyBy([...usersMap.values()], "_id"),
+        usersMap,
       };
-    }),
+    },
+  ),
 };

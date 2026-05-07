@@ -5,13 +5,13 @@ import Type from "@/components/Type";
 import UsersName from "@/components/UsersName";
 import { commentGetPageUrlFromIds } from "@/lib/comments/commentHelpers";
 import { MODERATION_PAGE_SIZE } from "@/lib/moderation/moderationTransforms";
-import type { LinkableUser, PostSummary } from "@/lib/moderation/moderationTypes";
+import type { UserSummary, PostSummary } from "@/lib/moderation/moderationTypes";
 import type { SectionState } from "./moderationPageClientTypes";
 
 export const MOD_ONLY_HEADER_CLASS = "bg-amber-600 text-always-white";
 
 export const renderUserLink = (
-  user: LinkableUser | null | undefined,
+  user: UserSummary | null | undefined,
   { showDashWhenMissing = false }: { showDashWhenMissing?: boolean } = {},
 ) => {
   if (!user && showDashWhenMissing) {

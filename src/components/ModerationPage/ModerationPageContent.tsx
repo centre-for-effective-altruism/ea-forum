@@ -1,7 +1,5 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
-import keyBy from "lodash/keyBy";
 import { userIsModOrAdmin } from "@/lib/users/userHelpers";
-import type { GloballyBannedUserRow } from "@/lib/moderation/moderationTypes";
 import {
   fetchAutoRateLimits,
   fetchDeletedComments,
@@ -15,8 +13,8 @@ import {
 import {
   MODERATION_PAGE_SIZE,
   MODERATOR_COMMENTS_PAGE_SIZE,
+  redactDeletedCommentsForViewer,
   toRateLimitDisplay,
-  uniqueIds,
 } from "@/lib/moderation/moderationTransforms";
 import ModerationPageContentClient from "./ModerationPageContentClient";
 import type { ModerationPageInitialData } from "./moderationPageClientTypes";
@@ -43,44 +41,40 @@ export default async function ModerationPageContent() {
       }),
     ]);
 
-  const [deletedCommentPostsMap, deletedByUsersMap] = await Promise.all([
-    fetchPostsByIds(
-      uniqueIds(deletedCommentsData.comments.map((comment) => comment.postId)),
-    ),
+  const [
+    deletedCommentPosts,
+    deletedCommentDeletedByUsers,
+    moderatorActionsData,
+    globallyBannedUsersData,
+    manualRateLimitsData,
+  ] = await Promise.all([
+    fetchPostsByIds(deletedCommentsData.comments.map((comment) => comment.postId)),
     fetchUsersByIds(
-      uniqueIds(
-        deletedCommentsData.comments.map((comment) => comment.deletedByUserId),
-      ),
+      deletedCommentsData.comments.map((comment) => comment.deletedByUserId),
       { includeDeleted: canViewModeratorActions },
     ),
-  ]);
-
-  const autoRateLimits = toRateLimitDisplay(autoRateLimitsData.rows);
-
-  const [moderatorActionsData, globallyBannedUsersData, manualRateLimitsData] =
     canViewModeratorActions
-      ? await Promise.all([
-          fetchModeratorActions({ offset: 0, limit: MODERATION_PAGE_SIZE }),
-          fetchGloballyBannedUsers({
-            offset: 0,
-            limit: MODERATION_PAGE_SIZE,
-            showExpiredBans: false,
-          }),
-          fetchManualRateLimits({ offset: 0, limit: MODERATION_PAGE_SIZE }),
-        ])
-      : [
-          { actions: [], count: 0 },
-          { users: [], count: 0 },
-          { actions: [], count: 0 },
-        ];
+      ? fetchModeratorActions({ offset: 0, limit: MODERATION_PAGE_SIZE })
+      : Promise.resolve({ actions: [], count: 0 }),
+    canViewModeratorActions
+      ? fetchGloballyBannedUsers({
+          offset: 0,
+          limit: MODERATION_PAGE_SIZE,
+          showExpiredBans: false,
+        })
+      : Promise.resolve({ users: [], count: 0 }),
+    canViewModeratorActions
+      ? fetchManualRateLimits({ offset: 0, limit: MODERATION_PAGE_SIZE })
+      : Promise.resolve({ actions: [], count: 0 }),
+  ]);
 
   const [moderatorActionUsers, manualRateLimitUsers] = await Promise.all([
     fetchUsersByIds(
-      uniqueIds(moderatorActionsData.actions.map((action) => action.userId)),
+      moderatorActionsData.actions.map((action) => action.userId),
       { includeDeleted: canViewModeratorActions },
     ),
     fetchUsersByIds(
-      uniqueIds(manualRateLimitsData.actions.map((action) => action.userId)),
+      manualRateLimitsData.actions.map((action) => action.userId),
       { includeDeleted: canViewModeratorActions },
     ),
   ]);
@@ -89,20 +83,23 @@ export default async function ModerationPageContent() {
     canViewModeratorActions,
     moderatorComments: moderatorCommentsData.comments,
     moderatorCommentsTotalCount: moderatorCommentsData.count,
-    autoRateLimits,
+    autoRateLimits: toRateLimitDisplay(autoRateLimitsData.rows),
     autoRateLimitsTotalCount: autoRateLimitsData.count,
-    deletedComments: deletedCommentsData.comments,
+    deletedComments: redactDeletedCommentsForViewer(
+      deletedCommentsData.comments,
+      canViewModeratorActions,
+    ),
     deletedCommentsTotalCount: deletedCommentsData.count,
-    deletedCommentPosts: keyBy([...deletedCommentPostsMap.values()], "_id"),
-    deletedCommentDeletedByUsers: keyBy([...deletedByUsersMap.values()], "_id"),
+    deletedCommentPosts,
+    deletedCommentDeletedByUsers,
     moderatorActions: moderatorActionsData.actions,
     moderatorActionsTotalCount: moderatorActionsData.count,
-    moderatorActionUsers: keyBy([...moderatorActionUsers.values()], "_id"),
-    globallyBannedUsers: globallyBannedUsersData.users as GloballyBannedUserRow[],
+    moderatorActionUsers,
+    globallyBannedUsers: globallyBannedUsersData.users,
     globallyBannedUsersTotalCount: globallyBannedUsersData.count,
     manualRateLimits: manualRateLimitsData.actions,
     manualRateLimitsTotalCount: manualRateLimitsData.count,
-    manualRateLimitUsers: keyBy([...manualRateLimitUsers.values()], "_id"),
+    manualRateLimitUsers,
   };
 
   return <ModerationPageContentClient initialData={initialData} />;

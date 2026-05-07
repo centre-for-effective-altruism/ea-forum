@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { rpc } from "@/lib/rpc";
+import type { UserSummary } from "@/lib/moderation/moderationTypes";
 import type {
   DeletedCommentsSectionState,
   ModerationPageInitialData,
@@ -9,13 +10,6 @@ import type {
   ModerationRowsState,
   UserMappedRowsState,
 } from "./moderationPageClientTypes";
-import type {
-  AutoRateLimitRow,
-  DeletedCommentRow,
-  GloballyBannedUserRow,
-  ModeratorActionRow,
-} from "@/lib/moderation/moderationTypes";
-import type { CommentsList } from "@/lib/comments/commentLists";
 
 const createRowsState = <T>(
   rows: T[],
@@ -41,7 +35,7 @@ const createDeletedCommentsState = (
 const createUserMappedRowsState = <T>(
   rows: T[],
   totalCount: number,
-  usersMap: ModerationPageInitialData["moderatorActionUsers"],
+  usersMap: Record<string, UserSummary>,
 ): UserMappedRowsState<T> => ({
   ...createRowsState(rows, totalCount),
   usersMap,
@@ -109,7 +103,7 @@ export function useModerationPageState(initialData: ModerationPageInitialData) {
     try {
       const data = await rpc.moderation.listModeratorComments({ page });
       setModeratorCommentsState({
-        rows: data.comments as CommentsList[],
+        rows: data.comments,
         totalCount: data.count,
         loading: false,
         error: null,
@@ -140,7 +134,7 @@ export function useModerationPageState(initialData: ModerationPageInitialData) {
         showNewUserRateLimits: effective.showNewUserRateLimits,
       });
       setAutoRateLimitsState({
-        rows: data.rows as AutoRateLimitRow[],
+        rows: data.rows,
         totalCount: data.count,
         loading: false,
         error: null,
@@ -160,7 +154,7 @@ export function useModerationPageState(initialData: ModerationPageInitialData) {
     try {
       const data = await rpc.moderation.listDeletedComments({ page });
       setDeletedCommentsState({
-        rows: data.comments as DeletedCommentRow[],
+        rows: data.comments,
         totalCount: data.count,
         postMap: data.postMap,
         deletedByUsersMap: data.deletedByUsersMap,
@@ -182,7 +176,7 @@ export function useModerationPageState(initialData: ModerationPageInitialData) {
     try {
       const data = await rpc.moderation.listModeratorActions({ page });
       setModeratorActionsState({
-        rows: data.actions as ModeratorActionRow[],
+        rows: data.actions,
         totalCount: data.count,
         usersMap: data.usersMap,
         loading: false,
@@ -212,7 +206,7 @@ export function useModerationPageState(initialData: ModerationPageInitialData) {
         showExpiredBans: effective.showExpiredBans,
       });
       setGloballyBannedUsersState({
-        rows: data.users as GloballyBannedUserRow[],
+        rows: data.users,
         totalCount: data.count,
         loading: false,
         error: null,
@@ -232,7 +226,7 @@ export function useModerationPageState(initialData: ModerationPageInitialData) {
     try {
       const data = await rpc.moderation.listManualRateLimits({ page });
       setManualRateLimitsState({
-        rows: data.actions as ModeratorActionRow[],
+        rows: data.actions,
         totalCount: data.count,
         usersMap: data.usersMap,
         loading: false,
