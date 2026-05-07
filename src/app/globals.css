@@ -190,6 +190,7 @@
   --color-mentions-selected: #0c70c7;
   --color-mentions-selected-hover: #0b62ae;
   --color-mentions-border: #212121;
+  --color-strawpoll: rgb(251, 191, 36);
 
   --color-editor-bg: #2a2a2a;
   --color-editor-comment-bg: #333333;
@@ -240,9 +241,11 @@
  */
 .no-scrollbars {
   scrollbar-width: none;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 .no-scrollbars::-webkit-scrollbar {
   height: 0;
+  display: none;
 }
 
 .text-size-adjust-none {

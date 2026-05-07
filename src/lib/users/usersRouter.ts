@@ -11,6 +11,7 @@ import { filterSettingsSchema } from "../filterSettings";
 import { calculateKarmaChanges } from "./karmaChanges";
 import {
   fetchOnboardingUsers,
+  fetchUserBySlug,
   isDisplayNameTaken,
   updateExpandedSection,
   updateWork,
@@ -72,6 +73,12 @@ export const usersRouter = {
     cookieStore.delete(LOGIN_TOKEN_COOKIE_NAME);
   }),
   currentUser: os.handler(getCurrentUser),
+  listBySlug: os
+    .input(z.object({ slug: z.string().nonempty() }))
+    .handler(async ({ input: { slug } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchUserBySlug(currentUser, slug);
+    }),
   hideDigestAd: os.handler(async () => {
     const currentUser = await getCurrentUser();
     if (!currentUser) {

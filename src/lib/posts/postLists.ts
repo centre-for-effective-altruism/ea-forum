@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
-import { fetchOrgUpdatesTagId, postTagsProjection } from "../tags/tagQueries";
+import { fetchTagBySlug, postTagsProjection } from "../tags/tagQueries";
 import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
@@ -490,8 +490,8 @@ export const fetchOrgUpdatesPostsList = async ({
   offset?: number;
   limit: number;
 }) => {
-  const tagId = await fetchOrgUpdatesTagId();
-  if (!tagId) {
+  const tag = await fetchTagBySlug("organization-updates");
+  if (!tag) {
     console.warn("Organization updates tag not found by slug");
     return [];
   }
@@ -502,7 +502,7 @@ export const fetchOrgUpdatesPostsList = async ({
       sticky: false,
       groupId: { isNull: true },
       postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
-      RAW: onlyTagFilter(tagId),
+      RAW: onlyTagFilter(tag._id),
     },
     orderBy: magicSort(),
     offset,

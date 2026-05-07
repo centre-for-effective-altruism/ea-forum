@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { fetchFrontpageCuratedPostsList } from "@/lib/posts/postLists";
-import { fetchOrgUpdatesTagId } from "@/lib/tags/tagQueries";
+import { fetchTagBySlug } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
@@ -17,13 +17,14 @@ import Type from "@/components/Type";
 // Frontpage and Community. Delete this directory (and the supporting code in
 // postLists.ts, postsHelpers.ts, tagQueries.tsx) once the experiment ends.
 export default async function AdminOrgUpdatesTestPage() {
-  const [cookieStore, curatedPosts, orgUpdatesTagId] = await Promise.all([
+  const [cookieStore, curatedPosts, orgUpdatesTag] = await Promise.all([
     cookies(),
     getCurrentUser().then((user) =>
       fetchFrontpageCuratedPostsList(user?._id ?? null),
     ),
-    fetchOrgUpdatesTagId(),
+    fetchTagBySlug("organization-updates"),
   ]);
+  const orgUpdatesTagId = orgUpdatesTag?._id ?? null;
 
   const postViewCookie = cookieStore.get("posts_list_view_type")?.value ?? "";
   const ssrPostView = isPostsListViewType(postViewCookie)

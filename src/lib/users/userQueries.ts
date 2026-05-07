@@ -4,7 +4,11 @@ import { posts, users } from "../schema";
 import type { CurrentUser } from "./currentUser";
 import type { AnyKarmaChange } from "./karmaChangesTypes";
 import type { CareerStageValue } from "./userHelpers";
-import type { RelationalProjection } from "../utils/queryHelpers";
+import type {
+  RelationalFilter,
+  RelationalOrderBy,
+  RelationalProjection,
+} from "../utils/queryHelpers";
 import { getReactionsForKarmaChanges } from "../votes/reactions";
 import { filterNonNull } from "../typeHelpers";
 import keyBy from "lodash/keyBy";
@@ -68,6 +72,54 @@ export const coauthorsSelector = (postsTable: typeof posts) => sql<
     coauthor."_id" = ANY(${postsTable}."coauthorUserIds")
     AND coauthor."deleted" IS NOT TRUE
 )`;
+
+type UsersFilter = RelationalFilter<typeof db.query.users>;
+
+type UsersOrderBy = RelationalOrderBy<typeof db.query.users>;
+
+// TODO: Maybe this should be a function that takes the current user and does
+// permission checks
+const viewableUserFilter = {
+  deleted: false,
+} as const;
+
+export const fetchUserBase = ({
+  where,
+  orderBy,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  where?: UsersFilter;
+  orderBy?: UsersOrderBy;
+  offset?: number;
+  limit?: number;
+}) => {
+  return db.query.users.findMany({
+    ...userBaseProjection,
+    where: {
+      ...viewableUserFilter,
+      ...where,
+    },
+    orderBy,
+    offset,
+    limit,
+  });
+};
+
+export const fetchUserBySlug = async (
+  currentUser: CurrentUser | null,
+  slug: string,
+) => {
+  const result = await fetchUserBase({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      slug,
+    },
+    limit: 1,
+  });
+  return result[0] ?? null;
+};
 
 export const fetchUserForReview = (userId: string) =>
   db.query.users.findFirst({
