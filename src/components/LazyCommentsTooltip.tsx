@@ -73,7 +73,7 @@ export default function LazyCommentsTooltip({
       placement={placement}
       className={className}
       tooltipClassName="
-        bg-gray-0! text-gray-900! p-0! shadow-md w-[360px] max-w-full
+        bg-surface-floating! text-gray-900! p-0! shadow-md w-[360px] max-w-full
       "
       title={<Loading />}
     >

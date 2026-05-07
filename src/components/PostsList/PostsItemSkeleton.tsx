@@ -11,7 +11,7 @@ export default function PostsItemSkeleton({
       <article
         aria-hidden
         className="
-          w-full max-w-full h-[144px] rounded bg-gray-50 border border-gray-100
+          w-full max-w-full h-[144px] rounded bg-gray-50
           [&_*]:max-w-full [&_*]:min-w-0
         "
         data-component="PostsItemSkeleton"
@@ -52,7 +52,7 @@ export default function PostsItemSkeleton({
     <article
       aria-hidden
       className="
-        w-full max-w-full h-[60px] rounded bg-gray-50 border border-gray-100
+        w-full max-w-full h-[60px] rounded bg-gray-50
         [&_*]:max-w-full [&_*]:min-w-0
       "
       data-component="PostsItemSkeleton"
