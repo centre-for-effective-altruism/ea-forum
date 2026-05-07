@@ -2,7 +2,7 @@
 
 import { ElementType, FC, ReactNode, RefObject, useMemo, useRef } from "react";
 import { parseDocument, ElementType as HtmlElementType } from "htmlparser2";
-import type { ChildNode } from "domhandler";
+import type { ChildNode, Document } from "domhandler";
 import { captureEvent } from "@/lib/analyticsEvents";
 import { translateAttribs, validateUrl } from "@/lib/utils/contentHelpers";
 import MaybeHorizScrollBlock from "../MaybeHorizScrollBlock";
@@ -10,10 +10,15 @@ import CollapsedFootnotes from "./CollapsedFootnotes";
 import HoverPreviewLink from "./HoverPreviewLink";
 
 const HtmlNode: FC<{
+  /** The parsed node to render */
   node: ChildNode;
+  /** Parsed node for the entire piece of content, which will have node as a child */
+  document: Document;
+  /** Ref to the outer container for this content */
   bodyRef: RefObject<HTMLDivElement | null>;
+  /** Whether or not this is a top level root node */
   root?: boolean;
-}> = ({ node, bodyRef, root }) => {
+}> = ({ node, document, bodyRef, root }) => {
   switch (node.type) {
     case HtmlElementType.Tag: {
       let As = node.tagName.toLowerCase() as ElementType & string;
@@ -26,7 +31,7 @@ const HtmlNode: FC<{
       const classNames = node.attribs.class?.split(" ") ?? [];
 
       const mappedChildren: ReactNode[] = node.childNodes.map((c, i) => (
-        <HtmlNode key={i} node={c} bodyRef={bodyRef} />
+        <HtmlNode key={i} node={c} document={document} bodyRef={bodyRef} />
       ));
 
       if (classNames.includes("footnotes")) {
@@ -102,7 +107,11 @@ const HtmlNode: FC<{
         );
       } else if (As === "a") {
         return (
-          <HoverPreviewLink href={attribs.href as string} {...attribs}>
+          <HoverPreviewLink
+            href={attribs.href as string}
+            document={document}
+            {...attribs}
+          >
             {result}
           </HoverPreviewLink>
         );
@@ -140,19 +149,33 @@ const HtmlNode: FC<{
   }
 };
 
+type EnhancedContent =
+  | {
+      html: string;
+      document?: never;
+    }
+  | {
+      html?: never;
+      document: Document;
+    };
+
 export default function ContentProgressiveEnhancements({
   html,
+  document: document_,
   className,
-}: Readonly<{
-  html: string;
-  className?: string;
-}>) {
+}: Readonly<
+  EnhancedContent & {
+    className?: string;
+  }
+>) {
   const bodyRef = useRef<HTMLDivElement>(null);
-  const node = useMemo(() => parseDocument(html), [html]);
+  const document = useMemo(() => {
+    return document_ ?? parseDocument(html);
+  }, [html, document_]);
   return (
     <div data-component="ContentItemBody" ref={bodyRef} className={className}>
-      {node.childNodes.map((node, i) => (
-        <HtmlNode key={i} node={node} bodyRef={bodyRef} root />
+      {document.childNodes.map((node, i) => (
+        <HtmlNode key={i} node={node} document={document} bodyRef={bodyRef} root />
       ))}
     </div>
   );

@@ -1,5 +1,7 @@
 import { captureException } from "@sentry/nextjs";
 import { CSSProperties } from "react";
+import { Document } from "domhandler";
+import { findOne } from "domutils";
 
 const tryToFixUrl = (oldUrl: string, newUrl: string) => {
   try {
@@ -128,3 +130,10 @@ export const locationHashIsFootnote = (hash: string) =>
 
 export const locationHashIsFootnoteBackreference = (hash: string) =>
   hash.startsWith("#fnref");
+
+export const getNodeById = (doc: Document, id: string) =>
+  findOne(
+    (node) => node.type === "tag" && node.attribs?.id === id,
+    doc.children,
+    true,
+  );

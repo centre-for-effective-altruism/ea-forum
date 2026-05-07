@@ -1,4 +1,5 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { Document } from "domhandler";
 import {
   locationHashIsFootnote,
   locationHashIsFootnoteBackreference,
@@ -10,12 +11,14 @@ export default function HoverPreviewLink({
   href,
   id,
   rel,
+  document,
   className,
   children,
 }: Readonly<{
   href: string;
   id?: string;
   rel?: string;
+  document: Document;
   className?: string;
   children: ReactNode;
 }>) {
@@ -34,7 +37,13 @@ export default function HoverPreviewLink({
   if (href.startsWith("#")) {
     if (locationHashIsFootnote(href)) {
       return (
-        <FootnotePreview href={href} id={id} rel={rel} className={className}>
+        <FootnotePreview
+          href={href}
+          id={id}
+          rel={rel}
+          document={document}
+          className={className}
+        >
           {children}
         </FootnotePreview>
       );
