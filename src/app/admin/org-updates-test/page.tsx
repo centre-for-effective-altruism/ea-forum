@@ -15,7 +15,7 @@ import Type from "@/components/Type";
 // Throwaway admin-only test page for evaluating a home-page layout where posts
 // tagged "organization-updates" are diverted into their own section between
 // Frontpage and Community. Delete this directory (and the supporting code in
-// postLists.ts, postsHelpers.ts, tagQueries.tsx) once the experiment ends.
+// postLists.ts and postsHelpers.ts) once the experiment ends.
 export default async function AdminOrgUpdatesTestPage() {
   const [cookieStore, curatedPosts, orgUpdatesTag] = await Promise.all([
     cookies(),
