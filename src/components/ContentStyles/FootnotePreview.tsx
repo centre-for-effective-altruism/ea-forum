@@ -26,10 +26,7 @@ export default function FootnotePreview({
     }
     const footnoteId = href.slice(1);
     const node = getNodeById(document, footnoteId);
-    if (!node) {
-      return null;
-    }
-    return new Document([node]);
+    return node ? new Document([node]) : null;
   }, [href, document]);
 
   const linkNode = (
@@ -38,21 +35,19 @@ export default function FootnotePreview({
     </Link>
   );
 
-  if (!footnoteDocument) {
-    return linkNode;
-  }
-
-  return (
+  return footnoteDocument ? (
     <Tooltip
       interactable
       As="span"
       title={<ContentProgressiveEnhancements document={footnoteDocument} />}
       tooltipClassName="
-        w-[400px] max-w-full px-3! py-2!
-        [&_.footnote-back-link]:hidden [&>li]:list-none
-      "
+          [&_.footnote-back-link]:hidden [&>*>li]:list-none
+          w-[400px] max-w-full px-3! py-2!
+        "
     >
       {linkNode}
     </Tooltip>
+  ) : (
+    linkNode
   );
 }
