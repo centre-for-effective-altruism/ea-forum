@@ -41,9 +41,9 @@ export default function FootnotePreview({
       As="span"
       title={<ContentProgressiveEnhancements document={footnoteDocument} />}
       tooltipClassName="
-          [&_.footnote-back-link]:hidden [&>*>li]:list-none
-          w-[400px] max-w-full px-3! py-2!
-        "
+        [&_.footnote-back-link]:hidden [&>*>li]:list-none
+        footnote-section footnotes w-[400px] max-w-full px-3! py-2!
+      "
     >
       {linkNode}
     </Tooltip>

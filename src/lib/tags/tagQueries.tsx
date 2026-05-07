@@ -43,14 +43,22 @@ export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
   });
 });
 
+export const fetchTagBySlug = async (slug: string): Promise<TagBase> => {
+  const result = await db.query.tags.findMany({
+    ...tagBaseProjection,
+    where: {
+      slug,
+      deleted: false,
+    },
+  });
+  return result[0] ?? null;
+};
+
 export const fetchTagsById = async (
   tagIds: string[],
 ): Promise<Record<string, TagBase>> => {
   const result = await db.query.tags.findMany({
     ...tagBaseProjection,
-    extras: {
-      description: htmlSubstring(sql`"description"->>'html'`),
-    },
     where: {
       _id: { in: tagIds },
       deleted: false,

@@ -8,6 +8,7 @@ import {
 } from "@/lib/utils/contentHelpers";
 import LazyPostsTooltip from "../LazyPostsTooltip";
 import LazyUsersTooltip from "../LazyUsersTooltip";
+import LazyTagTooltip from "../LazyTagTooltip";
 import FootnotePreview from "./FootnotePreview";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
@@ -63,6 +64,7 @@ export default function HoverPreviewLink({
     }
   }
 
+  // A page with a special tooltip component
   switch (linkContentType?.type) {
     case "post":
       return (
@@ -85,13 +87,22 @@ export default function HoverPreviewLink({
         </LazyUsersTooltip>
       );
     case "tag":
-    // TODO: Tag hover previews
+      return (
+        <LazyTagTooltip
+          As="span"
+          tagSlug={linkContentType.tagSlug}
+          className="[&_a]:after:content-['°'] [&_a]:after:ml-px"
+        >
+          {defaultLinkNode}
+        </LazyTagTooltip>
+      );
     case "sequence":
     // TODO: Sequence hover previews
     default:
       break;
   }
 
+  // Anything else, just show the URL in a tooltip
   return (
     <Tooltip
       As="span"

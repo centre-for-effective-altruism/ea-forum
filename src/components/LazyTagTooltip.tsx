@@ -2,47 +2,47 @@ import { ElementType, ReactNode, useCallback, useEffect, useState } from "react"
 import { rpc } from "@/lib/rpc";
 import { captureException } from "@sentry/nextjs";
 import type { Placement } from "@floating-ui/react";
-import type { UserBase } from "@/lib/users/userQueries";
-import UsersTooltip from "./UsersTooltip";
+import type { TagBase } from "@/lib/tags/tagQueries";
+import TagTooltip from "./Tags/TagTooltip";
 import Tooltip from "./Tooltip";
 import Loading from "./Loading";
 
-export default function LazyUsersTooltip({
-  userSlug,
+export default function LazyTagTooltip({
+  tagSlug,
   placement,
   As = "div",
   className,
   children,
 }: Readonly<{
-  userSlug: string | null;
+  tagSlug: string | null;
   placement?: Placement;
   As?: ElementType;
   className?: string;
   children: ReactNode;
 }>) {
-  const [user, setUser] = useState<UserBase | null>(null);
+  const [tag, setTag] = useState<TagBase | null>(null);
   const [everHovered, setEverHovered] = useState(false);
   const onMouseEnter = useCallback(() => setEverHovered(true), []);
 
   // TODO: These results should be stored in a global cache to avoid refetching
-  // the same user multiple times
+  // the same tag multiple times
   const refetch = useCallback(async () => {
-    if (!userSlug) {
-      setUser(null);
+    if (!tagSlug) {
+      setTag(null);
       return;
     }
     try {
-      const result = await rpc.users.listBySlug({ slug: userSlug });
-      setUser(result);
+      const result = await rpc.tags.listBySlug({ slug: tagSlug });
+      setTag(result);
     } catch (e) {
-      console.error(`Error fetching user ${userSlug}:`, e);
+      console.error(`Error fetching tag ${tagSlug}:`, e);
       captureException(e);
     }
-  }, [userSlug]);
+  }, [tagSlug]);
 
   useEffect(() => {
     setEverHovered(false);
-  }, [userSlug]);
+  }, [tagSlug]);
 
   useEffect(() => {
     if (everHovered) {
@@ -50,15 +50,15 @@ export default function LazyUsersTooltip({
     }
   }, [everHovered, refetch]);
 
-  if (!userSlug) {
+  if (!tagSlug) {
     return <>{children}</>;
   }
 
-  if (user) {
+  if (tag) {
     return (
-      <UsersTooltip As={As} placement={placement} className={className} user={user}>
+      <TagTooltip As={As} placement={placement} className={className} tag={tag}>
         {children}
-      </UsersTooltip>
+      </TagTooltip>
     );
   }
 
