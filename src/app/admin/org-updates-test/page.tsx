@@ -17,9 +17,11 @@ import Type from "@/components/Type";
 // Frontpage and Community. Delete this directory (and the supporting code in
 // postLists.ts, postsHelpers.ts, tagQueries.tsx) once the experiment ends.
 export default async function AdminOrgUpdatesTestPage() {
-  const [cookieStore, currentUser, orgUpdatesTagId] = await Promise.all([
+  const [cookieStore, curatedPosts, orgUpdatesTagId] = await Promise.all([
     cookies(),
-    getCurrentUser(),
+    getCurrentUser().then((user) =>
+      fetchFrontpageCuratedPostsList(user?._id ?? null),
+    ),
     fetchOrgUpdatesTagId(),
   ]);
 
@@ -30,13 +32,8 @@ export default async function AdminOrgUpdatesTestPage() {
 
   const communityTagId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
 
-  const frontpageExcludeTagId =
-    communityTagId && orgUpdatesTagId
-      ? [communityTagId, orgUpdatesTagId]
-      : (communityTagId ?? orgUpdatesTagId ?? undefined);
-
-  const curatedPosts = await fetchFrontpageCuratedPostsList(
-    currentUser?._id ?? null,
+  const frontpageExcludeTagIds = [communityTagId, orgUpdatesTagId].filter(
+    (id): id is string => Boolean(id),
   );
 
   return (
@@ -66,9 +63,7 @@ export default async function AdminOrgUpdatesTestPage() {
               view={{
                 view: "frontpage",
                 limit: 11,
-                ...(frontpageExcludeTagId
-                  ? { excludeTagId: frontpageExcludeTagId }
-                  : null),
+                excludeTagId: frontpageExcludeTagIds,
               }}
             />
           </Suspense>
@@ -102,7 +97,7 @@ export default async function AdminOrgUpdatesTestPage() {
               view: "frontpage",
               limit: 5,
               onlyTagId: communityTagId,
-              ...(orgUpdatesTagId ? { excludeTagId: orgUpdatesTagId } : null),
+              excludeTagId: orgUpdatesTagId ?? undefined,
             }}
           />
         </HomePageCommunitySection>
