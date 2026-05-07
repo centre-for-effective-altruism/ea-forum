@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import ViewBasedPostsList from "@/components/PostsList/ViewBasedPostsList";
 import PostsList from "@/components/PostsList/PostsList";
 import PostsListSkeleton from "@/components/PostsList/PostsListSkeleton";
+import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import HomePageCommunitySection from "@/components/HomePage/HomePageCommunitySection";
 import Type from "@/components/Type";
 
@@ -38,71 +39,73 @@ export default async function AdminOrgUpdatesTestPage() {
   );
 
   return (
-    <PostsListViewProvider ssrValue={ssrPostView}>
-      <Type style="sectionTitleLarge" className="mb-2">
-        Admin: organization updates test
-      </Type>
-      <div className="mb-2">
-        <ViewBasedPostsList
-          viewType="list"
-          hideLoadMore
-          view={{
-            view: "sticky",
-            limit: 5,
-          }}
-        />
-      </div>
-      <div className="mb-10">
-        <HideRepeatedPostsProvider>
-          <PostsList posts={curatedPosts} viewType="fromContext" />
-          <Suspense
-            fallback={<PostsListSkeleton count={11} viewType="fromContext" />}
-          >
-            <ViewBasedPostsList
-              viewType="fromContext"
-              maxOffset={200}
-              view={{
-                view: "frontpage",
-                limit: 11,
-                excludeTagId: frontpageExcludeTagIds,
-              }}
-            />
-          </Suspense>
-        </HideRepeatedPostsProvider>
-      </div>
-      {orgUpdatesTagId && (
-        <div className="mb-10">
-          <Type style="sectionTitleLarge" className="mb-2">
-            Organization updates
-          </Type>
-          <Suspense
-            fallback={<PostsListSkeleton count={5} viewType="fromContext" />}
-          >
-            <ViewBasedPostsList
-              viewType="fromContext"
-              initialLimit={5}
-              view={{
-                view: "orgUpdates",
-                limit: 10,
-              }}
-            />
-          </Suspense>
-        </div>
-      )}
-      {communityTagId && (
-        <HomePageCommunitySection className="mb-10">
+    <HomePageColumns pageContext="adminOrgUpdatesTest">
+      <PostsListViewProvider ssrValue={ssrPostView}>
+        <Type style="sectionTitleLarge" className="mb-2">
+          Admin: organization updates test
+        </Type>
+        <div className="mb-2">
           <ViewBasedPostsList
-            viewType="fromContext"
+            viewType="list"
             hideLoadMore
             view={{
-              view: "frontpage",
+              view: "sticky",
               limit: 5,
-              onlyTagId: communityTagId,
-              excludeTagId: orgUpdatesTagId ?? undefined,
             }}
           />
-        </HomePageCommunitySection>
-      )}
-    </PostsListViewProvider>
+        </div>
+        <div className="mb-10">
+          <HideRepeatedPostsProvider>
+            <PostsList posts={curatedPosts} viewType="fromContext" />
+            <Suspense
+              fallback={<PostsListSkeleton count={11} viewType="fromContext" />}
+            >
+              <ViewBasedPostsList
+                viewType="fromContext"
+                maxOffset={200}
+                view={{
+                  view: "frontpage",
+                  limit: 11,
+                  excludeTagId: frontpageExcludeTagIds,
+                }}
+              />
+            </Suspense>
+          </HideRepeatedPostsProvider>
+        </div>
+        {orgUpdatesTagId && (
+          <div className="mb-10">
+            <Type style="sectionTitleLarge" className="mb-2">
+              Organization updates
+            </Type>
+            <Suspense
+              fallback={<PostsListSkeleton count={5} viewType="fromContext" />}
+            >
+              <ViewBasedPostsList
+                viewType="fromContext"
+                initialLimit={5}
+                view={{
+                  view: "orgUpdates",
+                  limit: 10,
+                }}
+              />
+            </Suspense>
+          </div>
+        )}
+        {communityTagId && (
+          <HomePageCommunitySection className="mb-10">
+            <ViewBasedPostsList
+              viewType="fromContext"
+              hideLoadMore
+              view={{
+                view: "frontpage",
+                limit: 5,
+                onlyTagId: communityTagId,
+                excludeTagId: orgUpdatesTagId ?? undefined,
+              }}
+            />
+          </HomePageCommunitySection>
+        )}
+      </PostsListViewProvider>
+    </HomePageColumns>
   );
 }
