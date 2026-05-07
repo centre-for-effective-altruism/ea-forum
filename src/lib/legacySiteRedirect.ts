@@ -33,6 +33,7 @@ const newSitePatterns = [
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
   /^\/admin$/, // Admin
   /^\/admin\/onboarding$/, // Admin onboarding test
+  /^\/admin\/org-updates-test$/, // Admin org-updates layout test
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
