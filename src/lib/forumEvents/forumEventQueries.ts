@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
-import type { DbOrTransaction } from "../db";
+import type { CurrentUser } from "../users/currentUser";
 import type { ForumEvent, InsertForumEvent } from "../schema";
 import type { EditorContents } from "../ckeditor/editorHelpers";
+import type { RelationalProjection } from "../utils/queryHelpers";
+import { db, DbOrTransaction } from "../db";
 import {
   createRevisionForDenormalizedEditableField,
   createRevisionForNormalizedEditableField,
@@ -11,7 +13,59 @@ import {
   ForumEventSticker,
   ForumEventStickerData,
 } from "./forumEventHelpers";
-import { CurrentUser } from "../users/currentUser";
+
+export type ForumEventRelationalProjection = RelationalProjection<
+  typeof db.query.forumEvents
+>;
+
+export type ForumEventFromProjection<
+  TConfig extends ForumEventRelationalProjection,
+> = Awaited<ReturnType<typeof db.query.forumEvents.findMany<TConfig>>>[number];
+
+export const forumEventBaseProjection = {
+  columns: {
+    _id: true,
+    title: true,
+    eventFormat: true,
+    isGlobal: true,
+    postId: true,
+    bannerImageId: true,
+    darkColor: true,
+    lightColor: true,
+    bannerTextColor: true,
+    publicData: true,
+    pollAgreeWording: true,
+    pollDisagreeWording: true,
+  },
+  with: {
+    post: {
+      columns: {
+        _id: true,
+        slug: true,
+      },
+    },
+    tag: {
+      columns: {
+        _id: true,
+        slug: true,
+      },
+    },
+  },
+} as const satisfies ForumEventRelationalProjection;
+
+export type ForumEventBase = ForumEventFromProjection<
+  typeof forumEventBaseProjection
+>;
+
+export const fetchForumEventById = async (_id: string) => {
+  const result = await db.query.forumEvents.findFirst({
+    ...forumEventBaseProjection,
+    where: {
+      _id,
+    },
+  });
+  return result ?? null;
+};
 
 /**
  * Asserts "publicData" is tagged with the format expected. If no format is set

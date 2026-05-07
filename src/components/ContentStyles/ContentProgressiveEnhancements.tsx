@@ -5,6 +5,7 @@ import { parseDocument, ElementType as HtmlElementType } from "htmlparser2";
 import type { ChildNode, Document } from "domhandler";
 import { captureEvent } from "@/lib/analyticsEvents";
 import { translateAttribs, validateUrl } from "@/lib/utils/contentHelpers";
+import PostPagePollSection from "../Polls/PostPagePollSection";
 import MaybeHorizScrollBlock from "../MaybeHorizScrollBlock";
 import CollapsedFootnotes from "./CollapsedFootnotes";
 import HoverPreviewLink from "./HoverPreviewLink";
@@ -28,7 +29,6 @@ const HtmlNode: FC<{
       }
 
       const attribs = translateAttribs(node.attribs);
-      // const id = attribs.id;
       const classNames = node.attribs.class?.split(" ") ?? [];
 
       const mappedChildren: ReactNode[] = node.childNodes.map((c, i) => (
@@ -64,17 +64,15 @@ const HtmlNode: FC<{
       }
 
       if (classNames.includes("ck-poll")) {
-        /*
-      const forumEventId = attribs['data-internal-id'];
-      if (forumEventId) {
-        return (
-          <ForumEventPostPagePollSection
-            id={forumEventId}
-            forumEventId={forumEventId}
-          />
-        );
-      }
-       */
+        const forumEventId = attribs["data-internal-id"];
+        if (forumEventId) {
+          return (
+            <PostPagePollSection
+              id={forumEventId as string}
+              forumEventId={forumEventId as string}
+            />
+          );
+        }
       }
 
       if (attribs["data-internal-id"]) {

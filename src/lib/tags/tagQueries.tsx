@@ -43,15 +43,15 @@ export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
   });
 });
 
-export const fetchTagBySlug = async (slug: string): Promise<TagBase> => {
-  const result = await db.query.tags.findMany({
+export const fetchTagBySlug = async (slug: string): Promise<TagBase | null> => {
+  const result = await db.query.tags.findFirst({
     ...tagBaseProjection,
     where: {
       slug,
       deleted: false,
     },
   });
-  return result[0] ?? null;
+  return result ?? null;
 };
 
 export const fetchTagsById = async (

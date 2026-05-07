@@ -1,6 +1,8 @@
 import { z } from "zod/v4";
 import { TupleSet, UnionOf } from "../typeHelpers";
 import type { Revision } from "../schema";
+import { ForumEventBase } from "./forumEventQueries";
+import { CurrentUser } from "../users/currentUser";
 
 export const FORUM_EVENT_FORMATS = new TupleSet([
   "BASIC",
@@ -98,3 +100,14 @@ export const endDateFromDuration = (duration: PollProps["duration"]) =>
       duration.hours * ONE_HOUR_MS +
       duration.minutes * ONE_MINUTE_MS,
   );
+
+/**
+ * Pull out the given user's vote in the forum event. Note that 0 is a valid vote.
+ */
+export const getForumEventVoteForUser = (
+  event: ForumEventBase | null,
+  user: CurrentUser | null,
+): number | null => {
+  const data = event?.publicData as Record<string, { x: number }> | null;
+  return user ? (data?.[user._id]?.x ?? null) : null;
+};
