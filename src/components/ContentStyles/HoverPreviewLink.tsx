@@ -6,11 +6,12 @@ import {
   locationHashIsFootnoteBackreference,
   parseLinkContentType,
 } from "@/lib/utils/contentHelpers";
+import LazyPostsTooltip from "../LazyPostsTooltip";
+import LazyUsersTooltip from "../LazyUsersTooltip";
 import FootnotePreview from "./FootnotePreview";
-import Link from "../Link";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
-import LazyPostsTooltip from "../LazyPostsTooltip";
+import Link from "../Link";
 
 export default function HoverPreviewLink({
   href,
@@ -74,7 +75,15 @@ export default function HoverPreviewLink({
         </LazyPostsTooltip>
       );
     case "user":
-    // TODO: User hover previews
+      return (
+        <LazyUsersTooltip
+          As="span"
+          userSlug={linkContentType.userSlug}
+          className="[&_a]:after:content-['°'] [&_a]:after:ml-px"
+        >
+          {defaultLinkNode}
+        </LazyUsersTooltip>
+      );
     case "tag":
     // TODO: Tag hover previews
     case "sequence":
