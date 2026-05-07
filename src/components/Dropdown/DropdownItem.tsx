@@ -124,7 +124,7 @@ export default function DropdownItem({
       onClick={onClick}
       submenu={submenu}
       className={clsx(
-        "rounded p-2 cursor-pointer hover:bg-gray-100 outline-none w-full",
+        "rounded p-2 cursor-pointer hover:bg-surface-floating-hover outline-none w-full",
         "flex items-center justify-start gap-3 text-left",
         className,
       )}

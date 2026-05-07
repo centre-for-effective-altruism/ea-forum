@@ -24,7 +24,7 @@ export default function TagTooltip({
     <Tooltip
       interactable
       placement={placement}
-      tooltipClassName="bg-gray-0! text-gray-900! p-0! shadow w-[270px]"
+      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
       title={
         <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">
           {description && <TagBody html={description} isExcerpt />}

@@ -38,7 +38,7 @@ export default function ReactionPalette({
     <div
       data-component="ReactionPalette"
       className="
-        bg-gray-0 rounded shadow p-2 border border-gray-100 flex flex-col
+        bg-surface-floating rounded shadow p-2 border border-gray-100 flex flex-col
       "
     >
       <Type style="sectionTitleSmall" className="mt-[6px] mb-1 ml-1 !text-[11px]">

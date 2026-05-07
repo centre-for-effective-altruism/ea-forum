@@ -74,7 +74,10 @@ export default function PostsList({
   }, [displayedPosts, loading, canLoadMore, onLoadMore]);
 
   return (
-    <section className={clsx("max-w-full", className)} data-component="PostsList">
+    <section
+      className={clsx("max-w-full space-y-1", className)}
+      data-component="PostsList"
+    >
       {displayedPosts.map((post) => (
         <PostsItem key={post._id} post={post} viewType={actualViewType} />
       ))}

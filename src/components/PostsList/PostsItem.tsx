@@ -113,9 +113,8 @@ export default function PostsItem({
       <article
         data-component="PostsItem"
         className={clsx(
-          "w-full max-w-full rounded bg-gray-50 border border-gray-100",
+          "w-full max-w-full rounded bg-gray-50",
           "flex flex-col hover:bg-postitemhover",
-          "hover:border-postitemhover-border",
           cardView ? "justify-between" : "justify-center",
           !cardView && !showNewComments && "md:h-[60px]",
         )}
@@ -141,8 +140,8 @@ export default function PostsItem({
               style="postTitle"
               className={clsx(
                 "mb-[2px] max-md:line-clamp-2 md:truncate",
-                "visited:text-grey-700 hover:opacity-70",
-                isRead ? "text-grey-700" : "text-grey-900",
+                "visited:text-gray-700 hover:opacity-70",
+                isRead ? "text-gray-700" : "text-gray-900",
               )}
             >
               <InteractionWrapper className="inline">
