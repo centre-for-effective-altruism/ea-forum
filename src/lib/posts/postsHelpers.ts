@@ -19,10 +19,10 @@ export const postStatuses = {
 };
 
 export const postsListViewSchema = z.object({
-  view: z.enum(["frontpage", "sticky"]),
+  view: z.enum(["frontpage", "sticky", "orgUpdates"]),
   offset: z.int().gte(0).optional(),
   limit: z.int().gt(0),
-  excludeTagId: z.string().optional(),
+  excludeTagId: z.union([z.string(), z.array(z.string())]).optional(),
   onlyTagId: z.string().optional(),
   filterSettings: filterSettingsSchema.optional(),
 });

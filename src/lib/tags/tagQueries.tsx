@@ -43,6 +43,14 @@ export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
   });
 });
 
+export const fetchOrgUpdatesTagId = cache(async (): Promise<string | null> => {
+  const tag = await db.query.tags.findFirst({
+    columns: { _id: true },
+    where: { slug: "organization-updates", deleted: false },
+  });
+  return tag?._id ?? null;
+});
+
 export const fetchTagsById = async (
   tagIds: string[],
 ): Promise<Record<string, TagBase>> => {

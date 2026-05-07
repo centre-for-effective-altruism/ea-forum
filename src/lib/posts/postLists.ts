@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
-import { postTagsProjection } from "../tags/tagQueries";
+import { fetchOrgUpdatesTagId, postTagsProjection } from "../tags/tagQueries";
 import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
@@ -208,7 +208,7 @@ export const fetchFrontpagePostsList = ({
   offset?: number;
   limit: number;
   onlyTagId?: string;
-  excludeTagId?: string;
+  excludeTagId?: string | string[];
   filterSettings?: FilterSettings;
 }) => {
   let scoreField: ((postsTable: typeof posts) => SQL) | undefined;
@@ -217,7 +217,10 @@ export const fetchFrontpagePostsList = ({
     filters.push(onlyTagFilter(onlyTagId));
   }
   if (excludeTagId) {
-    filters.push(excludeTagFilter(excludeTagId));
+    const ids = Array.isArray(excludeTagId) ? excludeTagId : [excludeTagId];
+    for (const id of ids) {
+      filters.push(excludeTagFilter(id));
+    }
   }
   if (filterSettings) {
     const { filter, score } = filterSettingsToSelector(filterSettings);
@@ -476,6 +479,37 @@ export const fetchRecentOpportunitiesPostsList = async ({
   });
 };
 
+// TODO: Remove along with the /admin/org-updates-test page once the
+// organization-updates layout experiment is concluded.
+export const fetchOrgUpdatesPostsList = async ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) => {
+  const tagId = await fetchOrgUpdatesTagId();
+  if (!tagId) {
+    console.warn("Organization updates tag not found by slug");
+    return [];
+  }
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: false,
+      sticky: false,
+      groupId: { isNull: true },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
+      RAW: onlyTagFilter(tagId),
+    },
+    orderBy: magicSort(),
+    offset,
+    limit,
+  });
+};
+
 export const fetchPostsListFromView = (
   currentUserId: string | null,
   { view, ...props }: PostsListView,
@@ -485,6 +519,8 @@ export const fetchPostsListFromView = (
       return fetchFrontpagePostsList({ currentUserId, ...props });
     case "sticky":
       return fetchStickyPostsList({ currentUserId, ...props });
+    case "orgUpdates":
+      return fetchOrgUpdatesPostsList({ currentUserId, ...props });
     default:
       throw new Error("Invalid posts list view");
   }
