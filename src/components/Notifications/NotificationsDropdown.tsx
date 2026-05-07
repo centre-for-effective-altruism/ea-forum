@@ -1,23 +1,34 @@
+"use client";
+
 import { useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
+import type { UserKarmaChanges } from "@/lib/users/karmaChangesTypes";
 import type { NotificationDisplay as TNotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import range from "lodash/range";
 import debounce from "lodash/debounce";
 import toast from "react-hot-toast";
+import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
+import KarmaAndReactsNotifications from "./KarmaAndReactsNotifications";
 import NotificationDisplaySkeleton from "./NotificationDisplaySkeleton";
 import InfiniteLoadTrigger from "../InfiniteLoadTrigger";
 import NotificationDisplay from "./NotificationDisplay";
+import DropdownMenu from "../Dropdown/DropdownMenu";
 import Dropdown from "../Dropdown/Dropdown";
 import Type from "../Type";
 
 const PAGE_SIZE = 20;
 
 export default function NotificationsDropdown({
+  karmaChanges,
+  className,
   children,
 }: Readonly<{
+  karmaChanges: UserKarmaChanges | null;
+  className?: string;
   children: ReactNode;
 }>) {
+  const [markAsReadLoading, setMarkAsReadLoading] = useState(false);
   const [pages, setPages] = useState<(TNotificationDisplay[] | null)[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
@@ -77,25 +88,73 @@ export default function NotificationsDropdown({
 
   useEffect(() => () => loadMore.cancel(), [loadMore]);
 
+  const onToggleOpen = useCallback(
+    (open: boolean) => {
+      if (open) {
+        void rpc.users.checkNotifications({
+          hasKarmaChanges: !!karmaChanges,
+          openedAt: new Date(),
+          endDate: karmaChanges?.endDate ?? new Date(),
+        });
+      }
+    },
+    [karmaChanges],
+  );
+
+  const markAllAsRead = useCallback(async () => {
+    setMarkAsReadLoading(true);
+    await rpc.notifications.markAllAsRead();
+    setMarkAsReadLoading(false);
+    setPages([]);
+  }, []);
+
   const isAnyLoading = pages.some((item) => !item);
 
   return (
     <AnalyticsContext pageSectionContext="notificationsPopover">
       <Dropdown
+        className={className}
+        onToggleOpen={onToggleOpen}
         placement="bottom"
         menu={
           <div
             data-component="NotificationsDropdown"
-            className={`
-              bg-gray-0 rounded shadow px-1 py-2 border border-gray-100
+            className="
+              bg-surface-floating rounded shadow px-1 py-2 border border-gray-100
               w-[400px] max-w-full max-h-[90vh] overflow-y-auto
-            `}
+            "
           >
             <div className="px-2">
-              <Type className="text-[24px] font-[600] mb-6">Notifications</Type>
-              <Type style="sectionTitleSmall" className="mb-4">
-                Karma & reacts
-              </Type>
+              <div className="flex items-center">
+                <Type className="text-[24px] font-[600] mb-6 grow">
+                  Notifications
+                </Type>
+                <DropdownMenu
+                  items={[
+                    {
+                      title: "Mark all as read",
+                      onClick: markAllAsRead,
+                      loading: markAsReadLoading,
+                    },
+                    {
+                      title: "Keyword alerts",
+                      href: "/keywords",
+                    },
+                    {
+                      title: "Notification settings",
+                      href: "/account?highlightField=auto_subscribe_to_my_posts",
+                    },
+                  ]}
+                >
+                  <button className="cursor-pointer">
+                    <EllipsisVerticalIcon className="w-6" />
+                  </button>
+                </DropdownMenu>
+              </div>
+              <KarmaAndReactsNotifications
+                karmaChanges={karmaChanges}
+                className="mb-6"
+              />
               <Type style="sectionTitleSmall" className="mb-4">
                 Posts & comments
               </Type>

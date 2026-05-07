@@ -40,7 +40,9 @@ declare namespace NodeJS {
 
     // Mailchimp
     MAILCHIMP_API_KEY?: string;
+    MAILCHIMP_EA_FORUM_LIST_ID?: string;
     MAILCHIMP_DIGEST_LIST_ID?: string;
+    MAILCHIMP_EA_NEWSLETTER_LIST_ID?: string;
 
     // Other services
     NEXT_PUBLIC_IPAPI_KEY?: string;

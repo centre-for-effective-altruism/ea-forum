@@ -2,6 +2,7 @@ import { cache } from "react";
 import { sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
 import { db } from "@/lib/db";
+import { filterNonNull } from "../typeHelpers";
 import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
 
@@ -42,14 +43,22 @@ export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
   });
 });
 
+export const fetchTagBySlug = async (slug: string): Promise<TagBase | null> => {
+  const result = await db.query.tags.findFirst({
+    ...tagBaseProjection,
+    where: {
+      slug,
+      deleted: false,
+    },
+  });
+  return result ?? null;
+};
+
 export const fetchTagsById = async (
   tagIds: string[],
 ): Promise<Record<string, TagBase>> => {
   const result = await db.query.tags.findMany({
     ...tagBaseProjection,
-    extras: {
-      description: htmlSubstring(sql`"description"->>'html'`),
-    },
     where: {
       _id: { in: tagIds },
       deleted: false,
@@ -104,3 +113,36 @@ export const commentTagsProjection = (commentsTable: typeof comments) =>
     WHERE
       comment_for_tags."_id" = ${commentsTable}."_id"
   `;
+
+export const fetchOnboardingTags = async () => {
+  const _ids = [
+    "sWcuTyTB5dP3nas2t", // Global health and development
+    "QdH9f8TC6G8oGYdgt", // Animal welfare
+    "ee66CtAMYurQreWBH", // Existential risk
+    "H43gvLzBCacxxamPe", // Biosecurity and pandemics
+    "oNiQsBHA3i837sySD", // AI safety
+    "4eyeLKC64Yvznzt6Z", // Philosophy
+    "EHLmbEmJ2Qd5WfwTb", // Building effective altruism
+    "aJnrnnobcBNWRsfAw", // Forecasting and estimation
+    "psBzwdY8ipfCeExJ7", // Cause prioritisation
+    "4CH9vsvzyk4mSKwyZ", // Career choice
+  ];
+  const tags = await db.query.tags.findMany({
+    columns: {
+      _id: true,
+      name: true,
+      shortName: true,
+      slug: true,
+      bannerImageId: true,
+      squareImageId: true,
+    },
+    where: {
+      _id: { in: _ids },
+      deleted: false,
+    },
+  });
+  const byId = keyBy(tags, "_id");
+  return filterNonNull(_ids.map((id) => byId[id]));
+};
+
+export type OnboardingTag = Awaited<ReturnType<typeof fetchOnboardingTags>>[number];

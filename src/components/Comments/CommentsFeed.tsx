@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import range from "lodash/range";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import CommentItem from "./CommentItem";
 import Type from "../Type";
 
@@ -18,8 +18,8 @@ export default function CommentsFeed({
   loadMore,
   className,
 }: Readonly<{
-  comments: CommentsList[];
-  loadMore: (props: { offset: number; limit: number }) => Promise<CommentsList[]>;
+  comments: CommentListItem[];
+  loadMore: (props: { offset: number; limit: number }) => Promise<CommentListItem[]>;
   className?: string;
 }>) {
   const [loadMoreLimit] = useState(comments.length || 3);

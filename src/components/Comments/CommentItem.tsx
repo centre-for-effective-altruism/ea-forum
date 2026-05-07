@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useOptionalCommentsList } from "./useCommentsList";
 import {
   userGetProfileUrl,
   userIsNew,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/users/userHelpers";
 import toast from "react-hot-toast";
 import clsx from "clsx";
+import ArrowTurnLeftUpIcon from "@heroicons/react/16/solid/ArrowTurnLeftUpIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import LinkIcon from "@heroicons/react/16/solid/LinkIcon";
 import SproutIcon from "../Icons/SproutIcon";
@@ -23,10 +25,18 @@ import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
+import NewComment from "./NewComment";
+import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
+import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 
+/**
+ * Render a comment. While you can use this directly, it's often better to instead
+ * create a `CommentsListProvider` and then place a `CommentsList` inside it, as
+ * this will enable more dynamic features such as loading parent comments.
+ */
 export default function CommentItem({
   node: { comment, depth, children },
   onToggleExpanded,
@@ -37,9 +47,9 @@ export default function CommentItem({
   showMenu = true,
   className,
 }: Readonly<{
-  node: CommentTreeNode<CommentsList>;
+  node: CommentTreeNode<CommentListItem>;
   onToggleExpanded?: (expanded: boolean) => void;
-  /** If true, the comment initially renders un-collapsed */
+  /** If true, the comment initially renders collapsed */
   startCollapsed?: boolean;
   /**
    * By default, the body of an un-expanded comment is completely hidden. When
@@ -57,15 +67,30 @@ export default function CommentItem({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const { onSignup } = useLoginPopoverContext();
+  const commentsListContext = useOptionalCommentsList();
   const [isEditing, setIsEditing] = useState(false);
-  const [expanded, setExpanded] = useState(!startCollapsed);
+  const [isReplying, setIsReplying] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(!startCollapsed);
+  const [isLoadingParent, setIsLoadingParent] = useState(false);
+
   const toggleExpanded = useCallback(() => {
-    setExpanded((expanded) => {
+    setIsExpanded((expanded) => {
       const newExpanded = !expanded;
       onToggleExpanded?.(newExpanded);
       return newExpanded;
     });
   }, [onToggleExpanded]);
+
+  const onClickReply = useCallback(() => {
+    if (currentUser) {
+      setIsReplying(true);
+    } else {
+      onSignup();
+    }
+  }, [currentUser, onSignup]);
+
+  const onReplySuccess = useCallback(() => setIsReplying(false), []);
 
   const copyLink = useCallback(async () => {
     try {
@@ -84,12 +109,38 @@ export default function CommentItem({
   const onEdit = useCallback(() => setIsEditing(true), []);
   const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
-  const { _id, user, html, postedAt, post, promoted, promotedBy, moderatorHat } =
-    comment;
+  const {
+    _id,
+    user,
+    html,
+    postedAt,
+    parentCommentId,
+    post,
+    promoted,
+    promotedBy,
+    moderatorHat,
+  } = comment;
   const isPostAuthor = userIsPostAuthor(user, post);
   const isNew =
     !!post?.readStatus?.[0]?.lastUpdated &&
     new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
+
+  const canLoadParent =
+    !!commentsListContext &&
+    !!parentCommentId &&
+    !isLoadingParent &&
+    !commentsListContext.commentIsLoaded(parentCommentId);
+
+  const loadParent = useCallback(() => {
+    if (canLoadParent) {
+      setIsLoadingParent(true);
+      void (async () => {
+        await commentsListContext.loadParentComment(parentCommentId);
+        setIsLoadingParent(false);
+      })();
+    }
+  }, [canLoadParent, commentsListContext, parentCommentId]);
+
   return (
     <div
       data-component="CommentItem"
@@ -111,54 +162,66 @@ export default function CommentItem({
         data-depth={depth}
         className={borderless ? undefined : "pr-3 mb-2"}
       >
-        <div className="mb-2 flex items-center gap-2">
-          {!borderless && (
-            <ChevronDownIcon
-              className={clsx(
-                "w-[16px] cursor-pointer text-gray-600 hover:opacity-70",
-                "transition-transform",
-                !expanded && "-rotate-90",
-              )}
-              role="button"
-              onClick={toggleExpanded}
-            />
-          )}
-          <UsersTooltip user={user}>
-            <Type className="font-[600]">
-              {user && user.slug && (
-                <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
-              )}
-            </Type>
-          </UsersTooltip>
-          {isPostAuthor && (
-            <Tooltip
-              title={<Type style="bodySmall">Post author</Type>}
-              placement="bottom"
-            >
-              <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
-            </Tooltip>
-          )}
-          {user && userIsNew(user) && (
-            <Tooltip
-              title={
-                <Type style="bodySmall">
-                  {user?.displayName} is either new on the EA Forum or doesn&apos;t
-                  have much karma yet
-                </Type>
-              }
-              placement="bottom-start"
-              tooltipClassName="max-w-[300px]"
-            >
-              <SproutIcon className="text-new-user-sprout" />
-            </Tooltip>
-          )}
-          <CommentDate comment={comment} />
-          {comment.moderatorHat && (
-            <Type className="text-gray-600 cursor-default">Moderator comment</Type>
-          )}
-          <CommentVoteButtons comment={comment} />
-          <div className="grow">
-            <CommentTags comment={comment} />
+        <div className="mb-2 flex items-start gap-2">
+          <div className="flex items-center gap-2 flex-wrap grow">
+            {canLoadParent && (
+              <Tooltip title={<Type style="bodySmall">Show parent comment</Type>}>
+                <ArrowTurnLeftUpIcon
+                  role="button"
+                  className="w-3 cursor-pointer text-gray-600 hover:opacity-70"
+                  onClick={loadParent}
+                />
+              </Tooltip>
+            )}
+            {isLoadingParent && <Loading />}
+            {!borderless && (
+              <ChevronDownIcon
+                className={clsx(
+                  "w-4 cursor-pointer text-gray-600 hover:opacity-70",
+                  "transition-transform",
+                  !isExpanded && "-rotate-90",
+                )}
+                role="button"
+                onClick={toggleExpanded}
+              />
+            )}
+            <UsersTooltip user={user}>
+              <Type className="font-[600]">
+                {user && user.slug && (
+                  <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
+                )}
+              </Type>
+            </UsersTooltip>
+            {isPostAuthor && (
+              <Tooltip
+                title={<Type style="bodySmall">Post author</Type>}
+                placement="bottom"
+              >
+                <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
+              </Tooltip>
+            )}
+            {user && userIsNew(user) && (
+              <Tooltip
+                title={
+                  <Type style="bodySmall">
+                    {user?.displayName} is either new on the EA Forum or doesn&apos;t
+                    have much karma yet
+                  </Type>
+                }
+                placement="bottom-start"
+                tooltipClassName="max-w-[300px]"
+              >
+                <SproutIcon className="text-new-user-sprout" />
+              </Tooltip>
+            )}
+            <CommentDate comment={comment} />
+            {comment.moderatorHat && (
+              <Type className="text-gray-600 cursor-default">Moderator comment</Type>
+            )}
+            <CommentVoteButtons comment={comment} />
+            <div className="grow">
+              <CommentTags comment={comment} />
+            </div>
           </div>
           {showPermalink && (
             <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
@@ -172,12 +235,12 @@ export default function CommentItem({
             />
           )}
         </div>
-        {!expanded && showPreviewWhenCollapsed && (
+        {!isExpanded && showPreviewWhenCollapsed && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
             <CommentBody html={html} />
           </div>
         )}
-        {expanded &&
+        {isExpanded &&
           (isEditing ? (
             <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
           ) : (
@@ -193,8 +256,28 @@ export default function CommentItem({
               <CommentBody html={html} className="cursor-default" />
             </>
           ))}
+        {isExpanded && post && (
+          <div>
+            <Type
+              onClick={onClickReply}
+              As="button"
+              className="text-gray-500 font-[600]! cursor-pointer mt-[2px]"
+            >
+              Reply
+            </Type>
+            {isReplying && (
+              <div className="bg-gray-0 rounded mt-2">
+                <NewComment
+                  postId={post._id}
+                  parentCommentId={_id}
+                  onSuccess={onReplySuccess}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </article>
-      {expanded && children.length > 0 && (
+      {isExpanded && children.length > 0 && (
         <div>
           {children.map((node) => (
             <CommentItem node={node} key={node.comment._id} />

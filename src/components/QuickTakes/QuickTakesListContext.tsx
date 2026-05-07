@@ -9,14 +9,14 @@ import {
   useState,
 } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { useExpandedFrontpageSection } from "@/lib/hooks/useExpandedFrontpageSection";
 
 type QuickTakesListContext = {
   showCommunity: boolean;
   toggleShowCommunity: () => void;
-  localQuickTakes: CommentsList[];
-  addLocalQuickTake: (quickTake: CommentsList) => void;
+  localQuickTakes: CommentListItem[];
+  addLocalQuickTake: (quickTake: CommentListItem) => void;
 };
 
 const quickTakesListContext = createContext<QuickTakesListContext>({
@@ -29,8 +29,8 @@ const quickTakesListContext = createContext<QuickTakesListContext>({
 export const QuickTakesListProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [localQuickTakes, setLocalQuickTakes] = useState<CommentsList[]>([]);
-  const addLocalQuickTake = useCallback((quickTake: CommentsList) => {
+  const [localQuickTakes, setLocalQuickTakes] = useState<CommentListItem[]>([]);
+  const addLocalQuickTake = useCallback((quickTake: CommentListItem) => {
     setLocalQuickTakes((quickTakes) => [quickTake, ...quickTakes]);
   }, []);
 

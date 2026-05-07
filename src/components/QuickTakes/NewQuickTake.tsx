@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import toast from "react-hot-toast";
 import clsx from "clsx";
 import Editor from "../Editor/Editor";
@@ -19,7 +19,7 @@ export default function NewQuickTake({
   const onFocus = useCallback(() => setOpen(true), []);
   const onCancel = useCallback(() => setOpen(false), []);
   const onSuccess = useCallback(
-    (quickTake: CommentsList) => {
+    (quickTake: CommentListItem) => {
       addLocalQuickTake(quickTake);
       toast.success("Quick take published");
     },
@@ -42,7 +42,7 @@ export default function NewQuickTake({
     >
       <div
         className={clsx(
-          "flex flex-col gap-1 bg-gray-100 rounded p-2",
+          "flex flex-col gap-1 bg-surface-floating rounded p-2",
           open ? "[&_.ck.ck-content]:min-h-[100px]" : "[&_p]:mb-0!",
         )}
       >
@@ -60,6 +60,7 @@ export default function NewQuickTake({
           ref={editorRef}
           className="w-full grow"
         />
+        {/* TODO: Add topics to quick takes */}
         <div
           className={clsx("flex items-center justify-end gap-2", !open && "hidden")}
         >

@@ -19,6 +19,7 @@ import {
   localgroups,
   lwEvents,
   moderatorActions,
+  notifications,
   podcastEpisodes,
   podcasts,
   posts,
@@ -43,6 +44,7 @@ const relations = defineRelations(
     revisions,
     votes,
     localgroups,
+    notifications,
     subscriptions,
     tags,
     images,
@@ -193,6 +195,23 @@ const relations = defineRelations(
         where: {
           draft: false,
           deletedDraft: false,
+        },
+      }),
+    },
+    forumEvents: {
+      post: r.one.posts({
+        from: r.forumEvents.postId,
+        to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
+        },
+      }),
+      tag: r.one.tags({
+        from: r.forumEvents.tagId,
+        to: r.tags._id,
+        where: {
+          deleted: false,
         },
       }),
     },

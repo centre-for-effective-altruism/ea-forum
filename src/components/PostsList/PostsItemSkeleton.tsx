@@ -11,7 +11,8 @@ export default function PostsItemSkeleton({
       <article
         aria-hidden
         className="
-          w-full max-w-full h-[144px] rounded bg-gray-50 border border-gray-100
+          w-full max-w-full h-[144px] rounded bg-gray-50
+          [&_*]:max-w-full [&_*]:min-w-0
         "
         data-component="PostsItemSkeleton"
       >
@@ -36,7 +37,7 @@ export default function PostsItemSkeleton({
             <div className="h-5 w-2 bg-gray-200 rounded" />
           </div>
         </div>
-        <div className="flex items-end gap-6 pl-[56px] pr-5 pb-4 -mt-2">
+        <div className="flex items-end gap-6 pl-[56px] pr-5 pb-4">
           <div className="grow flex flex-col gap-2">
             <div className="w-full h-4 bg-gray-200 rounded" />
             <div className="w-full h-4 bg-gray-200 rounded" />
@@ -50,7 +51,10 @@ export default function PostsItemSkeleton({
   return (
     <article
       aria-hidden
-      className="w-full max-w-full h-[60px] rounded bg-gray-50 border border-gray-100"
+      className="
+        w-full max-w-full h-[60px] rounded bg-gray-50
+        [&_*]:max-w-full [&_*]:min-w-0
+      "
       data-component="PostsItemSkeleton"
     >
       <div

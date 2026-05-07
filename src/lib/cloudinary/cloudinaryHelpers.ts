@@ -35,3 +35,6 @@ export const makeCloudinaryImageUrl = (
 
 export const getSocialImagePreviewPrefix = () =>
   `https://res.cloudinary.com/${getCloudinaryCloudName()}/image/upload/c_fill,ar_1.91,g_auto/`;
+
+export const getSiteLogoUrl = (sizePixels: number) =>
+  `https://images.ctfassets.net/ohf186sfn6di/7J4cBC9SXCWMoqqCIqI0GI/affe205261bb8cff47501a0ada0f2268/ea-logo-square-1200x1200__1_.png?h=${sizePixels}`;

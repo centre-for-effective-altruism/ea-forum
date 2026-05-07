@@ -253,3 +253,17 @@ export const userCanArchivePost = (
   const isPostGroupOrganizer = organizerIds?.some((id) => id === user?._id);
   return (post.user?._id === user._id || isPostGroupOrganizer) && !!post.draft;
 };
+
+export const postHasNewUnreadComments = (post: PostListItem) => {
+  const { readStatus, lastCommentedAt } = post;
+  if (
+    !readStatus?.[0]?.isRead ||
+    !readStatus?.[0]?.lastUpdated ||
+    !lastCommentedAt
+  ) {
+    return false;
+  }
+  const lastVisitedDate = new Date(readStatus[0].lastUpdated);
+  const lastCommentedDate = new Date(lastCommentedAt);
+  return lastVisitedDate < lastCommentedDate;
+};

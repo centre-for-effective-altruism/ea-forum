@@ -107,6 +107,10 @@ export const postsListProjection = (
       lastCommentedAt: true,
       sharingSettings: true,
       shortform: true,
+      // TODO: Move these rarely used event fields into a separate type?
+      startTime: true,
+      onlineEvent: true,
+      googleLocation: true,
     },
     extras: {
       coauthors: coauthorsSelector,
@@ -324,23 +328,18 @@ export const fetchPingbackPosts = async (
     },
   });
 
-export const fetchSidebarOpportunities = (limit: number) => {
+export const fetchSidebarOpportunities = (
+  currentUserId: string | null,
+  limit: number,
+) => {
   const tagId = process.env.OPPORTUNITIES_TAG_ID;
   if (!tagId) {
     console.warn("Opportunities tag ID is not configured");
     return Promise.resolve([]);
   }
-  return db.query.posts.findMany({
-    columns: {
-      _id: true,
-      slug: true,
-      title: true,
-      postedAt: true,
-      isEvent: true,
-      groupId: true,
-    },
+  return fetchPostsList({
+    currentUserId,
     where: {
-      ...viewablePostFilter,
       isEvent: false,
       sticky: false,
       groupId: { isNull: true },
@@ -354,24 +353,10 @@ export const fetchSidebarOpportunities = (limit: number) => {
   });
 };
 
-export type SidebarOpportunityItem = Awaited<
-  ReturnType<typeof fetchSidebarOpportunities>
->[number];
-
-export const fetchSidebarEvents = (limit: number) => {
-  return db.query.posts.findMany({
-    columns: {
-      _id: true,
-      slug: true,
-      title: true,
-      startTime: true,
-      onlineEvent: true,
-      googleLocation: true,
-      isEvent: true,
-      groupId: true,
-    },
+export const fetchSidebarEvents = (currentUserId: string | null, limit: number) => {
+  return fetchPostsList({
+    currentUserId,
     where: {
-      ...viewablePostFilter,
       isEvent: true,
       startTime: { gt: new Date().toISOString() },
     },
@@ -383,10 +368,6 @@ export const fetchSidebarEvents = (limit: number) => {
     limit,
   });
 };
-
-export type SidebarEventItem = Awaited<
-  ReturnType<typeof fetchSidebarEvents>
->[number];
 
 export const fetchMoreFromAuthorPostsList = async ({
   currentUserId,

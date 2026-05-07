@@ -6,7 +6,7 @@ import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { rpc } from "@/lib/rpc";
 import type { PostDisplay } from "@/lib/posts/postQueries";
 import type { PostListItem } from "@/lib/posts/postLists";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import toast from "react-hot-toast";
 import UsersName from "../UsersName";
 import Input from "../Forms/Input";
@@ -21,7 +21,7 @@ type ReportDocument =
     }
   | {
       post?: never;
-      comment: CommentsList;
+      comment: CommentListItem;
     };
 
 export default function ReportPopover({

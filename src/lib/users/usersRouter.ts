@@ -5,19 +5,32 @@ import { cookies } from "next/headers";
 import { captureException } from "@sentry/nextjs";
 import { db } from "../db";
 import { users } from "../schema";
-import { userIsInGroup } from "./userHelpers";
+import { careerStageValuesSchema, userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
-import { updateExpandedSection } from "./userQueries";
-import { approveNewUser } from "./userMutations";
+import { calculateKarmaChanges } from "./karmaChanges";
+import {
+  fetchOnboardingUsers,
+  fetchUserBySlug,
+  isDisplayNameTaken,
+  updateExpandedSection,
+  updateWork,
+} from "./userQueries";
+import {
+  approveNewUser,
+  completeUserProfile,
+  userCheckNotifications,
+} from "./userMutations";
 import { themeSchema } from "../themes";
 import {
+  mailchimpListSchema,
   updateMailchimpSubscription,
   updateUserMailchimpSubscription,
 } from "../mailchimp";
 import {
   LOGIN_TOKEN_COOKIE_NAME,
   loginWithPassword,
+  signupWithPassword,
   UserIsBannedError,
 } from "../authHelpers";
 import {
@@ -33,12 +46,15 @@ export const usersRouter = {
       z.object({
         email: z.string().nonempty(),
         password: z.string().nonempty(),
+        isSignup: z.boolean().optional(),
       }),
     )
-    .handler(async ({ input: { email, password } }) => {
+    .handler(async ({ input: { email, password, isSignup } }) => {
       try {
         const cookieStore = await cookies();
-        const hashedToken = await loginWithPassword(cookieStore, email, password);
+        const hashedToken = isSignup
+          ? await signupWithPassword(cookieStore, email, password)
+          : await loginWithPassword(cookieStore, email, password);
         const currentUser = await fetchCurrentUserByHashedToken(hashedToken);
         return { ok: true, currentUser };
       } catch (e) {
@@ -57,11 +73,32 @@ export const usersRouter = {
     cookieStore.delete(LOGIN_TOKEN_COOKIE_NAME);
   }),
   currentUser: os.handler(getCurrentUser),
-  subscribeToDigest: os
-    .input(z.object({ email: z.string().optional() }))
-    .handler(async ({ input: { email } }) => {
-      const list = "digest";
-      const status = "subscribed";
+  listBySlug: os
+    .input(z.object({ slug: z.string().nonempty() }))
+    .handler(async ({ input: { slug } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchUserBySlug(currentUser, slug);
+    }),
+  hideDigestAd: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Please login");
+    }
+    await db
+      .update(users)
+      .set({ hideSubscribePoke: true })
+      .where(eq(users._id, currentUser._id));
+  }),
+  subscribeToList: os
+    .input(
+      z.object({
+        list: mailchimpListSchema,
+        email: z.string().optional(),
+        subscribed: z.boolean().optional(),
+      }),
+    )
+    .handler(async ({ input: { list, email, subscribed = true } }) => {
+      const status = subscribed ? "subscribed" : "unsubscribed";
       const currentUser = await getCurrentUser();
       if (currentUser) {
         await updateUserMailchimpSubscription({
@@ -141,5 +178,89 @@ export const usersRouter = {
         throw new Error("Please login");
       }
       await updateExpandedSection(currentUser._id, section, expanded);
+    }),
+  updateSendMarketingEmails: os
+    .input(z.object({ value: z.boolean() }))
+    .handler(async ({ input: { value } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateWithFieldChanges(db, currentUser, users, currentUser._id, {
+        sendMarketingEmails: value,
+      });
+    }),
+  completeUserProfile: os
+    .input(
+      z.object({
+        name: z.string(),
+        acceptedTos: z.boolean(),
+      }),
+    )
+    .handler(async ({ input: { name, acceptedTos } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await completeUserProfile(currentUser, name, acceptedTos);
+    }),
+  isDisplayNameTaken: os
+    .input(z.object({ displayName: z.string().nonempty() }))
+    .handler(async ({ input: { displayName } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await isDisplayNameTaken(currentUser, displayName);
+    }),
+  updateWork: os
+    .input(
+      z.object({
+        jobTitle: z.string().nullable().optional(),
+        organization: z.string().nullable().optional(),
+        careerStage: z.array(careerStageValuesSchema).nullable().optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await updateWork(currentUser, input);
+    }),
+  fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
+  karmaChanges: os
+    .input(
+      z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      }),
+    )
+    .handler(async ({ input: { startDate, endDate } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await calculateKarmaChanges(currentUser, startDate, endDate);
+    }),
+  checkNotifications: os
+    .input(
+      z.object({
+        hasKarmaChanges: z.boolean(),
+        openedAt: z.date(),
+        endDate: z.date(),
+      }),
+    )
+    .handler(async ({ input: { hasKarmaChanges, openedAt, endDate } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await userCheckNotifications({
+        currentUser,
+        hasKarmaChanges,
+        openedAt,
+        endDate,
+      });
     }),
 };

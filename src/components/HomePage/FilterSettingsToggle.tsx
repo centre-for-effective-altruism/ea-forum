@@ -24,7 +24,7 @@ export default function FilterSettingsToggle() {
         As="button"
         className="cursor-pointer text-gray-600 hover:text-gray-1000"
       >
-        Customize feed
+        Customize <span className="max-[370px]:hidden">feed</span>
       </Type>
     </Tooltip>
   );

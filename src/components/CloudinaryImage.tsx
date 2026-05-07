@@ -19,6 +19,7 @@ export default function CloudinaryImage({
   fullWidthHeader,
   loading,
   onLoaded,
+  style,
   className = "",
   wrapperClassName = "",
 }: Readonly<{
@@ -34,6 +35,7 @@ export default function CloudinaryImage({
   fullWidthHeader?: boolean;
   loading?: "lazy" | "eager";
   onLoaded?: () => void;
+  style?: CSSProperties;
   className?: string;
   wrapperClassName?: string;
 }>) {
@@ -121,7 +123,11 @@ export default function CloudinaryImage({
   }
 
   return (
-    <picture className={wrapperClassName} data-component="CloudinaryImage">
+    <picture
+      style={style}
+      className={wrapperClassName}
+      data-component="CloudinaryImage"
+    >
       {srcSetFunc &&
         (shouldUseDarkImage === "maybe" ? (
           <source

@@ -11,7 +11,8 @@ import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
-import UserProfileImage from "../UserProfileImage";
+import StackedUserAvatars from "../StackedUserAvatars";
+import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
@@ -56,7 +57,10 @@ export default async function PostDisplay({ postId }: { postId: string }) {
             {post.title}
           </Type>
           <div className="flex gap-3 mb-6">
-            <UserProfileImage user={post.user} size={36} />
+            <StackedUserAvatars
+              users={[post.user, ...(post.coauthors ?? [])]}
+              size={36}
+            />
             <div>
               <Type style="bodyMedium">
                 <UsersName user={post.user} pageSectionContext="post_header" />
@@ -75,7 +79,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           </div>
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
-              <PostVoteButtons />
+              <PostVoteButtons hideReacts />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">
@@ -138,6 +142,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           )}
         </PostColumn>
       </ReadProgress>
+      <DigestPopup />
     </PostDisplayProvider>
   );
 }

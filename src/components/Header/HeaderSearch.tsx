@@ -93,7 +93,9 @@ export default function HeaderSearch({
         onChange={onChange}
         ref={inputRef}
         placeholder="Search here..."
-        className="w-[220px] outline-none font-sans text-[14px]"
+        className="
+          w-[100px] sm:w-[160px] md:w-[220px] outline-none font-sans text-[14px]
+        "
       />
       <button
         onClick={onClose}
@@ -104,7 +106,7 @@ export default function HeaderSearch({
       {query && (
         <div
           className="
-            absolute top-[66px] right-0 w-[440px] max-w-full bg-gray-0 shadow-md
+            absolute top-[66px] right-0 w-[440px] max-w-full bg-surface-floating shadow-md
           "
         >
           {loading && (
@@ -116,7 +118,7 @@ export default function HeaderSearch({
             <div
               className="
                 flex flex-col gap-[1px] bg-gray-300 overflow-auto
-                max-h-[calc(100vh-66px)] [&>*]:bg-gray-0 [&>*]:p-2
+                max-h-[calc(100vh-66px)] [&>*]:bg-surface-floating [&>*]:p-2
               "
             >
               {results.users && results.users.length > 0 && (

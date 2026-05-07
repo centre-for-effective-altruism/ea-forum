@@ -7,7 +7,11 @@ import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-export default function PostVoteButtons() {
+export default function PostVoteButtons({
+  hideReacts,
+}: Readonly<{
+  hideReacts?: boolean;
+}>) {
   const {
     post: { reactors },
     vote: {
@@ -49,15 +53,16 @@ export default function PostVoteButtons() {
         orientation="up"
         onVote={onVote}
         large
-        className="text-gray-600"
+        className="text-gray-600 mr-3"
       />
-      <ReactButtons
-        reactors={reactors}
-        extendedScore={extendedScore}
-        extendedVoteType={extendedVoteType}
-        onReact={onReact}
-        className="ml-3"
-      />
+      {!hideReacts && (
+        <ReactButtons
+          reactors={reactors}
+          extendedScore={extendedScore}
+          extendedVoteType={extendedVoteType}
+          onReact={onReact}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
+import { CurrentUser } from "../users/currentUser";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -17,7 +18,7 @@ export type CommentRelationalProjection = RelationalProjection<
 export type CommentFromProjection<TConfig extends CommentRelationalProjection> =
   Awaited<ReturnType<typeof db.query.comments.findMany<TConfig>>>[number];
 
-export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
+export type CommentListItem = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
 type CommentsFilter = NonNullable<
   Parameters<typeof db.query.comments.findMany>[0]
@@ -267,6 +268,21 @@ export const fetchFrontpageQuickTakes = ({
   });
 };
 
+export const fetchNewComments = async (
+  currentUser: CurrentUser | null,
+  postId: string,
+  limit: number,
+) => {
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      postId,
+    },
+    orderBy: { postedAt: "desc" },
+    limit,
+  });
+};
+
 type PopularCommentsConfig = {
   currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
   offset?: number;
@@ -286,7 +302,7 @@ export const fetchPopularComments = async ({
   limit = 3,
   recencyFactor = 250000,
   recencyBias = 60 * 60 * 2,
-}: PopularCommentsConfig): Promise<CommentsList[]> => {
+}: PopularCommentsConfig): Promise<CommentListItem[]> => {
   const communityTopicId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id

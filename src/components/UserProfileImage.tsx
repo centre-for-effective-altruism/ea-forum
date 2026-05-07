@@ -130,6 +130,7 @@ export default function UserProfileImage({
         publicId={user.profileImageId}
         alt={user.displayName}
         onLoaded={() => setLoaded(true)}
+        style={{ width: size, height: size, minWidth: size, minHeight: size }}
         className={clsx(rootClassName, "text-[0px]")}
         wrapperClassName={wrapperClassName}
         data-component="UserProfileImage"

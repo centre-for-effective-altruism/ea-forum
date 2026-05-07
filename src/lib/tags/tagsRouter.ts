@@ -1,7 +1,12 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { db } from "../db";
-import { fetchCoreTags, fetchTagsById } from "./tagQueries";
+import {
+  fetchCoreTags,
+  fetchOnboardingTags,
+  fetchTagBySlug,
+  fetchTagsById,
+} from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 
 export const tagsRouter = {
@@ -11,6 +16,9 @@ export const tagsRouter = {
   listByIds: os
     .input(z.object({ tagIds: z.array(z.string()) }))
     .handler(({ input: { tagIds } }) => fetchTagsById(tagIds)),
+  listBySlug: os
+    .input(z.object({ slug: z.string().nonempty() }))
+    .handler(({ input: { slug } }) => fetchTagBySlug(slug)),
   diff: os
     .input(z.object({ revisionId: z.string().nonempty() }))
     .handler(async ({ input: { revisionId } }) => {
@@ -51,4 +59,5 @@ export const tagsRouter = {
       });
       return diffHtml(before?.html ?? "", after.html ?? "", true);
     }),
+  fetchOnboardingTags: os.handler(fetchOnboardingTags),
 };

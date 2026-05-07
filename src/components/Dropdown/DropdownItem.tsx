@@ -18,6 +18,7 @@ import {
 import clsx from "clsx";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import DropdownMenuItems from "./DropdownMenuItems";
+import Loading from "../Loading";
 import Type from "../Type";
 import Link from "../Link";
 
@@ -30,6 +31,7 @@ export type DropdownItemProps = {
   onClick?: () => void | Promise<void>;
   submenu?: DropdownMenuItem[];
   afterNode?: ReactNode;
+  loading?: boolean;
 };
 
 const SubmenuItemWrapper: FC<{
@@ -113,6 +115,7 @@ export default function DropdownItem({
   onClick,
   submenu,
   afterNode,
+  loading,
   className,
 }: Readonly<DropdownItemProps & { className?: string }>) {
   return (
@@ -121,13 +124,13 @@ export default function DropdownItem({
       onClick={onClick}
       submenu={submenu}
       className={clsx(
-        "rounded p-2 cursor-pointer hover:bg-gray-100 outline-none w-full",
+        "rounded p-2 cursor-pointer hover:bg-surface-floating-hover outline-none w-full",
         "flex items-center justify-start gap-3 text-left",
         className,
       )}
     >
       {Icon && <Icon className="w-[20px] h-[20px] text-gray-600" />}
-      <Type className="grow">{title}</Type>
+      <Type className="grow">{loading ? <Loading /> : title}</Type>
       {afterNode}
     </DropdownItemWrapper>
   );

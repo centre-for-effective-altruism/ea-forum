@@ -24,6 +24,7 @@
   --color-primary-light: #00b2be;
   --color-primary-dark: #085d6c;
 
+  --color-panel-background: #fff;
   --color-error: #e04e4b;
   --color-error-light: #cb5e3c;
   --color-warning: #832013;
@@ -31,6 +32,7 @@
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
   --color-login-input: #efefef;
+  --color-login-input-hover: #e4e4e4;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
   --color-tooltip-text: #ffffff;
@@ -57,6 +59,11 @@
   --color-diff-removed: #f0d3d3;
   --color-moderator-comment: #ecf2ed;
   --color-promoted-comment: #137283;
+  --color-karma-star: #ffad08;
+  --color-mentions-hover: #e6e6e6;
+  --color-mentions-selected: #198cf0;
+  --color-mentions-selected-hover: #0e7fe1;
+  --color-mentions-border: #c4c4c4;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -79,6 +86,10 @@
   --color-always-white: #fff;
   --color-always-black: #000;
 
+  --color-surface-floating: #ffffff;
+  --color-surface-floating-hover: #f5f5f5;
+  --color-card-tinted: #eeeeee;
+
   --spacing: 4px;
 
   --radius-sm: 6px;
@@ -89,6 +100,8 @@
   --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
+  --zindex-digest-popup: 1050;
+  --zindex-site-toggle: 1100;
   --zindex-headroom: 1300;
   --zindex-read-progress: 1302;
   --zindex-popover: 1304;
@@ -100,7 +113,6 @@
   --buzzsprout-opacity: 1;
 
   --animate-bounce-delay: bounce-delay 1.4s infinite ease-in-out both;
-
   @keyframes bounce-delay {
     0%,
     80%,
@@ -111,17 +123,27 @@
       transform: scale(1);
     }
   }
+
+  --animate-fade-in: fade-in 0.3s ease-in-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 @utility dark-mode {
-  --color-background: #282828;
+  --color-background: #141414;
   --color-foreground: rgba(255, 255, 255, 0.87);
 
-  --color-gray-0: #141414;
-  --color-gray-50: #141414;
-  --color-gray-100: #282828;
-  --color-gray-200: #333333;
-  --color-gray-300: #464646;
+  --color-gray-0: #1e1e1e;
+  --color-gray-50: #1e1e1e;
+  --color-gray-100: #2a2a2a;
+  --color-gray-200: #363636;
+  --color-gray-300: #454545;
   --color-gray-400: #6f6f6f;
   --color-gray-500: #8f8f8f;
   --color-gray-600: #b3b3b3;
@@ -134,46 +156,57 @@
   --color-primary-light: #0c869b;
   --color-primary-dark: #00adb9;
 
+  --color-panel-background: #191919;
   --color-error: #9b5e5e;
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #202020;
-  --color-postitemhover-border: #282828;
-  --color-login-input: #3d3d3d;
+  --color-postitemhover: #2a2a2a;
+  --color-postitemhover-border: #363636;
+  --color-login-input: #2e2e2e;
+  --color-login-input-hover: #363636;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
-  --color-tooltip-background: rgba(75, 75, 75, 0.94);
+  --color-tooltip-background: rgba(95, 95, 95, 0.96);
   --color-tooltip-text: #ffffff;
-  --color-posts-page-hr: #464646;
+  --color-posts-page-hr: #454545;
   --color-visited-link: #9b71be;
   --color-table-border: #7a7a7a;
   --color-table-cell-border: #4f4f4f;
-  --color-table-header-bg: #202020;
+  --color-table-header-bg: #2a2a2a;
   --color-spoiler-hover: rgba(255, 255, 255, 0.12);
   --color-metaculus-preview: #2c3947;
   --color-details-title: rgba(255, 255, 255, 0.3);
   --color-conditionally-visible: rgba(255, 255, 255, 0.2);
   --color-post-hr: rgba(255, 255, 255, 0.26);
-  --color-comment-border: #333;
-  --color-comment-odd: #1c1c1c;
-  --color-comment-even: #2d2d2d;
-  --color-people-directory-row-hover: #242424;
-  --color-popover-dim: rgba(255, 255, 255, 0.4);
+  --color-comment-border: #363636;
+  --color-comment-odd: #1f1f1f;
+  --color-comment-even: #262626;
+  --color-people-directory-row-hover: #2a2a2a;
+  --color-popover-dim: rgba(0, 0, 0, 0.65);
   --color-diff-added: #008800;
   --color-diff-removed: #880000;
   --color-moderator-comment: #202719;
+  --color-mentions-hover: #333;
+  --color-mentions-selected: #0c70c7;
+  --color-mentions-selected-hover: #0b62ae;
+  --color-mentions-border: #212121;
+  --color-strawpoll: rgb(251, 191, 36);
 
-  --color-editor-bg: #333;
-  --color-editor-comment-bg: #282828;
-  --color-editor-focus-bg: #191919;
+  --color-editor-bg: #2a2a2a;
+  --color-editor-comment-bg: #333333;
+  --color-editor-focus-bg: #262626;
   --color-editor-comment-marker: #80792e;
   --color-editor-comment-marker-active: #cbc14f;
   --color-editor-table-cell-border: #4f4f4f;
-  --color-editor-table-header-bg: #202020;
+  --color-editor-table-header-bg: #2e2e2e;
   --color-editor-figcaption: rgba(255, 255, 255, 0.54);
   --color-editor-hr: rgba(255, 255, 255, 0.26);
   --color-editor-secondary-text: rgba(255, 255, 255, 0.54);
   --color-editor-comment-border: rgba(255, 255, 255, 0.15);
+
+  --color-surface-floating: #353535;
+  --color-surface-floating-hover: #4a4a4a;
+  --color-card-tinted: #1f1f1f;
 }
 
 .theme-light {
@@ -199,7 +232,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--fontstack-sans);
+  --font-sans: var(--font-stack-sans);
   --font-serif: var(--font-stack-serif);
 }
 
@@ -208,9 +241,11 @@
  */
 .no-scrollbars {
   scrollbar-width: none;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 .no-scrollbars::-webkit-scrollbar {
   height: 0;
+  display: none;
 }
 
 .text-size-adjust-none {
@@ -287,6 +322,19 @@
 .ck-powered-by,
 .ck-powered-by-balloon {
   display: none !important;
+}
+
+/**
+ * Styles for the ckeditor mentions popup
+ */
+.ck-mentions-balloon {
+  --ck-color-list-background: var(--color-panel-background);
+  --ck-color-panel-background: var(--color-panel-background);
+  --ck-color-panel-border: var(--color-mentions-border);
+  --ck-color-text: var(--color-gray-1000);
+  --ck-color-list-button-hover-background: var(--color-mentions-hover);
+  --ck-color-list-button-on-background: var(--color-mentions-selected);
+  --ck-color-list-button-on-background-focus: var(--color-mentions-selected-hover);
 }
 
 /**

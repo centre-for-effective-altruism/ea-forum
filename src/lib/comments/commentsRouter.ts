@@ -6,6 +6,7 @@ import { fetchCommentToEdit } from "./commentQueries";
 import {
   fetchCommentsListItem,
   fetchFrontpageQuickTakes,
+  fetchNewComments,
   fetchPopularComments,
 } from "./commentLists";
 import {
@@ -16,6 +17,15 @@ import {
 } from "./commentMutations";
 
 export const commentsRouter = {
+  listById: os
+    .input(z.object({ _id: z.string() }))
+    .handler(async ({ input: { _id } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchCommentsListItem({
+        currentUser,
+        commentId: _id,
+      });
+    }),
   create: os
     .input(
       z.object({
@@ -103,6 +113,17 @@ export const commentsRouter = {
         pinned,
       );
       return { isPinnedOnProfile };
+    }),
+  listNew: os
+    .input(
+      z.object({
+        postId: z.string().nonempty(),
+        limit: z.number().min(0).max(50).optional(),
+      }),
+    )
+    .handler(async ({ input: { postId, limit = 7 } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchNewComments(currentUser, postId, limit);
     }),
   listPopular: os
     .input(
