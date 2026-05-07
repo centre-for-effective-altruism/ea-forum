@@ -2,6 +2,7 @@ import { captureException } from "@sentry/nextjs";
 import { CSSProperties } from "react";
 import { Document } from "domhandler";
 import { findOne } from "domutils";
+import { classifyHost, getSiteUrl } from "../routeHelpers";
 
 const tryToFixUrl = (oldUrl: string, newUrl: string) => {
   try {
@@ -137,3 +138,97 @@ export const getNodeById = (doc: Document, id: string) =>
     doc.children,
     true,
   );
+
+const linkIsExcludedFromPreview = (url: string): boolean => {
+  // Don't try to preview special JS links
+  if (!url || url === "#" || url === "") {
+    return true;
+  }
+
+  // Don't try to preview links that go directly to images. The usual use case
+  // for such links is an image where you click for a larger version.
+  return (
+    url.endsWith(".png") ||
+    url.endsWith(".jpg") ||
+    url.endsWith(".jpeg") ||
+    url.endsWith(".gif")
+  );
+};
+
+type LinkContentType =
+  | {
+      type: "post";
+      postId: string;
+    }
+  | {
+      type: "user";
+      userSlug: string;
+    }
+  | {
+      type: "tag";
+      tagSlug: string;
+    }
+  | {
+      type: "sequence";
+      sequenceId: string;
+    };
+
+const matchPath = (regex: RegExp, path: string) => path.match(regex)?.[1] || null;
+
+export const parseLinkContentType = (
+  pathname: string,
+  href: string,
+): LinkContentType | null => {
+  if (!href) {
+    return null;
+  }
+
+  try {
+    const currentUrl = new URL(pathname, getSiteUrl());
+    const absTarget = new URL(href, currentUrl);
+
+    const onsiteUrl = absTarget.pathname + absTarget.search + absTarget.hash;
+    if (linkIsExcludedFromPreview(onsiteUrl)) {
+      return null;
+    }
+
+    const hostType = classifyHost(absTarget.host);
+    if (hostType === "offsite") {
+      return null;
+    }
+
+    let match: string | null = null;
+    match = matchPath(/^\/posts\/([a-zA-Z0-9]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "post", postId: match };
+    }
+    match = matchPath(/^\/events\/([a-zA-Z0-9]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "post", postId: match };
+    }
+    match = matchPath(/^\/s\/[a-zA-Z0-9]+\/p\/([a-zA-Z0-9]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "post", postId: match };
+    }
+    match = matchPath(/^\/g\/[a-zA-Z0-9]+\/p\/([a-zA-Z0-9]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "post", postId: match };
+    }
+    match = matchPath(/^\/users\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "user", userSlug: match };
+    }
+    match = matchPath(/^\/topics\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "tag", tagSlug: match };
+    }
+    match = matchPath(/^\/s\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    if (match) {
+      return { type: "sequence", sequenceId: match };
+    }
+  } catch (e) {
+    console.error(`Error parsing link content type for ${href}:`, e);
+  }
+
+  return null;
+};

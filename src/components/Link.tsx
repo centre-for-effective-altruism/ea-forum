@@ -1,12 +1,15 @@
-import type { MouseEvent, ReactNode } from "react";
+"use client";
+
+import { useCallback, MouseEvent, ReactNode } from "react";
 // eslint-disable-next-line no-restricted-imports
 import NextLink from "next/link";
+import { useTracking } from "@/lib/analyticsEvents";
 
 export default function Link({
   href,
   id,
   rel,
-  onClick,
+  onClick: onClick_,
   className,
   openInNewTab,
   children,
@@ -19,11 +22,20 @@ export default function Link({
   openInNewTab?: boolean;
   children: ReactNode;
 }>) {
+  const { captureEvent } = useTracking();
+
+  const onClick = useCallback(
+    (ev: MouseEvent<HTMLAnchorElement>) => {
+      captureEvent("linkClicked", { to: href, buttonPressed: ev.button });
+      onClick_?.(ev);
+    },
+    [captureEvent, href, onClick_],
+  );
+
   const props = openInNewTab
     ? { rel: rel ?? "noopener noreferrer", target: "_blank" }
     : { rel };
 
-  // TODO Analytics
   return (
     <NextLink
       id={id}
