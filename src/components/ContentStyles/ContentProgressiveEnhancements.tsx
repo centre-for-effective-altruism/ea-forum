@@ -8,6 +8,7 @@ import { translateAttribs, validateUrl } from "@/lib/utils/contentHelpers";
 import MaybeHorizScrollBlock from "../MaybeHorizScrollBlock";
 import CollapsedFootnotes from "./CollapsedFootnotes";
 import HoverPreviewLink from "./HoverPreviewLink";
+import WrappedStrawPoll from "./WrappedStrawPoll";
 
 const HtmlNode: FC<{
   /** The parsed node to render */
@@ -47,13 +48,7 @@ const HtmlNode: FC<{
       let result: ReactNode | ReactNode[] = mappedChildren;
 
       if (classNames.includes("strawpoll-embed")) {
-        /*
-      result = (
-        <WrappedStrawPoll>
-          {result}
-        </WrappedStrawPoll>
-      );
-       */
+        result = <WrappedStrawPoll>{result}</WrappedStrawPoll>;
       }
 
       if (classNames.includes("ck-cta-button")) {
