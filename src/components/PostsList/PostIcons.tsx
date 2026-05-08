@@ -26,7 +26,7 @@ const PostIcon: FC<{
       title={<Type style="bodySmall">{children}</Type>}
     >
       <Link href={href} openInNewTab={openInNewTab} className="text-gray-600">
-        <Icon className={clsx("w-4 mr-1", className)} />
+        <Icon className={clsx("w-4", className)} />
       </Link>
     </Tooltip>
   );
@@ -34,8 +34,12 @@ const PostIcon: FC<{
 
 export default function PostIcons({
   post,
+  side,
+  curatedIconLeft = false,
 }: Readonly<{
   post: PostListItem;
+  side: "left" | "right";
+  curatedIconLeft?: boolean;
 }>) {
   const openThreadTagId = process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID;
   const amaTagid = process.env.NEXT_PUBLIC_AMA_TAG_ID;
@@ -43,12 +47,41 @@ export default function PostIcons({
     post.tags?.find((tag) => tag._id === openThreadTagId)?.baseScore ?? 0;
   const amaRelevance =
     post.tags?.find((tag) => tag._id === amaTagid)?.baseScore ?? 0;
+
+  const showPinned = side === "left" && post.sticky;
+  const showOpenThread =
+    side === "left" && !!openThreadTagId && openThreadRelevance >= 1;
+  const showAma = side === "left" && !!amaTagid && amaRelevance >= 1;
+  const showCurated =
+    !!post.curatedDate && (side === "left" ? curatedIconLeft : !curatedIconLeft);
+  const showQuestion = side === "right" && post.question;
+  const linkUrl = side === "right" ? post.url : null;
+  const showDialogue = side === "right" && post.collabEditorDialogue;
+  const showPersonalBlogpost =
+    side === "right" && !post.frontpageDate && !post.isEvent;
+
+  const hasAny =
+    showPinned ||
+    showOpenThread ||
+    showAma ||
+    showCurated ||
+    showQuestion ||
+    !!linkUrl ||
+    showDialogue ||
+    showPersonalBlogpost;
+  if (!hasAny) {
+    return null;
+  }
+
   return (
     <div
       data-component="PostIcons"
-      className="inline-flex items-center [&>:last-child]:mr-[2px]"
+      className={clsx(
+        "inline-flex items-center gap-1",
+        side === "left" ? "mr-[6px]" : "ml-[6px]",
+      )}
     >
-      {post.sticky && (
+      {showPinned && (
         <PostIcon
           href={postGetPageUrl({ post })}
           Icon={PinIcon}
@@ -57,52 +90,47 @@ export default function PostIcons({
           Pinned post
         </PostIcon>
       )}
-      {post.curatedDate && (
+      {showCurated && (
         <PostIcon
           href="/recommendations"
           Icon={StarIcon}
-          className="text-curated-star"
+          className={side === "left" ? "text-curated-star" : undefined}
         >
           Curated
           <br />
           <em>(click to view all curated posts)</em>
         </PostIcon>
       )}
-      {post.question && (
+      {showQuestion && (
         <PostIcon href="/questions" Icon={QIcon}>
           Question
           <br />
           <em>(click to view all questions)</em>
         </PostIcon>
       )}
-      {post.url && (
-        <PostIcon
-          href={post.url}
-          openInNewTab
-          Icon={LinkIcon}
-          className="translate-y-[2px]"
-        >
+      {linkUrl && (
+        <PostIcon href={linkUrl} openInNewTab Icon={LinkIcon}>
           Link post
           <br />
           <em>(click to see linked content)</em>
         </PostIcon>
       )}
-      {post.collabEditorDialogue && (
+      {showDialogue && (
         <PostIcon href={postGetPageUrl({ post })} Icon={ChatBubbleIcon}>
           Dialogue
         </PostIcon>
       )}
-      {!post.frontpageDate && !post.isEvent && (
+      {showPersonalBlogpost && (
         <PostIcon href={postGetPageUrl({ post })} Icon={UserIcon}>
           Personal blogpost
         </PostIcon>
       )}
-      {openThreadTagId && openThreadRelevance >= 1 && (
+      {showOpenThread && (
         <PostIcon href={postGetPageUrl({ post })} Icon={OpenThreadIcon}>
           Open thread
         </PostIcon>
       )}
-      {amaTagid && amaRelevance >= 1 && (
+      {showAma && (
         <PostIcon href={postGetPageUrl({ post })} Icon={ChatBubbleIcon}>
           Ask Me Anything thread
         </PostIcon>

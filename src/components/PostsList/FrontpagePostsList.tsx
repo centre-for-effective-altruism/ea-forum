@@ -27,7 +27,7 @@ export default async function FrontpagePostsList() {
   return (
     <HideRepeatedPostsProvider>
       <AnalyticsContext listContext="curatedPosts">
-        <PostsList posts={curatedPosts} viewType="fromContext" />
+        <PostsList posts={curatedPosts} viewType="fromContext" curatedIconLeft />
       </AnalyticsContext>
       <AnalyticsContext listContext="latestPosts">
         <ClientFrontpagePostsList

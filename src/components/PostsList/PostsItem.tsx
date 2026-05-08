@@ -33,10 +33,12 @@ export default function PostsItem({
   post,
   viewType,
   openInNewTab,
+  curatedIconLeft = false,
 }: Readonly<{
   post: PostListItem;
   viewType?: PostsListViewType;
   openInNewTab?: boolean;
+  curatedIconLeft?: boolean;
 }>) {
   const cardView = viewType === "card";
   const {
@@ -136,24 +138,42 @@ export default function PostsItem({
             className={clsx("min-w-[24px] md:min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
-            <Type
-              style="postTitle"
+            <div
               className={clsx(
-                "mb-[2px] max-md:line-clamp-2 md:truncate",
-                "visited:text-gray-700 hover:opacity-70",
-                isRead ? "text-gray-700" : "text-gray-900",
+                "mb-[2px] flex min-w-0 items-center",
+                "max-md:flex-wrap",
               )}
             >
-              <InteractionWrapper className="inline">
-                <PostIcons post={post} />
+              <InteractionWrapper className="inline-flex shrink-0">
+                <PostIcons
+                  post={post}
+                  side="left"
+                  curatedIconLeft={curatedIconLeft}
+                />
               </InteractionWrapper>
-              <PostsTooltip As="span" post={post}>
-                {/* Adding an empty class here removes the default hover styles */}
-                <Link href={postLink} className="">
-                  {title}
-                </Link>
-              </PostsTooltip>
-            </Type>
+              <Type
+                style="postTitle"
+                className={clsx(
+                  "min-w-0 max-md:line-clamp-2 md:truncate",
+                  "visited:text-gray-700 hover:opacity-70",
+                  isRead ? "text-gray-700" : "text-gray-900",
+                )}
+              >
+                <PostsTooltip As="span" post={post}>
+                  {/* Adding an empty class here removes the default hover styles */}
+                  <Link href={postLink} className="">
+                    {title}
+                  </Link>
+                </PostsTooltip>
+              </Type>
+              <InteractionWrapper className="inline-flex shrink-0">
+                <PostIcons
+                  post={post}
+                  side="right"
+                  curatedIconLeft={curatedIconLeft}
+                />
+              </InteractionWrapper>
+            </div>
             <Type style="bodySmall" className="min-w-0 flex">
               <InteractionWrapper className="grow">
                 <TruncationContainer
