@@ -35,6 +35,7 @@ import {
   tags,
   userLoginTokens,
   userRateLimits,
+  userTagRels,
   users,
   votes,
 } from "./schema";
@@ -64,6 +65,7 @@ const relations = defineRelations(
     moderatorActions,
     reports,
     userRateLimits,
+    userTagRels,
     userLoginTokens,
   },
   (r) => ({

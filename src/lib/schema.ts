@@ -3,7 +3,7 @@ import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
 import type { VoteType } from "./votes/voteHelpers";
-import type { Rsvp } from "./posts/postsHelpers";
+import type { Rsvp } from "./posts/rsvpHelpers";
 import type { Theme } from "./themes";
 import {
   KarmaChangeSettings,
@@ -289,6 +289,7 @@ export const users = pgTable(
     karmaChangeBatchStart: timestamp(),
     auto_subscribe_to_my_posts: boolean().notNull().default(true),
     auto_subscribe_to_my_comments: boolean().notNull().default(true),
+    autoSubscribeAsOrganizer: boolean().notNull().default(true),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -319,7 +320,6 @@ export const users = pgTable(
   "voteBanned" BOOL,
   "nullifyVotes" BOOL,
   "deleteContent" BOOL,
-  "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
   "hideDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
   "revealChecksToAdmins" BOOL NOT NULL DEFAULT FALSE,
   "optedInToDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,

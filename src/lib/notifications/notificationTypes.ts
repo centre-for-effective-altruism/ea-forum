@@ -4,13 +4,10 @@ import type {
   NotificationChannel,
   NotificationDocument,
 } from "./notificationHelpers";
-import {
-  getPostCollaborateUrl,
-  postGetEditUrl,
-  rsvpToText,
-} from "../posts/postsHelpers";
+import { getPostCollaborateUrl, postGetEditUrl } from "../posts/postsHelpers";
 import { sequenceGetPageUrl } from "../sequences/sequenceHelpers";
 import { getNotificationDocumentSummary } from "./notificationQueries";
+import { rsvpToText } from "../posts/rsvpHelpers";
 import { tagGetUrl } from "../tags/tagHelpers";
 import { db } from "../db";
 import keyBy from "lodash/keyBy";

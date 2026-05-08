@@ -6,7 +6,10 @@ import type { SubscribableCollection } from "./subscriptionTypes";
 
 type SubscriptionUser = Pick<
   User,
-  "_id" | "auto_subscribe_to_my_posts" | "auto_subscribe_to_my_comments"
+  | "_id"
+  | "auto_subscribe_to_my_posts"
+  | "auto_subscribe_to_my_comments"
+  | "autoSubscribeAsOrganizer"
 >;
 
 /**
@@ -80,6 +83,7 @@ export const fetchSubscribedUsers = async ({
         _id: true,
         auto_subscribe_to_my_posts: true,
         auto_subscribe_to_my_comments: true,
+        autoSubscribeAsOrganizer: true,
       },
       where: {
         _id: { in: potentiallyDefaultSubscribedUserIds },

@@ -18,23 +18,6 @@ export const postStatuses = {
   STATUS_DELETED: 5,
 };
 
-export type Rsvp = {
-  name: string;
-  email?: string;
-  nonPublic?: boolean;
-  response: "yes" | "maybe" | "no";
-  userId?: string | null;
-  createdAt?: string;
-};
-
-export const rsvpToText = (rsvp: Rsvp) => {
-  return {
-    yes: "Going",
-    maybe: "Maybe",
-    no: "Can't Go",
-  }[rsvp.response];
-};
-
 export const postsListViewSchema = z.object({
   view: z.enum(["frontpage", "sticky", "orgUpdates"]),
   offset: z.int().gte(0).optional(),
