@@ -26,7 +26,7 @@ const PostIcon: FC<{
       title={<Type style="bodySmall">{children}</Type>}
     >
       <Link href={href} openInNewTab={openInNewTab} className="text-gray-600">
-        <Icon className={clsx("w-4 mr-1", className)} />
+        <Icon className={clsx("w-4", className)} />
       </Link>
     </Tooltip>
   );
@@ -74,7 +74,13 @@ export default function PostIcons({
   }
 
   return (
-    <div data-component="PostIcons" className="inline-flex items-center">
+    <div
+      data-component="PostIcons"
+      className={clsx(
+        "inline-flex items-center gap-1",
+        side === "left" ? "mr-[6px]" : "ml-[6px]",
+      )}
+    >
       {showPinned && (
         <PostIcon
           href={postGetPageUrl({ post })}
@@ -88,7 +94,7 @@ export default function PostIcons({
         <PostIcon
           href="/recommendations"
           Icon={StarIcon}
-          className="text-curated-star"
+          className={side === "left" ? "text-curated-star" : undefined}
         >
           Curated
           <br />
@@ -103,12 +109,7 @@ export default function PostIcons({
         </PostIcon>
       )}
       {linkUrl && (
-        <PostIcon
-          href={linkUrl}
-          openInNewTab
-          Icon={LinkIcon}
-          className="translate-y-[2px]"
-        >
+        <PostIcon href={linkUrl} openInNewTab Icon={LinkIcon}>
           Link post
           <br />
           <em>(click to see linked content)</em>

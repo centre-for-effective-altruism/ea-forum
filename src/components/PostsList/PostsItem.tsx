@@ -140,7 +140,7 @@ export default function PostsItem({
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
             <div
               className={clsx(
-                "mb-[2px] flex min-w-0 items-baseline gap-[2px]",
+                "mb-[2px] flex min-w-0 items-center",
                 "max-md:flex-wrap",
               )}
             >
