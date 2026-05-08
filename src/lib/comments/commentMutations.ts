@@ -27,6 +27,7 @@ import {
   updateCommentTag,
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
+  newCommentNotifications,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -169,9 +170,9 @@ export const createPostComment = async ({
 
   void checkCommentForSpam(db, user, commentId, revision, post);
   void triggerReviewIfNeededById(user._id);
+  void newCommentNotifications(commentId);
 
   // TODO: Notifications:
-  // commentsNewNotifications
   // notifyUsersOfPingbackMentions
 
   // This is potentially slow - do it outside of the transaction to avoid

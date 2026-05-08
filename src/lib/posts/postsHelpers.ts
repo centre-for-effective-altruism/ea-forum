@@ -18,6 +18,23 @@ export const postStatuses = {
   STATUS_DELETED: 5,
 };
 
+export type Rsvp = {
+  name: string;
+  email?: string;
+  nonPublic?: boolean;
+  response: "yes" | "maybe" | "no";
+  userId?: string | null;
+  createdAt?: string;
+};
+
+export const rsvpToText = (rsvp: Rsvp) => {
+  return {
+    yes: "Going",
+    maybe: "Maybe",
+    no: "Can't Go",
+  }[rsvp.response];
+};
+
 export const postsListViewSchema = z.object({
   view: z.enum(["frontpage", "sticky", "orgUpdates"]),
   offset: z.int().gte(0).optional(),
@@ -51,6 +68,23 @@ export const postGetPageUrl = ({
 
 export const postGetCommentsUrl: typeof postGetPageUrl = (...args) =>
   postGetPageUrl(...args) + "#comments";
+
+export const postGetEditUrl = (
+  postId: string,
+  isAbsolute = false,
+  linkSharingKey?: string,
+  version?: string,
+): string => {
+  const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  let url = `${prefix}/editPost?postId=${postId}`;
+  if (linkSharingKey) {
+    url += `&key=${linkSharingKey}`;
+  }
+  if (version) {
+    url += `&version=${version}`;
+  }
+  return url;
+};
 
 export type GoogleLocation = {
   address_components: {
@@ -161,6 +195,18 @@ export const userIsSharedOnPost = (
     post.sharingSettings.anyoneWithLinkCan !== "none" &&
     post.currentUserUsedLinkKey
   );
+};
+
+export const getPostCollaborateUrl = (
+  postId: string,
+  isAbsolute = false,
+  linkSharingKey?: string,
+) => {
+  const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  if (linkSharingKey) {
+    return `${prefix}/collaborateOnPost?postId=${postId}&key=${linkSharingKey}`;
+  }
+  return `${prefix}/collaborateOnPost?postId=${postId}`;
 };
 
 /**

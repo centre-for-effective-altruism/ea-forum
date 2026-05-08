@@ -3,6 +3,7 @@ import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
 import type { VoteType } from "./votes/voteHelpers";
+import type { Rsvp } from "./posts/postsHelpers";
 import type { Theme } from "./themes";
 import {
   KarmaChangeSettings,
@@ -62,6 +63,8 @@ const timestamp = customType<{
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
 const jsonb = <T = Json>() => jsonbRaw().$type<T>();
+
+const jsonbArray = <T = Json>() => jsonbRaw().array().$type<T>();
 
 const denormalizedRevision = () => jsonb<DenormalizedRevision>();
 
@@ -284,6 +287,8 @@ export const users = pgTable(
       .default(defaultKarmaChangeSettings),
     karmaChangeLastOpened: timestamp(),
     karmaChangeBatchStart: timestamp(),
+    auto_subscribe_to_my_posts: boolean().notNull().default(true),
+    auto_subscribe_to_my_comments: boolean().notNull().default(true),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -314,8 +319,6 @@ export const users = pgTable(
   "voteBanned" BOOL,
   "nullifyVotes" BOOL,
   "deleteContent" BOOL,
-  "auto_subscribe_to_my_posts" BOOL NOT NULL DEFAULT TRUE,
-  "auto_subscribe_to_my_comments" BOOL NOT NULL DEFAULT TRUE,
   "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
   "hideDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
   "revealChecksToAdmins" BOOL NOT NULL DEFAULT FALSE,
@@ -1314,6 +1317,8 @@ export const debouncerEvents = pgTable(
   ],
 );
 
+export type DebouncerEvent = typeof debouncerEvents.$inferSelect;
+
 export const electionVotes = pgTable(
   "ElectionVotes",
   {
@@ -1656,6 +1661,7 @@ export const notifications = pgTable(
 );
 
 export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
 
 export const podcastEpisodes = pgTable(
   "PodcastEpisodes",
@@ -1938,7 +1944,7 @@ export const posts = pgTable(
     lastCommentPromotedAt: timestamp(),
     tagRelevance: jsonb<Record<string, number>>(),
     noIndex: boolean().default(false).notNull(),
-    rsvps: jsonb().array(),
+    rsvps: jsonbArray<Rsvp[]>(),
     activateRSVPs: boolean(),
     nextDayReminderSent: boolean().default(false).notNull(),
     onlyVisibleToLoggedIn: boolean().default(false).notNull(),
