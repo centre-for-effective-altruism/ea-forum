@@ -136,12 +136,7 @@ export default function PostsItem({
             className={clsx("min-w-[24px] md:min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
-            <div
-              className={clsx(
-                "mb-[2px] flex min-w-0 items-center",
-                "max-md:flex-wrap",
-              )}
-            >
+            <div className="mb-[2px] flex min-w-0 items-start">
               <InteractionWrapper className="inline-flex shrink-0">
                 <PostIcons
                   post={post}
@@ -152,14 +147,12 @@ export default function PostsItem({
               <Type
                 style="postTitle"
                 className={clsx(
-                  "min-w-0 max-md:line-clamp-2 md:truncate",
-                  "visited:text-gray-700 hover:opacity-70",
+                  "min-w-0 max-md:line-clamp-2 md:truncate hover:opacity-70",
                   isRead ? "text-gray-700" : "text-gray-900",
                 )}
               >
                 <PostsTooltip As="span" post={post}>
-                  {/* Adding an empty class here removes the default hover styles */}
-                  <Link href={postLink} className="">
+                  <Link href={postLink} className="visited:text-gray-600">
                     {title}
                   </Link>
                 </PostsTooltip>
