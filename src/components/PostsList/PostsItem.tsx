@@ -118,7 +118,6 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-gray-50",
           "flex flex-col hover:bg-postitemhover",
           cardView ? "justify-between" : "justify-center",
-          !cardView && !showNewComments && "md:h-[60px]",
         )}
       >
         <div
@@ -127,8 +126,7 @@ export default function PostsItem({
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
             "md:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start py-2" : "items-center",
-            showNewComments && !cardView && "py-[6px]",
+            cardView ? "items-start py-2" : "items-center py-[6px]",
           )}
         >
           <Score
