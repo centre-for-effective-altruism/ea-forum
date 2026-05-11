@@ -20,11 +20,11 @@ export const fetchCommentAncestors = async (
 ): Promise<CommentWithAncestor[]> => {
   const result = await txn.execute<CommentWithAncestor>(sql`
     WITH RECURSIVE "comment_ancestors" AS (
-      SELECT "_id", "parentCommentId", "userId" 0 AS "depth"
+      SELECT "_id", "parentCommentId", "userId", 0 AS "depth"
       FROM "Comments"
       WHERE "_id" = ${commentId}
       UNION ALL
-      SELECT c."_id", c."parentCommentId", "userId" ca."depth" + 1
+      SELECT c."_id", c."parentCommentId", c."userId", ca."depth" + 1
       FROM "Comments" c
       INNER JOIN "comment_ancestors" ca ON c."_id" = ca."parentCommentId"
       WHERE ca."parentCommentId" IS NOT NULL
