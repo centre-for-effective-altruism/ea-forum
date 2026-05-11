@@ -11,7 +11,6 @@ import { createNotifications } from "../notifications/notificationMutations";
 import { fetchSubscribedUsers } from "../subscriptions/subscriptionQueries";
 import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 import { subscriptionTypes } from "../subscriptions/subscriptionTypes";
-// import { getUsersToNotifyAboutEvent } from "../posts/rsvpHelpers";
 import { db, DbOrTransaction, Transaction } from "../db";
 import { captureEvent } from "../analytics/captureEvent";
 import { postGetPageUrl } from "../posts/postsHelpers";
@@ -277,30 +276,8 @@ export const newCommentNotifications = async (commentId: string) => {
 
   // Notify event RSVPs
   if (comment.post?.isEvent && comment.post.rsvps?.length) {
-    /*
-    const emailsToNotify = await getUsersToNotifyAboutEvent(comment.post);
-    for (let {userId, email} of emailsToNotify) {
-      if (!email) {
-        continue;
-      }
-      const user = userId
-        ? await db.query.users.findFirst({
-          columns: {
-          },
-          where: {
-            _id: userId,
-          },
-        })
-        : null;
-      await wrapAndSendEmail({
-        user: user,
-        to: email,
-        subject: `New comment on ${post.title}`,
-        body: <EmailComment commentId={comment._id}/>,
-        tag: "rsvps-new-comment",
-      });
-    }
-    */
+    // TODO: Send emails to RSVPS - this is currently handled by ForumMagnum
+    // since event pages haven't been migrated yet
   }
 
   // Keep track of whom we've notified (so that we don't notify the same user
