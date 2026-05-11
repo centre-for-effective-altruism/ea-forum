@@ -77,7 +77,7 @@ export default function PostsList({
 
   return (
     <section
-      className={clsx("max-w-full space-y-1", className)}
+      className={clsx("max-w-full space-y-0.5", className)}
       data-component="PostsList"
     >
       {displayedPosts.map((post) => (

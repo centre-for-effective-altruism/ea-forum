@@ -89,7 +89,7 @@ export default function RecentDiscussionsPostCommented({
               <PostsTooltip As="span" post={post}>
                 <Link
                   href={postLink}
-                  className="visited:text-gray-700 hover:opacity-60"
+                  className="visited:text-gray-600 hover:opacity-60"
                 >
                   {title}
                 </Link>

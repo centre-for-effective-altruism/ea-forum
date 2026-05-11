@@ -118,7 +118,6 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-gray-50",
           "flex flex-col hover:bg-postitemhover",
           cardView ? "justify-between" : "justify-center",
-          !cardView && !showNewComments && "md:h-[60px]",
         )}
       >
         <div
@@ -126,47 +125,42 @@ export default function PostsItem({
           className={clsx(
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
-            "md:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start py-2" : "items-center",
-            showNewComments && !cardView && "py-[6px]",
+            "sm:grid-cols-[min-content_1fr_min-content_min-content]",
+            cardView ? "items-start py-2" : "items-center py-[6px]",
           )}
         >
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
             orientation="vertical"
-            className={clsx("min-w-[24px] md:min-w-[33px]", cardView && "mt-[10px]")}
+            className={clsx("min-w-[24px] sm:min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
-            <div
-              className={clsx(
-                "mb-[2px] flex min-w-0 items-center",
-                "max-md:flex-wrap",
-              )}
-            >
-              <InteractionWrapper className="inline-flex shrink-0">
-                <PostIcons
-                  post={post}
-                  side="left"
-                  curatedIconLeft={curatedIconLeft}
-                />
-              </InteractionWrapper>
+            <div className="mb-[2px] flex min-w-0 items-center">
               <Type
                 style="postTitle"
                 className={clsx(
-                  "min-w-0 max-md:line-clamp-2 md:truncate",
-                  "visited:text-gray-700 hover:opacity-70",
+                  "min-w-0 max-sm:line-clamp-3 sm:truncate",
                   isRead ? "text-gray-700" : "text-gray-900",
                 )}
               >
+                <InteractionWrapper className="inline-flex align-middle">
+                  <PostIcons
+                    post={post}
+                    side="left"
+                    curatedIconLeft={curatedIconLeft}
+                  />
+                </InteractionWrapper>
                 <PostsTooltip As="span" post={post}>
-                  {/* Adding an empty class here removes the default hover styles */}
-                  <Link href={postLink} className="">
+                  <Link
+                    href={postLink}
+                    className="align-middle visited:text-gray-600 hover:opacity-70"
+                  >
                     {title}
                   </Link>
                 </PostsTooltip>
               </Type>
-              <InteractionWrapper className="inline-flex shrink-0">
+              <InteractionWrapper className="inline-flex shrink-0 max-sm:hidden">
                 <PostIcons
                   post={post}
                   side="right"
@@ -202,7 +196,7 @@ export default function PostsItem({
                         includeAgo
                       />
                       {post.curatedDate && (
-                        <span className="max-md:hidden">
+                        <span className="max-sm:hidden">
                           <span className="px-1">·</span>
                           <span>Curated </span>
                           <TimeAgo
@@ -214,7 +208,7 @@ export default function PostsItem({
                           />
                         </span>
                       )}
-                      <span className="max-md:hidden">
+                      <span className="max-sm:hidden">
                         <span className="px-1">·</span>
                         <span>{readTime}m read</span>
                       </span>
@@ -222,23 +216,23 @@ export default function PostsItem({
                   }
                 />
               </InteractionWrapper>
-              <InteractionWrapper className="md:hidden">
+              <InteractionWrapper className="sm:hidden">
                 {commentsNode}
               </InteractionWrapper>
-              <InteractionWrapper className="flex items-center md:hidden">
+              <InteractionWrapper className="flex items-center sm:hidden">
                 <PostTripleDotMenu post={post} orientation="vertical" />
               </InteractionWrapper>
             </Type>
           </div>
-          <InteractionWrapper className="max-md:hidden">
+          <InteractionWrapper className="max-sm:hidden">
             {commentsNode}
           </InteractionWrapper>
-          <InteractionWrapper className="flex items-center max-md:hidden">
+          <InteractionWrapper className="flex items-center max-sm:hidden">
             <PostTripleDotMenu post={post} orientation="vertical" />
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-2 sm:gap-4 md:gap-8 items-end pl-[56px] pr-5 pb-4">
+          <div className="flex gap-2 sm:gap-8 items-end pl-[56px] pr-5 pb-4">
             <Type
               style="postDescription"
               className="text-gray-600 line-clamp-3 overflow-hidden"
@@ -247,7 +241,7 @@ export default function PostsItem({
             </Type>
             <div
               className={clsx(
-                "w-[100px] min-w-[100px] md:w-[160px] md:min-w-[160px]",
+                "w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]",
                 "overflow-hidden rounded relative",
                 imageUrl && "h-[80px] min-h-[80px]",
               )}
