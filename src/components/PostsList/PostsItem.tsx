@@ -154,7 +154,7 @@ export default function PostsItem({
                 <PostsTooltip As="span" post={post}>
                   <Link
                     href={postLink}
-                    className="visited:text-gray-600 hover:opacity-70"
+                    className="align-middle visited:text-gray-600 hover:opacity-70"
                   >
                     {title}
                   </Link>
