@@ -56,7 +56,7 @@ export default async function AdminOrgUpdatesTestPage() {
         </div>
         <div className="mb-10">
           <HideRepeatedPostsProvider>
-            <PostsList posts={curatedPosts} viewType="fromContext" />
+            <PostsList posts={curatedPosts} viewType="fromContext" curatedIconLeft />
             <Suspense
               fallback={<PostsListSkeleton count={11} viewType="fromContext" />}
             >
