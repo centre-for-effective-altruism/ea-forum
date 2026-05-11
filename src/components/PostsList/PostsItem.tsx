@@ -136,36 +136,38 @@ export default function PostsItem({
             className={clsx("min-w-[24px] sm:min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
-            <Type
-              style="postTitle"
-              className={clsx(
-                "mb-[2px] min-w-0 max-sm:line-clamp-3 sm:truncate",
-                isRead ? "text-gray-700" : "text-gray-900",
-              )}
-            >
-              <InteractionWrapper className="inline-flex align-middle">
-                <PostIcons
-                  post={post}
-                  side="left"
-                  curatedIconLeft={curatedIconLeft}
-                />
-              </InteractionWrapper>
-              <PostsTooltip As="span" post={post}>
-                <Link
-                  href={postLink}
-                  className="visited:text-gray-600 hover:opacity-70"
-                >
-                  {title}
-                </Link>
-              </PostsTooltip>
-              <InteractionWrapper className="inline-flex align-middle max-sm:hidden">
+            <div className="mb-[2px] flex min-w-0 items-center">
+              <Type
+                style="postTitle"
+                className={clsx(
+                  "min-w-0 max-sm:line-clamp-3 sm:truncate",
+                  isRead ? "text-gray-700" : "text-gray-900",
+                )}
+              >
+                <InteractionWrapper className="inline-flex align-middle">
+                  <PostIcons
+                    post={post}
+                    side="left"
+                    curatedIconLeft={curatedIconLeft}
+                  />
+                </InteractionWrapper>
+                <PostsTooltip As="span" post={post}>
+                  <Link
+                    href={postLink}
+                    className="visited:text-gray-600 hover:opacity-70"
+                  >
+                    {title}
+                  </Link>
+                </PostsTooltip>
+              </Type>
+              <InteractionWrapper className="inline-flex shrink-0 max-sm:hidden">
                 <PostIcons
                   post={post}
                   side="right"
                   curatedIconLeft={curatedIconLeft}
                 />
               </InteractionWrapper>
-            </Type>
+            </div>
             <Type style="bodySmall" className="min-w-0 flex">
               <InteractionWrapper className="grow">
                 <TruncationContainer
