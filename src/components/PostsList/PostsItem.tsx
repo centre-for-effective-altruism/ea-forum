@@ -125,7 +125,7 @@ export default function PostsItem({
           className={clsx(
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
-            "md:grid-cols-[min-content_1fr_min-content_min-content]",
+            "sm:grid-cols-[min-content_1fr_min-content_min-content]",
             cardView ? "items-start py-2" : "items-center py-[6px]",
           )}
         >
@@ -133,13 +133,13 @@ export default function PostsItem({
             baseScore={baseScore}
             voteCount={voteCount}
             orientation="vertical"
-            className={clsx("min-w-[24px] md:min-w-[33px]", cardView && "mt-[10px]")}
+            className={clsx("min-w-[24px] sm:min-w-[33px]", cardView && "mt-[10px]")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
             <Type
               style="postTitle"
               className={clsx(
-                "mb-[2px] min-w-0 max-md:line-clamp-3 md:truncate",
+                "mb-[2px] min-w-0 max-sm:line-clamp-3 sm:truncate",
                 isRead ? "text-gray-700" : "text-gray-900",
               )}
             >
@@ -158,7 +158,7 @@ export default function PostsItem({
                   {title}
                 </Link>
               </PostsTooltip>
-              <InteractionWrapper className="inline-flex align-middle max-md:hidden">
+              <InteractionWrapper className="inline-flex align-middle max-sm:hidden">
                 <PostIcons
                   post={post}
                   side="right"
@@ -194,7 +194,7 @@ export default function PostsItem({
                         includeAgo
                       />
                       {post.curatedDate && (
-                        <span className="max-md:hidden">
+                        <span className="max-sm:hidden">
                           <span className="px-1">·</span>
                           <span>Curated </span>
                           <TimeAgo
@@ -206,7 +206,7 @@ export default function PostsItem({
                           />
                         </span>
                       )}
-                      <span className="max-md:hidden">
+                      <span className="max-sm:hidden">
                         <span className="px-1">·</span>
                         <span>{readTime}m read</span>
                       </span>
@@ -214,23 +214,23 @@ export default function PostsItem({
                   }
                 />
               </InteractionWrapper>
-              <InteractionWrapper className="md:hidden">
+              <InteractionWrapper className="sm:hidden">
                 {commentsNode}
               </InteractionWrapper>
-              <InteractionWrapper className="flex items-center md:hidden">
+              <InteractionWrapper className="flex items-center sm:hidden">
                 <PostTripleDotMenu post={post} orientation="vertical" />
               </InteractionWrapper>
             </Type>
           </div>
-          <InteractionWrapper className="max-md:hidden">
+          <InteractionWrapper className="max-sm:hidden">
             {commentsNode}
           </InteractionWrapper>
-          <InteractionWrapper className="flex items-center max-md:hidden">
+          <InteractionWrapper className="flex items-center max-sm:hidden">
             <PostTripleDotMenu post={post} orientation="vertical" />
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-2 sm:gap-4 md:gap-8 items-end pl-[56px] pr-5 pb-4">
+          <div className="flex gap-2 sm:gap-8 items-end pl-[56px] pr-5 pb-4">
             <Type
               style="postDescription"
               className="text-gray-600 line-clamp-3 overflow-hidden"
@@ -239,7 +239,7 @@ export default function PostsItem({
             </Type>
             <div
               className={clsx(
-                "w-[100px] min-w-[100px] md:w-[160px] md:min-w-[160px]",
+                "w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]",
                 "overflow-hidden rounded relative",
                 imageUrl && "h-[80px] min-h-[80px]",
               )}
