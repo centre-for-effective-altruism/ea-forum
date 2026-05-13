@@ -29,7 +29,7 @@ export const fetchCommentAncestors = async (
       INNER JOIN "comment_ancestors" ca ON c."_id" = ca."parentCommentId"
       WHERE ca."parentCommentId" IS NOT NULL
     )
-    SELECT "_id" FROM "comment_ancestors" WHERE "_id" <> ${commentId}
+    SELECT * FROM "comment_ancestors" WHERE "_id" <> ${commentId}
     ORDER BY "depth" ASC
   `);
   return result.rows;
