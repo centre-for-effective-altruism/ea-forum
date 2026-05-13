@@ -48,6 +48,17 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
 export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
 
+// TODO: Remove the onsiteDigestFilter, FEATURED_CUTOFF_DAYS,
+// fetchFeaturedCuratedPostsList, and fetchFeaturedPostsList below along with
+// the /admin/featured page once the featured-page experiment is concluded.
+const onsiteDigestFilter = (postsTable: typeof posts) => sql`
+  EXISTS (
+    SELECT 1 FROM "DigestPosts" dp
+    WHERE dp."postId" = ${postsTable}."_id"
+      AND dp."onsiteDigestStatus" = 'yes'
+  )
+`;
+
 /**
  * New and upvoted sorting: Calculate score from karma with bonuses for
  * frontpage/curated posts, then divide by a time decay factor.
@@ -256,6 +267,40 @@ export const fetchFrontpageCuratedPostsList = async (
       postedAt: "desc",
     },
     limit: currentUserId ? 3 : 2,
+  });
+};
+
+const FEATURED_CUTOFF_DAYS = 14;
+
+export const fetchFeaturedCuratedPostsList = async (
+  currentUserId: string | null,
+) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      curatedDate: { gte: nDaysAgo(5).toISOString() },
+      RAW: onsiteDigestFilter,
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    limit: currentUserId ? 3 : 2,
+  });
+};
+
+export const fetchFeaturedPostsList = (currentUserId: string | null) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: false,
+      sticky: false,
+      groupId: { isNull: true },
+      postedAt: { gt: nDaysAgo(FEATURED_CUTOFF_DAYS).toISOString() },
+      RAW: onsiteDigestFilter,
+    },
+    orderBy: magicSort(),
   });
 };
 
