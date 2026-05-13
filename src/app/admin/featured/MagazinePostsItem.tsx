@@ -74,8 +74,8 @@ export default function MagazinePostsItem({
               fill
               sizes={
                 isCompact
-                  ? "(min-width: 640px) 33vw, 100vw"
-                  : "(min-width: 640px) 66vw, 100vw"
+                  ? "(min-width: 1200px) 400px, (min-width: 640px) 33vw, 100vw"
+                  : "(min-width: 1200px) 800px, (min-width: 640px) 66vw, 100vw"
               }
               className="object-cover"
             />
@@ -95,7 +95,7 @@ export default function MagazinePostsItem({
         >
           <div
             className={clsx(
-              "font-serif font-[400] leading-tight text-gray-1000",
+              "font-serif font-normal leading-tight text-gray-1000",
               isCompact
                 ? "line-clamp-2 text-[18px]"
                 : "line-clamp-3 text-[24px] sm:text-[28px]",
@@ -122,7 +122,7 @@ export default function MagazinePostsItem({
               {description}
             </Type>
           )}
-          <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+          <div className="mt-auto flex items-center justify-between gap-3">
             <Type
               style="bodySmall"
               className="flex min-w-0 items-center gap-1 text-gray-800"
