@@ -1,5 +1,20 @@
 import type { NotificationDocument } from "./notificationHelpers";
+import { InsertNotification, notifications } from "../schema";
+import { randomId } from "../utils/random";
 import { db } from "../db";
+
+export const insertNotification = async (data: Omit<InsertNotification, "_id">) => {
+  const [result] = await db
+    .insert(notifications)
+    .values([
+      {
+        _id: randomId(),
+        ...data,
+      },
+    ])
+    .returning();
+  return result;
+};
 
 type NotificationDocumentSummary = {
   type: NotificationDocument;

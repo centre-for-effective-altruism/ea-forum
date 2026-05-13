@@ -49,7 +49,11 @@ export default function NotificationsHeaderButton() {
   const showBadge = unreadNotifications > 0;
 
   return (
-    <NotificationsDropdown karmaChanges={karmaChanges} className="relative">
+    <NotificationsDropdown
+      karmaChanges={karmaChanges}
+      onOpen={refetch}
+      className="relative"
+    >
       {showBadge && (
         <Type
           style="bodySmall"

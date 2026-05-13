@@ -1,8 +1,7 @@
 import { db } from "../db";
 import type { JsonRecord } from "../typeHelpers";
-import { notifications, InsertNotification } from "../schema";
+import type { InsertNotification } from "../schema";
 import { getNotificationTypeByName } from "./notificationTypes";
-import { randomId } from "../utils/random";
 import {
   getNotificationTiming,
   notificationDebouncers,
@@ -13,19 +12,7 @@ import {
   NotificationDocument,
   NotificationTypeSettings,
 } from "./notificationHelpers";
-
-const insertNotification = async (data: Omit<InsertNotification, "_id">) => {
-  const [result] = await db
-    .insert(notifications)
-    .values([
-      {
-        _id: randomId(),
-        ...data,
-      },
-    ])
-    .returning();
-  return result;
-};
+import { insertNotification } from "./notificationQueries";
 
 export const createNotification = async ({
   userId,
