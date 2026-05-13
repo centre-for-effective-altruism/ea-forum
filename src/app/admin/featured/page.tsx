@@ -43,10 +43,10 @@ export default async function AdminFeaturedPage() {
         <Type style="sectionTitleLarge" className="mb-2">
           Featured
         </Type>
-        <div className="mb-10 grid grid-cols-1 sm:grid-cols-2">
+        <div className="mb-10 grid grid-cols-1 gap-px bg-gray-300 outline outline-1 outline-gray-300 sm:grid-cols-[2fr_1fr]">
           {topPosts[0] && <MagazinePostsItem post={topPosts[0]} />}
           {topPosts.length > 1 && (
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-px">
               {topPosts.slice(1).map((post) => (
                 <MagazinePostsItem key={post._id} post={post} variant="compact" />
               ))}
@@ -61,7 +61,7 @@ export default async function AdminFeaturedPage() {
             <PopularCommentsList initialLimit={5} />
           </Suspense>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-px bg-gray-300 outline outline-1 outline-gray-300 sm:grid-cols-2">
           {restPosts.map((post) => (
             <MagazinePostsItem key={post._id} post={post} />
           ))}

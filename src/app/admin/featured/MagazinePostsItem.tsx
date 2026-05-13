@@ -53,8 +53,7 @@ export default function MagazinePostsItem({
       <article
         data-component="MagazinePostsItem"
         className={clsx(
-          "group relative outline outline-1 outline-gray-800",
-          isCompact ? "flex flex-row" : "flex flex-col",
+          "group relative flex flex-col",
           isRead
             ? "bg-primary/10 hover:bg-primary/20"
             : "bg-gray-50 hover:bg-gray-200",
@@ -62,13 +61,10 @@ export default function MagazinePostsItem({
       >
         <div
           className={clsx(
-            "relative overflow-hidden transition group-hover:brightness-90",
+            "relative aspect-[16/9] w-full overflow-hidden transition group-hover:brightness-90",
             imageUrl
               ? "bg-gray-100"
               : "bg-gradient-to-br from-primary-light/20 to-primary-dark/30",
-            isCompact
-              ? "aspect-[4/3] w-1/3 shrink-0 self-stretch"
-              : "aspect-[16/9] w-full",
           )}
         >
           {imageUrl && (
@@ -78,8 +74,8 @@ export default function MagazinePostsItem({
               fill
               sizes={
                 isCompact
-                  ? "(min-width: 640px) 17vw, 33vw"
-                  : "(min-width: 640px) 50vw, 100vw"
+                  ? "(min-width: 640px) 33vw, 100vw"
+                  : "(min-width: 640px) 66vw, 100vw"
               }
               className="object-cover"
             />
@@ -97,10 +93,9 @@ export default function MagazinePostsItem({
             isCompact ? "gap-2 p-4" : "gap-3 p-5",
           )}
         >
-          <Type
-            style="postsPageTitle"
+          <div
             className={clsx(
-              "leading-tight text-gray-1000",
+              "font-serif font-[400] leading-tight text-gray-1000",
               isCompact
                 ? "line-clamp-2 text-[18px]"
                 : "line-clamp-3 text-[24px] sm:text-[28px]",
@@ -115,13 +110,19 @@ export default function MagazinePostsItem({
             >
               {title}
             </Link>
-          </Type>
-          {!isCompact && description && (
-            <Type style="postDescription" className="line-clamp-3 text-gray-700">
+          </div>
+          {description && (
+            <Type
+              style="postDescription"
+              className={clsx(
+                "text-gray-700",
+                isCompact ? "line-clamp-2" : "line-clamp-3",
+              )}
+            >
               {description}
             </Type>
           )}
-          <div className="mt-1 flex items-center justify-between gap-3">
+          <div className="mt-auto flex items-center justify-between gap-3 pt-1">
             <Type
               style="bodySmall"
               className="flex min-w-0 items-center gap-1 text-gray-800"
