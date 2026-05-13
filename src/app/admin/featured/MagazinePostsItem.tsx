@@ -60,15 +60,18 @@ export default function MagazinePostsItem({
             : "bg-gray-50 hover:bg-gray-200",
         )}
       >
-        {imageUrl && (
-          <div
-            className={clsx(
-              "relative overflow-hidden bg-gray-100",
-              isCompact
-                ? "aspect-[4/3] w-1/3 shrink-0 self-stretch"
-                : "aspect-[16/9] w-full",
-            )}
-          >
+        <div
+          className={clsx(
+            "relative overflow-hidden transition group-hover:brightness-90",
+            imageUrl
+              ? "bg-gray-100"
+              : "bg-gradient-to-br from-primary-light/20 to-primary-dark/30",
+            isCompact
+              ? "aspect-[4/3] w-1/3 shrink-0 self-stretch"
+              : "aspect-[16/9] w-full",
+          )}
+        >
+          {imageUrl && (
             <Image
               src={imageUrl}
               alt=""
@@ -78,16 +81,16 @@ export default function MagazinePostsItem({
                   ? "(min-width: 640px) 17vw, 33vw"
                   : "(min-width: 640px) 50vw, 100vw"
               }
-              className="object-cover transition group-hover:brightness-90"
+              className="object-cover"
             />
-            {post.curatedDate && (
-              <div className="absolute right-0 top-0 z-[3] flex items-center gap-1 bg-curated-star px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-1000">
-                <StarIcon className="w-3" />
-                Curated
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          {post.curatedDate && (
+            <div className="absolute right-0 top-0 z-[3] flex items-center gap-1 bg-curated-star px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-1000">
+              <StarIcon className="w-3" />
+              Curated
+            </div>
+          )}
+        </div>
         <div
           className={clsx(
             "flex min-w-0 flex-1 flex-col",
