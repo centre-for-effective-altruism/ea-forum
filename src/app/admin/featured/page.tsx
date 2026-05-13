@@ -17,6 +17,7 @@ import MagazinePostsItem from "./MagazinePostsItem";
 // directory (and the supporting helpers in postLists.ts) once the experiment
 // concludes.
 const TOP_CARD_COUNT = 3;
+const GRID_HAIRLINE = "gap-px bg-gray-300 outline outline-1 outline-gray-300";
 
 export default async function AdminFeaturedPage() {
   const currentUser = await getCurrentUser();
@@ -43,10 +44,12 @@ export default async function AdminFeaturedPage() {
         <Type style="sectionTitleLarge" className="mb-2">
           Featured
         </Type>
-        <div className="mb-10 grid grid-cols-1 sm:grid-cols-2">
+        <div
+          className={`mb-10 grid grid-cols-1 sm:grid-cols-[2fr_1fr] ${GRID_HAIRLINE}`}
+        >
           {topPosts[0] && <MagazinePostsItem post={topPosts[0]} />}
           {topPosts.length > 1 && (
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-px">
               {topPosts.slice(1).map((post) => (
                 <MagazinePostsItem key={post._id} post={post} variant="compact" />
               ))}
@@ -61,7 +64,7 @@ export default async function AdminFeaturedPage() {
             <PopularCommentsList initialLimit={5} />
           </Suspense>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${GRID_HAIRLINE}`}>
           {restPosts.map((post) => (
             <MagazinePostsItem key={post._id} post={post} />
           ))}
