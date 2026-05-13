@@ -16,7 +16,7 @@ import MagazinePostsItem from "./MagazinePostsItem";
 // the same way as the home page (curated first, then magic). Delete this
 // directory (and the supporting helpers in postLists.ts) once the experiment
 // concludes.
-const TOP_CARD_COUNT = 4;
+const TOP_CARD_COUNT = 3;
 
 export default async function AdminFeaturedPage() {
   const currentUser = await getCurrentUser();
@@ -43,10 +43,15 @@ export default async function AdminFeaturedPage() {
         <Type style="sectionTitleLarge" className="mb-2">
           Featured
         </Type>
-        <div className="mb-10 grid grid-cols-1 gap-8 sm:grid-cols-2">
-          {topPosts.map((post) => (
-            <MagazinePostsItem key={post._id} post={post} />
-          ))}
+        <div className="mb-10 grid grid-cols-1 sm:grid-cols-2">
+          {topPosts[0] && <MagazinePostsItem post={topPosts[0]} />}
+          {topPosts.length > 1 && (
+            <div className="flex flex-col">
+              {topPosts.slice(1).map((post) => (
+                <MagazinePostsItem key={post._id} post={post} variant="compact" />
+              ))}
+            </div>
+          )}
         </div>
         <Type style="sectionTitleLarge" className="mb-2">
           Popular comments
@@ -56,7 +61,7 @@ export default async function AdminFeaturedPage() {
             <PopularCommentsList initialLimit={5} />
           </Suspense>
         </div>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
           {restPosts.map((post) => (
             <MagazinePostsItem key={post._id} post={post} />
           ))}

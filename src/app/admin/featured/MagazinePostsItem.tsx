@@ -4,6 +4,7 @@ import { Fragment, useMemo } from "react";
 import Image from "next/image";
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import StarIcon from "@heroicons/react/24/solid/StarIcon";
 import type { PostListItem } from "@/lib/posts/postLists";
 import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import {
@@ -20,9 +21,13 @@ import TimeAgo from "@/components/TimeAgo";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
 
+type Variant = "hero" | "compact";
+
 export default function MagazinePostsItem({
   post,
-}: Readonly<{ post: PostListItem }>) {
+  variant = "hero",
+}: Readonly<{ post: PostListItem; variant?: Variant }>) {
+  const isCompact = variant === "compact";
   const {
     _id,
     title,
@@ -48,30 +53,58 @@ export default function MagazinePostsItem({
       <article
         data-component="MagazinePostsItem"
         className={clsx(
-          "group relative flex flex-col overflow-hidden rounded",
+          "group relative outline outline-1 outline-gray-800",
+          isCompact ? "flex flex-row" : "flex flex-col",
           isRead
             ? "bg-primary/10 hover:bg-primary/20"
-            : "bg-gray-50 hover:bg-postitemhover",
+            : "bg-gray-50 hover:bg-gray-200",
         )}
       >
         {imageUrl && (
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+          <div
+            className={clsx(
+              "relative overflow-hidden bg-gray-100",
+              isCompact
+                ? "aspect-[4/3] w-1/3 shrink-0 self-stretch"
+                : "aspect-[16/9] w-full",
+            )}
+          >
             <Image
               src={imageUrl}
               alt=""
               fill
-              sizes="(min-width: 640px) 50vw, 100vw"
-              className="object-cover transition-opacity group-hover:opacity-90"
+              sizes={
+                isCompact
+                  ? "(min-width: 640px) 17vw, 33vw"
+                  : "(min-width: 640px) 50vw, 100vw"
+              }
+              className="object-cover transition group-hover:brightness-90"
             />
+            {post.curatedDate && (
+              <div className="absolute right-0 top-0 z-[3] flex items-center gap-1 bg-curated-star px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-1000">
+                <StarIcon className="w-3" />
+                Curated
+              </div>
+            )}
           </div>
         )}
-        <div className="flex flex-col gap-3 p-5">
+        <div
+          className={clsx(
+            "flex min-w-0 flex-1 flex-col",
+            isCompact ? "gap-2 p-4" : "gap-3 p-5",
+          )}
+        >
           <Type
             style="postsPageTitle"
-            className="line-clamp-3 text-[24px] leading-tight text-gray-1000 sm:text-[28px]"
+            className={clsx(
+              "leading-tight text-gray-1000",
+              isCompact
+                ? "line-clamp-2 text-[18px]"
+                : "line-clamp-3 text-[24px] sm:text-[28px]",
+            )}
           >
             <span className="relative z-[2] inline-flex align-middle">
-              <PostIcons post={post} side="left" curatedIconLeft />
+              <PostIcons post={post} side="left" />
             </span>
             <Link
               href={postLink}
@@ -80,7 +113,7 @@ export default function MagazinePostsItem({
               {title}
             </Link>
           </Type>
-          {description && (
+          {!isCompact && description && (
             <Type style="postDescription" className="line-clamp-3 text-gray-700">
               {description}
             </Type>
@@ -116,15 +149,17 @@ export default function MagazinePostsItem({
                 <span>{readTime}m read</span>
               </span>
             </Type>
-            <Link
-              href={`${postLink}#comments`}
-              className="relative z-[2] flex shrink-0 items-center gap-1 text-gray-800 hover:text-gray-1000"
-            >
-              <ChatBubbleLeftIcon className="w-[18px]" />
-              <Type As="span" style="bodyHeavy">
-                {commentCount}
-              </Type>
-            </Link>
+            {commentCount > 0 && (
+              <Link
+                href={`${postLink}#comments`}
+                className="relative z-[2] flex shrink-0 items-center gap-1 text-gray-800 hover:text-gray-1000"
+              >
+                <ChatBubbleLeftIcon className="w-[18px]" />
+                <Type As="span" style="bodyHeavy">
+                  {commentCount}
+                </Type>
+              </Link>
+            )}
           </div>
         </div>
       </article>
