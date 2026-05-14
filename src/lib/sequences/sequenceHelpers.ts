@@ -1,5 +1,7 @@
+import sum from "lodash/sum";
 import { getSiteUrl } from "../routeHelpers";
-import { SequenceBase } from "./sequenceQueries";
+import { SequenceBase, SequencePost } from "./sequenceQueries";
+import { getPostReadTimeMinutes } from "../posts/postsHelpers";
 
 export const sequenceGetPageUrl = ({
   sequence,
@@ -25,3 +27,13 @@ export const getPreviousAndNextPostIds = (
 
 export const sequencePostCount = (sequence: SequenceBase) =>
   sequence.chapters.flatMap(({ postIds }) => postIds).length;
+
+export const sequenceReadTimeMinutes = (posts: SequencePost[]) => {
+  const readTimes = posts.map((post) =>
+    getPostReadTimeMinutes(
+      post.readTimeMinutesOverride,
+      post.contents?.wordCount ?? 0,
+    ),
+  );
+  return sum(readTimes);
+};
