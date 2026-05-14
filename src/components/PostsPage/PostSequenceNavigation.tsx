@@ -7,6 +7,7 @@ import {
 import clsx from "clsx";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import ChevronLeftIcon from "@heroicons/react/16/solid/ChevronLeftIcon";
+import SequenceTooltip from "../SequenceTooltip";
 import Type from "../Type";
 import Link from "../Link";
 
@@ -34,7 +35,7 @@ export default function PostSequenceNavigation({
     return null;
   }
 
-  const [prev, next] = getPreviousAndNextPostIds(canonicalSequence.chapters, _id);
+  const [prev, next] = getPreviousAndNextPostIds(canonicalSequence, _id);
   if (!prev && !next) {
     return null;
   }
@@ -45,11 +46,13 @@ export default function PostSequenceNavigation({
       className={clsx("flex items-center gap-1 text-gray-600", className)}
     >
       <Button postId={prev} Icon={ChevronLeftIcon} />
-      <Link href={sequenceGetPageUrl({ sequence: canonicalSequence })}>
-        <Type style="postTitle" className="uppercase">
-          {canonicalSequence.title}
-        </Type>
-      </Link>
+      <SequenceTooltip sequence={canonicalSequence}>
+        <Link href={sequenceGetPageUrl({ sequence: canonicalSequence })}>
+          <Type style="postTitle" className="uppercase">
+            {canonicalSequence.title}
+          </Type>
+        </Link>
+      </SequenceTooltip>
       <Button postId={next} Icon={ChevronRightIcon} />
     </nav>
   );

@@ -2,6 +2,7 @@ import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts, User } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
+import { sequenceBaseProjection } from "../sequences/sequenceQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
@@ -104,22 +105,7 @@ export const fetchPostDisplay = async (
           organizerIds: true,
         },
       },
-      canonicalSequence: {
-        columns: {
-          _id: true,
-          title: true,
-        },
-        with: {
-          user: userBaseProjection,
-          chapters: {
-            columns: {
-              title: true,
-              number: true,
-              postIds: true,
-            },
-          },
-        },
-      },
+      canonicalSequence: sequenceBaseProjection,
       podcastEpisode: {
         columns: {
           episodeLink: true,
