@@ -375,3 +375,44 @@ export const userHasKarmaChange = (
   const lastOpened = currentUser.karmaChangeLastOpened ?? new Date(0);
   return lastOpened < (endDate ?? new Date(0)) || updateFrequency === "realtime";
 };
+
+export const userCanMention = (
+  currentUser: CurrentUser,
+  mentionsCount: number,
+  {
+    karmaThreshold = 1,
+    mentionsLimit = 10,
+  }: {
+    karmaThreshold?: number;
+    mentionsLimit?: number;
+  } = {},
+): { result: boolean; reason?: string } => {
+  if (currentUser.isAdmin) {
+    return { result: true };
+  }
+
+  const youCanStillPost = `This will not prevent you from posting, but the mentioned users won't be notified.`;
+
+  if ((currentUser.karma || 0) < karmaThreshold && mentionsCount > 0) {
+    return {
+      result: false,
+      reason: `You must have at least ${karmaThreshold} karma to mention users. ${youCanStillPost}`,
+    };
+  }
+
+  if (mentionsCount > mentionsLimit) {
+    return {
+      result: false,
+      reason: `You can notify ${mentionsLimit} users at most in a single post. ${youCanStillPost}`,
+    };
+  }
+
+  if (currentUser.conversationsDisabled || currentUser.mentionsDisabled) {
+    return {
+      result: false,
+      reason: `Ability to mention users has been disabled for this account. ${youCanStillPost}`,
+    };
+  }
+
+  return { result: true };
+};

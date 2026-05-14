@@ -2,6 +2,7 @@ import { db } from "../db";
 import type { JsonRecord } from "../typeHelpers";
 import type { InsertNotification } from "../schema";
 import { getNotificationTypeByName } from "./notificationTypes";
+import { insertNotification } from "./notificationQueries";
 import {
   getNotificationTiming,
   notificationDebouncers,
@@ -12,7 +13,6 @@ import {
   NotificationDocument,
   NotificationTypeSettings,
 } from "./notificationHelpers";
-import { insertNotification } from "./notificationQueries";
 
 export const createNotification = async ({
   userId,

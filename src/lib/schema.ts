@@ -2,6 +2,7 @@ import "server-only";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
+import type { Pingbacks } from "./pingbacks";
 import type { VoteType } from "./votes/voteHelpers";
 import type { Rsvp } from "./posts/rsvpHelpers";
 import type { Theme } from "./themes";
@@ -621,7 +622,7 @@ export const comments = pgTable(
     afBaseScore: doublePrecision(),
     afExtendedScore: jsonb(),
     afVoteCount: doublePrecision(),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     relevantTagIds: varchar({ length: 27 }).array().default([]).notNull(),
     debateResponse: boolean(),
     rejected: boolean().default(false).notNull(),
@@ -2035,7 +2036,7 @@ export const posts = pgTable(
     reviewForAlignmentUserId: text(),
     agentFoundationsId: text(),
     contentsLatest: text("contents_latest"),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     moderationGuidelinesLatest: text("moderationGuidelines_latest"),
     customHighlight: jsonb(),
     customHighlightLatest: text("customHighlight_latest"),
@@ -3396,7 +3397,7 @@ export const tags = pgTable(
     noindex: boolean().default(false).notNull(),
     isPostType: boolean().default(false).notNull(),
     isPlaceholderPage: boolean().default(false).notNull(),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     voteCount: doublePrecision().default(0).notNull(),
     score: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
