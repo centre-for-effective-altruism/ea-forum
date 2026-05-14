@@ -2,6 +2,7 @@
   color: var(--color-foreground);
   font-family: var(--font-stack-serif);
   font-size: 17px;
+  font-weight: 400;
   word-break: break-word;
 }
 .content-base p:not(:first-child) {
