@@ -21,13 +21,9 @@ import TimeAgo from "@/components/TimeAgo";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
 
-type Variant = "hero" | "compact";
-
 export default function MagazinePostsItem({
   post,
-  variant = "hero",
-}: Readonly<{ post: PostListItem; variant?: Variant }>) {
-  const isCompact = variant === "compact";
+}: Readonly<{ post: PostListItem }>) {
   const {
     _id,
     title,
@@ -72,11 +68,7 @@ export default function MagazinePostsItem({
               src={imageUrl}
               alt=""
               fill
-              sizes={
-                isCompact
-                  ? "(min-width: 1200px) 400px, (min-width: 640px) 33vw, 100vw"
-                  : "(min-width: 1200px) 800px, (min-width: 640px) 66vw, 100vw"
-              }
+              sizes="(min-width: 1200px) 400px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               className="object-cover"
             />
           )}
@@ -87,20 +79,8 @@ export default function MagazinePostsItem({
             </div>
           )}
         </div>
-        <div
-          className={clsx(
-            "flex min-w-0 flex-1 flex-col",
-            isCompact ? "gap-2 p-4" : "gap-3 p-5",
-          )}
-        >
-          <div
-            className={clsx(
-              "font-serif font-normal leading-tight text-gray-1000",
-              isCompact
-                ? "line-clamp-2 text-[18px]"
-                : "line-clamp-3 text-[24px] sm:text-[28px]",
-            )}
-          >
+        <div className="flex min-w-0 flex-1 flex-col gap-2 p-4">
+          <div className="line-clamp-2 font-serif text-[18px] font-normal leading-tight text-gray-1000">
             <span className="relative z-[2] inline-flex align-middle">
               <PostIcons post={post} side="left" />
             </span>
@@ -112,13 +92,7 @@ export default function MagazinePostsItem({
             </Link>
           </div>
           {description && (
-            <Type
-              style="postDescription"
-              className={clsx(
-                "text-gray-700",
-                isCompact ? "line-clamp-2" : "line-clamp-3",
-              )}
-            >
+            <Type style="postDescription" className="line-clamp-2 text-gray-700">
               {description}
             </Type>
           )}
