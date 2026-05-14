@@ -4,7 +4,6 @@ import { posts, User } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
-import { isNotTrue } from "../utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import {
   filterModeToAdditiveKarmaModifier,
@@ -81,10 +80,10 @@ export const fetchPostDisplay = async (
         : [
             ...(currentUserId ? [{ userId: currentUserId }] : []),
             {
-              draft: isNotTrue,
-              deletedDraft: isNotTrue,
-              rejected: isNotTrue,
-              isFuture: isNotTrue,
+              draft: false,
+              deletedDraft: false,
+              rejected: false,
+              isFuture: false,
               postedAt: { isNotNull: true },
               status: postStatuses.STATUS_APPROVED,
             },
@@ -103,6 +102,22 @@ export const fetchPostDisplay = async (
           _id: true,
           name: true,
           organizerIds: true,
+        },
+      },
+      canonicalSequence: {
+        columns: {
+          _id: true,
+          title: true,
+        },
+        with: {
+          user: userBaseProjection,
+          chapters: {
+            columns: {
+              title: true,
+              number: true,
+              postIds: true,
+            },
+          },
         },
       },
       podcastEpisode: {

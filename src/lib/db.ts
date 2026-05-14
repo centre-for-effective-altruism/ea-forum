@@ -14,6 +14,7 @@ import { defineRelations } from "drizzle-orm";
 import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
+  chapters,
   comments,
   conversations,
   forumEvents,
@@ -46,6 +47,7 @@ const relations = defineRelations(
     posts,
     readStatuses,
     bookmarks,
+    chapters,
     comments,
     conversations,
     revisions,
@@ -88,6 +90,14 @@ const relations = defineRelations(
           deleted: false,
         },
       }),
+      canonicalSequence: r.one.sequences({
+        from: r.posts.canonicalSequenceId,
+        to: r.sequences._id,
+        where: {
+          draft: false,
+          isDeleted: false,
+        },
+      }),
       podcastEpisode: r.one.podcastEpisodes({
         from: r.posts.podcastEpisodeId,
         to: r.podcastEpisodes._id,
@@ -118,6 +128,19 @@ const relations = defineRelations(
         where: {
           collectionName: "Posts",
         },
+      }),
+    },
+    sequences: {
+      user: r.one.users({
+        from: r.sequences.userId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      chapters: r.many.chapters({
+        from: r.sequences._id,
+        to: r.chapters.sequenceId,
       }),
     },
     podcastEpisodes: {
