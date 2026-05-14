@@ -10,7 +10,6 @@ import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import {
   getPostPlaintextDescription,
   getPostReadTimeMinutes,
-  getPostSocialImageUrl,
   postGetPageUrl,
 } from "@/lib/posts/postsHelpers";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
@@ -20,6 +19,7 @@ import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
+import { getMagazinePostImageUrl } from "./magazinePostImages";
 
 type Variant = "hero" | "compact";
 
@@ -39,7 +39,7 @@ export default function MagazinePostsItem({
     postedAt,
   } = post;
   const postLink = postGetPageUrl({ post });
-  const imageUrl = getPostSocialImageUrl(post);
+  const imageUrl = getMagazinePostImageUrl(post);
   const description = useMemo(() => getPostPlaintextDescription(post), [post]);
   const readTime = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
