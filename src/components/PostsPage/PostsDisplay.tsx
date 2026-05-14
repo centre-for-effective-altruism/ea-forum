@@ -7,11 +7,12 @@ import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatShortDate } from "@/lib/timeUtils";
 import { PostDisplayProvider } from "./usePostDisplay";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import PostSequenceNavigation from "./PostSequenceNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
+import StackedUserAvatars from "../StackedUserAvatars";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
-import StackedUserAvatars from "../StackedUserAvatars";
 import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
@@ -53,6 +54,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
     <PostDisplayProvider post={post}>
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
+          <PostSequenceNavigation post={post} className="mb-2" />
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
             {post.title}
           </Type>

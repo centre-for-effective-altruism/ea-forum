@@ -2,9 +2,9 @@ import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts, User } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
+import { sequenceBaseProjection } from "../sequences/sequenceQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
-import { isNotTrue } from "../utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import {
   filterModeToAdditiveKarmaModifier,
@@ -81,10 +81,10 @@ export const fetchPostDisplay = async (
         : [
             ...(currentUserId ? [{ userId: currentUserId }] : []),
             {
-              draft: isNotTrue,
-              deletedDraft: isNotTrue,
-              rejected: isNotTrue,
-              isFuture: isNotTrue,
+              draft: false,
+              deletedDraft: false,
+              rejected: false,
+              isFuture: false,
               postedAt: { isNotNull: true },
               status: postStatuses.STATUS_APPROVED,
             },
@@ -105,6 +105,7 @@ export const fetchPostDisplay = async (
           organizerIds: true,
         },
       },
+      canonicalSequence: sequenceBaseProjection,
       podcastEpisode: {
         columns: {
           episodeLink: true,

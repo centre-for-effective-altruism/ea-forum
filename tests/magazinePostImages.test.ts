@@ -63,7 +63,9 @@ describe("magazine post images", () => {
   });
 
   test("selects the same default image for the same post id", () => {
-    expect(getMagazinePostImageUrl(basePost)).toBe(getMagazinePostImageUrl(basePost));
+    expect(getMagazinePostImageUrl(basePost)).toBe(
+      getMagazinePostImageUrl(basePost),
+    );
   });
 
   test("can select different default images for different post ids", () => {
