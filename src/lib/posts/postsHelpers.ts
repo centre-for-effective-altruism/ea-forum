@@ -52,6 +52,23 @@ export const postGetPageUrl = ({
 export const postGetCommentsUrl: typeof postGetPageUrl = (...args) =>
   postGetPageUrl(...args) + "#comments";
 
+export const postGetEditUrl = (
+  postId: string,
+  isAbsolute = false,
+  linkSharingKey?: string,
+  version?: string,
+): string => {
+  const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  let url = `${prefix}/editPost?postId=${postId}`;
+  if (linkSharingKey) {
+    url += `&key=${linkSharingKey}`;
+  }
+  if (version) {
+    url += `&version=${version}`;
+  }
+  return url;
+};
+
 export type GoogleLocation = {
   address_components: {
     types: string;
@@ -161,6 +178,18 @@ export const userIsSharedOnPost = (
     post.sharingSettings.anyoneWithLinkCan !== "none" &&
     post.currentUserUsedLinkKey
   );
+};
+
+export const getPostCollaborateUrl = (
+  postId: string,
+  isAbsolute = false,
+  linkSharingKey?: string,
+) => {
+  const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  if (linkSharingKey) {
+    return `${prefix}/collaborateOnPost?postId=${postId}&key=${linkSharingKey}`;
+  }
+  return `${prefix}/collaborateOnPost?postId=${postId}`;
 };
 
 /**

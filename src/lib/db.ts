@@ -1,4 +1,5 @@
 import "server-only";
+
 import { isAnyTest } from "./environment";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
@@ -14,10 +15,12 @@ import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
   comments,
+  conversations,
   forumEvents,
   images,
   localgroups,
   lwEvents,
+  messages,
   moderatorActions,
   notifications,
   podcastEpisodes,
@@ -26,10 +29,13 @@ import {
   readStatuses,
   reports,
   revisions,
+  sequences,
   subscriptions,
+  tagRels,
   tags,
   userLoginTokens,
   userRateLimits,
+  userTagRels,
   users,
   votes,
 } from "./schema";
@@ -41,12 +47,16 @@ const relations = defineRelations(
     readStatuses,
     bookmarks,
     comments,
+    conversations,
     revisions,
     votes,
     localgroups,
+    messages,
     notifications,
+    sequences,
     subscriptions,
     tags,
+    tagRels,
     images,
     lwEvents,
     forumEvents,
@@ -55,6 +65,7 @@ const relations = defineRelations(
     moderatorActions,
     reports,
     userRateLimits,
+    userTagRels,
     userLoginTokens,
   },
   (r) => ({
@@ -174,6 +185,23 @@ const relations = defineRelations(
         },
       }),
     },
+    tagRels: {
+      tag: r.one.tags({
+        from: r.tagRels.tagId,
+        to: r.tags._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      post: r.one.posts({
+        from: r.tagRels.postId,
+        to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
+        },
+      }),
+    },
     revisions: {
       user: r.one.users({
         from: r.revisions.userId,
@@ -213,6 +241,16 @@ const relations = defineRelations(
         where: {
           deleted: false,
         },
+      }),
+    },
+    messages: {
+      user: r.one.users({
+        from: r.messages.userId,
+        to: r.users._id,
+      }),
+      conversation: r.one.conversations({
+        from: r.messages.conversationId,
+        to: r.conversations._id,
       }),
     },
     userLoginTokens: {

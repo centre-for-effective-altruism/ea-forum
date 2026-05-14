@@ -6,7 +6,7 @@ import { randomId } from "../utils/random";
 import { comments } from "../schema";
 import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision, getNextVersion } from "../revisions/revisionHelpers";
-import { htmlToPingbacks } from "../pingbacks";
+import { htmlToPingbacks, notifyUsersOfPingbackMentions } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { fetchPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
@@ -27,6 +27,7 @@ import {
   updateCommentTag,
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
+  newCommentNotifications,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -106,7 +107,7 @@ export const createPostComment = async ({
   }
 
   const commentId = randomId();
-  const revision = await db.transaction(async (txn) => {
+  const [revision, comment] = await db.transaction(async (txn) => {
     const revision = await createRevision(txn, user, editorData, {
       documentId: commentId,
       collectionName: "Comments",
@@ -164,15 +165,13 @@ export const createPostComment = async ({
         skipRateLimits: true,
       }),
     ]);
-    return revision;
+    return [revision, comment];
   });
 
   void checkCommentForSpam(db, user, commentId, revision, post);
   void triggerReviewIfNeededById(user._id);
-
-  // TODO: Notifications:
-  // commentsNewNotifications
-  // notifyUsersOfPingbackMentions
+  void newCommentNotifications(commentId);
+  void notifyUsersOfPingbackMentions(user, "Comments", comment);
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock
@@ -205,44 +204,46 @@ export const updateComment = async ({
     throw new Error("Banned");
   }
 
-  const comment = await db.query.comments.findFirst({
+  const oldComment = await db.query.comments.findFirst({
     columns: {
+      _id: true,
       userId: true,
       postId: true,
       shortform: true,
       draft: true,
       contents: true,
+      pingbacks: true,
     },
     where: {
       _id: commentId,
     },
   });
-  if (!comment) {
+  if (!oldComment) {
     throw new Error("Comment not found");
   }
 
-  validateEditorContents(editorData, comment.shortform);
+  validateEditorContents(editorData, oldComment.shortform);
 
   const post = await fetchPostForCommentCreation({
     txn: db,
-    postId: comment.postId ?? undefined,
-    shortform: comment.shortform ?? false,
+    postId: oldComment.postId ?? undefined,
+    shortform: oldComment.shortform ?? false,
     userId: user._id,
   });
   if (!post) {
     throw new Error("Post not found");
   }
 
-  const revision = await db.transaction(async (txn) => {
+  const [revision, updatedComment] = await db.transaction(async (txn) => {
     const revision = await createRevision(txn, user, editorData, {
       documentId: commentId,
       collectionName: "Comments",
       fieldName: "contents",
-      draft: comment.draft,
+      draft: oldComment.draft,
       version: getNextVersion(
-        comment.contents,
+        oldComment.contents,
         editorData.updateType,
-        comment.draft,
+        oldComment.draft,
       ),
     });
     const pingbacks = revision.html ? await htmlToPingbacks(revision.html) : null;
@@ -263,12 +264,11 @@ export const updateComment = async ({
       upsertPolls({ txn, user, revision, post, comment: updatedComment }),
     ]);
 
-    return revision;
+    return [revision, updatedComment];
   });
 
   void checkCommentForSpam(db, user, commentId, revision, post);
-
-  // TODO: Notifications: notifyUsersOfPingbackMentions
+  void notifyUsersOfPingbackMentions(user, "Comments", updatedComment, oldComment);
 
   const { newRevision } = await convertImagesInObject(db, revision);
   if (newRevision) {

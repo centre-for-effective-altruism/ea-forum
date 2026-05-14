@@ -21,10 +21,12 @@ const PAGE_SIZE = 20;
 
 export default function NotificationsDropdown({
   karmaChanges,
+  onOpen,
   className,
   children,
 }: Readonly<{
   karmaChanges: UserKarmaChanges | null;
+  onOpen?: () => void;
   className?: string;
   children: ReactNode;
 }>) {
@@ -96,9 +98,10 @@ export default function NotificationsDropdown({
           openedAt: new Date(),
           endDate: karmaChanges?.endDate ?? new Date(),
         });
+        onOpen?.();
       }
     },
-    [karmaChanges],
+    [karmaChanges, onOpen],
   );
 
   const markAllAsRead = useCallback(async () => {

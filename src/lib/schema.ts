@@ -2,7 +2,9 @@ import "server-only";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
+import type { Pingbacks } from "./pingbacks";
 import type { VoteType } from "./votes/voteHelpers";
+import type { Rsvp } from "./posts/rsvpHelpers";
 import type { Theme } from "./themes";
 import {
   KarmaChangeSettings,
@@ -62,6 +64,8 @@ const timestamp = customType<{
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
 const jsonb = <T = Json>() => jsonbRaw().$type<T>();
+
+const jsonbArray = <T = Json>() => jsonbRaw().array().$type<T>();
 
 const denormalizedRevision = () => jsonb<DenormalizedRevision>();
 
@@ -284,6 +288,9 @@ export const users = pgTable(
       .default(defaultKarmaChangeSettings),
     karmaChangeLastOpened: timestamp(),
     karmaChangeBatchStart: timestamp(),
+    auto_subscribe_to_my_posts: boolean().notNull().default(true),
+    auto_subscribe_to_my_comments: boolean().notNull().default(true),
+    autoSubscribeAsOrganizer: boolean().notNull().default(true),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -314,9 +321,6 @@ export const users = pgTable(
   "voteBanned" BOOL,
   "nullifyVotes" BOOL,
   "deleteContent" BOOL,
-  "auto_subscribe_to_my_posts" BOOL NOT NULL DEFAULT TRUE,
-  "auto_subscribe_to_my_comments" BOOL NOT NULL DEFAULT TRUE,
-  "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
   "hideDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
   "revealChecksToAdmins" BOOL NOT NULL DEFAULT FALSE,
   "optedInToDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
@@ -618,7 +622,7 @@ export const comments = pgTable(
     afBaseScore: doublePrecision(),
     afExtendedScore: jsonb(),
     afVoteCount: doublePrecision(),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     relevantTagIds: varchar({ length: 27 }).array().default([]).notNull(),
     debateResponse: boolean(),
     rejected: boolean().default(false).notNull(),
@@ -1314,6 +1318,8 @@ export const debouncerEvents = pgTable(
   ],
 );
 
+export type DebouncerEvent = typeof debouncerEvents.$inferSelect;
+
 export const electionVotes = pgTable(
   "ElectionVotes",
   {
@@ -1656,6 +1662,7 @@ export const notifications = pgTable(
 );
 
 export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
 
 export const podcastEpisodes = pgTable(
   "PodcastEpisodes",
@@ -1938,7 +1945,7 @@ export const posts = pgTable(
     lastCommentPromotedAt: timestamp(),
     tagRelevance: jsonb<Record<string, number>>(),
     noIndex: boolean().default(false).notNull(),
-    rsvps: jsonb().array(),
+    rsvps: jsonbArray<Rsvp[]>(),
     activateRSVPs: boolean(),
     nextDayReminderSent: boolean().default(false).notNull(),
     onlyVisibleToLoggedIn: boolean().default(false).notNull(),
@@ -2029,7 +2036,7 @@ export const posts = pgTable(
     reviewForAlignmentUserId: text(),
     agentFoundationsId: text(),
     contentsLatest: text("contents_latest"),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     moderationGuidelinesLatest: text("moderationGuidelines_latest"),
     customHighlight: jsonb(),
     customHighlightLatest: text("customHighlight_latest"),
@@ -3390,7 +3397,7 @@ export const tags = pgTable(
     noindex: boolean().default(false).notNull(),
     isPostType: boolean().default(false).notNull(),
     isPlaceholderPage: boolean().default(false).notNull(),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     voteCount: doublePrecision().default(0).notNull(),
     score: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),
