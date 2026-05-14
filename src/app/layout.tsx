@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import { Charis_SIL, Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
@@ -19,9 +19,9 @@ const inter = Inter({
   preload: true,
 });
 
-const charis = Charis_SIL({
-  weight: ["400", "700"],
-  variable: "--font-charis",
+const newsreader = Newsreader({
+  weight: "variable",
+  variable: "--font-newsreader",
   display: "swap",
   preload: true,
 });
@@ -54,7 +54,7 @@ export default function RootLayout({
           "antialiased text-size-adjust-none w-full min-h-screen flex flex-col",
           "bg-background text-foreground font-sans",
           inter.variable,
-          charis.variable,
+          newsreader.variable,
         )}
       >
         <Providers>

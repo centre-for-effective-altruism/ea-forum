@@ -97,7 +97,7 @@
 
   --font-stack-sans:
     GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
+  --font-stack-serif: "Newsreader", Baskerville, "Libre Baskerville", Georgia, serif;
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-digest-popup: 1050;
