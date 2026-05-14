@@ -400,23 +400,23 @@
   border-radius: 6px;
   box-shadow: none;
   background-color: var(--color-primary);
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
   transition: background-color 0.3s ease;
 }
 .content-base .ck-cta-button:hover {
   opacity: 1;
   background-color: var(--color-primary-dark);
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
 }
 .content-base .ck-cta-button:visited,
 .content-base .ck-cta-button.visited,
 .content-base .ck-cta-button:visited:hover,
 .content-base .ck-cta-button.visited:hover {
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
 }
 .content-base .ck-cta-button:disabled {
   background-color: var(--color-primary);
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
   opacity: 0.5;
 }
 .content-base .ck-cta-button-centered {
