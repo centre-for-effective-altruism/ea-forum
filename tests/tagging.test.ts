@@ -16,7 +16,7 @@ suite("Tagging", () => {
     });
     expect(postTags1.length).toBe(1);
     expect(postTags1[0]._id).toBe(tag._id);
-    expect(postTags1[0].baseScore).toBe(1);
+    expect(postTags1[0].tagRel.baseScore).toBe(1);
     const postTags2 = await addOrUpvoteTag({
       currentUser: user,
       postId: post._id,
@@ -24,7 +24,7 @@ suite("Tagging", () => {
     });
     expect(postTags2.length).toBe(1);
     expect(postTags2[0]._id).toBe(tag._id);
-    expect(postTags2[0].baseScore).toBe(1);
+    expect(postTags2[0].tagRel.baseScore).toBe(1);
   });
   test("Other users can upvote a post tag", async () => {
     const [user1, user2, post, tag] = await Promise.all([
@@ -40,7 +40,7 @@ suite("Tagging", () => {
     });
     expect(postTags1.length).toBe(1);
     expect(postTags1[0]._id).toBe(tag._id);
-    expect(postTags1[0].baseScore).toBe(1);
+    expect(postTags1[0].tagRel.baseScore).toBe(1);
     const postTags2 = await addOrUpvoteTag({
       currentUser: user2,
       postId: post._id,
@@ -48,7 +48,7 @@ suite("Tagging", () => {
     });
     expect(postTags2.length).toBe(1);
     expect(postTags2[0]._id).toBe(tag._id);
-    expect(postTags2[0].baseScore).toBe(2);
+    expect(postTags2[0].tagRel.baseScore).toBe(2);
   });
   test("Posts can have multiple tags", async () => {
     const [user, post, tag1, tag2] = await Promise.all([
@@ -64,7 +64,7 @@ suite("Tagging", () => {
     });
     expect(postTags1.length).toBe(1);
     expect(postTags1[0]._id).toBe(tag1._id);
-    expect(postTags1[0].baseScore).toBe(1);
+    expect(postTags1[0].tagRel.baseScore).toBe(1);
     const postTags2 = await addOrUpvoteTag({
       currentUser: user,
       postId: post._id,
@@ -74,8 +74,8 @@ suite("Tagging", () => {
     expect(postTags2.map(({ _id }) => _id).sort()).toStrictEqual(
       [tag1._id, tag2._id].sort(),
     );
-    expect(postTags2[0].baseScore).toBe(1);
-    expect(postTags2[1].baseScore).toBe(1);
+    expect(postTags2[0].tagRel.baseScore).toBe(1);
+    expect(postTags2[1].tagRel.baseScore).toBe(1);
   });
   test("Adding a child tag automatically adds the parent tag", async () => {
     const parentTag = await createTestTag();
@@ -93,8 +93,8 @@ suite("Tagging", () => {
     expect(postTags.map(({ _id }) => _id).sort()).toStrictEqual(
       [childTag._id, parentTag._id].sort(),
     );
-    expect(postTags[0].baseScore).toBe(1);
-    expect(postTags[1].baseScore).toBe(1);
+    expect(postTags[0].tagRel.baseScore).toBe(1);
+    expect(postTags[1].tagRel.baseScore).toBe(1);
   });
   test("Adding a child tag doesn't vote parent if it already exists", async () => {
     const parentTag = await createTestTag();
@@ -110,7 +110,7 @@ suite("Tagging", () => {
     });
     expect(postTags1.length).toBe(1);
     expect(postTags1[0]._id).toBe(parentTag._id);
-    expect(postTags1[0].baseScore).toBe(1);
+    expect(postTags1[0].tagRel.baseScore).toBe(1);
     const postTags2 = await addOrUpvoteTag({
       currentUser: user,
       postId: post._id,
@@ -120,8 +120,8 @@ suite("Tagging", () => {
     expect(postTags2.map(({ _id }) => _id).sort()).toStrictEqual(
       [childTag._id, parentTag._id].sort(),
     );
-    expect(postTags2[0].baseScore).toBe(1);
-    expect(postTags2[1].baseScore).toBe(1);
+    expect(postTags2[0].tagRel.baseScore).toBe(1);
+    expect(postTags2[1].tagRel.baseScore).toBe(1);
   });
   test("Adding a tag to an invalid post throws an error", async () => {
     const [user, tag] = await Promise.all([createTestUser(), createTestTag()]);
@@ -156,7 +156,7 @@ suite("Tagging", () => {
     });
     expect(postTags.length).toBe(1);
     expect(postTags[0]._id).toBe(tag._id);
-    expect(postTags[0].baseScore).toBe(1);
+    expect(postTags[0].tagRel.baseScore).toBe(1);
   });
   test("Admins can add tags to any drafts", async () => {
     const [user, post, tag] = await Promise.all([
@@ -171,6 +171,6 @@ suite("Tagging", () => {
     });
     expect(postTags.length).toBe(1);
     expect(postTags[0]._id).toBe(tag._id);
-    expect(postTags[0].baseScore).toBe(1);
+    expect(postTags[0].tagRel.baseScore).toBe(1);
   });
 });

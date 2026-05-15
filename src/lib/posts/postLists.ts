@@ -130,7 +130,7 @@ export const postsListProjection = (
           sql`${posts}."customHighlight"->>'html'`,
           options?.highlightLength || 350,
         ),
-      tags: postTagsProjection,
+      tags: (postsTable) => postTagsProjection(postsTable, currentUserId),
       ...(currentUserId
         ? {
             currentUserIsShared: currentUserIsSharedSelector(currentUserId),
@@ -394,7 +394,7 @@ export const fetchSidebarOpportunities = (
       frontpageDate: { gt: EPOCH_ISO_DATE },
       postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
       RAW: (postsTable: typeof posts) =>
-        sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
+        sql`(${postsTable.tagRelevance}->>${tagId})::FLOAT >= 1`,
     },
     orderBy: magicSort(),
     limit,

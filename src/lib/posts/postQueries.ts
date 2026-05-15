@@ -63,7 +63,7 @@ export const fetchPostDisplay = async (
     },
     extras: {
       coauthors: coauthorsSelector,
-      tags: postTagsProjection,
+      tags: (postsTable) => postTagsProjection(postsTable, currentUserId),
       reactors: reactorsSelector("Posts"),
       ...(currentUserId
         ? {
