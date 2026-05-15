@@ -27,6 +27,7 @@ import {
   updateUserVoteCounts,
   updateUserKarma,
   triggerCommentAutomod,
+  updatePostDenormalizedTags,
 } from "./voteCallbacks";
 
 const clearVotes = async ({
@@ -111,8 +112,8 @@ const clearVotes = async ({
     await Promise.all([
       updateUserKarma(txn, collectionName, authors, user._id, -vote.power),
       updateUserVoteCounts(txn, authors, user._id, vote.voteType, -1),
+      updatePostDenormalizedTags(txn, collectionName, document),
       // TODO: We still need the following ForumMagnum vote callbacks
-      // voteUpdatePostDenormalizedTags
       // recomputeContributorScoresFor
     ]);
   }
@@ -289,8 +290,8 @@ export const performVote = async ({
     updateUserVoteCounts(txn, authors, user._id, voteType, 1),
     increasePostMaxBaseScore(txn, collectionName, newDocument),
     triggerCommentAutomod(txn, collectionName, newDocument),
+    updatePostDenormalizedTags(txn, collectionName, document),
     // TODO: We still need the following ForumMagnum vote callbacks
-    // voteUpdatePostDenormalizedTags
     // recomputeContributorScoresFor
   ]);
 
