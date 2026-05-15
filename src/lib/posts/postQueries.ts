@@ -1,6 +1,6 @@
 import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
-import { posts, User } from "../schema";
+import { posts } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { sequenceBaseProjection } from "../sequences/sequenceQueries";
 import { postTagsProjection } from "../tags/tagQueries";
@@ -12,6 +12,8 @@ import {
   resolveFrontpageTagFilters,
   type FilterSettings,
 } from "../filterSettings";
+import { userIsAdminOrMod } from "../users/userHelpers";
+import { CurrentUser } from "../users/currentUser";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -26,14 +28,11 @@ export const currentUserSuggestedCurationSelector =
     sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
 export const fetchPostDisplay = async (
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null,
+  currentUser: CurrentUser | null,
   postId: string,
 ) => {
   const currentUserId = currentUser?._id ?? null;
-  const currentUserIsModerator =
-    currentUser?.isAdmin ||
-    currentUser?.groups?.includes("sunshineRegiment") ||
-    false;
+  const currentUserIsModerator = userIsAdminOrMod(currentUser);
   const post = await db.query.posts.findFirst({
     columns: {
       _id: true,

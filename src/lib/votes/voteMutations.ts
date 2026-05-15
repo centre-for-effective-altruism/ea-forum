@@ -2,13 +2,14 @@ import maxBy from "lodash/maxBy";
 import { and, eq } from "drizzle-orm";
 import { randomId } from "@/lib/utils/random";
 import { DbOrTransaction } from "../db";
-import { votes, Comment, Revision } from "../schema";
+import { votes, Comment, Revision, TagRel } from "../schema";
 import { collectionIsSearchIndexed } from "../search/elastic/elasticIndexes";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import type { CurrentUser } from "../users/currentUser";
-import { userCanDo } from "../users/userHelpers";
+import { userCanDo, userIsAdminOrMod } from "../users/userHelpers";
 import { createModeratorAction } from "../moderatorActions/moderatorActionMutations";
 import { calculateVotePower, VoteType } from "./voteHelpers";
+import { filterNonNull } from "../typeHelpers";
 import {
   checkVotingRateLimits,
   wasVotingPatternWarningDeliveredRecently,
@@ -168,6 +169,39 @@ export const performVote = async ({
   const authors = await fetchVoteableDocumentAuthors(txn, document);
   const authorIds = authors.map(({ _id }) => _id);
   const isSelfVote = authorIds.includes(user._id);
+
+  // The community tag can only be added or removed by admins and moderators.
+  // The author of the post can add or upvote it, but not downvote or remove it.
+  if (
+    collectionName === "TagRels" &&
+    !userIsAdminOrMod(user) &&
+    (document as TagRel).tagId === process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
+  ) {
+    const tagRel = await txn.query.tagRels.findFirst({
+      columns: {},
+      with: {
+        post: {
+          columns: {
+            userId: true,
+            coauthorUserIds: true,
+          },
+        },
+      },
+      where: {
+        _id: document._id,
+      },
+    });
+    const postAuthorIds = filterNonNull([
+      tagRel?.post?.userId,
+      ...(tagRel?.post?.coauthorUserIds ?? []),
+    ]);
+    if (
+      !postAuthorIds.includes(user._id) ||
+      !["bigUpvote", "smallUpvote", "neutral"].includes(voteType)
+    ) {
+      throw new Error("You do not have permission to make this vote");
+    }
+  }
 
   // Prevent strong votes on own comments (but posts allow strong self-votes)
   if (

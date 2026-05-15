@@ -30,6 +30,7 @@ export default function VoteButton({
   onVote,
   dimWhenNotVoted,
   large,
+  disabled,
   className,
 }: Readonly<{
   currentVoteStrength: VoteStrength;
@@ -38,6 +39,7 @@ export default function VoteButton({
   onVote: (voteType: VoteType) => void;
   dimWhenNotVoted?: boolean;
   large?: boolean;
+  disabled?: boolean;
   className?: string;
 }>) {
   const [votingTransition, setVotingTransition] = useState<NodeJS.Timeout | null>(
@@ -105,19 +107,26 @@ export default function VoteButton({
   return (
     <Tooltip
       title={
-        <Type>
-          <strong>Overall karma: {direction}</strong>
-          <br />
-          Is this a valuable contribution?
-          <br />
-          <em>
-            For strong {direction.toLowerCase()}, click-and-hold
+        disabled ? (
+          <Type>You do not have permission</Type>
+        ) : (
+          <Type>
+            <strong>Overall karma: {direction}</strong>
             <br />
-            (Press twice on mobile)
-          </em>
-        </Type>
+            Is this a valuable contribution?
+            <br />
+            <em>
+              For strong {direction.toLowerCase()}, click-and-hold
+              <br />
+              (Press twice on mobile)
+            </em>
+          </Type>
+        )
       }
-      className="flex items-center"
+      className={clsx(
+        "flex items-center",
+        disabled && "pointer-events-none cursor-not-allowed",
+      )}
     >
       <button
         data-component="VoteButton"
