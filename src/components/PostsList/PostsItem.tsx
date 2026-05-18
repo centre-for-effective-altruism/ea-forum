@@ -169,7 +169,7 @@ export default function PostsItem({
               </InteractionWrapper>
             </div>
             <Type style="bodySmall" className="min-w-0 flex">
-              <InteractionWrapper className="grow">
+              <InteractionWrapper className="grow min-w-0">
                 <TruncationContainer
                   items={[
                     <UsersName key="author" user={user} />,
