@@ -92,8 +92,12 @@ export const useCommentEditor = ({
         console.error("Editor API not found");
         return;
       }
-      setLoading(true);
       const data = await editorApi.getSubmitData();
+      if (!data.originalContents.data) {
+        toast.error("Comment is empty");
+        return;
+      }
+      setLoading(true);
       startTransition(async () => {
         try {
           const newComment = comment
