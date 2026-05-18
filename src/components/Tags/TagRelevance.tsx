@@ -50,7 +50,7 @@ export default function TagRelevance({
         orientation="left"
         onVote={onVote}
         dimWhenNotVoted
-        disabled={!downvoteDisabled}
+        disabled={downvoteDisabled}
       />
       <Type style="bodySmall" className="mx-[2px]">
         {baseScore}
