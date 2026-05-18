@@ -45,6 +45,11 @@ type UseCommentEditorProps = UseCommentEditorDocument & {
   onSuccess?: (comment: CommentListItem) => void;
 };
 
+type SubmitExtraProps = {
+  shortformFrontpage?: boolean;
+  relevantTagIds?: string[];
+};
+
 const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {
   if (comment !== undefined) {
     return comment?.shortform ? "Edit quick take..." : "Edit comment...";
@@ -81,7 +86,7 @@ export const useCommentEditor = ({
   }, []);
 
   const onSubmit = useCallback(
-    async (ev?: SubmitEvent) => {
+    async (ev?: SubmitEvent<HTMLFormElement>, extraProps?: SubmitExtraProps) => {
       ev?.preventDefault();
       if (!currentUser) {
         onSignup();
@@ -110,6 +115,7 @@ export const useCommentEditor = ({
                 parentCommentId,
                 shortform,
                 editorData: data,
+                ...extraProps,
               });
           if (!newComment) {
             throw new Error("Something went wrong");

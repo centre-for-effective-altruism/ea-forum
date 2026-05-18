@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { SubmitEvent, useCallback, useState } from "react";
 import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import { useQuickTakesTags } from "@/lib/hooks/useQuickTakesTags";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
@@ -48,10 +48,20 @@ export default function NewQuickTake({
       onSuccess,
     });
 
+  const handleSubmit = useCallback(
+    async (ev: SubmitEvent<HTMLFormElement>) => {
+      await onSubmit(ev, {
+        shortformFrontpage: frontpage,
+        relevantTagIds: selectedTagIds,
+      });
+    },
+    [onSubmit, frontpage, selectedTagIds],
+  );
+
   return (
     <form
       data-component="NewQuickTake"
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
       onKeyDown={onKeyDown}
       className={clsx(
         "bg-comment-odd border border-comment-border p-3 rounded",
