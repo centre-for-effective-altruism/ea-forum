@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { Post, posts, users } from "../schema";
+import { Post, posts, TagRel, users } from "../schema";
 import { isAnyInArray } from "../utils/queryHelpers";
 import { userIsInGroup } from "../users/userHelpers";
 import { userSmallVotePower, VoteType } from "./voteHelpers";
@@ -174,4 +174,35 @@ export const triggerCommentAutomod = (
   // TODO: See triggerCommentAutomodIfNeeded in ForumMagnum
   void db;
   void document;
+};
+
+export const updatePostDenormalizedTags = async (
+  txn: DbOrTransaction,
+  collectionName: VoteableCollectionName,
+  document: VoteableDocument,
+) => {
+  if (collectionName !== "TagRels") {
+    return;
+  }
+
+  const postId = (document as TagRel).postId;
+  const tagRels = await txn.query.tagRels.findMany({
+    columns: {
+      tagId: true,
+      baseScore: true,
+    },
+    where: {
+      postId,
+      deleted: false,
+    },
+  });
+
+  const tagRelevance: Record<string, number> = {};
+  for (const tagRel of tagRels) {
+    if (tagRel.baseScore > 0) {
+      tagRelevance[tagRel.tagId] = tagRel.baseScore;
+    }
+  }
+
+  await txn.update(posts).set({ tagRelevance }).where(eq(posts._id, postId));
 };

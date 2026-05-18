@@ -223,6 +223,9 @@ export const userGetGroups = (user: UserPermissions | null): string[] => {
 export const userIsInGroup = (user: UserPermissions | null, group: string) =>
   userGetGroups(user).indexOf(group) >= 0;
 
+export const userIsAdminOrMod = (user: UserPermissions | null) =>
+  userIsAdmin(user) || userIsInGroup(user, "sunshineRegiment");
+
 /**
  * Get a list of all the actions a user can perform
  */

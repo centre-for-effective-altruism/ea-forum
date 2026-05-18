@@ -2895,6 +2895,9 @@ export const tagRels = pgTable(
   ],
 );
 
+export type TagRel = typeof tagRels.$inferSelect;
+export type InsertTagRel = typeof tagRels.$inferInsert;
+
 export const subscriptions = pgTable(
   "Subscriptions",
   {

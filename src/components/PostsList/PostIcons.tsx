@@ -44,9 +44,9 @@ export default function PostIcons({
   const openThreadTagId = process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID;
   const amaTagid = process.env.NEXT_PUBLIC_AMA_TAG_ID;
   const openThreadRelevance =
-    post.tags?.find((tag) => tag._id === openThreadTagId)?.baseScore ?? 0;
+    post.tags?.find((tag) => tag._id === openThreadTagId)?.tagRel.baseScore ?? 0;
   const amaRelevance =
-    post.tags?.find((tag) => tag._id === amaTagid)?.baseScore ?? 0;
+    post.tags?.find((tag) => tag._id === amaTagid)?.tagRel.baseScore ?? 0;
 
   const showPinned = side === "left" && post.sticky;
   const showOpenThread =

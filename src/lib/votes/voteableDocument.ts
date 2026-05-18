@@ -13,18 +13,18 @@ import {
   posts,
   comments,
   Revision,
-  Tag,
   revisions,
-  tags,
+  TagRel,
+  tagRels,
 } from "../schema";
 
-export type VoteableDocument = Post | Comment | Revision | Tag;
+export type VoteableDocument = Post | Comment | Revision | TagRel;
 
 export const voteableCollectionNameSchema = z.enum([
   "Posts",
   "Comments",
   "Revisions",
-  "Tags",
+  "TagRels",
 ]);
 
 export type VoteableCollectionName = z.infer<typeof voteableCollectionNameSchema>;
@@ -33,7 +33,7 @@ export const voteableSchemas = {
   Posts: posts,
   Comments: comments,
   Revisions: revisions,
-  Tags: tags,
+  TagRels: tagRels,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as const satisfies Record<VoteableCollectionName, PgTableWithColumns<any>>;
 
@@ -62,9 +62,9 @@ export const getVoteableDocument = async (
           where: { _id: documentId },
         })) as VoteableDocument) ?? null
       );
-    case "Tags":
+    case "TagRels":
       return (
-        ((await db.query.tags.findFirst({
+        ((await db.query.tagRels.findFirst({
           where: { _id: documentId },
         })) as VoteableDocument) ?? null
       );
