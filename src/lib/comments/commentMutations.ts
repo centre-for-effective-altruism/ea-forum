@@ -50,6 +50,8 @@ export const createPostComment = async ({
   parentCommentId,
   editorData,
   draft,
+  shortformFrontpage,
+  relevantTagIds,
 }: {
   user: CurrentUser;
   postId?: string;
@@ -57,6 +59,8 @@ export const createPostComment = async ({
   parentCommentId: string | null;
   editorData: EditorData;
   draft?: boolean;
+  shortformFrontpage?: boolean;
+  relevantTagIds?: string[];
 }) => {
   if (user.banned) {
     throw new Error("Banned");
@@ -137,8 +141,8 @@ export const createPostComment = async ({
         pingbacks,
         postVersion: post.contents?.version || "1.0.0",
         shortform,
-        // TODO: shortformFrontpage, relevantTagIds
-        shortformFrontpage: true,
+        shortformFrontpage,
+        relevantTagIds,
         postedAt: now,
         createdAt: now,
         lastEditedAt: now,

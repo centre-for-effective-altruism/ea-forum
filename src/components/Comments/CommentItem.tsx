@@ -3,9 +3,10 @@
 import { useCallback, useState } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
+import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
+import { useOptionalCommentsList } from "./useCommentsList";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { useOptionalCommentsList } from "./useCommentsList";
 import {
   userGetProfileUrl,
   userIsNew,
@@ -30,7 +31,6 @@ import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
-import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 
 /**
  * Render a comment. While you can use this directly, it's often better to instead
@@ -215,9 +215,7 @@ export default function CommentItem({
               <Type className="text-gray-600 cursor-default">Moderator comment</Type>
             )}
             <CommentVoteButtons comment={comment} />
-            <div className="grow">
-              <CommentTags comment={comment} />
-            </div>
+            <CommentTags comment={comment} className="grow" />
           </div>
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
             <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />

@@ -10,6 +10,7 @@ import CommentTripleDotMenu from "../Comments/CommentTripleDotMenu";
 import CommentBody from "../ContentStyles/CommentBody";
 import CommentItem from "../Comments/CommentItem";
 import CommentDate from "../Comments/CommentDate";
+import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import Score from "../Score";
 import Type from "../Type";
@@ -65,7 +66,9 @@ export default function QuickTakeItem({
           )}
         </Type>
         <CommentDate comment={quickTake} />
-        <div className="grow" />
+        <div className="grow">
+          <CommentTags comment={quickTake} />
+        </div>
         <Type
           style="body"
           className="flex flex-row gap-1 cursor-pointer hover:text-gray-1000"

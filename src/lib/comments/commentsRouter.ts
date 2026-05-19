@@ -34,6 +34,8 @@ export const commentsRouter = {
         parentCommentId: z.string().nullable().optional(),
         editorData: editorDataSchema,
         draft: z.boolean().optional(),
+        shortformFrontpage: z.boolean().optional(),
+        relevantTagIds: z.array(z.string().nonempty()).optional(),
       }),
     )
     .handler(
@@ -44,6 +46,8 @@ export const commentsRouter = {
           parentCommentId = null,
           editorData,
           draft = false,
+          shortformFrontpage,
+          relevantTagIds,
         },
       }) => {
         const user = await getCurrentUser();
@@ -57,6 +61,8 @@ export const commentsRouter = {
           parentCommentId,
           editorData,
           draft,
+          shortformFrontpage,
+          relevantTagIds,
         });
         return await fetchCommentsListItem({
           currentUser: user,

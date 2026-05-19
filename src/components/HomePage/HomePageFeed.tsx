@@ -109,7 +109,7 @@ export default async function HomePageFeed({
               />
             </HomePageCommunitySection>
           )}
-          <HomePageQuickTakesSection className="mb-10">
+          <HomePageQuickTakesSection coreTags={coreTags} className="mb-10">
             <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
               <FrontpageQuickTakesList initialLimit={5} />
             </Suspense>

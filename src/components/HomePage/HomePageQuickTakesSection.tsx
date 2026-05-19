@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { TagBase } from "@/lib/tags/tagQueries";
 import { useExpandedFrontpageSection } from "@/lib/hooks/useExpandedFrontpageSection";
 import { QuickTakesListProvider } from "../QuickTakes/QuickTakesListContext";
 import QuickTakesCommunityToggle from "../QuickTakes/QuickTakesCommunityToggle";
@@ -10,9 +11,11 @@ import Type from "../Type";
 import Link from "../Link";
 
 export default function HomePageQuickTakesSection({
+  coreTags,
   className,
   children,
 }: Readonly<{
+  coreTags: TagBase[];
   className?: string;
   children: ReactNode;
 }>) {
@@ -44,7 +47,7 @@ export default function HomePageQuickTakesSection({
         toggleExpanded={toggleExpanded}
         className={className}
       >
-        <NewQuickTake className="mb-1" />
+        <NewQuickTake coreTags={coreTags} className="mb-1" />
         {children}
       </ExpandableSection>
     </QuickTakesListProvider>
