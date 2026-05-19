@@ -1,7 +1,7 @@
-import urlJoin from "url-join";
 import type { CurrentUser } from "./currentUser";
 import type { Localgroup, Post, User } from "../schema";
 import type { UserKarmaChanges } from "./karmaChangesTypes";
+import { combineUrls, getSiteUrl } from "../routeHelpers";
 import { allUserGroupsByName } from "./userGroups";
 import { z } from "zod/v4";
 import uniq from "lodash/uniq";
@@ -13,12 +13,15 @@ export const MINIMUM_APPROVAL_KARMA = 5;
 export const userGetProfileUrl = ({
   user,
   from,
+  isAbsolute,
 }: {
   user: { slug: string | null };
   from?: string;
+  isAbsolute?: boolean;
 }) => {
   const url = user.slug ? `/users/${user.slug}` : "#";
-  return from ? `${url}?from=${from}` : url;
+  const taggedUrl = from ? `${url}?from=${from}` : url;
+  return isAbsolute ? combineUrls(getSiteUrl(), taggedUrl) : taggedUrl;
 };
 
 export const userGetStatsUrl = ({ slug }: Pick<CurrentUser, "slug">) =>
@@ -158,7 +161,7 @@ type SocialMediaProfileField = keyof typeof socalMediaProfileFields;
 const profileFieldToSocialMediaHref = (
   field: SocialMediaProfileField,
   userUrl: string,
-) => urlJoin("https://" + socalMediaProfileFields[field], userUrl);
+) => combineUrls("https://" + socalMediaProfileFields[field], userUrl);
 
 export const socialMediaSiteNameToHref = (
   siteName: SocialMediaSiteName | "website",

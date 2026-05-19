@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts } from "../schema";
@@ -59,10 +60,16 @@ export const fetchPostDisplay = async (
       authorIsUnreviewed: true,
       forceAllowType3Audio: true,
       sharingSettings: true,
+      socialPreview: true,
+      socialPreviewImageAutoUrl: true,
+      eventImageId: true,
+      noIndex: true,
     },
     extras: {
       coauthors: coauthorsSelector,
       tags: (postsTable) => postTagsProjection(postsTable, currentUserId),
+      customHighlightHtml: (posts) =>
+        sql<string | null>`${posts}."customHighlight"->>'html'`,
       reactors: reactorsSelector("Posts"),
       ...(currentUserId
         ? {
@@ -160,6 +167,8 @@ export const fetchPostDisplay = async (
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
+
+export const fetchPostDisplayCached = cache(fetchPostDisplay);
 
 export const filterSettingsToSelector = (
   filterSettings: FilterSettings,

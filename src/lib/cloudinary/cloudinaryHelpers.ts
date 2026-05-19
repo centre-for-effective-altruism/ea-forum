@@ -38,3 +38,6 @@ export const getSocialImagePreviewPrefix = () =>
 
 export const getSiteLogoUrl = (sizePixels: number) =>
   `https://images.ctfassets.net/ohf186sfn6di/7J4cBC9SXCWMoqqCIqI0GI/affe205261bb8cff47501a0ada0f2268/ea-logo-square-1200x1200__1_.png?h=${sizePixels}`;
+
+export const getSiteOgImageUrl = () =>
+  "https://res.cloudinary.com/cea/image/upload/v1582740871/EA_Forum_OG_Image.png";

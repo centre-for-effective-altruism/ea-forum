@@ -1,11 +1,14 @@
 import { Fragment, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchPostDisplay } from "@/lib/posts/postQueries";
-import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
+import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatShortDate } from "@/lib/timeUtils";
 import { PostDisplayProvider } from "./usePostDisplay";
+import {
+  getPostReadTimeMinutes,
+  postGetStructuredData,
+} from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostSequenceNavigation from "./PostSequenceNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
@@ -19,6 +22,7 @@ import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
+import StructuredData from "../StructuredData";
 import PostPingbacks from "./PostPingbacks";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
@@ -31,7 +35,7 @@ import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
-  const post = await fetchPostDisplay(currentUser, postId);
+  const post = await fetchPostDisplayCached(currentUser, postId);
   if (!post) {
     notFound();
   }
@@ -52,6 +56,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
 
   return (
     <PostDisplayProvider post={post}>
+      <StructuredData data={postGetStructuredData(post)} />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
           <PostSequenceNavigation post={post} className="mb-2" />
