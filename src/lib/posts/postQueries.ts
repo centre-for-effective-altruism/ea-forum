@@ -59,10 +59,14 @@ export const fetchPostDisplay = async (
       authorIsUnreviewed: true,
       forceAllowType3Audio: true,
       sharingSettings: true,
+      socialPreview: true,
+      socialPreviewImageAutoUrl: true,
     },
     extras: {
       coauthors: coauthorsSelector,
       tags: (postsTable) => postTagsProjection(postsTable, currentUserId),
+      customHighlightHtml: (posts) =>
+        sql<string | null>`${posts}."customHighlight"->>'html'`,
       reactors: reactorsSelector("Posts"),
       ...(currentUserId
         ? {
