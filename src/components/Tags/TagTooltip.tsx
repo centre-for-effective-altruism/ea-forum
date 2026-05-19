@@ -35,7 +35,7 @@ export default function TagTooltip({
       title={
         <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">
           {"tagRel" in tag && <TagRelevance tag={tag as PostTag} />}
-          {description && <TagBody html={description} isExcerpt />}
+          {description && <TagBody html={description} />}
           <Type style="bodyHeavy">
             <Link
               href={tagGetPageUrl({ tag })}
