@@ -5,6 +5,7 @@ import { useTheme } from "@/lib/hooks/useTheme";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
 import { rpc } from "@/lib/rpc";
+import AdjustmentsHorizontalIcon from "@heroicons/react/24/outline/AdjustmentsHorizontalIcon";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import BookmarkIcon from "@heroicons/react/24/outline/BookmarkIcon";
@@ -117,6 +118,15 @@ export default function UserDropdownMenu({
             Icon: Cog6ToothIcon,
             href: "/account",
           },
+          ...(currentUser.isAdmin
+            ? [
+                {
+                  title: "Admin",
+                  Icon: AdjustmentsHorizontalIcon,
+                  href: "/admin",
+                },
+              ]
+            : []),
           "divider",
           {
             title: "Logout",
