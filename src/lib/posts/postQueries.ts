@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
 import { posts } from "../schema";
@@ -61,6 +62,8 @@ export const fetchPostDisplay = async (
       sharingSettings: true,
       socialPreview: true,
       socialPreviewImageAutoUrl: true,
+      eventImageId: true,
+      noIndex: true,
     },
     extras: {
       coauthors: coauthorsSelector,
@@ -164,6 +167,8 @@ export const fetchPostDisplay = async (
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
+
+export const fetchPostDisplayCached = cache(fetchPostDisplay);
 
 export const filterSettingsToSelector = (
   filterSettings: FilterSettings,

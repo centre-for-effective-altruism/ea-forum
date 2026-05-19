@@ -305,7 +305,7 @@ const POST_DESCRIPTION_EXCLUSIONS: RegExp[] = [
 ];
 
 /** Get a og:description-appropriate description for a post */
-export const getPostDescription = (post: PostDisplay): string | null => {
+export const getPostDescription = (post: PostDisplay): string | undefined => {
   const socialPreview = post.socialPreview as Record<string, unknown> | undefined;
   if (socialPreview?.text && typeof socialPreview.text === "string") {
     return socialPreview.text;
@@ -323,7 +323,7 @@ export const getPostDescription = (post: PostDisplay): string | null => {
       .filter((par) => !POST_DESCRIPTION_EXCLUSIONS.some((re) => re.test(par)));
 
     if (!plaintextPars.length) {
-      return null;
+      return undefined;
     }
 
     // Concatenate paragraphs together with a delimiter, until they reach an
@@ -356,11 +356,13 @@ export const getPostDescription = (post: PostDisplay): string | null => {
     const userText = post.user ? `by EA Forum user ${post.user.displayName}` : "";
     return `A collection of shorter posts ${userText}`;
   }
-  return null;
+  return undefined;
 };
 
-export const postGetStructuredData = (post: PostDisplay): JsonRecord => {
-  const description = getPostDescription(post);
+export const postGetStructuredData = (
+  post: PostDisplay,
+  description = getPostDescription(post) ?? null,
+): JsonRecord => {
   const url = postGetPageUrl({ post, isAbsolute: true });
   return {
     "@context": "http://schema.org",

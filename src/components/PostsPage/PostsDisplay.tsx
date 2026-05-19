@@ -1,7 +1,7 @@
 import { Fragment, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchPostDisplay } from "@/lib/posts/postQueries";
+import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatShortDate } from "@/lib/timeUtils";
 import { PostDisplayProvider } from "./usePostDisplay";
@@ -35,7 +35,7 @@ import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
-  const post = await fetchPostDisplay(currentUser, postId);
+  const post = await fetchPostDisplayCached(currentUser, postId);
   if (!post) {
     notFound();
   }
