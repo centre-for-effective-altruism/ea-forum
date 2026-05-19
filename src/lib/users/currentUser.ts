@@ -3,47 +3,52 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
 import { db } from "@/lib/db";
+import type { UserRelationalProjection } from "./userQueries";
+
+export const currentUserProjection = {
+  columns: {
+    _id: true,
+    displayName: true,
+    username: true,
+    email: true,
+    profileImageId: true,
+    slug: true,
+    karma: true,
+    isAdmin: true,
+    theme: true,
+    hideIntercom: true,
+    acceptedTos: true,
+    hideNavigationSidebar: true,
+    hideHomeRHS: true,
+    usernameUnset: true,
+    currentFrontpageFilter: true,
+    frontpageFilterSettings: true,
+    lastNotificationsCheck: true,
+    expandedFrontpageSections: true,
+    markDownPostEditor: true,
+    banned: true,
+    groups: true,
+    conversationsDisabled: true,
+    mentionsDisabled: true,
+    showCommunityInRecentDiscussion: true,
+    hideCommunitySection: true,
+    reviewedByUserId: true,
+    snoozedUntilContentCount: true,
+    subscribedToDigest: true,
+    hideSubscribePoke: true,
+    mongoLocation: true,
+    karmaChangeNotifierSettings: true,
+    karmaChangeLastOpened: true,
+    karmaChangeBatchStart: true,
+  },
+} as const satisfies UserRelationalProjection;
 
 // TODO: We can get a small performance boost here by using
 // fm_get_user_by_login_token but it's hard to use that in drizzle while
 // keeping typesafety.
 export const fetchCurrentUserByHashedToken = cache(async (hashedToken: string) => {
   const user = await db.query.users.findFirst({
-    columns: {
-      _id: true,
-      displayName: true,
-      username: true,
-      email: true,
-      profileImageId: true,
-      slug: true,
-      karma: true,
-      isAdmin: true,
-      theme: true,
-      hideIntercom: true,
-      acceptedTos: true,
-      hideNavigationSidebar: true,
-      hideHomeRHS: true,
-      usernameUnset: true,
-      currentFrontpageFilter: true,
-      frontpageFilterSettings: true,
-      lastNotificationsCheck: true,
-      expandedFrontpageSections: true,
-      markDownPostEditor: true,
-      banned: true,
-      groups: true,
-      conversationsDisabled: true,
-      mentionsDisabled: true,
-      showCommunityInRecentDiscussion: true,
-      hideCommunitySection: true,
-      reviewedByUserId: true,
-      snoozedUntilContentCount: true,
-      subscribedToDigest: true,
-      hideSubscribePoke: true,
-      mongoLocation: true,
-      karmaChangeNotifierSettings: true,
-      karmaChangeLastOpened: true,
-      karmaChangeBatchStart: true,
-    },
+    ...currentUserProjection,
     where: {
       RAW: (users, { sql }) => sql`
         ${users.services}->'resume'->'loginTokens' @>
