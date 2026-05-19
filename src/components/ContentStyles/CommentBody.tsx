@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import ContentProgressiveEnhancements from "./ContentProgressiveEnhancements";
 import clsx from "clsx";
 import "./content-base.css";
 import "./comment-body.css";
@@ -24,19 +25,15 @@ export default function CommentBody({
     className?: string;
   }
 >) {
-  const classes = clsx("content-base comment-body", className);
+  const styledClassName = clsx("content-base comment-body", className);
   if (html) {
     return (
-      <div
-        data-component="CommentBody"
-        dangerouslySetInnerHTML={{ __html: html }}
-        className={classes}
-      />
+      <ContentProgressiveEnhancements html={html} className={styledClassName} />
     );
   }
   if (children) {
     return (
-      <div data-component="CommentBody" className={classes}>
+      <div data-component="CommentBody" className={styledClassName}>
         {children}
       </div>
     );

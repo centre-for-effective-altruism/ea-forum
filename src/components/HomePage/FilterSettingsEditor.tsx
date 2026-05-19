@@ -273,7 +273,7 @@ const TagFilterButton: FC<
       description={
         tag ? (
           <div>
-            <TagBody html={tag.description} isExcerpt className="mb-3" />
+            <TagBody html={tag.description} className="mb-3" />
             <Type style="bodyHeavy">
               <Link href={url} className="text-primary hover:opacity-70">
                 View all {tag.postCount} posts
