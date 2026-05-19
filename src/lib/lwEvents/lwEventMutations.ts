@@ -4,18 +4,22 @@ import { db } from "../db";
 import { lwEvents } from "../schema";
 import { randomId } from "../utils/random";
 import { upsertReadStatus } from "../readStatuses/readStatusQueries";
+import { sendIntercomEvent } from "./lwEventCallbacks";
 
 export const createLWEvent = async (
   currentUser: CurrentUser | null,
   data: CreateLWEvent,
 ) => {
-  await Promise.all([
+  const [[lwEvent]] = await Promise.all([
     // Create the LWEvent
-    db.insert(lwEvents).values({
-      _id: randomId(),
-      userId: currentUser?._id,
-      ...data,
-    }),
+    db
+      .insert(lwEvents)
+      .values({
+        _id: randomId(),
+        userId: currentUser?._id,
+        ...data,
+      })
+      .returning(),
     // Update post read status
     currentUser && data.documentId && data.name === "post-view"
       ? upsertReadStatus({
@@ -25,6 +29,5 @@ export const createLWEvent = async (
         })
       : null,
   ]);
-
-  // TODO: updatePartiallyReadSequences and sendIntercomEvent
+  await sendIntercomEvent(currentUser, lwEvent);
 };
