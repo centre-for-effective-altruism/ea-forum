@@ -2,7 +2,7 @@
   color: var(--color-foreground);
   font-family: var(--font-stack-serif);
   font-size: 17px;
-  font-weight: 450;
+  font-weight: 400;
   word-break: break-word;
 }
 .content-base p:not(:first-child) {
@@ -30,7 +30,6 @@
   line-height: 1.42;
 }
 .content-base blockquote {
-  font-weight: 450;
   padding: 16px;
   border-left: solid 3px var(--color-gray-300);
   margin: 0;
@@ -47,7 +46,6 @@
 .content-base li {
   font-size: 17px;
   line-height: 1.75em;
-  font-weight: 450;
   font-family: var(--font-stack-serif);
   color: var(--color-gray-900);
   margin-bottom: 6.5px;
@@ -188,7 +186,6 @@
 }
 .content-base figcaption {
   font-size: 11.7px;
-  font-weight: 450;
   font-family: var(--font-stack-serif);
   line-height: 1.75em;
   color: var(--color-gray-900);
