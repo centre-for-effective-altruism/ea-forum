@@ -48,6 +48,7 @@ const nextConfig: NextConfig = {
     },
   ],
   serverExternalPackages: ["mathjax-full"],
+  poweredByHeader: false,
 };
 
 export default withSentryConfig(nextConfig, {
