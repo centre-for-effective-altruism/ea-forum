@@ -9,8 +9,7 @@ const oldSitePatterns = [
   /^\/api\/notificationEvents$/,
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
-  /^\/api\/search$/,
-  /^\/api\/search\/userFacets$/,
+  /^\/api\/search.*$/,
 ];
 
 // Middle precedence: Route these to the new site

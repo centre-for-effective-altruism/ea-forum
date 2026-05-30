@@ -65,7 +65,7 @@ export default function HeaderSearch({
           const results: Partial<HeaderSearchResults> = {};
           for (let i = 0; i < indexes.length; i++) {
             const index = indexes[i];
-            const hits = response.results[i].hits;
+            const hits = response[i].hits;
             if (hits.length) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               results[index] = hits as any;

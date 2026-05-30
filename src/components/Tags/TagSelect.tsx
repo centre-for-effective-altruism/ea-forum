@@ -60,7 +60,7 @@ export default function TagSelect({
           },
         ]);
         if (requestIdRef.current === requestId) {
-          setResults(results.results[0].hits ?? []);
+          setResults(results[0].hits ?? []);
         }
       })();
     } else {
