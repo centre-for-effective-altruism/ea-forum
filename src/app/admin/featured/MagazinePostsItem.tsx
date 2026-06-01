@@ -51,13 +51,13 @@ export default function MagazinePostsItem({
         className={clsx(
           "group relative flex flex-col",
           isRead
-            ? "bg-primary/10 hover:bg-primary/20"
+            ? "bg-primary/20 hover:bg-primary/30"
             : "bg-gray-50 hover:bg-gray-200",
         )}
       >
         <div
           className={clsx(
-            "relative aspect-[16/9] w-full overflow-hidden transition group-hover:brightness-90",
+            "relative aspect-[16/9] w-full overflow-hidden group-hover:brightness-90 [.theme-dark_&]:group-hover:brightness-110",
             imageUrl
               ? "bg-gray-100"
               : "bg-gradient-to-br from-primary-light/20 to-primary-dark/30",
@@ -79,8 +79,8 @@ export default function MagazinePostsItem({
             </div>
           )}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-2 p-4">
-          <div className="line-clamp-2 font-serif text-[18px] font-normal leading-tight text-gray-1000">
+        <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
+          <div className="line-clamp-2 font-serif text-[22px] font-normal leading-tight text-gray-1000">
             <span className="relative z-[2] inline-flex align-middle">
               <PostIcons post={post} side="left" />
             </span>
