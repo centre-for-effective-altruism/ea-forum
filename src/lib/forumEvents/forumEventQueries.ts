@@ -32,16 +32,31 @@ export const forumEventBaseProjection = {
     bannerImageId: true,
     darkColor: true,
     lightColor: true,
+    contrastColor: true,
     bannerTextColor: true,
     publicData: true,
     pollAgreeWording: true,
     pollDisagreeWording: true,
+    endDate: true,
   },
   with: {
+    pollQuestion: {
+      columns: {
+        _id: true,
+        html: true,
+      },
+    },
     post: {
       columns: {
         _id: true,
         slug: true,
+        isEvent: true,
+        groupId: true,
+      },
+    },
+    comment: {
+      columns: {
+        _id: true,
       },
     },
     tag: {

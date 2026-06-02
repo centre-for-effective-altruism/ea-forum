@@ -205,6 +205,18 @@ export const fetchCommmentsForPost = ({
     where: { postId },
   });
 
+export const fetchCommentsForForumEvent = ({
+  currentUser,
+  forumEventId,
+}: {
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  forumEventId: string;
+}) =>
+  fetchCommentsList({
+    currentUser,
+    where: { forumEventId },
+  });
+
 export const fetchFrontpageQuickTakes = ({
   currentUser,
   includeCommunity,

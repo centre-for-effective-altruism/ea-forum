@@ -250,12 +250,24 @@ const relations = defineRelations(
       }),
     },
     forumEvents: {
+      pollQuestion: r.one.revisions({
+        from: r.forumEvents.pollQuestionLatest,
+        to: r.revisions._id,
+      }),
       post: r.one.posts({
         from: r.forumEvents.postId,
         to: r.posts._id,
         where: {
           draft: false,
           deletedDraft: false,
+        },
+      }),
+      comment: r.one.comments({
+        from: r.forumEvents.commentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
         },
       }),
       tag: r.one.tags({

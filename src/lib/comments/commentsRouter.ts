@@ -4,6 +4,7 @@ import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
 import {
+  fetchCommentsForForumEvent,
   fetchCommentsListItem,
   fetchFrontpageQuickTakes,
   fetchNewComments,
@@ -18,12 +19,21 @@ import {
 
 export const commentsRouter = {
   listById: os
-    .input(z.object({ _id: z.string() }))
+    .input(z.object({ _id: z.string().nonempty() }))
     .handler(async ({ input: { _id } }) => {
       const currentUser = await getCurrentUser();
-      return fetchCommentsListItem({
+      return await fetchCommentsListItem({
         currentUser,
         commentId: _id,
+      });
+    }),
+  listByForumEvent: os
+    .input(z.object({ forumEventId: z.string().nonempty() }))
+    .handler(async ({ input: { forumEventId } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchCommentsForForumEvent({
+        currentUser,
+        forumEventId,
       });
     }),
   create: os

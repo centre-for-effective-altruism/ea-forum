@@ -111,3 +111,6 @@ export const getForumEventVoteForUser = (
   const data = event?.publicData as Record<string, { x: number }> | null;
   return user ? (data?.[user._id]?.x ?? null) : null;
 };
+
+export const getForumEventVoteCount = (event: ForumEventBase) =>
+  Object.keys(event.publicData || {}).length;

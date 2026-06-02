@@ -6,4 +6,9 @@ export const forumEventsRouter = {
   listById: os
     .input(z.object({ _id: z.string().nonempty() }))
     .handler(async ({ input: { _id } }) => fetchForumEventById(_id)),
+  removeVote: os
+    .input(z.object({ forumEventId: z.string().nonempty() }))
+    .handler(async () => {
+      // TODO
+    }),
 };

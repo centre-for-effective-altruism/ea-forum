@@ -1,5 +1,5 @@
+import type { CSSProperties, FC } from "react";
 import clsx from "clsx";
-import { FC } from "react";
 
 const Dot: FC<{ colorClassName?: string; className?: string }> = ({
   colorClassName,
@@ -17,12 +17,16 @@ const Dot: FC<{ colorClassName?: string; className?: string }> = ({
 export default function Loading({
   colorClassName,
   className,
+  style,
 }: {
   colorClassName?: string;
   className?: string;
+  style?: CSSProperties,
 }) {
   return (
     <div
+      data-component="Loading"
+      style={style}
       className={clsx(
         "flex items-center justify-center mx-auto h-[26px]",
         className,

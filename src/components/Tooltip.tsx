@@ -25,6 +25,7 @@ export default function Tooltip({
   tooltipClassName,
   title,
   interactable,
+  disabled,
   As = "div",
   children,
 }: Readonly<{
@@ -33,6 +34,7 @@ export default function Tooltip({
   tooltipClassName?: string;
   title: ReactNode;
   interactable?: boolean;
+  disabled?: boolean,
   As?: ElementType;
   children: ReactNode;
 }>) {
@@ -73,8 +75,7 @@ export default function Tooltip({
       >
         {children}
       </As>
-      {isOpen &&
-        title &&
+      {isOpen && !disabled && title &&
         createPortal(
           <div
             ref={setFloating}

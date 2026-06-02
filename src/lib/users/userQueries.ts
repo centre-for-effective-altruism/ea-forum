@@ -121,6 +121,20 @@ export const fetchUserBySlug = async (
   return result[0] ?? null;
 };
 
+
+export const fetchUsersById = async (
+  currentUser: CurrentUser | null,
+  userIds: string[],
+) => {
+  const result = await fetchUserBase({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      _id: { in: userIds },
+    },
+  });
+  return keyBy(result, "_id");
+}
+
 export const fetchUserForReview = (userId: string) =>
   db.query.users.findFirst({
     columns: {
