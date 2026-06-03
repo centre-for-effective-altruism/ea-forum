@@ -46,7 +46,7 @@ export default function PollSubtitle({
       <button
         data-component="PollSubtitle"
         onClick={hideResults}
-        className={clsx(buttonClassName, "ml-auto mr-3")}
+        className={clsx(buttonClassName, "mr-4")}
       >
         Hide results
       </button>
@@ -63,7 +63,7 @@ export default function PollSubtitle({
       {votingOpen && (hasVoted ? "Change" : "Place") + " your vote or "}
       <button
         data-component="PollSubtitle"
-        className={buttonClassName}
+        className={clsx(buttonClassName, "ml-1")}
         onClick={showResults}
       >
         {votingOpen ? "view results." : "View results."}

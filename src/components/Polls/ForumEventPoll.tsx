@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  PointerEvent,
+  PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -37,12 +37,15 @@ import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import clsx from "clsx";
 import ForumEventCommentForm from "../ForumEvents/ForumEventCommentForm";
 import UserProfileImage from "../UserProfileImage";
+import PollResultIcon from "./PollResultIcon";
 import PollSubtitle from "./PollSubtitle";
+import PollButton from "./PollButton";
 import Tooltip from "../Tooltip";
 import Loading from "../Loading";
 import Type from "../Type";
 import Link from "../Link";
-import PollButton from "./PollButton";
+
+type AddVoteData = Parameters<typeof rpc.forumEvents.addVote>[0];
 
 const SLIDER_MAX_WIDTH = 880;
 const RESULT_ICON_MAX_HEIGHT = 32;
@@ -157,7 +160,7 @@ export default function ForumEventPoll({
    * delete their vote data
    */
   const clearVote = useCallback(
-    async (e?: React.PointerEvent) => {
+    async (e?: ReactPointerEvent) => {
       try {
         e?.stopPropagation();
         if (currentUser && event) {
@@ -179,12 +182,96 @@ export default function ForumEventPoll({
   /**
    * When the user pointerdowns on their vote circle, start dragging it
    */
-  const startDragVote = useCallback((e: PointerEvent) => {
+  const startDragVote = useCallback((e: ReactPointerEvent) => {
     if (votingOpen) {
       e.preventDefault();
       isDragging.current = true;
     }
   }, [votingOpen]);
+
+  /**
+   * When the user drags their vote, update its x position
+   */
+  useEffect(() => {
+    const updateVotePos = (e: PointerEvent) => {
+      if (!isDragging.current || !sliderRef.current || !votingOpen) {
+        return;
+      }
+
+      const sliderRect = sliderRef.current.getBoundingClientRect();
+      const sliderWidth = sliderRect.right - sliderRect.left;
+      if (e.clientX < sliderRect.left) {
+        setCurrentBucketIndex(0);
+        return;
+      } else if (e.clientX > sliderRect.right) {
+        setCurrentBucketIndex(NUM_TICKS - 1);
+        return;
+      }
+
+      const rawVotePos = (e.clientX - sliderRect.left) / sliderWidth;
+      const bucketIndex = Math.round(rawVotePos * (NUM_TICKS - 1));
+      setCurrentBucketIndex(bucketIndex);
+    }
+    window.addEventListener("pointermove", updateVotePos);
+    return () => window.removeEventListener("pointermove", updateVotePos);
+  }, []);
+
+  /**
+   * When the user is done dragging their vote:
+   * - If this is the user's initial vote, save the vote
+   * - If we have a postId (because we're on the post page), save the vote
+   * - Otherwise (we're on the home page), open the post selection modal
+   */
+  useEffect(() => {
+    const saveVotePos = async () => {
+      if (!isDragging.current || !event || !votingOpen) {
+        return;
+      }
+
+      isDragging.current = false;
+
+      if (!currentUser) {
+        void clearVote()
+        return;
+      }
+
+      try {
+        const newVotePos = currentBucketIndex / (NUM_TICKS - 1);
+        const voteData: AddVoteData = {
+          forumEventId: event._id,
+          x: newVotePos,
+        };
+        if (!hasVoted) {
+          if (event.post) {
+            setCommentFormOpen(true);
+          }
+          setVoteCount((count) => count + 1);
+          setCurrentUserVote(newVotePos);
+          await rpc.forumEvents.addVote(voteData);
+          refetch?.();
+          return;
+        }
+        const delta =
+          newVotePos - (currentUserVote ?? (CENTRAL_TICK_INDEX / (NUM_TICKS - 1)));
+        if (delta) {
+          voteData.delta = delta;
+          setCurrentUserVote(newVotePos);
+          await rpc.forumEvents.addVote({
+            ...voteData,
+            ...(event.post?._id && { postIds: [event.post._id] }),
+          });
+          refetch?.();
+        }
+      } catch (e) {
+        setCurrentBucketIndex(initialBucketIndex);
+        setCurrentUserVote(initialUserVotePos);
+        toast((e as Error).message);
+        captureException(e);
+      }
+    }
+    window.addEventListener("pointerup", saveVotePos);
+    return () => window.removeEventListener("pointerup", saveVotePos);
+  }, [event]);
 
   const questionNode = useMemo(() => createQuestionNode(event), [event]);
 
@@ -243,7 +330,10 @@ export default function ForumEventPoll({
         <div className="min-h-[17px] mb-[14px]">
           {!hideViewResults && (
             <Type
-              className="mx-auto"
+              className={clsx(
+                "flex",
+                resultsVisible ? "justify-end" : "justify-center",
+              )}
               cssStyle={{ maxWidth: SLIDER_MAX_WIDTH }}
             >
               <PollSubtitle
@@ -263,7 +353,7 @@ export default function ForumEventPoll({
           >
             <div
               className="
-                flex justify-between max-w-full relative max-h-[0]
+                flex justify-between max-w-full relative
                 transition-[max-height_0.5s_ease-in-out,_opacity_0.5s_ease-in-out]
               "
               style={{
@@ -301,15 +391,14 @@ export default function ForumEventPoll({
                       </span>
                     </div>
                   )}
-                  {/* TODO
                   {cluster.votes.slice(-maxStackSize).map((vote) => (
-                    <ForumEventResultIcon
+                    <PollResultIcon
                       key={vote.user._id}
                       vote={vote}
+                      event={event}
                       tooltipDisabled={!resultsVisible}
                     />
                   ))}
-                    */}
                 </div>
               ))}
             </div>
@@ -346,9 +435,9 @@ export default function ForumEventPoll({
                       "opacity-0 group-hover:opacity-100 transition-opacity",
                       "before:absolute before:top-px before:bottom-0",
                       "before:left-1/2 before:w-px before:content-['']",
-                      "before:bg-[var(--forum-event-foreground)]",
+                      "before:bg-(--forum-event-foreground)",
                       "before:opacity-30 before:-translate-x-1/2",
-                      isDragging.current && "opacity-100",
+                      isDragging.current && "opacity-100!",
                       tickIndex === CENTRAL_TICK_INDEX && `
                         opacity-30 before:height-[125%] before:-top-[5%]
                         before:opacity-100 before:bg-(--forum-event-foreground)
@@ -393,6 +482,7 @@ export default function ForumEventPoll({
                         )
                       }
                       disabled={commentFormOpen}
+                      className="group/user-icon"
                     >
                       {currentUser ? (
                         <UserProfileImage
@@ -410,18 +500,24 @@ export default function ForumEventPoll({
                           "
                         />
                       )}
-                      {votingOpen && hasVoted && (
+                      {votingOpen && hasVoted &&
                         <PollButton
                           Icon={XMarkIcon}
                           onClick={clearVote}
-                          className="top-[-5px] right-[-5px]"
+                          className="
+                            absolute top-[-5px] right-[-5px] transition-opacity
+                            opacity-0 group-hover/user-icon:opacity-100
+                          "
                         />
-                      )}
+                      }
                       {event.post && hasVoted &&
                         <PollButton
                           Icon={CommentIcon}
                           onClick={toggleCommentFormOpen}
-                          className="top-[22px] right-[-5px]"
+                          className="
+                            absolute top-[22px] right-[-5px] transition-opacity
+                            opacity-0 group-hover/user-icon:opacity-100
+                          "
                         />
                       }
                     </Tooltip>

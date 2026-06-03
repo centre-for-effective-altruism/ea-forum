@@ -133,6 +133,19 @@
       opacity: 1;
     }
   }
+
+  --animate-poll-results-fade-in: poll-results-fade-in 2s ease;
+  @keyframes poll-results-fade-in {
+    0% {
+      pointer-events: none;
+    }
+    99% {
+      pointer-events: none;
+    }
+    100% {
+      pointer-events: auto;
+    }
+  }
 }
 
 @utility dark-mode {
