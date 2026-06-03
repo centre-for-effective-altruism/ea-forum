@@ -253,6 +253,10 @@ export default function ForumEventPoll({
           setCurrentUserVote(newVotePos);
           await rpc.forumEvents.addVote(voteData);
           refetch?.();
+          captureEvent("addForumEventVote", {
+            userId: currentUser._id,
+            ...voteData,
+          });
           return;
         }
         const delta =
@@ -260,11 +264,19 @@ export default function ForumEventPoll({
         if (delta) {
           voteData.delta = delta;
           setCurrentUserVote(newVotePos);
+          const postIds = {
+            ...(event.post?._id && { postIds: [event.post._id] }),
+          };
           await rpc.forumEvents.addVote({
             ...voteData,
-            ...(event.post?._id && { postIds: [event.post._id] }),
+            ...postIds,
           });
           refetch?.();
+          captureEvent("addForumEventVote", {
+            userId: currentUser._id,
+            ...voteData,
+            ...postIds,
+          });
         }
       } catch (e) {
         setCurrentBucketIndex(initialBucketIndex);
@@ -285,7 +297,13 @@ export default function ForumEventPoll({
     initialBucketIndex,
     initialUserVotePos,
     votingOpen,
+    captureEvent,
   ]);
+
+  const onIncreaseStackSize = useCallback(
+    () => setMaxStackSize((prev) => prev + 10),
+    [],
+  );
 
   const questionNode = useMemo(() => createQuestionNode(event), [event]);
 
@@ -384,7 +402,7 @@ export default function ForumEventPoll({
                 >
                   {cluster.votes.length > maxStackSize && (
                     <div
-                      onClick={() => setMaxStackSize((prev) => prev + 10)}
+                      onClick={onIncreaseStackSize}
                       className="
                         cursor-pointer relative flex items-center justify-center
                         rounded-[50%] overflow-hidden aspect-square w-[calc(100%+4px)]

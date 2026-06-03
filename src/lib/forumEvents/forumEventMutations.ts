@@ -1,12 +1,14 @@
 import "server-only";
 import { load as cheerioLoad } from "cheerio";
-import { db, type DbOrTransaction } from "../db";
+import { db, DbOrTransaction } from "../db";
+import { sql } from "drizzle-orm";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import { randomId } from "../utils/random";
 import { isAnyTest } from "../environment";
 import { updateWithFieldChanges } from "../fieldChanges";
 import {
+  addUserPollVote,
   buildForumEventRevisions,
   removeUserPollVote,
   setLatestPollVote,
@@ -21,6 +23,7 @@ import {
 } from "../schema";
 import {
   endDateFromDuration,
+  ForumEventPollVote,
   PollProps,
   pollPropsSchema,
   revisionIsAllowedPolls,
@@ -232,6 +235,65 @@ export const upsertPolls = async ({
     }),
   );
 };
+
+export const addPollVote = async ({
+  currentUser,
+  forumEventId,
+  x,
+  delta,
+  postIds,
+}: {
+  currentUser: CurrentUser,
+  forumEventId: string,
+  x: number,
+  delta?: number,
+  postIds?: string[],
+}) => {
+  const event = await db.query.forumEvents.findFirst({
+    columns: {
+      _id: true,
+      endDate: true,
+    },
+    where: {
+      _id: forumEventId,
+    },
+    extras: {
+      oldVote: (forumEvents) => sql<ForumEventPollVote>
+        `${forumEvents.publicData}->${currentUser._id}`,
+    },
+  });
+  if (!event) {
+    throw new Error("Event not found");
+  }
+  if (event?.endDate && new Date(event.endDate) < new Date()) {
+    throw new Error("Cannot edit vote after voting has closed");
+  }
+
+  const voteData: ForumEventPollVote = {
+    x,
+    points: event.oldVote?.points ?? {},
+  };
+
+  // Update the points associated with this vote if there was a change and that
+  // change was associated with posts
+  if (postIds?.length && !!delta) {
+    const pointsPerPost = Math.abs(delta);
+    for (const postId of postIds) {
+      // Each post gets points equal to the max change attributed to that post
+      voteData.points[postId] = Math.max(
+        pointsPerPost,
+        voteData.points?.[postId] ?? 0,
+      );
+    }
+  }
+
+  await db.transaction(async (txn) => {
+    await Promise.all([
+      addUserPollVote(txn, currentUser, event, voteData),
+      setLatestPollVote(txn, currentUser, event, x),
+    ]);
+  });
+}
 
 export const removePollVote = async (
   currentUser: CurrentUser,

@@ -10,6 +10,7 @@ import {
 } from "../revisions/revisionMutations";
 import {
   FORUM_EVENT_STICKER_VERSION,
+  ForumEventPollVote,
   ForumEventSticker,
   ForumEventStickerData,
 } from "./forumEventHelpers";
@@ -242,6 +243,23 @@ export const buildForumEventRevisions = async (
   const revisions = await Promise.all(revisionPromises);
   return Object.assign({}, ...revisions);
 };
+
+export const addUserPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  voteData: ForumEventPollVote,
+) => {
+  return db
+    .update(forumEvents)
+    .set({
+      publicData: sql`
+        COALESCE(${forumEvents.publicData}, '{}'::JSONB) ||
+          ${JSON.stringify({ [currentUser._id]: voteData })}::JSONB
+      `,
+    })
+    .where(eq(forumEvents._id, event._id))
+}
 
 export const removeUserPollVote = async (
   db: DbOrTransaction,

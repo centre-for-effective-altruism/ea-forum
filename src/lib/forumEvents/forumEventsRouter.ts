@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { removePollVote } from "./forumEventMutations";
+import { addPollVote, removePollVote } from "./forumEventMutations";
 import { fetchForumEventById } from "./forumEventQueries";
 
 export const forumEventsRouter = {
@@ -15,9 +15,12 @@ export const forumEventsRouter = {
       x: z.number(),
       delta: z.number().optional(),
     }))
-    .handler(async () => {
-      console.warn("Adding vote...");
-      // TODO
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await addPollVote({ ...input, currentUser });
     }),
   removeVote: os
     .input(z.object({ forumEventId: z.string().nonempty() }))

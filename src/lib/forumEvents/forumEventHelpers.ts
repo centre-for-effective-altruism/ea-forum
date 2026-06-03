@@ -36,6 +36,11 @@ export type ForumEventStickerData = {
   data: ForumEventSticker[];
 };
 
+export type ForumEventPollVote = {
+  x: number,
+  points: Record<string, number>,
+}
+
 export type ForumEventCommentMetadata = {
   eventFormat: ForumEventFormat;
   sticker?: Partial<ForumEventStickerInput> | null;
