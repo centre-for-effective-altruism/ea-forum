@@ -1,8 +1,8 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
-import type { ForumEvent, InsertForumEvent } from "../schema";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { RelationalProjection } from "../utils/queryHelpers";
+import { forumEvents, ForumEvent, InsertForumEvent, comments } from "../schema";
 import { db, DbOrTransaction } from "../db";
 import {
   createRevisionForDenormalizedEditableField,
@@ -242,3 +242,44 @@ export const buildForumEventRevisions = async (
   const revisions = await Promise.all(revisionPromises);
   return Object.assign({}, ...revisions);
 };
+
+export const removeUserPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+) => {
+  await db
+    .update(forumEvents)
+    .set({
+      publicData: sql`${forumEvents.publicData} - ${currentUser._id}`,
+    })
+    .where(eq(forumEvents._id, event._id));
+}
+
+export const setLatestPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  latestVote: number | null,
+) => {
+  await db
+    .update(comments)
+    .set({
+      forumEventMetadata: sql`
+        JSONB_SET(
+          ${comments.forumEventMetadata},
+          '{poll,latestVote}',
+          CASE
+            WHEN ${latestVote}::FLOAT IS NULL THEN 'null'::JSONB
+            ELSE TO_JSONB(${latestVote}::FLOAT)
+          END
+        )
+      `,
+    })
+    .where(
+      and(
+        eq(comments.forumEventId, event._id),
+        eq(comments.userId, currentUser._id),
+      ),
+    );
+}

@@ -129,7 +129,7 @@ export default function ForumEventPoll({
 
   useEffect(() => {
     void refetchComments();
-  }, []);
+  }, [refetchComments]);
 
   const currentUserComment = useMemo(() => {
     if (!currentUser) {
@@ -153,7 +153,7 @@ export default function ForumEventPoll({
     });
   }, [captureEvent])
 
-  const refetch = () => {} // TODO
+  const refetch = useCallback(() => {}, []); // TODO
 
   /**
    * When the user clicks the "x" icon, or when a logged out user tries to vote,
@@ -168,6 +168,10 @@ export default function ForumEventPoll({
           setVoteCount((count) => count - 1);
           setCommentFormOpen(false);
           refetch();
+          captureEvent("removeForumEventVote", {
+            forumEventId: event._id,
+            userId: currentUser._id,
+          });
         }
         setCurrentBucketIndex(CENTRAL_TICK_INDEX);
         setCurrentUserVote(null);
@@ -176,7 +180,7 @@ export default function ForumEventPoll({
         captureException(e);
       }
     },
-    [currentUser, event, refetch],
+    [currentUser, event, refetch, captureEvent],
   );
 
   /**
@@ -214,7 +218,7 @@ export default function ForumEventPoll({
     }
     window.addEventListener("pointermove", updateVotePos);
     return () => window.removeEventListener("pointermove", updateVotePos);
-  }, []);
+  }, [votingOpen]);
 
   /**
    * When the user is done dragging their vote:
@@ -271,7 +275,17 @@ export default function ForumEventPoll({
     }
     window.addEventListener("pointerup", saveVotePos);
     return () => window.removeEventListener("pointerup", saveVotePos);
-  }, [event]);
+  }, [
+    event,
+    clearVote,
+    currentBucketIndex,
+    currentUser,
+    currentUserVote,
+    hasVoted,
+    initialBucketIndex,
+    initialUserVotePos,
+    votingOpen,
+  ]);
 
   const questionNode = useMemo(() => createQuestionNode(event), [event]);
 

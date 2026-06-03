@@ -1,12 +1,16 @@
 import "server-only";
 import { load as cheerioLoad } from "cheerio";
-import type { DbOrTransaction } from "../db";
+import { db, type DbOrTransaction } from "../db";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import { randomId } from "../utils/random";
 import { isAnyTest } from "../environment";
 import { updateWithFieldChanges } from "../fieldChanges";
-import { buildForumEventRevisions } from "./forumEventQueries";
+import {
+  buildForumEventRevisions,
+  removeUserPollVote,
+  setLatestPollVote,
+} from "./forumEventQueries";
 import {
   forumEvents,
   Comment,
@@ -228,3 +232,30 @@ export const upsertPolls = async ({
     }),
   );
 };
+
+export const removePollVote = async (
+  currentUser: CurrentUser,
+  forumEventId: string,
+) => {
+  const event = await db.query.forumEvents.findFirst({
+    columns: {
+      _id: true,
+      endDate: true,
+    },
+    where: {
+      _id: forumEventId,
+    },
+  });
+  if (!event) {
+    throw new Error("Event not found");
+  }
+  if (event.endDate && new Date(event.endDate) < new Date()) {
+    throw new Error("Cannot edit vote after voting has closed");
+  }
+  await db.transaction(async (txn) => {
+    await Promise.all([
+      removeUserPollVote(txn, currentUser, event),
+      setLatestPollVote(txn, currentUser, event, null),
+    ]);
+  });
+}
