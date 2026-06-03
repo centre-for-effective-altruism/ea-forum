@@ -45,7 +45,7 @@ export type ForumEventCommentMetadata = {
   eventFormat: ForumEventFormat;
   sticker?: Partial<ForumEventStickerInput> | null;
   poll?: {
-    /** 0 to 1 */
+    /** 0 to 1 - 0.5 is a neutral vote in the middle */
     voteWhenPublished: number;
     /**
      * 0 to 1, in the case where the vote hasn't changed, latestVote will be

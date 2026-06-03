@@ -14,6 +14,7 @@ import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { UserBase } from "@/lib/users/userQueries";
 import {
+  ForumEventCommentMetadata,
   getForumEventVoteCount,
   getForumEventVoteForUser,
 } from "@/lib/forumEvents/forumEventHelpers";
@@ -314,27 +315,16 @@ export default function ForumEventPoll({
 
   const commentPrompt = `<blockquote>${plaintextQuestion}</blockquote><p></p>`;
 
-  const commentPrefilledProps = !currentUserComment && currentUserVote !== null ? {
-    forumEventMetadata: {
-      eventFormat: "POLL",
-      sticker: null,
-      poll: {
-        voteWhenPublished: currentUserVote,
-        latestVote: null,
-        pollQuestionWhenPublished: event.pollQuestion?._id ?? null,
-        commentPrompt
-      }
+  const forumEventMetadata: ForumEventCommentMetadata = {
+    eventFormat: "POLL",
+    sticker: null,
+    poll: {
+      voteWhenPublished: currentUserVote ?? 0.5,
+      latestVote: null,
+      pollQuestionWhenPublished: event.pollQuestion?._id ?? null,
+      commentPrompt,
     },
-    parentCommentId: event.comment?._id,
-    ...(!event.isGlobal && {
-      contents: {
-        originalContents: {
-          type: "ckEditorMarkup",
-          data: commentPrompt,
-        }
-      }
-    }),
-  } : {};
+  };
 
   // The position of the current vote as a percentage along the slider
   const votePos =
@@ -555,20 +545,20 @@ export default function ForumEventPoll({
                     </Tooltip>
                   </div>
                   {/* Popup containing the form for creating a comment */}
-                  {/* TODO
                   {event.post && (
                     <ForumEventCommentForm
                       open={commentFormOpen}
                       comment={currentUserComment}
-                      prefilledProps={commentPrefilledProps}
                       successMessage="Success! Open the results to view everyone's votes and comments."
                       forumEvent={event}
                       cancelLabel="Skip"
                       cancelCallback={() => setCommentFormOpen(false)}
                       successCallback={refetchComments}
                       anchorEl={userVoteRef.current}
-                      post={event.post}
-                      title="What made you vote this way?"
+                      commentPrompt={commentPrompt}
+                      forumEventMetadata={forumEventMetadata}
+                      parentCommentId={event.comment?._id}
+                      title={() => "What made you vote this way?"}
                       subtitle={(post, comment) => (
                         <div>
                           Your response will appear as a comment on{" "}
@@ -581,7 +571,9 @@ export default function ForumEventPoll({
                                         postId: comment.post?._id,
                                         commentId: comment._id,
                                       })
-                                    : postGetPageUrl({ post })
+                                    : post
+                                      ? postGetPageUrl({ post })
+                                      : "#"
                                 }
                                 openInNewTab
                               >
@@ -595,7 +587,6 @@ export default function ForumEventPoll({
                       )}
                     />
                   )}
-                    */}
                 </AnalyticsContext>
               </div>
               {/* Arrows */}

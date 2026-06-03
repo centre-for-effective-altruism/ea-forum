@@ -2,15 +2,21 @@
 
 import { ReactNode, useCallback, useState } from "react";
 import toast from "react-hot-toast";
-import type { ForumEvent } from "@/lib/schema";
-import type { PostListItem } from "@/lib/posts/postLists";
+import type { ForumEventCommentMetadata } from "@/lib/forumEvents/forumEventHelpers";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
+import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
+import CommentBody from "../ContentStyles/CommentBody";
+
+type TitleCallback = (
+  post: Pick<ForumEventBase, "post">["post"],
+  comment: CommentListItem | null,
+) => ReactNode
 
 export default function ForumEventCommentForm({
   open,
   comment,
   forumEvent,
-  post,
   cancelCallback,
   successCallback,
   setEmoji,
@@ -20,23 +26,26 @@ export default function ForumEventCommentForm({
   subtitle,
   successMessage="Comment posted",
   cancelLabel,
-  prefilledProps: extraPrefilledProps,
+  commentPrompt,
+  forumEventMetadata,
+  parentCommentId,
   className,
 }: Readonly<{
   open: boolean;
-  comment: ShortformComments | null;
-  forumEvent: Pick<ForumEvent, "_id" | "eventFormat">
+  comment: CommentListItem | null;
+  forumEvent: ForumEventBase,
   anchorEl: HTMLElement | null;
-  post: PostsMinimumInfo;
   cancelCallback: () => Promise<void> | void;
   successCallback: () => Promise<void> | void;
   setEmoji?: (emoji: string) => void;
   currentEmoji?: string | null,
-  title: ((post: PostListItem, comment: CommentListItem | null) => ReactNode) | ReactNode;
-  subtitle: ((post: PostListItem, comment: CommentListItem | null) => ReactNode) | ReactNode;
+  title: TitleCallback;
+  subtitle: TitleCallback;
   successMessage?: string;
   cancelLabel?: string;
-  prefilledProps?: PartialDeep<DbComment>;
+  commentPrompt: string,
+  forumEventMetadata: ForumEventCommentMetadata,
+  parentCommentId?: string,
   className?: string;
 }>) {
   const hasEmoji = !!setEmoji;
@@ -56,17 +65,20 @@ export default function ForumEventCommentForm({
     toast(successMessage)
   }, [successCallback, successMessage])
 
-  const prefilledProps: PartialDeep<DbComment> = {
+  const prefilledProps = {
     forumEventId: forumEvent._id,
-    ...extraPrefilledProps
+    forumEventMetadata,
+    parentCommentId,
   };
 
   if (!open || !anchorEl?.isConnected) {
     return null;
   }
 
+  const classes: Record<string, string> = {}; // TODO
+
   return (
-    <LWPopper
+    <Popper
       open={open}
       anchorEl={anchorEl}
       placement="bottom"
@@ -76,10 +88,14 @@ export default function ForumEventCommentForm({
     >
       <div className={classes.popperContent}>
         <div className={classes.triangle}></div>
-        <ForumIcon icon="Close" className={classes.closeIcon} onClick={cancelCallback} />
+        <XMarkIcon
+          onClick={cancelCallback}
+          role="button"
+          className="absolute top-2 right-2 cursor-pointer w-5"
+        />
         <div className={classes.header}>
-          <div className={classes.title}>{typeof title === "function" ? title(post, comment) : title}</div>
-          {typeof subtitle === "function" ? subtitle(post, comment) : subtitle}
+          <div className={classes.title}>{title(forumEvent.post, comment)}</div>
+          {subtitle(post, comment)}
         </div>
         <div className={classes.formSection}>
           {hasEmoji && <ForumEventEmojiPicker onSelect={setEmoji} />}
@@ -100,8 +116,11 @@ export default function ForumEventCommentForm({
             )}
             {comment && !editFormOpen && (
               <>
-                <CommentBody comment={comment} />
-                <div className={classes.editButton} onClick={() => setEditFormOpen(true)}>
+                <CommentBody html={comment.html} />
+                <div
+                  onClick={() => setEditFormOpen(true)}
+                  className={classes.editButton}
+                >
                   Edit comment
                 </div>
               </>
@@ -122,6 +141,6 @@ export default function ForumEventCommentForm({
           </div>
         </div>
       </div>
-    </LWPopper>
+    </Popper>
   );
 };
