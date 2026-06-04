@@ -1,10 +1,13 @@
-import { useState } from "react";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { ForumEventVoteDisplay } from "@/lib/utils/pollHelpers";
+import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import CommentBody from "../ContentStyles/CommentBody";
 import UserProfileImage from "../UserProfileImage";
+import UsersName from "../UsersName";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
+import Link from "../Link";
 
 export default function PollResultIcon({
   vote: { user, comment },
@@ -12,19 +15,12 @@ export default function PollResultIcon({
   tooltipDisabled,
 }: Readonly<{
   vote: ForumEventVoteDisplay;
-  event: ForumEventBase,
+  event: ForumEventBase;
   tooltipDisabled: boolean;
 }>) {
-  const [isPinned, setIsPinned] = useState(false);
-  const [newRepliesCount, setNewRepliesCount] = useState(0);
-  // const isDesktop = useIsAboveBreakpoint('sm');
-  // const { eventHandlers, hover, anchorEl } = useHover();
-  // const popperOpen = (hover || isPinned) && isDesktop;
-
   if (!user?.displayName) {
     return null;
   }
-
   return (
     <AnalyticsContext
       pageElementContext="forumEventResultIcon"
@@ -39,8 +35,34 @@ export default function PollResultIcon({
         "
       >
         <Tooltip
-          title={<Type style="bodySmall">{user.displayName}</Type>}
-          disabled={!!comment}
+          title={
+            comment ? (
+              <div className="w-[350px] max-w-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <UserProfileImage user={comment.user} size={40} />
+                  <Type style="bodyHeavy">
+                    <UsersName user={comment.user} />
+                  </Type>
+                </div>
+                <CommentBody html={comment.html} />
+                <Type style="bodyHeavy" className="flex justify-end mt-1">
+                  <Link
+                    href={commentGetPageUrl({ comment })}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    Go to thread
+                  </Link>
+                </Type>
+              </div>
+            ) : (
+              <Type style="bodySmall">{user.displayName}</Type>
+            )
+          }
+          disabled={tooltipDisabled}
+          interactable={!!comment}
+          tooltipClassName={
+            comment ? "bg-surface-floating! text-gray-900! p-3!" : undefined
+          }
         >
           <UserProfileImage
             user={user}
@@ -53,21 +75,6 @@ export default function PollResultIcon({
             "
           />
         </Tooltip>
-        {/*
-          * Controlling whether the popper is open is done outside the component
-          * so that it fully unmounts and clears all the state when closed
-        {!tooltipDisabled && comment && popperOpen && (
-          <ForumEventResultPopper
-            anchorEl={anchorEl}
-            user={user}
-            comment={comment}
-            setIsPinned={setIsPinned}
-            isPinned={isPinned}
-            newRepliesCount={newRepliesCount}
-            setNewRepliesCount={setNewRepliesCount}
-          />
-        )}
-          */}
       </div>
     </AnalyticsContext>
   );

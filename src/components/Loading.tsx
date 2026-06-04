@@ -21,7 +21,7 @@ export default function Loading({
 }: {
   colorClassName?: string;
   className?: string;
-  style?: CSSProperties,
+  style?: CSSProperties;
 }) {
   return (
     <div

@@ -14,11 +14,16 @@ export default function PollSubtitle({
   endDate: Date | string | null;
   voteCount: number;
   hasVoted: boolean;
-  resultsVisible: boolean,
+  resultsVisible: boolean;
   setResultsVisible: (visible: boolean) => void;
 }>) {
-  const end = useMemo(() => endDate ? new Date(endDate).getTime() : null, [endDate]);
-  const [remainingMs, setRemainingMs] = useState(() => end ? end - Date.now() : Infinity);
+  const end = useMemo(
+    () => (endDate ? new Date(endDate).getTime() : null),
+    [endDate],
+  );
+  const [remainingMs, setRemainingMs] = useState(() =>
+    end ? end - Date.now() : Infinity,
+  );
 
   useEffect(() => {
     if (!end) {
@@ -31,8 +36,14 @@ export default function PollSubtitle({
     return () => clearInterval(timer);
   }, [end]);
 
-  const showResults = useCallback(() => setResultsVisible(true), [setResultsVisible]);
-  const hideResults = useCallback(() => setResultsVisible(false), [setResultsVisible]);
+  const showResults = useCallback(
+    () => setResultsVisible(true),
+    [setResultsVisible],
+  );
+  const hideResults = useCallback(
+    () => setResultsVisible(false),
+    [setResultsVisible],
+  );
 
   const votingOpen = !end || remainingMs > 0;
 
@@ -55,11 +66,14 @@ export default function PollSubtitle({
 
   return (
     <>
-      {voteCount > 0 && `${voteCount} vote${voteCount === 1 ? "" : "s"}${votingOpen ? " so far" : ""}. `}
-      {end && (remainingMs > 0
-        ? <>Voting closes in {formatRemainingTime(remainingMs)}. </>
-        : <>Voting has closed. </>
-      )}
+      {voteCount > 0 &&
+        `${voteCount} vote${voteCount === 1 ? "" : "s"}${votingOpen ? " so far" : ""}. `}
+      {end &&
+        (remainingMs > 0 ? (
+          <>Voting closes in {formatRemainingTime(remainingMs)}. </>
+        ) : (
+          <>Voting has closed. </>
+        ))}
       {votingOpen && (hasVoted ? "Change" : "Place") + " your vote or "}
       <button
         data-component="PollSubtitle"

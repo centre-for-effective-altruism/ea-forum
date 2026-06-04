@@ -6,9 +6,9 @@ export default function PollButton({
   onClick,
   className,
 }: {
-  Icon: FC<{ className?: string }>
-  onClick: () => void,
-  className?: string,
+  Icon: FC<{ className?: string }>;
+  onClick: () => void;
+  className?: string;
 }) {
   return (
     <button

@@ -64,8 +64,8 @@ export const createPostComment = async ({
   draft?: boolean;
   shortformFrontpage?: boolean;
   relevantTagIds?: string[];
-  forumEventId?: string,
-  forumEventMetadata?: ForumEventCommentMetadata,
+  forumEventId?: string;
+  forumEventMetadata?: ForumEventCommentMetadata;
 }) => {
   if (user.banned) {
     throw new Error("Banned");

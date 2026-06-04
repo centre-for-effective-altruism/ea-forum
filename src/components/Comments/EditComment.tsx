@@ -13,10 +13,15 @@ import Type from "../Type";
 
 const EditCommentInner: FC<{
   comment: CommentToEdit;
-  cancelLabel?: string,
-  beforeSubmit?: (data: EditorData) => void,
+  cancelLabel?: string;
+  beforeSubmit?: (data: EditorData) => void;
   onSuccess?: () => void;
-}> = ({ comment, beforeSubmit, onSuccess: onSuccessCallback, ...passthroughProps }) => {
+}> = ({
+  comment,
+  beforeSubmit,
+  onSuccess: onSuccessCallback,
+  ...passthroughProps
+}) => {
   const { updateComment } = useCommentsList();
   const onSuccess = useCallback(
     (updatedComment: CommentListItem) => {
@@ -40,9 +45,9 @@ export default function EditComment({
   ...passthroughProps
 }: Readonly<{
   commentId: string;
-  cancelLabel?: string,
-  onCancel?: () => void,
-  beforeSubmit?: (data: EditorData) => void,
+  cancelLabel?: string;
+  onCancel?: () => void;
+  beforeSubmit?: (data: EditorData) => void;
   onSuccess?: () => void;
   className?: string;
 }>) {
@@ -63,7 +68,11 @@ export default function EditComment({
   return (
     <div data-component="EditComment" className={className}>
       {comment ? (
-        <EditCommentInner comment={comment} onSuccess={onSuccess} {...passthroughProps} />
+        <EditCommentInner
+          comment={comment}
+          onSuccess={onSuccess}
+          {...passthroughProps}
+        />
       ) : error ? (
         <Type>Error: {error}</Type>
       ) : (

@@ -9,12 +9,14 @@ export const forumEventsRouter = {
     .input(z.object({ _id: z.string().nonempty() }))
     .handler(async ({ input: { _id } }) => fetchForumEventById(_id)),
   addVote: os
-    .input(z.object({
-      forumEventId: z.string().nonempty(),
-      postIds: z.string().nonempty().array().optional(),
-      x: z.number(),
-      delta: z.number().optional(),
-    }))
+    .input(
+      z.object({
+        forumEventId: z.string().nonempty(),
+        postIds: z.string().nonempty().array().optional(),
+        x: z.number(),
+        delta: z.number().optional(),
+      }),
+    )
     .handler(async ({ input }) => {
       const currentUser = await getCurrentUser();
       if (!currentUser) {

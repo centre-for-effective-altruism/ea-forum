@@ -17,15 +17,17 @@ export default function NewComment({
   htmlTemplate,
   className,
   ...formProps
-}: Readonly<Pick<UseCommentEditorProps, "beforeSubmit" | "onSuccess"> & {
-  cancelLabel?: string,
-  onCancel?: () => void,
-  postId: string;
-  parentCommentId?: string;
-  prefilledProps?: CommentPrefilledProps,
-  htmlTemplate?: string,
-  className?: string;
-}>) {
+}: Readonly<
+  Pick<UseCommentEditorProps, "beforeSubmit" | "onSuccess"> & {
+    cancelLabel?: string;
+    onCancel?: () => void;
+    postId: string;
+    parentCommentId?: string;
+    prefilledProps?: CommentPrefilledProps;
+    htmlTemplate?: string;
+    className?: string;
+  }
+>) {
   const { addTopLevelComment } = useCommentsList();
   const onCommentSuccess = useCallback(
     (comment: CommentListItem) => {

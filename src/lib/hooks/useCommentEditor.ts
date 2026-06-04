@@ -51,10 +51,10 @@ export type CommentPrefilledProps = Pick<
 >;
 
 export type UseCommentEditorProps = UseCommentEditorDocument & {
-  beforeSubmit?: (data: EditorData) => void,
+  beforeSubmit?: (data: EditorData) => void;
   onSuccess?: (comment: CommentListItem) => void;
-  prefilledProps?: CommentPrefilledProps,
-  htmlTemplate?: string,
+  prefilledProps?: CommentPrefilledProps;
+  htmlTemplate?: string;
 };
 
 type SubmitExtraProps = {
@@ -69,10 +69,14 @@ const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) 
   return shortform ? "Write a new quick take..." : "Write a new comment...";
 };
 
-const getInitialContents = ({ currentUser, comment, htmlTemplate }: {
-  currentUser: CurrentUser | null,
-  comment?: CommentToEdit | null,
-  htmlTemplate?: string,
+const getInitialContents = ({
+  currentUser,
+  comment,
+  htmlTemplate,
+}: {
+  currentUser: CurrentUser | null;
+  comment?: CommentToEdit | null;
+  htmlTemplate?: string;
 }): EditorContents =>
   comment?.originalContents ?? {
     type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
@@ -93,11 +97,13 @@ export const useCommentEditor = ({
   const { onSignup } = useLoginPopoverContext();
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState(getInitialContents({
-    currentUser,
-    comment,
-    htmlTemplate,
-  }));
+  const [contents, setContents] = useState(
+    getInitialContents({
+      currentUser,
+      comment,
+      htmlTemplate,
+    }),
+  );
 
   const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
     setContents(contents);

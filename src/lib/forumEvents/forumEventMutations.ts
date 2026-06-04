@@ -243,11 +243,11 @@ export const addPollVote = async ({
   delta,
   postIds,
 }: {
-  currentUser: CurrentUser,
-  forumEventId: string,
-  x: number,
-  delta?: number,
-  postIds?: string[],
+  currentUser: CurrentUser;
+  forumEventId: string;
+  x: number;
+  delta?: number;
+  postIds?: string[];
 }) => {
   const event = await db.query.forumEvents.findFirst({
     columns: {
@@ -258,8 +258,8 @@ export const addPollVote = async ({
       _id: forumEventId,
     },
     extras: {
-      oldVote: (forumEvents) => sql<ForumEventPollVote>
-        `${forumEvents.publicData}->${currentUser._id}`,
+      oldVote: (forumEvents) =>
+        sql<ForumEventPollVote>`${forumEvents.publicData}->${currentUser._id}`,
     },
   });
   if (!event) {
@@ -293,7 +293,7 @@ export const addPollVote = async ({
       setLatestPollVote(txn, currentUser, event, x),
     ]);
   });
-}
+};
 
 export const removePollVote = async (
   currentUser: CurrentUser,
@@ -320,4 +320,4 @@ export const removePollVote = async (
       setLatestPollVote(txn, currentUser, event, null),
     ]);
   });
-}
+};

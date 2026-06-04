@@ -22,8 +22,8 @@ export default function CommentForm({
   contents: EditorContents;
   editorRef: RefObject<EditorAPI | null>;
   loading?: boolean;
-  cancelLabel?: string,
-  onCancel?: () => void,
+  cancelLabel?: string;
+  onCancel?: () => void;
   onSubmit: () => void;
   onKeyDown: (e: KeyboardEvent<HTMLFormElement>) => void;
   onChange: (props: EditorOnChangeProps) => void;
@@ -54,11 +54,11 @@ export default function CommentForm({
         className="w-full grow"
       />
       <div className="flex items-center gap-2">
-        {onCancel &&
+        {onCancel && (
           <Button variant="greyFilled" onClick={onCancel}>
             {cancelLabel}
           </Button>
-        }
+        )}
         <Button type="submit" loading={loading}>
           Comment
         </Button>

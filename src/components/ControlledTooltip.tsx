@@ -32,15 +32,15 @@ export default function ControlledTooltip({
   As = "div",
   children,
 }: Readonly<{
-  isOpen: boolean,
-  setIsOpen: (isOpen: boolean) => void,
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
   placement?: Placement;
   className?: string;
   tooltipClassName?: string;
   title: ReactNode;
   interactable?: boolean;
-  noHover?: boolean,
-  disabled?: boolean,
+  noHover?: boolean;
+  disabled?: boolean;
   As?: ElementType;
   children: ReactNode;
 }>) {
@@ -81,7 +81,9 @@ export default function ControlledTooltip({
       >
         {children}
       </As>
-      {isOpen && !disabled && title &&
+      {isOpen &&
+        !disabled &&
+        title &&
         createPortal(
           <div
             ref={setFloating}

@@ -64,14 +64,15 @@ export default function ForumEventPoll({
   hideViewResults?: boolean;
   className?: string;
 }>) {
-  const {onLogin} = useLoginPopoverContext();
-  const {currentUser} = useCurrentUser();
-  const {captureEvent} = useTracking();
+  const { onLogin } = useLoginPopoverContext();
+  const { currentUser } = useCurrentUser();
+  const { captureEvent } = useTracking();
 
   const initialUserVotePos = getForumEventVoteForUser(event, currentUser);
-  const initialBucketIndex = initialUserVotePos !== null
-    ? Math.round(initialUserVotePos * (NUM_TICKS - 1))
-    : CENTRAL_TICK_INDEX;
+  const initialBucketIndex =
+    initialUserVotePos !== null
+      ? Math.round(initialUserVotePos * (NUM_TICKS - 1))
+      : CENTRAL_TICK_INDEX;
 
   const [commentFormOpen, setCommentFormOpen] = useState(false);
   const [maxStackSize, setMaxStackSize] = useState(DEFAULT_STACK_IMAGES);
@@ -90,10 +91,10 @@ export default function ForumEventPoll({
   const votingOpen = !event.endDate || new Date(event.endDate) > new Date();
 
   // Whether or not the user is currently dragging their vote
-  const isDragging = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [tickPositions, setTickPositions] = useState<number[]>([]);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const tickRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const tickPositions = useRef<number[]>([]);
 
   const [voters, setVoters] = useState<UserBase[] | null>(null);
   const [comments, setComments] = useState<CommentListItem[] | null>(null);
@@ -135,7 +136,9 @@ export default function ForumEventPoll({
     if (!currentUser) {
       return null;
     }
-    return comments?.find(comment => comment.user?._id === currentUser._id) || null;
+    return (
+      comments?.find((comment) => comment.user?._id === currentUser._id) || null
+    );
   }, [comments, currentUser]);
 
   const voteClusters = useMemo(
@@ -151,7 +154,7 @@ export default function ForumEventPoll({
       captureEvent("forumEventCommentFormToggled", { newState });
       return newState;
     });
-  }, [captureEvent])
+  }, [captureEvent]);
 
   const refetch = useCallback(() => {}, []); // TODO
 
@@ -186,19 +189,22 @@ export default function ForumEventPoll({
   /**
    * When the user pointerdowns on their vote circle, start dragging it
    */
-  const startDragVote = useCallback((e: ReactPointerEvent) => {
-    if (votingOpen) {
-      e.preventDefault();
-      isDragging.current = true;
-    }
-  }, [votingOpen]);
+  const startDragVote = useCallback(
+    (e: ReactPointerEvent) => {
+      if (votingOpen) {
+        e.preventDefault();
+        setIsDragging(true);
+      }
+    },
+    [votingOpen],
+  );
 
   /**
    * When the user drags their vote, update its x position
    */
   useEffect(() => {
     const updateVotePos = (e: PointerEvent) => {
-      if (!isDragging.current || !sliderRef.current || !votingOpen) {
+      if (!isDragging || !sliderRef.current || !votingOpen) {
         return;
       }
 
@@ -215,10 +221,10 @@ export default function ForumEventPoll({
       const rawVotePos = (e.clientX - sliderRect.left) / sliderWidth;
       const bucketIndex = Math.round(rawVotePos * (NUM_TICKS - 1));
       setCurrentBucketIndex(bucketIndex);
-    }
+    };
     window.addEventListener("pointermove", updateVotePos);
     return () => window.removeEventListener("pointermove", updateVotePos);
-  }, [votingOpen]);
+  }, [isDragging, votingOpen]);
 
   /**
    * When the user is done dragging their vote:
@@ -228,14 +234,14 @@ export default function ForumEventPoll({
    */
   useEffect(() => {
     const saveVotePos = async () => {
-      if (!isDragging.current || !event || !votingOpen) {
+      if (!isDragging || !event || !votingOpen) {
         return;
       }
 
-      isDragging.current = false;
+      setIsDragging(false);
 
       if (!currentUser) {
-        void clearVote()
+        void clearVote();
         return;
       }
 
@@ -260,7 +266,7 @@ export default function ForumEventPoll({
           return;
         }
         const delta =
-          newVotePos - (currentUserVote ?? (CENTRAL_TICK_INDEX / (NUM_TICKS - 1)));
+          newVotePos - (currentUserVote ?? CENTRAL_TICK_INDEX / (NUM_TICKS - 1));
         if (delta) {
           voteData.delta = delta;
           setCurrentUserVote(newVotePos);
@@ -284,10 +290,11 @@ export default function ForumEventPoll({
         toast((e as Error).message);
         captureException(e);
       }
-    }
+    };
     window.addEventListener("pointerup", saveVotePos);
     return () => window.removeEventListener("pointerup", saveVotePos);
   }, [
+    isDragging,
     event,
     clearVote,
     currentBucketIndex,
@@ -309,8 +316,9 @@ export default function ForumEventPoll({
   const questionNode = useMemo(() => createQuestionNode(event), [event]);
 
   const plaintextQuestion = useMemo(
-    () => (event.pollQuestion?.html ? stripFootnotes(event.pollQuestion.html) : null),
-    [event.pollQuestion?.html]
+    () =>
+      event.pollQuestion?.html ? stripFootnotes(event.pollQuestion.html) : null,
+    [event.pollQuestion],
   );
 
   const commentPrompt = `<blockquote>${plaintextQuestion}</blockquote><p></p>`;
@@ -326,13 +334,34 @@ export default function ForumEventPoll({
     },
   };
 
+  // Get the exact positions of the ticks on the slider after they have rendered,
+  // in order to place the user vote without having to account for spacing etc.
+  useEffect(() => {
+    if (sliderRef.current) {
+      const sliderRect = sliderRef.current.getBoundingClientRect();
+      setTickPositions(
+        tickRefs.current.map((tick) => {
+          if (tick) {
+            const tickRect = tick.getBoundingClientRect();
+            return (
+              ((tickRect.left + tickRect.width / 2 - sliderRect.left) /
+                sliderRect.width) *
+              100
+            );
+          }
+          return 0;
+        }),
+      );
+    }
+  }, [currentBucketIndex]);
+
   // The position of the current vote as a percentage along the slider
   const votePos =
-    tickPositions.current.length && tickPositions.current[currentBucketIndex] !== undefined
-      ? tickPositions.current[currentBucketIndex]
-      // Fall back to naive approximate calculation so there isn't a big jump after
-      // the first render
-      : (currentBucketIndex / (NUM_TICKS - 1)) * 100;
+    tickPositions.length && tickPositions[currentBucketIndex] !== undefined
+      ? tickPositions[currentBucketIndex]
+      : // Fall back to naive approximate calculation so there isn't a big jump after
+        // the first render
+        (currentBucketIndex / (NUM_TICKS - 1)) * 100;
 
   return (
     <AnalyticsContext pageElementContext="forumEventPoll">
@@ -344,11 +373,11 @@ export default function ForumEventPoll({
           className,
         )}
       >
-        {questionNode &&
+        {questionNode && (
           <Type style="pollQuestion" className="max-w-[730px] mb-[13px] mx-auto">
             {questionNode}
           </Type>
-        }
+        )}
         <div className="min-h-[17px] mb-[14px]">
           {!hideViewResults && (
             <Type
@@ -380,9 +409,11 @@ export default function ForumEventPoll({
               "
               style={{
                 gap: GAP,
-                maxHeight: resultsVisible ? maxStackSize * RESULT_ICON_MAX_HEIGHT : 0,
+                maxHeight: resultsVisible
+                  ? maxStackSize * RESULT_ICON_MAX_HEIGHT
+                  : 0,
                 opacity: resultsVisible ? 1 : 0,
-                marginBottom: (USER_IMAGE_SIZE / 2) + 12,
+                marginBottom: USER_IMAGE_SIZE / 2 + 12,
               }}
             >
               {voteClusters.map((cluster) => (
@@ -424,12 +455,12 @@ export default function ForumEventPoll({
                 </div>
               ))}
             </div>
-            {resultsVisible && votesLoading &&
+            {resultsVisible && votesLoading && (
               <Loading
                 colorClassName="bg-gray-1000"
-                style={{ marginBottom: (USER_IMAGE_SIZE / 2) + 24 }}
+                style={{ marginBottom: USER_IMAGE_SIZE / 2 + 24 }}
               />
-            }
+            )}
             <div
               ref={sliderRef}
               className="
@@ -451,7 +482,9 @@ export default function ForumEventPoll({
                 {Array.from({ length: NUM_TICKS }, (_, i) => i).map((tickIndex) => (
                   <div
                     key={tickIndex}
-                    ref={(el) => {tickRefs.current[tickIndex] = el}}
+                    ref={(el) => {
+                      tickRefs.current[tickIndex] = el;
+                    }}
                     className={clsx(
                       "flex-1 relative duration-200",
                       "opacity-0 group-hover:opacity-100 transition-opacity",
@@ -459,8 +492,9 @@ export default function ForumEventPoll({
                       "before:left-1/2 before:w-px before:content-['']",
                       "before:bg-(--forum-event-foreground)",
                       "before:opacity-30 before:-translate-x-1/2",
-                      isDragging.current && "opacity-100!",
-                      tickIndex === CENTRAL_TICK_INDEX && `
+                      isDragging && "opacity-100!",
+                      tickIndex === CENTRAL_TICK_INDEX &&
+                        `
                         opacity-30 before:height-[125%] before:-top-[5%]
                         before:opacity-100 before:bg-(--forum-event-foreground)
                       `,
@@ -477,7 +511,7 @@ export default function ForumEventPoll({
                       "absolute top-0 z-15 touch-none transform-[translateX(-50%)]",
                       "opacity-60 hover:opacity-100",
                       votingOpen ? "cursor-grab" : "cursor-default",
-                      isDragging.current && "cursor-grabbing!",
+                      isDragging && "cursor-grabbing!",
                       hasVoted && "opacity-100!",
                     )}
                     style={{ left: `${votePos}%` }}
@@ -498,33 +532,33 @@ export default function ForumEventPoll({
                       subtitle={(post, comment) => (
                         <div>
                           Your response will appear as a comment on{" "}
-                          {event.isGlobal
-                            ? (
-                              <Link
-                                href={
-                                  comment
-                                    ? commentGetPageUrlFromIds({
-                                        postId: comment.post?._id,
-                                        commentId: comment._id,
-                                      })
-                                    : post
-                                      ? postGetPageUrl({ post })
-                                      : "#"
-                                }
-                                openInNewTab
-                              >
-                                this post
-                              </Link>
-                            )
-                            : "this post"
-                          }
+                          {event.isGlobal ? (
+                            <Link
+                              href={
+                                comment
+                                  ? commentGetPageUrlFromIds({
+                                      postId: comment.post?._id,
+                                      commentId: comment._id,
+                                    })
+                                  : post
+                                    ? postGetPageUrl({ post })
+                                    : "#"
+                              }
+                              openInNewTab
+                            >
+                              this post
+                            </Link>
+                          ) : (
+                            "this post"
+                          )}
                           , and show next to your avatar in the results.
                         </div>
                       )}
                     >
                       <Tooltip
                         title={
-                          (votingOpen && !hasVoted) && (
+                          votingOpen &&
+                          !hasVoted && (
                             <>
                               <Type
                                 style="bodyXHeavy"
@@ -532,11 +566,9 @@ export default function ForumEventPoll({
                               >
                                 Click and drag to vote
                               </Type>
-                              <Type
-                                style="bodyMedium"
-                                className="leading-[140%]"
-                              >
-                                Votes are non-anonymous and can be changed at any time
+                              <Type style="bodyMedium" className="leading-[140%]">
+                                Votes are non-anonymous and can be changed at any
+                                time
                               </Type>
                             </>
                           )
@@ -562,7 +594,7 @@ export default function ForumEventPoll({
                             "
                           />
                         )}
-                        {votingOpen && hasVoted &&
+                        {votingOpen && hasVoted && (
                           <PollButton
                             Icon={XMarkIcon}
                             onClick={clearVote}
@@ -571,8 +603,8 @@ export default function ForumEventPoll({
                               opacity-0 group-hover/user-icon:opacity-100
                             "
                           />
-                        }
-                        {event.post && hasVoted &&
+                        )}
+                        {event.post && hasVoted && (
                           <PollButton
                             Icon={CommentIcon}
                             onClick={toggleCommentFormOpen}
@@ -581,7 +613,7 @@ export default function ForumEventPoll({
                               opacity-0 group-hover/user-icon:opacity-100
                             "
                           />
-                        }
+                        )}
                       </Tooltip>
                     </ForumEventCommentForm>
                   </div>

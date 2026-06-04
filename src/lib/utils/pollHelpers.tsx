@@ -14,7 +14,10 @@ import Link from "@/components/Link";
 
 export const NUM_TICKS = 21;
 
-const footnotesToTooltips = ({ html, event }: {
+const footnotesToTooltips = ({
+  html,
+  event,
+}: {
   html: string;
   event: ForumEventBase;
 }): ReactNode[] => {
@@ -53,7 +56,11 @@ const footnotesToTooltips = ({ html, event }: {
     if ($node.hasClass("footnote-reference")) {
       const footnoteId = $node.attr("data-footnote-id") ?? "";
       const content = footnotesMap[footnoteId] ?? "";
-      const footnoteNumber = $node.text().trim().replace(/[^\d]+/g, "") || "?";
+      const footnoteNumber =
+        $node
+          .text()
+          .trim()
+          .replace(/[^\d]+/g, "") || "?";
       resultArray.push(
         <Tooltip
           key={footnoteNumber}
@@ -65,7 +72,7 @@ const footnotesToTooltips = ({ html, event }: {
           >
             {footnoteNumber}
           </span>
-        </Tooltip>
+        </Tooltip>,
       );
       return;
     }
@@ -77,9 +84,7 @@ const footnotesToTooltips = ({ html, event }: {
   return resultArray;
 };
 
-export const createQuestionNode = (
-  event: ForumEventBase | null | undefined,
-) => {
+export const createQuestionNode = (event: ForumEventBase | null | undefined) => {
   if (!event?.pollQuestion?.html) {
     return null;
   }
@@ -87,14 +92,12 @@ export const createQuestionNode = (
     html: event.pollQuestion.html,
     event,
   });
-  return event.post
-    ? (
-      <Link href={postGetPageUrl({ post: event.post })}>
-        {questionNode}
-      </Link>
-    )
-    : questionNode;
-}
+  return event.post ? (
+    <Link href={postGetPageUrl({ post: event.post })}>{questionNode}</Link>
+  ) : (
+    questionNode
+  );
+};
 
 /**
  * Removes any footnotes and converts what remains to plain text. Only tested
@@ -108,7 +111,7 @@ export const stripFootnotes = (html: string): string => {
   // Remove the entire .footnotes block (where the list of footnotes usually lives)
   $(".footnotes").remove();
   return $.root().text().trim();
-}
+};
 
 /**
  * Examples: "3 days", "1 day, 12 hours" (because <2 days), "3 hours",
@@ -126,7 +129,7 @@ export const formatRemainingTime = (remainingMs: number): string => {
 
   const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   if (days >= 1) {
-    return `${days} day, ${hours} hour${hours !== 1 ? 's' : ''}`;
+    return `${days} day, ${hours} hour${hours !== 1 ? "s" : ""}`;
   }
 
   if (hours >= 2) {
@@ -135,7 +138,7 @@ export const formatRemainingTime = (remainingMs: number): string => {
 
   const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
   if (hours >= 1) {
-    return `${hours} hour, ${minutes} min${minutes !== 1 ? 's' : ''}`;
+    return `${hours} hour, ${minutes} min${minutes !== 1 ? "s" : ""}`;
   }
 
   if (minutes >= 2) {
@@ -147,18 +150,18 @@ export const formatRemainingTime = (remainingMs: number): string => {
     return `${minutes} min, ${seconds}s`;
   }
   return `${seconds}s`;
-}
+};
 
 export type ForumEventVoteDisplay = {
-  x: number,
-  user: UserBase,
-  comment: CommentListItem | null,
-}
+  x: number;
+  user: UserBase;
+  comment: CommentListItem | null;
+};
 
 type ForumEventVoteDisplayCluster = {
-  center: number,
-  votes: ForumEventVoteDisplay[]
-}
+  center: number;
+  votes: ForumEventVoteDisplay[];
+};
 
 /**
  * Groups the given forum event votes into NUM_TICKS equal-width clusters
@@ -179,18 +182,25 @@ export const clusterForumEventVotes = ({
   }
 
   const publicData = event.publicData as Record<string, ForumEventSticker>;
-  const votes = sortBy(voters
-    .filter((voter) => publicData[voter._id]?.x !== null &&
-      publicData[voter._id]?.x !== undefined)
-    .map((voter) => {
-      const vote = publicData[voter._id].x as number;
-      return {
-        x: vote,
-        user: voter,
-        // O(n^2), but unlikely to be a problem given the numbers involved
-        comment: comments?.find(comment => comment.user?._id === voter._id) || null
-      };
-    }), "x");
+  const votes = sortBy(
+    voters
+      .filter(
+        (voter) =>
+          publicData[voter._id]?.x !== null &&
+          publicData[voter._id]?.x !== undefined,
+      )
+      .map((voter) => {
+        const vote = publicData[voter._id].x as number;
+        return {
+          x: vote,
+          user: voter,
+          // O(n^2), but unlikely to be a problem given the numbers involved
+          comment:
+            comments?.find((comment) => comment.user?._id === voter._id) || null,
+        };
+      }),
+    "x",
+  );
 
   const clusters: ForumEventVoteDisplayCluster[] = range(0, NUM_TICKS).map((i) => ({
     center: i / (NUM_TICKS - 1),
@@ -203,7 +213,7 @@ export const clusterForumEventVotes = ({
     clusters[clusterIndex].votes.push(vote);
   }
 
-    for (const cluster of clusters) {
+  for (const cluster of clusters) {
     cluster.votes.sort((a, b) => {
       // Current user should always appear at the bottom
       if (a.user._id === currentUser?._id) return 1;
@@ -214,9 +224,9 @@ export const clusterForumEventVotes = ({
       if (!a.comment && b.comment) return -1;
 
       // Alphabetically by name
-      return a.user.displayName.toLowerCase().localeCompare(
-        b.user.displayName.toLowerCase(),
-      );
+      return a.user.displayName
+        .toLowerCase()
+        .localeCompare(b.user.displayName.toLowerCase());
     });
   }
 

@@ -18,10 +18,12 @@ const pickerStyles = `
       border-color: #444;
     }
   }
-`
+`;
 
-export default function ForumEventEmojiPicker({ onSelect }: Readonly<{
-  onSelect: (value: string) => void,
+export default function ForumEventEmojiPicker({
+  onSelect,
+}: Readonly<{
+  onSelect: (value: string) => void;
 }>) {
   const [openPicker, setOpenPicker] = useState(false);
   const [emoji, setEmoji] = useState<string | null>(null);
@@ -37,37 +39,49 @@ export default function ForumEventEmojiPicker({ onSelect }: Readonly<{
 
   const toggleOpen = useCallback(() => setOpenPicker((open) => !open), []);
 
-  const handleEmojiClick = useCallback((emoji: string) => {
-    setEmoji(emoji);
-    onSelect(emoji);
-    setOpenPicker(false);
-  }, [onSelect]);
+  const handleEmojiClick = useCallback(
+    (emoji: string) => {
+      setEmoji(emoji);
+      onSelect(emoji);
+      setOpenPicker(false);
+    },
+    [onSelect],
+  );
 
-  const handleEmojiPickerSelect = useCallback((event: CustomEvent) => {
-    const { emoji } = event.detail;
-    if (emoji?.unicode) {
-      handleEmojiClick(emoji.unicode);
-    }
-  }, [handleEmojiClick]);
+  const handleEmojiPickerSelect = useCallback(
+    (event: CustomEvent) => {
+      const { emoji } = event.detail;
+      if (emoji?.unicode) {
+        handleEmojiClick(emoji.unicode);
+      }
+    },
+    [handleEmojiClick],
+  );
 
   /**
    * Inject custom CSS into the <emoji-picker> shadow root.
    */
-  const handlePickerRef = useCallback((elem: HTMLElement | null) => {
-    if (elem) {
-      const styleId = "forum-emoji-picker-styles";
-      const alreadyHasStyle = elem.shadowRoot?.getElementById(styleId);
+  const handlePickerRef = useCallback(
+    (elem: HTMLElement | null) => {
+      if (elem) {
+        const styleId = "forum-emoji-picker-styles";
+        const alreadyHasStyle = elem.shadowRoot?.getElementById(styleId);
 
-      if (!alreadyHasStyle) {
-        const styleEl = document.createElement("style");
-        styleEl.id = styleId;
-        styleEl.textContent = pickerStyles;
-        elem.shadowRoot?.appendChild(styleEl);
+        if (!alreadyHasStyle) {
+          const styleEl = document.createElement("style");
+          styleEl.id = styleId;
+          styleEl.textContent = pickerStyles;
+          elem.shadowRoot?.appendChild(styleEl);
+        }
+
+        elem.addEventListener(
+          "emoji-click",
+          handleEmojiPickerSelect as EventListener,
+        );
       }
-
-      elem.addEventListener("emoji-click", handleEmojiPickerSelect as EventListener);
-    }
-  }, [handleEmojiPickerSelect]);
+    },
+    [handleEmojiPickerSelect],
+  );
 
   return (
     <ControlledTooltip
@@ -95,10 +109,11 @@ export default function ForumEventEmojiPicker({ onSelect }: Readonly<{
             w-10 h-10 rounded border-1 border-gray-400
           "
         >
-          {emoji
-            ? <span className="font-[26px] mt-[3px]">{emoji}</span>
-            : <AddEmojiIcon className="text-gray-500 ml-[2px]" />
-          }
+          {emoji ? (
+            <span className="font-[26px] mt-[3px]">{emoji}</span>
+          ) : (
+            <AddEmojiIcon className="text-gray-500 ml-[2px]" />
+          )}
         </div>
       </button>
     </ControlledTooltip>

@@ -3,11 +3,7 @@ import type { Revision } from "../schema";
 import { ForumEventBase } from "./forumEventQueries";
 import { CurrentUser } from "../users/currentUser";
 
-const forumEventFormatSchema = z.enum([
-  "BASIC",
-  "POLL",
-  "STICKERS",
-] as const);
+const forumEventFormatSchema = z.enum(["BASIC", "POLL", "STICKERS"] as const);
 
 export type ForumEventFormat = z.infer<typeof forumEventFormatSchema>;
 
@@ -38,29 +34,34 @@ export type ForumEventStickerData = {
 };
 
 export type ForumEventPollVote = {
-  x: number,
-  points: Record<string, number>,
-}
+  x: number;
+  points: Record<string, number>;
+};
 
 export const forumEventCommentMetadataSchema = z.object({
   eventFormat: forumEventFormatSchema,
   sticker: forumEventStickerInputSchema.nullable().optional(),
-  poll: z.object({
-    /** 0 to 1 - 0.5 is a neutral vote in the middle */
-    voteWhenPublished: z.number(),
-    /**
-     * 0 to 1, in the case where the vote hasn't changed, latestVote will be
-     * null and voteWhenPublished will have the latest vote
-     */
-    latestVote: z.number().nullable().optional(),
-    /** _id of the revision of the question when the comment was published */
-    pollQuestionWhenPublished: z.string().nullable().optional(),
-    /** The content that is prefilled into the comment box after voting */
-    commentPrompt: z.string().nullable().optional(),
-  }).nullable().optional(),
+  poll: z
+    .object({
+      /** 0 to 1 - 0.5 is a neutral vote in the middle */
+      voteWhenPublished: z.number(),
+      /**
+       * 0 to 1, in the case where the vote hasn't changed, latestVote will be
+       * null and voteWhenPublished will have the latest vote
+       */
+      latestVote: z.number().nullable().optional(),
+      /** _id of the revision of the question when the comment was published */
+      pollQuestionWhenPublished: z.string().nullable().optional(),
+      /** The content that is prefilled into the comment box after voting */
+      commentPrompt: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
-export type ForumEventCommentMetadata = z.infer<typeof forumEventCommentMetadataSchema>;
+export type ForumEventCommentMetadata = z.infer<
+  typeof forumEventCommentMetadataSchema
+>;
 
 const pollsAllowedFields = [
   { collectionName: "Comments", fieldName: "contents" },

@@ -258,8 +258,8 @@ export const addUserPollVote = async (
           ${JSON.stringify({ [currentUser._id]: voteData })}::JSONB
       `,
     })
-    .where(eq(forumEvents._id, event._id))
-}
+    .where(eq(forumEvents._id, event._id));
+};
 
 export const removeUserPollVote = async (
   db: DbOrTransaction,
@@ -272,7 +272,7 @@ export const removeUserPollVote = async (
       publicData: sql`${forumEvents.publicData} - ${currentUser._id}`,
     })
     .where(eq(forumEvents._id, event._id));
-}
+};
 
 export const setLatestPollVote = async (
   db: DbOrTransaction,
@@ -300,4 +300,4 @@ export const setLatestPollVote = async (
         eq(comments.userId, currentUser._id),
       ),
     );
-}
+};

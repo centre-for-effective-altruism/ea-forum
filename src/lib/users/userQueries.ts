@@ -121,7 +121,6 @@ export const fetchUserBySlug = async (
   return result[0] ?? null;
 };
 
-
 export const fetchUsersById = async (
   currentUser: CurrentUser | null,
   userIds: string[],
@@ -133,7 +132,7 @@ export const fetchUsersById = async (
     },
   });
   return keyBy(result, "_id");
-}
+};
 
 export const fetchUserForReview = (userId: string) =>
   db.query.users.findFirst({

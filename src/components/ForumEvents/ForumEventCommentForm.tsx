@@ -30,7 +30,7 @@ export default function ForumEventCommentForm({
   currentEmoji,
   title,
   subtitle,
-  successMessage="Comment posted",
+  successMessage = "Comment posted",
   commentPrompt,
   forumEventMetadata,
   parentCommentId,
@@ -39,22 +39,22 @@ export default function ForumEventCommentForm({
   children,
 }: Readonly<{
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void,
+  setIsOpen: (isOpen: boolean) => void;
   comment: CommentListItem | null;
-  forumEvent: ForumEventBase,
+  forumEvent: ForumEventBase;
   onCancel: () => Promise<void> | void;
   successCallback: () => Promise<void> | void;
   setEmoji?: (emoji: string) => void;
-  currentEmoji?: string | null,
+  currentEmoji?: string | null;
   title: TitleCallback;
   subtitle: TitleCallback;
   successMessage?: string;
-  commentPrompt: string,
-  forumEventMetadata: ForumEventCommentMetadata,
-  parentCommentId?: string,
-  disabled?: boolean,
+  commentPrompt: string;
+  forumEventMetadata: ForumEventCommentMetadata;
+  parentCommentId?: string;
+  disabled?: boolean;
   className?: string;
-  children: ReactNode,
+  children: ReactNode;
 }>) {
   const [editFormOpen, setEditFormOpen] = useState(false);
   const openEditForm = useCallback(() => setEditFormOpen(true), []);
@@ -73,8 +73,8 @@ export default function ForumEventCommentForm({
   const onSuccess = useCallback(async () => {
     closeEditForm();
     await successCallback();
-    toast(successMessage)
-  }, [successCallback, successMessage])
+    toast(successMessage);
+  }, [closeEditForm, successCallback, successMessage]);
 
   const postId = forumEvent.post?._id;
   if (!postId) {
@@ -160,4 +160,4 @@ export default function ForumEventCommentForm({
       {children}
     </ControlledTooltip>
   );
-};
+}
