@@ -43,7 +43,7 @@ export default function ForumEventEmojiPicker({ onSelect }: Readonly<{
     setOpenPicker(false);
   }, [onSelect]);
 
-  const handleEmojiPickerSelect = useCallback((event: any) => {
+  const handleEmojiPickerSelect = useCallback((event: CustomEvent) => {
     const { emoji } = event.detail;
     if (emoji?.unicode) {
       handleEmojiClick(emoji.unicode);
@@ -78,7 +78,7 @@ export default function ForumEventEmojiPicker({ onSelect }: Readonly<{
       interactable
       noHover
       title={
-        <div ref={pickerRef} className="">
+        <div ref={pickerRef}>
           {/* @ts-expect-error This element doesn't have types */}
           <emoji-picker ref={handlePickerRef} />
         </div>

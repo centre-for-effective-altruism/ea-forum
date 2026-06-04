@@ -5,31 +5,32 @@ import toast from "react-hot-toast";
 import type { ForumEventCommentMetadata } from "@/lib/forumEvents/forumEventHelpers";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
+import { CommentsListProvider } from "../Comments/useCommentsList";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import ForumEventEmojiPicker from "./ForumEventEmojiPicker";
 import CommentBody from "../ContentStyles/CommentBody";
 import ControlledTooltip from "../ControlledTooltip";
+import EditComment from "../Comments/EditComment";
+import NewComment from "../Comments/NewComment";
 import Type from "../Type";
 
 type TitleCallback = (
   post: Pick<ForumEventBase, "post">["post"],
   comment: CommentListItem | null,
-) => ReactNode
+) => ReactNode;
 
 export default function ForumEventCommentForm({
   isOpen,
   setIsOpen,
   comment,
   forumEvent,
-  cancelCallback,
+  onCancel,
   successCallback,
   setEmoji,
   currentEmoji,
-  anchorEl,
   title,
   subtitle,
   successMessage="Comment posted",
-  cancelLabel,
   commentPrompt,
   forumEventMetadata,
   parentCommentId,
@@ -41,15 +42,13 @@ export default function ForumEventCommentForm({
   setIsOpen: (isOpen: boolean) => void,
   comment: CommentListItem | null;
   forumEvent: ForumEventBase,
-  anchorEl: HTMLElement | null;
-  cancelCallback: () => Promise<void> | void;
+  onCancel: () => Promise<void> | void;
   successCallback: () => Promise<void> | void;
   setEmoji?: (emoji: string) => void;
   currentEmoji?: string | null,
   title: TitleCallback;
   subtitle: TitleCallback;
   successMessage?: string;
-  cancelLabel?: string;
   commentPrompt: string,
   forumEventMetadata: ForumEventCommentMetadata,
   parentCommentId?: string,
@@ -57,11 +56,13 @@ export default function ForumEventCommentForm({
   className?: string;
   children: ReactNode,
 }>) {
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  const openEditForm = useCallback(() => setEditFormOpen(true), []);
+  const closeEditForm = useCallback(() => setEditFormOpen(false), []);
+
   const hasEmoji = !!setEmoji;
 
-  const [editFormOpen, setEditFormOpen] = useState(false);
-
-  const onSubmit = useCallback(() => {
+  const beforeSubmit = useCallback(() => {
     if (hasEmoji && !currentEmoji) {
       const message = "Please select an emoji";
       toast(message);
@@ -70,17 +71,15 @@ export default function ForumEventCommentForm({
   }, [hasEmoji, currentEmoji]);
 
   const onSuccess = useCallback(async () => {
+    closeEditForm();
     await successCallback();
     toast(successMessage)
   }, [successCallback, successMessage])
 
-  const prefilledProps = {
-    forumEventId: forumEvent._id,
-    forumEventMetadata,
-    parentCommentId,
-  };
-
-  const classes: Record<string, string> = {}; // TODO
+  const postId = forumEvent.post?._id;
+  if (!postId) {
+    return <>{children}</>;
+  }
 
   return (
     <ControlledTooltip
@@ -91,17 +90,13 @@ export default function ForumEventCommentForm({
       noHover
       placement="bottom"
       className={className}
-      tooltipClassName="bg-surface-floating! w-[350] px-3 py-2"
+      tooltipClassName="bg-surface-floating! w-[350px] px-3 pt-3"
       title={
-        <div
-          data-component="ForumEventCommentForm"
-          className={classes.popperContent}
-        >
-          <div className={classes.triangle} />
+        <div data-component="ForumEventCommentForm" className="relative">
           <XMarkIcon
-            onClick={cancelCallback}
+            onClick={onCancel}
             role="button"
-            className="absolute top-2 right-2 cursor-pointer w-5 hover:opacity-70"
+            className="absolute top-[2px] right-0 cursor-pointer w-5 hover:opacity-70"
           />
           <div className="[&_a]:underline [&_a]:underline-offset-3 mb-2">
             <Type style="postTitle" className="mb-1">
@@ -113,48 +108,51 @@ export default function ForumEventCommentForm({
           </div>
           <div className="flex items-start gap-2">
             {hasEmoji && <ForumEventEmojiPicker onSelect={setEmoji} />}
-          {/*
-            <div className={classes.commentFormWrapper}>
-              {!comment && !editFormOpen && (
-                <CommentsNewForm
-                  interactionType="reply"
-                  post={post}
-                  enableGuidelines={false}
-                  hideControls
-                  submitCallback={onSubmit}
-                  cancelCallback={() => cancelCallback()}
-                  cancelLabel={cancelLabel}
-                  successCallback={onSuccess}
-                  prefilledProps={prefilledProps}
-                  className={classes.commentForm}
-                />
-              )}
-              {comment && !editFormOpen && (
-                <>
-                  <CommentBody html={comment.html} />
-                  <div
-                    onClick={() => setEditFormOpen(true)}
-                    className={classes.editButton}
-                  >
-                    Edit comment
-                  </div>
-                </>
-              )}
-              {comment && editFormOpen && (
-                <CommentsEditForm
-                  comment={comment}
-                  cancelCallback={() => setEditFormOpen(false)}
-                  successCallback={async () => {
-                    setEditFormOpen(false);
-                    await successCallback();
-                  }}
-                  prefilledProps={prefilledProps}
-                  hideControls
-                  className={classes.commentForm}
-                />
-              )}
-            </div>
-            */}
+            <CommentsListProvider comments={[]}>
+              <div
+                className="
+                  flex-1 [&_form]:p-2 [&_form]:mb-2 [&_form]:rounded
+                  [&_form]:border-gray-400 [&_form]:border-1
+                "
+              >
+                {!comment && !editFormOpen && (
+                  <NewComment
+                    htmlTemplate={commentPrompt}
+                    postId={postId}
+                    beforeSubmit={beforeSubmit}
+                    onCancel={onCancel}
+                    cancelLabel="Skip"
+                    onSuccess={onSuccess}
+                    parentCommentId={parentCommentId}
+                    prefilledProps={{
+                      forumEventId: forumEvent._id,
+                      forumEventMetadata,
+                    }}
+                  />
+                )}
+                {comment && !editFormOpen && (
+                  <>
+                    <CommentBody html={comment.html} />
+                    <Type
+                      As="button"
+                      style="bodyHeavy"
+                      onClick={openEditForm}
+                      className="cursor-pointer text-primary hover:opacity-70"
+                    >
+                      Edit comment
+                    </Type>
+                  </>
+                )}
+                {comment && editFormOpen && (
+                  <EditComment
+                    commentId={comment._id}
+                    onCancel={closeEditForm}
+                    beforeSubmit={beforeSubmit}
+                    onSuccess={onSuccess}
+                  />
+                )}
+              </div>
+            </CommentsListProvider>
           </div>
         </div>
       }

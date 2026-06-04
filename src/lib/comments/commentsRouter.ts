@@ -3,6 +3,7 @@ import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
+import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
@@ -46,6 +47,8 @@ export const commentsRouter = {
         draft: z.boolean().optional(),
         shortformFrontpage: z.boolean().optional(),
         relevantTagIds: z.array(z.string().nonempty()).optional(),
+        forumEventId: z.string().optional(),
+        forumEventMetadata: forumEventCommentMetadataSchema.optional(),
       }),
     )
     .handler(
@@ -58,6 +61,8 @@ export const commentsRouter = {
           draft = false,
           shortformFrontpage,
           relevantTagIds,
+          forumEventId,
+          forumEventMetadata,
         },
       }) => {
         const user = await getCurrentUser();
@@ -73,6 +78,8 @@ export const commentsRouter = {
           draft,
           shortformFrontpage,
           relevantTagIds,
+          forumEventId,
+          forumEventMetadata,
         });
         return await fetchCommentsListItem({
           currentUser: user,

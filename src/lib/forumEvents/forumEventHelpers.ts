@@ -1,16 +1,15 @@
 import { z } from "zod/v4";
-import { TupleSet, UnionOf } from "../typeHelpers";
 import type { Revision } from "../schema";
 import { ForumEventBase } from "./forumEventQueries";
 import { CurrentUser } from "../users/currentUser";
 
-export const FORUM_EVENT_FORMATS = new TupleSet([
+const forumEventFormatSchema = z.enum([
   "BASIC",
   "POLL",
   "STICKERS",
 ] as const);
 
-export type ForumEventFormat = UnionOf<typeof FORUM_EVENT_FORMATS>;
+export type ForumEventFormat = z.infer<typeof forumEventFormatSchema>;
 
 /**
  * Bump this version when the format of `publicData` changes, so we can interpret
@@ -18,13 +17,15 @@ export type ForumEventFormat = UnionOf<typeof FORUM_EVENT_FORMATS>;
  */
 export const FORUM_EVENT_STICKER_VERSION = "STICKERS_1.0";
 
-export type ForumEventStickerInput = {
-  _id: string;
-  x: number;
-  y: number;
-  theta: number;
-  emoji: string | null;
-};
+const forumEventStickerInputSchema = z.object({
+  _id: z.string(),
+  x: z.number(),
+  y: z.number(),
+  theta: z.number(),
+  emoji: z.string().nullable(),
+});
+
+export type ForumEventStickerInput = z.infer<typeof forumEventStickerInputSchema>;
 
 export type ForumEventSticker = ForumEventStickerInput & {
   commentId?: string;
@@ -41,23 +42,25 @@ export type ForumEventPollVote = {
   points: Record<string, number>,
 }
 
-export type ForumEventCommentMetadata = {
-  eventFormat: ForumEventFormat;
-  sticker?: Partial<ForumEventStickerInput> | null;
-  poll?: {
+export const forumEventCommentMetadataSchema = z.object({
+  eventFormat: forumEventFormatSchema,
+  sticker: forumEventStickerInputSchema.nullable().optional(),
+  poll: z.object({
     /** 0 to 1 - 0.5 is a neutral vote in the middle */
-    voteWhenPublished: number;
+    voteWhenPublished: z.number(),
     /**
      * 0 to 1, in the case where the vote hasn't changed, latestVote will be
      * null and voteWhenPublished will have the latest vote
      */
-    latestVote?: number | null;
+    latestVote: z.number().nullable().optional(),
     /** _id of the revision of the question when the comment was published */
-    pollQuestionWhenPublished?: string | null;
+    pollQuestionWhenPublished: z.string().nullable().optional(),
     /** The content that is prefilled into the comment box after voting */
-    commentPrompt?: string | null;
-  } | null;
-};
+    commentPrompt: z.string().nullable().optional(),
+  }).nullable().optional(),
+});
+
+export type ForumEventCommentMetadata = z.infer<typeof forumEventCommentMetadataSchema>;
 
 const pollsAllowedFields = [
   { collectionName: "Comments", fieldName: "contents" },

@@ -234,7 +234,7 @@ export default function CommentItem({
         )}
         {isExpanded &&
           (isEditing ? (
-            <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
+            <EditComment commentId={comment._id} onSuccess={onFinishEdit} />
           ) : (
             <>
               {promotedBy?.displayName && (

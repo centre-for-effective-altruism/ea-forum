@@ -2,19 +2,28 @@
 
 import { useCallback } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
-import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import { useCommentsList } from "./useCommentsList";
+import {
+  CommentPrefilledProps,
+  useCommentEditor,
+  UseCommentEditorProps,
+} from "@/lib/hooks/useCommentEditor";
 import CommentForm from "./CommentForm";
 
 export default function NewComment({
   postId,
   parentCommentId,
   onSuccess,
+  htmlTemplate,
   className,
-}: Readonly<{
+  ...formProps
+}: Readonly<Pick<UseCommentEditorProps, "beforeSubmit" | "onSuccess"> & {
+  cancelLabel?: string,
+  onCancel?: () => void,
   postId: string;
   parentCommentId?: string;
-  onSuccess?: (comment: CommentListItem) => void;
+  prefilledProps?: CommentPrefilledProps,
+  htmlTemplate?: string,
   className?: string;
 }>) {
   const { addTopLevelComment } = useCommentsList();
@@ -29,6 +38,7 @@ export default function NewComment({
     postId,
     parentCommentId,
     onSuccess: onCommentSuccess,
+    htmlTemplate,
   });
-  return <CommentForm {...props} className={className} />;
+  return <CommentForm {...props} {...formProps} className={className} />;
 }

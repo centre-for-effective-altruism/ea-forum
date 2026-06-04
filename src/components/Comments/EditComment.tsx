@@ -1,8 +1,9 @@
 "use client";
 
 import { FC, useCallback, useEffect, useState } from "react";
-import type { CommentToEdit } from "@/lib/comments/commentQueries";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import type { CommentToEdit } from "@/lib/comments/commentQueries";
+import type { EditorData } from "@/lib/ckeditor/editorHelpers";
 import { useCommentsList } from "./useCommentsList";
 import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
 import { rpc } from "@/lib/rpc";
@@ -12,30 +13,37 @@ import Type from "../Type";
 
 const EditCommentInner: FC<{
   comment: CommentToEdit;
-  onFinishEdit?: () => void;
-}> = ({ comment, onFinishEdit }) => {
+  cancelLabel?: string,
+  beforeSubmit?: (data: EditorData) => void,
+  onSuccess?: () => void;
+}> = ({ comment, beforeSubmit, onSuccess: onSuccessCallback, ...passthroughProps }) => {
   const { updateComment } = useCommentsList();
   const onSuccess = useCallback(
     (updatedComment: CommentListItem) => {
       updateComment(updatedComment);
-      onFinishEdit?.();
+      onSuccessCallback?.();
     },
-    [updateComment, onFinishEdit],
+    [updateComment, onSuccessCallback],
   );
   const props = useCommentEditor({
     comment,
+    beforeSubmit,
     onSuccess,
   });
-  return <CommentForm {...props} />;
+  return <CommentForm {...props} {...passthroughProps} />;
 };
 
 export default function EditComment({
   commentId,
-  onFinishEdit,
+  onSuccess,
   className,
+  ...passthroughProps
 }: Readonly<{
   commentId: string;
-  onFinishEdit?: () => void;
+  cancelLabel?: string,
+  onCancel?: () => void,
+  beforeSubmit?: (data: EditorData) => void,
+  onSuccess?: () => void;
   className?: string;
 }>) {
   const [comment, setComment] = useState<CommentToEdit | null>(null);
@@ -55,7 +63,7 @@ export default function EditComment({
   return (
     <div data-component="EditComment" className={className}>
       {comment ? (
-        <EditCommentInner comment={comment} onFinishEdit={onFinishEdit} />
+        <EditCommentInner comment={comment} onSuccess={onSuccess} {...passthroughProps} />
       ) : error ? (
         <Type>Error: {error}</Type>
       ) : (

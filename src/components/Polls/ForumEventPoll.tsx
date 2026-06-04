@@ -93,7 +93,6 @@ export default function ForumEventPoll({
   const isDragging = useRef(false);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const tickRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const userVoteRef = useRef<HTMLDivElement | null>(null);
   const tickPositions = useRef<number[]>([]);
 
   const [voters, setVoters] = useState<UserBase[] | null>(null);
@@ -299,6 +298,7 @@ export default function ForumEventPoll({
     initialUserVotePos,
     votingOpen,
     captureEvent,
+    refetch,
   ]);
 
   const onIncreaseStackSize = useCallback(
@@ -473,7 +473,6 @@ export default function ForumEventPoll({
                   forumEventId={event._id}
                 >
                   <div
-                    ref={userVoteRef}
                     className={clsx(
                       "absolute top-0 z-15 touch-none transform-[translateX(-50%)]",
                       "opacity-60 hover:opacity-100",
@@ -490,10 +489,8 @@ export default function ForumEventPoll({
                       comment={currentUserComment}
                       successMessage="Success! Open the results to view everyone's votes and comments."
                       forumEvent={event}
-                      cancelLabel="Skip"
-                      cancelCallback={() => setCommentFormOpen(false)}
+                      onCancel={() => setCommentFormOpen(false)}
                       successCallback={refetchComments}
-                      anchorEl={userVoteRef.current}
                       commentPrompt={commentPrompt}
                       forumEventMetadata={forumEventMetadata}
                       parentCommentId={event.comment?._id}
