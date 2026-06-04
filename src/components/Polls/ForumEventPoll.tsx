@@ -474,7 +474,6 @@ export default function ForumEventPoll({
                 >
                   <div
                     ref={userVoteRef}
-                    onPointerDown={startDragVote}
                     className={clsx(
                       "absolute top-0 z-15 touch-none transform-[translateX(-50%)]",
                       "opacity-60 hover:opacity-100",
@@ -484,70 +483,10 @@ export default function ForumEventPoll({
                     )}
                     style={{ left: `${votePos}%` }}
                   >
-                    <Tooltip
-                      title={
-                        (votingOpen && !hasVoted) && (
-                          <>
-                            <Type
-                              style="bodyXHeavy"
-                              className="leading-[140%] mb-1"
-                            >
-                              Click and drag to vote
-                            </Type>
-                            <Type
-                              style="bodyMedium"
-                              className="leading-[140%]"
-                            >
-                              Votes are non-anonymous and can be changed at any time
-                            </Type>
-                          </>
-                        )
-                      }
-                      disabled={commentFormOpen}
-                      className="group/user-icon"
-                    >
-                      {currentUser ? (
-                        <UserProfileImage
-                          user={currentUser}
-                          size={USER_IMAGE_SIZE}
-                          className="[outline:2px_solid_color-mix(in_oklab,_var(--forum-event-foreground)_50%,_var(--forum-event-background)_50%)]"
-                        />
-                      ) : (
-                        <UserCircleIcon
-                          onPointerDown={onLogin}
-                          className="
-                            bg-[radial-gradient(var(--color-always-black)_50%,transparent_50%)]
-                            text-(--forum-event-foreground) w-[44px] rounded-full
-                            -mt-[8px]
-                          "
-                        />
-                      )}
-                      {votingOpen && hasVoted &&
-                        <PollButton
-                          Icon={XMarkIcon}
-                          onClick={clearVote}
-                          className="
-                            absolute top-[-5px] right-[-5px] transition-opacity
-                            opacity-0 group-hover/user-icon:opacity-100
-                          "
-                        />
-                      }
-                      {event.post && hasVoted &&
-                        <PollButton
-                          Icon={CommentIcon}
-                          onClick={toggleCommentFormOpen}
-                          className="
-                            absolute top-[22px] right-[-5px] transition-opacity
-                            opacity-0 group-hover/user-icon:opacity-100
-                          "
-                        />
-                      }
-                    </Tooltip>
-                  </div>
-                  {/* Popup containing the form for creating a comment */}
-                  {event.post && (
                     <ForumEventCommentForm
-                      open={commentFormOpen}
+                      isOpen={commentFormOpen}
+                      setIsOpen={setCommentFormOpen}
+                      disabled={!event.post}
                       comment={currentUserComment}
                       successMessage="Success! Open the results to view everyone's votes and comments."
                       forumEvent={event}
@@ -580,13 +519,75 @@ export default function ForumEventPoll({
                                 this post
                               </Link>
                             )
-                            : 'this post'
+                            : "this post"
                           }
                           , and show next to your avatar in the results.
                         </div>
                       )}
-                    />
-                  )}
+                    >
+                      <Tooltip
+                        title={
+                          (votingOpen && !hasVoted) && (
+                            <>
+                              <Type
+                                style="bodyXHeavy"
+                                className="leading-[140%] mb-1"
+                              >
+                                Click and drag to vote
+                              </Type>
+                              <Type
+                                style="bodyMedium"
+                                className="leading-[140%]"
+                              >
+                                Votes are non-anonymous and can be changed at any time
+                              </Type>
+                            </>
+                          )
+                        }
+                        disabled={commentFormOpen}
+                        className="group/user-icon"
+                      >
+                        {currentUser ? (
+                          <span onPointerDown={startDragVote}>
+                            <UserProfileImage
+                              user={currentUser}
+                              size={USER_IMAGE_SIZE}
+                              className="[outline:2px_solid_color-mix(in_oklab,_var(--forum-event-foreground)_50%,_var(--forum-event-background)_50%)]"
+                            />
+                          </span>
+                        ) : (
+                          <UserCircleIcon
+                            onPointerDown={onLogin}
+                            className="
+                              bg-[radial-gradient(var(--color-always-black)_50%,transparent_50%)]
+                              text-(--forum-event-foreground) w-[44px] rounded-full
+                              -mt-[8px]
+                            "
+                          />
+                        )}
+                        {votingOpen && hasVoted &&
+                          <PollButton
+                            Icon={XMarkIcon}
+                            onClick={clearVote}
+                            className="
+                              absolute top-[-5px] right-[-5px] transition-opacity
+                              opacity-0 group-hover/user-icon:opacity-100
+                            "
+                          />
+                        }
+                        {event.post && hasVoted &&
+                          <PollButton
+                            Icon={CommentIcon}
+                            onClick={toggleCommentFormOpen}
+                            className="
+                              absolute top-[22px] right-[-5px] transition-opacity
+                              opacity-0 group-hover/user-icon:opacity-100
+                            "
+                          />
+                        }
+                      </Tooltip>
+                    </ForumEventCommentForm>
+                  </div>
                 </AnalyticsContext>
               </div>
               {/* Arrows */}

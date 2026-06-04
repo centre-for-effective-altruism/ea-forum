@@ -6,7 +6,10 @@ import type { ForumEventCommentMetadata } from "@/lib/forumEvents/forumEventHelp
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
+import ForumEventEmojiPicker from "./ForumEventEmojiPicker";
 import CommentBody from "../ContentStyles/CommentBody";
+import ControlledTooltip from "../ControlledTooltip";
+import Type from "../Type";
 
 type TitleCallback = (
   post: Pick<ForumEventBase, "post">["post"],
@@ -14,7 +17,8 @@ type TitleCallback = (
 ) => ReactNode
 
 export default function ForumEventCommentForm({
-  open,
+  isOpen,
+  setIsOpen,
   comment,
   forumEvent,
   cancelCallback,
@@ -29,9 +33,12 @@ export default function ForumEventCommentForm({
   commentPrompt,
   forumEventMetadata,
   parentCommentId,
+  disabled,
   className,
+  children,
 }: Readonly<{
-  open: boolean;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void,
   comment: CommentListItem | null;
   forumEvent: ForumEventBase,
   anchorEl: HTMLElement | null;
@@ -46,7 +53,9 @@ export default function ForumEventCommentForm({
   commentPrompt: string,
   forumEventMetadata: ForumEventCommentMetadata,
   parentCommentId?: string,
+  disabled?: boolean,
   className?: string;
+  children: ReactNode,
 }>) {
   const hasEmoji = !!setEmoji;
 
@@ -71,76 +80,86 @@ export default function ForumEventCommentForm({
     parentCommentId,
   };
 
-  if (!open || !anchorEl?.isConnected) {
-    return null;
-  }
-
   const classes: Record<string, string> = {}; // TODO
 
   return (
-    <Popper
-      open={open}
-      anchorEl={anchorEl}
+    <ControlledTooltip
+      As="span"
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      disabled={disabled}
+      noHover
       placement="bottom"
-      allowOverflow={false}
-      updateRef={updatePopperRef}
       className={className}
-    >
-      <div className={classes.popperContent}>
-        <div className={classes.triangle}></div>
-        <XMarkIcon
-          onClick={cancelCallback}
-          role="button"
-          className="absolute top-2 right-2 cursor-pointer w-5"
-        />
-        <div className={classes.header}>
-          <div className={classes.title}>{title(forumEvent.post, comment)}</div>
-          {subtitle(post, comment)}
-        </div>
-        <div className={classes.formSection}>
-          {hasEmoji && <ForumEventEmojiPicker onSelect={setEmoji} />}
-          <div className={classes.commentFormWrapper}>
-            {!comment && !editFormOpen && (
-              <CommentsNewForm
-                interactionType="reply"
-                post={post}
-                enableGuidelines={false}
-                hideControls
-                submitCallback={onSubmit}
-                cancelCallback={() => cancelCallback()}
-                cancelLabel={cancelLabel}
-                successCallback={onSuccess}
-                prefilledProps={prefilledProps}
-                className={classes.commentForm}
-              />
-            )}
-            {comment && !editFormOpen && (
-              <>
-                <CommentBody html={comment.html} />
-                <div
-                  onClick={() => setEditFormOpen(true)}
-                  className={classes.editButton}
-                >
-                  Edit comment
-                </div>
-              </>
-            )}
-            {comment && editFormOpen && (
-              <CommentsEditForm
-                comment={comment}
-                cancelCallback={() => setEditFormOpen(false)}
-                successCallback={async () => {
-                  setEditFormOpen(false);
-                  await successCallback();
-                }}
-                prefilledProps={prefilledProps}
-                hideControls
-                className={classes.commentForm}
-              />
-            )}
+      tooltipClassName="bg-surface-floating! w-[350] px-3 py-2"
+      title={
+        <div
+          data-component="ForumEventCommentForm"
+          className={classes.popperContent}
+        >
+          <div className={classes.triangle} />
+          <XMarkIcon
+            onClick={cancelCallback}
+            role="button"
+            className="absolute top-2 right-2 cursor-pointer w-5 hover:opacity-70"
+          />
+          <div className="[&_a]:underline [&_a]:underline-offset-3 mb-2">
+            <Type style="postTitle" className="mb-1">
+              {title(forumEvent.post, comment)}
+            </Type>
+            <Type style="bodySmall" className="text-gray-600">
+              {subtitle(forumEvent.post, comment)}
+            </Type>
+          </div>
+          <div className="flex items-start gap-2">
+            {hasEmoji && <ForumEventEmojiPicker onSelect={setEmoji} />}
+          {/*
+            <div className={classes.commentFormWrapper}>
+              {!comment && !editFormOpen && (
+                <CommentsNewForm
+                  interactionType="reply"
+                  post={post}
+                  enableGuidelines={false}
+                  hideControls
+                  submitCallback={onSubmit}
+                  cancelCallback={() => cancelCallback()}
+                  cancelLabel={cancelLabel}
+                  successCallback={onSuccess}
+                  prefilledProps={prefilledProps}
+                  className={classes.commentForm}
+                />
+              )}
+              {comment && !editFormOpen && (
+                <>
+                  <CommentBody html={comment.html} />
+                  <div
+                    onClick={() => setEditFormOpen(true)}
+                    className={classes.editButton}
+                  >
+                    Edit comment
+                  </div>
+                </>
+              )}
+              {comment && editFormOpen && (
+                <CommentsEditForm
+                  comment={comment}
+                  cancelCallback={() => setEditFormOpen(false)}
+                  successCallback={async () => {
+                    setEditFormOpen(false);
+                    await successCallback();
+                  }}
+                  prefilledProps={prefilledProps}
+                  hideControls
+                  className={classes.commentForm}
+                />
+              )}
+            </div>
+            */}
           </div>
         </div>
-      </div>
-    </Popper>
+      }
+    >
+      {children}
+    </ControlledTooltip>
   );
 };
