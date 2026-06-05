@@ -198,6 +198,10 @@ const relations = defineRelations(
           collectionName: "Comments",
         },
       }),
+      forumEvent: r.one.forumEvents({
+        from: r.comments.forumEventId,
+        to: r.forumEvents._id,
+      }),
     },
     tags: {
       comments: r.many.comments({

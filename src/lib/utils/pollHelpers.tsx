@@ -216,12 +216,20 @@ export const clusterForumEventVotes = ({
   for (const cluster of clusters) {
     cluster.votes.sort((a, b) => {
       // Current user should always appear at the bottom
-      if (a.user._id === currentUser?._id) return 1;
-      if (b.user._id === currentUser?._id) return -1;
+      if (a.user._id === currentUser?._id) {
+        return 1;
+      }
+      if (b.user._id === currentUser?._id) {
+        return -1;
+      }
 
       // Votes with comments should appear closer to the bottom
-      if (a.comment && !b.comment) return 1;
-      if (!a.comment && b.comment) return -1;
+      if (a.comment && !b.comment) {
+        return 1;
+      }
+      if (!a.comment && b.comment) {
+        return -1;
+      }
 
       // Alphabetically by name
       return a.user.displayName
@@ -232,3 +240,8 @@ export const clusterForumEventVotes = ({
 
   return clusters;
 };
+
+export const pollVoteIsAgreement = (pollVote: number) => pollVote >= 0.5;
+
+export const pollVoteToPercentage = (pollVote: number) =>
+  `${Math.round(Math.abs(pollVote - 0.5) * 200)}%`;

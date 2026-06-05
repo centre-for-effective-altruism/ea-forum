@@ -13,18 +13,20 @@ import CommentForm from "./CommentForm";
 export default function NewComment({
   postId,
   parentCommentId,
+  beforeSubmit,
   onSuccess,
+  prefilledProps,
   htmlTemplate,
   className,
   ...formProps
 }: Readonly<
   Pick<UseCommentEditorProps, "beforeSubmit" | "onSuccess"> & {
-    cancelLabel?: string;
-    onCancel?: () => void;
     postId: string;
     parentCommentId?: string;
     prefilledProps?: CommentPrefilledProps;
     htmlTemplate?: string;
+    cancelLabel?: string;
+    onCancel?: () => void;
     className?: string;
   }
 >) {
@@ -39,7 +41,9 @@ export default function NewComment({
   const props = useCommentEditor({
     postId,
     parentCommentId,
+    beforeSubmit,
     onSuccess: onCommentSuccess,
+    prefilledProps,
     htmlTemplate,
   });
   return <CommentForm {...props} {...formProps} className={className} />;

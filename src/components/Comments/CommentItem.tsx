@@ -22,6 +22,7 @@ import AuthorIcon from "../Icons/AuthorIcon";
 import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
+import CommentPollVote from "./CommentPollVote";
 import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import CommentDate from "./CommentDate";
@@ -215,6 +216,7 @@ export default function CommentItem({
               <Type className="text-gray-600 cursor-default">Moderator comment</Type>
             )}
             <CommentVoteButtons comment={comment} />
+            <CommentPollVote comment={comment} />
             <CommentTags comment={comment} className="grow" />
           </div>
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
