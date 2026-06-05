@@ -57,10 +57,12 @@ const CENTRAL_TICK_INDEX = Math.floor(NUM_TICKS / 2);
 
 export default function ForumEventPoll({
   event,
+  refetchEvent,
   hideViewResults,
   className,
 }: Readonly<{
   event: ForumEventBase;
+  refetchEvent: () => Promise<void>;
   hideViewResults?: boolean;
   className?: string;
 }>) {
@@ -156,8 +158,6 @@ export default function ForumEventPoll({
     });
   }, [captureEvent]);
 
-  const refetch = useCallback(() => {}, []); // TODO
-
   /**
    * When the user clicks the "x" icon, or when a logged out user tries to vote,
    * delete their vote data
@@ -170,7 +170,7 @@ export default function ForumEventPoll({
           await rpc.forumEvents.removeVote({ forumEventId: event._id });
           setVoteCount((count) => count - 1);
           setCommentFormOpen(false);
-          refetch();
+          void refetchEvent();
           captureEvent("removeForumEventVote", {
             forumEventId: event._id,
             userId: currentUser._id,
@@ -183,7 +183,7 @@ export default function ForumEventPoll({
         captureException(e);
       }
     },
-    [currentUser, event, refetch, captureEvent],
+    [currentUser, event, refetchEvent, captureEvent],
   );
 
   /**
@@ -258,7 +258,7 @@ export default function ForumEventPoll({
           setVoteCount((count) => count + 1);
           setCurrentUserVote(newVotePos);
           await rpc.forumEvents.addVote(voteData);
-          refetch?.();
+          void refetchEvent();
           captureEvent("addForumEventVote", {
             userId: currentUser._id,
             ...voteData,
@@ -277,7 +277,7 @@ export default function ForumEventPoll({
             ...voteData,
             ...postIds,
           });
-          refetch?.();
+          void refetchEvent();
           captureEvent("addForumEventVote", {
             userId: currentUser._id,
             ...voteData,
@@ -305,7 +305,7 @@ export default function ForumEventPoll({
     initialUserVotePos,
     votingOpen,
     captureEvent,
-    refetch,
+    refetchEvent,
   ]);
 
   const onIncreaseStackSize = useCallback(

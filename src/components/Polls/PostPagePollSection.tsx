@@ -45,17 +45,19 @@ export default function PostPagePollSection({
     }
   }, [queryPollId, event?._id]);
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        const result = await rpc.forumEvents.listById({ _id: forumEventId });
-        setEvent(result);
-      } catch (e) {
-        console.error(`Error fetching forum event ${forumEventId}:`, e);
-        captureException(e);
-      }
-    })();
+  const refetchEvent = useCallback(async () => {
+    try {
+      const result = await rpc.forumEvents.listById({ _id: forumEventId });
+      setEvent(result);
+    } catch (e) {
+      console.error(`Error fetching forum event ${forumEventId}:`, e);
+      captureException(e);
+    }
   }, [forumEventId]);
+
+  useEffect(() => {
+    void refetchEvent();
+  }, [refetchEvent]);
 
   const handleLinkClick = useCallback(async () => {
     if (!event) {
@@ -165,7 +167,11 @@ export default function PostPagePollSection({
           >
             <LinkIcon className="block w-4 opacity-80" />
           </button>
-          <ForumEventPoll event={event} hideViewResults={event.isGlobal} />
+          <ForumEventPoll
+            event={event}
+            refetchEvent={refetchEvent}
+            hideViewResults={event.isGlobal}
+          />
         </div>
       </div>
     </AnalyticsContext>
