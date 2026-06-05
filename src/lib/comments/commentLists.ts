@@ -62,6 +62,7 @@ export const commentListProjection = (currentUserId: string | null) =>
       shortformFrontpage: true,
       moderatorHat: true,
       promoted: true,
+      forumEventMetadata: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -78,6 +79,21 @@ export const commentListProjection = (currentUserId: string | null) =>
       promotedBy: {
         columns: {
           displayName: true,
+        },
+      },
+      forumEvent: {
+        columns: {
+          _id: true,
+          isGlobal: true,
+          pollAgreeWording: true,
+          pollDisagreeWording: true,
+        },
+        with: {
+          pollQuestion: {
+            columns: {
+              html: true,
+            },
+          },
         },
       },
       post: {
@@ -203,6 +219,18 @@ export const fetchCommmentsForPost = ({
   fetchCommentsList({
     currentUser,
     where: { postId },
+  });
+
+export const fetchCommentsForForumEvent = ({
+  currentUser,
+  forumEventId,
+}: {
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  forumEventId: string;
+}) =>
+  fetchCommentsList({
+    currentUser,
+    where: { forumEventId },
   });
 
 export const fetchFrontpageQuickTakes = ({

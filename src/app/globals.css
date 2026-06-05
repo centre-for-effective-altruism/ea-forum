@@ -28,6 +28,7 @@
   --color-error: #e04e4b;
   --color-error-light: #cb5e3c;
   --color-warning: #832013;
+  --color-warning-light: #ff9800;
   --color-warning-translucent: "rgba(255,152,0,0.1)";
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
@@ -131,6 +132,19 @@
     }
     to {
       opacity: 1;
+    }
+  }
+
+  --animate-poll-results-fade-in: poll-results-fade-in 2s ease;
+  @keyframes poll-results-fade-in {
+    0% {
+      pointer-events: none;
+    }
+    99% {
+      pointer-events: none;
+    }
+    100% {
+      pointer-events: auto;
     }
   }
 }

@@ -9,7 +9,11 @@ import {
   useState,
 } from "react";
 import toast from "react-hot-toast";
-import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
+import type {
+  EditorAPI,
+  EditorContents,
+  EditorData,
+} from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
 import type { CommentToEdit } from "../comments/commentQueries";
 import type { CommentListItem } from "../comments/commentLists";
@@ -41,8 +45,16 @@ type UseCommentEditorDocument =
       comment: CommentToEdit | null;
     };
 
-type UseCommentEditorProps = UseCommentEditorDocument & {
+export type CommentPrefilledProps = Pick<
+  Parameters<typeof rpc.comments.create>[0],
+  "forumEventId" | "forumEventMetadata"
+>;
+
+export type UseCommentEditorProps = UseCommentEditorDocument & {
+  beforeSubmit?: (data: EditorData) => void;
   onSuccess?: (comment: CommentListItem) => void;
+  prefilledProps?: CommentPrefilledProps;
+  htmlTemplate?: string;
 };
 
 type SubmitExtraProps = {
@@ -57,13 +69,18 @@ const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) 
   return shortform ? "Write a new quick take..." : "Write a new comment...";
 };
 
-const getInitialContents = (
-  currentUser: CurrentUser | null,
-  comment?: CommentToEdit | null,
-): EditorContents =>
+const getInitialContents = ({
+  currentUser,
+  comment,
+  htmlTemplate,
+}: {
+  currentUser: CurrentUser | null;
+  comment?: CommentToEdit | null;
+  htmlTemplate?: string;
+}): EditorContents =>
   comment?.originalContents ?? {
     type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
-    data: "",
+    data: htmlTemplate ?? "",
   };
 
 export const useCommentEditor = ({
@@ -71,13 +88,22 @@ export const useCommentEditor = ({
   parentCommentId,
   shortform,
   comment,
+  htmlTemplate,
+  beforeSubmit,
   onSuccess,
+  prefilledProps,
 }: UseCommentEditorProps) => {
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const [loading, setLoading] = useState(false);
   const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState(getInitialContents(currentUser, comment));
+  const [contents, setContents] = useState(
+    getInitialContents({
+      currentUser,
+      comment,
+      htmlTemplate,
+    }),
+  );
 
   const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
     setContents(contents);
@@ -102,6 +128,7 @@ export const useCommentEditor = ({
         toast.error("Comment is empty");
         return;
       }
+      beforeSubmit?.(data);
       setLoading(true);
       startTransition(async () => {
         try {
@@ -116,6 +143,7 @@ export const useCommentEditor = ({
                 shortform,
                 editorData: data,
                 ...extraProps,
+                ...prefilledProps,
               });
           if (!newComment) {
             throw new Error("Something went wrong");
@@ -130,7 +158,17 @@ export const useCommentEditor = ({
         }
       });
     },
-    [currentUser, onSignup, postId, parentCommentId, shortform, comment, onSuccess],
+    [
+      currentUser,
+      onSignup,
+      postId,
+      parentCommentId,
+      shortform,
+      comment,
+      beforeSubmit,
+      onSuccess,
+      prefilledProps,
+    ],
   );
 
   const onKeyDown = useCallback(

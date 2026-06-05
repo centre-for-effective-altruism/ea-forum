@@ -1,4 +1,5 @@
 import "server-only";
+import type { ForumEventCommentMetadata } from "./forumEvents/forumEventHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
@@ -633,7 +634,7 @@ export const comments = pgTable(
     shortformFrontpage: boolean().default(true).notNull(),
     originalDialogueId: varchar({ length: 27 }),
     forumEventId: varchar({ length: 27 }),
-    forumEventMetadata: jsonb(),
+    forumEventMetadata: jsonb<ForumEventCommentMetadata>(),
     lastEditedAt: timestamp(),
     draft: boolean().default(false).notNull(),
   },

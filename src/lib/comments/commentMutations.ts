@@ -1,5 +1,6 @@
 import "server-only";
 import type { CurrentUser } from "../users/currentUser";
+import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { randomId } from "../utils/random";
@@ -52,6 +53,8 @@ export const createPostComment = async ({
   draft,
   shortformFrontpage,
   relevantTagIds,
+  forumEventId,
+  forumEventMetadata,
 }: {
   user: CurrentUser;
   postId?: string;
@@ -61,6 +64,8 @@ export const createPostComment = async ({
   draft?: boolean;
   shortformFrontpage?: boolean;
   relevantTagIds?: string[];
+  forumEventId?: string;
+  forumEventMetadata?: ForumEventCommentMetadata;
 }) => {
   if (user.banned) {
     throw new Error("Banned");
@@ -143,6 +148,8 @@ export const createPostComment = async ({
         shortform,
         shortformFrontpage,
         relevantTagIds,
+        forumEventId,
+        forumEventMetadata,
         postedAt: now,
         createdAt: now,
         lastEditedAt: now,
