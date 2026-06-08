@@ -1,5 +1,6 @@
 import "server-only";
 import type { ForumEventCommentMetadata } from "./forumEvents/forumEventHelpers";
+import type { PangramV3Response } from "./revisions/pangramHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
@@ -3034,6 +3035,10 @@ export const revisions = pgTable(
     afVoteCount: doublePrecision(),
     googleDocMetadata: jsonb(),
     skipAttributions: boolean().default(false).notNull(),
+    pangramAiScore: doublePrecision(),
+    pangramCheckedAt: timestamp(),
+    pangramStatus: text(),
+    pangramRawResponse: jsonb<PangramV3Response>(),
   },
   (table) => [
     index("idx_Revisions_collectionName_fieldName_editedAt__id_changeMetri").using(

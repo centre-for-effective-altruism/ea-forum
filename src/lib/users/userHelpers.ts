@@ -197,7 +197,7 @@ export const userIsAdmin = <T extends Partial<User>>(
   user: T | null,
 ): user is T & { isAdmin: true } => user?.isAdmin ?? false;
 
-type UserPermissions = Pick<User, "groups" | "banned" | "isAdmin">;
+export type UserPermissions = Pick<User, "_id" | "groups" | "banned" | "isAdmin">;
 
 /**
  * Get a list of a user's groups

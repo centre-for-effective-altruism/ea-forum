@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
-import { formatShortDate } from "@/lib/timeUtils";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
+import { formatShortDate } from "@/lib/timeUtils";
 import {
   getPostReadTimeMinutes,
   postGetStructuredData,
@@ -24,6 +25,7 @@ import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
 import StructuredData from "../StructuredData";
 import PostPingbacks from "./PostPingbacks";
+import PangramBadge from "../PangramBadge";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
 import PostTags from "../Tags/PostTags";
@@ -95,6 +97,11 @@ export default async function PostDisplay({ postId }: { postId: string }) {
                   </Type>
                 </Link>
               </Tooltip>
+              {post.contents &&
+                "pangramAiScore" in post.contents &&
+                userIsAdminOrMod(currentUser) && (
+                  <PangramBadge revision={post.contents} />
+                )}
             </div>
             <div className="flex items-center gap-5">
               <PostAudioToggle />

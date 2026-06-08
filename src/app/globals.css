@@ -65,6 +65,13 @@
   --color-mentions-selected: #198cf0;
   --color-mentions-selected-hover: #0e7fe1;
   --color-mentions-border: #c4c4c4;
+  --color-strawpoll: rgb(251, 191, 36);
+  --color-pangram-mid-bg: #fff8e1;
+  --color-pangram-high-bg: #ffebee;
+  --color-pangram-error-bg: #ffebee;
+  --color-pangram-ai-fraction: #b71c1c;
+  --color-pangram-assisted-fraction: #ef6c00;
+  --color-pangram-human-fraction: #2e7d32;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -204,7 +211,12 @@
   --color-mentions-selected: #0c70c7;
   --color-mentions-selected-hover: #0b62ae;
   --color-mentions-border: #212121;
-  --color-strawpoll: rgb(251, 191, 36);
+  --color-pangram-mid-bg: #3e2f10;
+  --color-pangram-high-bg: #4a1f23;
+  --color-pangram-error-bg: #4a1f23;
+  --color-pangram-ai-fraction: #ff8a80;
+  --color-pangram-assisted-fraction: #ffb74d;
+  --color-pangram-human-fraction: #81c784;
 
   --color-editor-bg: #2a2a2a;
   --color-editor-comment-bg: #333333;

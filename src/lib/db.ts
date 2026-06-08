@@ -150,6 +150,10 @@ const relations = defineRelations(
       }),
     },
     comments: {
+      contentsRevision: r.one.revisions({
+        from: r.comments.contentsLatest,
+        to: r.revisions._id,
+      }),
       post: r.one.posts({
         from: r.comments.postId,
         to: r.posts._id,
@@ -250,6 +254,14 @@ const relations = defineRelations(
         where: {
           draft: false,
           deletedDraft: false,
+        },
+      }),
+      comment: r.one.comments({
+        from: r.revisions.documentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
         },
       }),
     },

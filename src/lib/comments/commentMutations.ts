@@ -29,6 +29,7 @@ import {
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
   newCommentNotifications,
+  runPangramOnComment,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -183,6 +184,7 @@ export const createPostComment = async ({
   void triggerReviewIfNeededById(user._id);
   void newCommentNotifications(commentId);
   void notifyUsersOfPingbackMentions(user, "Comments", comment);
+  void runPangramOnComment(user, revision._id);
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock
@@ -280,6 +282,7 @@ export const updateComment = async ({
 
   void checkCommentForSpam(db, user, commentId, revision, post);
   void notifyUsersOfPingbackMentions(user, "Comments", updatedComment, oldComment);
+  void runPangramOnComment(user, revision._id);
 
   const { newRevision } = await convertImagesInObject(db, revision);
   if (newRevision) {
