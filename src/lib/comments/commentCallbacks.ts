@@ -11,6 +11,7 @@ import { createNotifications } from "../notifications/notificationMutations";
 import { fetchSubscribedUsers } from "../subscriptions/subscriptionQueries";
 import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 import { subscriptionTypes } from "../subscriptions/subscriptionTypes";
+import { runPangramOnRevision } from "../revisions/pangramMutations";
 import { db, DbOrTransaction, Transaction } from "../db";
 import { captureEvent } from "../analytics/captureEvent";
 import { postGetPageUrl } from "../posts/postsHelpers";
@@ -554,4 +555,31 @@ export const newCommentNotifications = async (commentId: string) => {
     documentType: "comment",
     documentId: comment._id,
   });
+};
+
+// "Not fully reviewed" per getReasonForReview — includes never-reviewed and
+// currently-snoozed users.
+const userIsUnreviewedForPangram = (user: CurrentUser): boolean => {
+  const fullyReviewed = !!user.reviewedByUserId && !user.snoozedUntilContentCount;
+  return !fullyReviewed;
+};
+
+export const runPangramOnComment = async (user: CurrentUser, revisionId: string) => {
+  if (!userIsUnreviewedForPangram(user)) {
+    return;
+  }
+
+  const revision = await db.query.revisions.findFirst({
+    columns: {
+      pangramCheckedAt: true,
+    },
+    where: {
+      _id: revisionId,
+    },
+  });
+  if (!revision || revision.pangramCheckedAt) {
+    return;
+  }
+
+  await runPangramOnRevision(revisionId);
 };

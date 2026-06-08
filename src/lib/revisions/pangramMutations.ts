@@ -1,6 +1,4 @@
-import type { CurrentUser } from "../users/currentUser";
 import { recordPangramSkip, writePangramResultToRevision } from "./pangramQueries";
-import { userIsAdminOrMod } from "../users/userHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { db } from "../db";
 import {
@@ -99,13 +97,8 @@ const makePangramRequest = async (
 };
 
 export const runPangramOnRevision = async (
-  currentUser: CurrentUser,
   revisionId: string,
 ): Promise<PangramResult> => {
-  if (!userIsAdminOrMod(currentUser)) {
-    throw new Error("Only admins and moderators can run Pangram");
-  }
-
   const apiKey = process.env.PANGRAM_API_KEY;
   if (!apiKey) {
     return await writePangramResultToRevision(revisionId, {
