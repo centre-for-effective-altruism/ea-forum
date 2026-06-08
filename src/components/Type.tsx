@@ -7,6 +7,7 @@ export const typeStyles = {
   bodyXHeavy: "font-sans text-[14px] font-[700]",
   bodySmall: "font-sans text-[13px] font-[450]",
   bodyXSmall: "font-sans text-[12px] font-[500]",
+  bodyXXSmall: "font-sans text-[11px] font-[450]",
   bodySerif: "font-serif text-[17px] font-[400] tracking-tight",
   postTitle: "font-sans text-[16px] font-[600]",
   reactScore: "font-sans text-[16px] font-[500]",

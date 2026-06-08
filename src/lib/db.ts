@@ -150,6 +150,10 @@ const relations = defineRelations(
       }),
     },
     comments: {
+      contentsRevision: r.one.revisions({
+        from: r.comments.contentsLatest,
+        to: r.revisions._id,
+      }),
       post: r.one.posts({
         from: r.comments.postId,
         to: r.posts._id,

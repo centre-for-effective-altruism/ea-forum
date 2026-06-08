@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { User } from "../schema";
+import { userIsAdminOrMod, UserPermissions } from "../users/userHelpers";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
 import { commentTagsProjection } from "../tags/tagQueries";
@@ -9,7 +10,6 @@ import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
-import { CurrentUser } from "../users/currentUser";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -41,7 +41,7 @@ export const viewableCommentFilter = (currentUserId: string | null) => ({
   ],
 });
 
-export const commentListProjection = (currentUserId: string | null) =>
+export const commentListProjection = (currentUser: UserPermissions | null) =>
   ({
     columns: {
       _id: true,
@@ -70,6 +70,19 @@ export const commentListProjection = (currentUserId: string | null) =>
       tags: commentTagsProjection,
     },
     with: {
+      ...(userIsAdminOrMod(currentUser)
+        ? {
+            contentsRevision: {
+              columns: {
+                _id: true,
+                pangramAiScore: true,
+                pangramCheckedAt: true,
+                pangramStatus: true,
+                pangramRawResponse: true,
+              },
+            },
+          }
+        : {}),
       user: {
         ...userBaseProjection,
         where: {
@@ -105,14 +118,14 @@ export const commentListProjection = (currentUserId: string | null) =>
           coauthorUserIds: true,
         },
         with: {
-          ...(currentUserId
+          ...(currentUser
             ? {
                 readStatus: {
                   columns: {
                     lastUpdated: true,
                   },
                   where: {
-                    userId: currentUserId,
+                    userId: currentUser._id,
                   },
                 },
               }
@@ -124,14 +137,14 @@ export const commentListProjection = (currentUserId: string | null) =>
           slug: true,
         },
       },
-      ...(currentUserId
+      ...(currentUser
         ? {
             bookmarks: {
               columns: {
                 active: true,
               },
               where: {
-                userId: currentUserId,
+                userId: currentUser._id,
               },
             },
             votes: {
@@ -141,7 +154,7 @@ export const commentListProjection = (currentUserId: string | null) =>
                 power: true,
               },
               where: {
-                userId: currentUserId,
+                userId: currentUser._id,
               },
               orderBy: {
                 votedAt: "desc",
@@ -160,7 +173,7 @@ const fetchCommentsList = ({
   offset,
   limit,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
   offset?: number;
@@ -172,7 +185,7 @@ const fetchCommentsList = ({
     currentUser?.groups?.includes("sunshineRegiment") ||
     false;
   return db.query.comments.findMany({
-    ...commentListProjection(currentUserId),
+    ...commentListProjection(currentUser),
     where: {
       ...viewableCommentFilter(currentUserId),
       post: currentUserIsModerator
@@ -198,7 +211,7 @@ export const fetchCommentsListItem = async ({
   currentUser,
   commentId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   commentId: string;
 }) => {
   const result = await fetchCommentsList({
@@ -213,7 +226,7 @@ export const fetchCommmentsForPost = ({
   currentUser,
   postId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   postId: string;
 }) =>
   fetchCommentsList({
@@ -225,7 +238,7 @@ export const fetchCommentsForForumEvent = ({
   currentUser,
   forumEventId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   forumEventId: string;
 }) =>
   fetchCommentsList({
@@ -239,7 +252,7 @@ export const fetchFrontpageQuickTakes = ({
   offset,
   limit = 5,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   includeCommunity?: boolean;
   offset?: number;
   limit?: number;
@@ -297,7 +310,7 @@ export const fetchFrontpageQuickTakes = ({
 };
 
 export const fetchNewComments = async (
-  currentUser: CurrentUser | null,
+  currentUser: UserPermissions | null,
   postId: string,
   limit: number,
 ) => {
@@ -312,7 +325,7 @@ export const fetchNewComments = async (
 };
 
 type PopularCommentsConfig = {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups" | "banned"> | null;
   offset?: number;
   limit?: number;
   minScore?: number;

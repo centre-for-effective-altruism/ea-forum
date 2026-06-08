@@ -9,6 +9,7 @@ import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import {
   userGetProfileUrl,
+  userIsAdminOrMod,
   userIsNew,
   userIsPostAuthor,
 } from "@/lib/users/userHelpers";
@@ -25,6 +26,7 @@ import CommentBody from "../ContentStyles/CommentBody";
 import CommentPollVote from "./CommentPollVote";
 import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
+import PangramBadge from "../PangramBadge";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
 import NewComment from "./NewComment";
@@ -217,6 +219,9 @@ export default function CommentItem({
             )}
             <CommentVoteButtons comment={comment} />
             <CommentPollVote comment={comment} />
+            {comment.contentsRevision && userIsAdminOrMod(currentUser) && (
+              <PangramBadge revision={comment.contentsRevision} />
+            )}
             <CommentTags comment={comment} className="grow" />
           </div>
           <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>

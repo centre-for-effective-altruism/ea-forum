@@ -15,3 +15,6 @@ export const formatRole = (
 
 export const formatPostItemHiddenAuthors = (count: number, totalShown: number) =>
   totalShown === 0 ? `${count} authors` : `+ ${count} more`;
+
+export const formatPercent = (x: number | null | undefined) =>
+  typeof x === "number" ? `${Math.round(x * 100)}%` : "–";
