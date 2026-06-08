@@ -256,6 +256,14 @@ const relations = defineRelations(
           deletedDraft: false,
         },
       }),
+      comment: r.one.comments({
+        from: r.revisions.documentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
+        },
+      }),
     },
     forumEvents: {
       pollQuestion: r.one.revisions({

@@ -4,6 +4,7 @@ import { ReactNode, useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import {
   PANGRAM_MAX_CHARS_DISPLAY,
+  PangramResult,
   PangramRevision,
   PangramV3Response,
 } from "@/lib/revisions/pangramHelpers";
@@ -23,11 +24,7 @@ export default function PangramBadge({
 }>) {
   const { currentUser } = useCurrentUser();
   const [loading, setLoading] = useState(false);
-  const [localResult, setLocalResult] = useState<{
-    status: string;
-    aiScore: number | null;
-    rawResponse: PangramV3Response | null;
-  } | null>(null);
+  const [localResult, setLocalResult] = useState<PangramResult | null>(null);
 
   const status = localResult?.status ?? revision?.pangramStatus ?? null;
   const aiScore = localResult?.aiScore ?? revision?.pangramAiScore ?? null;

@@ -3036,7 +3036,7 @@ export const revisions = pgTable(
     googleDocMetadata: jsonb(),
     skipAttributions: boolean().default(false).notNull(),
     pangramAiScore: doublePrecision(),
-    pangramCheckedAt: doublePrecision(),
+    pangramCheckedAt: timestamp(),
     pangramStatus: text(),
     pangramRawResponse: jsonb<PangramV3Response>(),
   },

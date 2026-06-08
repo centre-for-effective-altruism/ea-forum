@@ -1,7 +1,7 @@
 import z from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { userIsAdminOrMod } from "../users/userHelpers";
+import { runPangramOnRevision } from "./pangramMutations";
 
 export const revisionsRouter = {
   runPangram: os
@@ -10,16 +10,11 @@ export const revisionsRouter = {
         revisionId: z.string().nonempty(),
       }),
     )
-    .handler(async () => {
+    .handler(async ({ input: { revisionId } }) => {
       const currentUser = await getCurrentUser();
-      if (!userIsAdminOrMod(currentUser)) {
-        throw new Error("Permission denied");
+      if (!currentUser) {
+        throw new Error("Please login");
       }
-      // TODO
-      return {
-        status: "",
-        aiScore: 1,
-        rawResponse: {},
-      };
+      return await runPangramOnRevision(currentUser, revisionId);
     }),
 };
