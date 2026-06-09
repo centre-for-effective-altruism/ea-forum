@@ -1,3 +1,11 @@
+import type { CurrentUser } from "./users/currentUser";
+import {
+  adminEditors,
+  EditorContents,
+  EditorTypeString,
+  nonAdminEditors,
+} from "./ckeditor/editorHelpers";
+
 export const getBrowserLocalStorage = () => {
   try {
     return "localStorage" in global && global.localStorage
@@ -66,4 +74,26 @@ export const getLSHandlers = (
       }
     },
   };
+};
+
+type LocalStorageHandlers = ReturnType<typeof getLSHandlers>;
+
+const restorableStateHasMetadata = (savedState: EditorContents | string) =>
+  typeof savedState === "object";
+
+export const getRestorableDocumentFromLocalStorage = (
+  currentUser: CurrentUser | null,
+  getLocalStorageHandlers: (editorType: EditorTypeString) => LocalStorageHandlers,
+): EditorContents | null => {
+  const editors = currentUser?.isAdmin ? adminEditors : nonAdminEditors;
+  for (const editorType of editors) {
+    const savedState = getLocalStorageHandlers(editorType).get();
+    if (savedState) {
+      if (restorableStateHasMetadata(savedState)) {
+        return savedState;
+      }
+      return { type: editorType, data: savedState };
+    }
+  }
+  return null;
 };

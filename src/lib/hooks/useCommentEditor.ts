@@ -26,8 +26,11 @@ import type { CurrentUser } from "../users/currentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useDebouncedCallback } from "./useDebouncedCallback";
 import { useCurrentUser } from "./useCurrentUser";
-import { getLSHandlers } from "../localStorage";
 import { rpc } from "../rpc";
+import {
+  getLSHandlers,
+  getRestorableDocumentFromLocalStorage,
+} from "../localStorage";
 
 const autosaveIntervalMs = 3000;
 
@@ -143,6 +146,9 @@ export const useCommentEditor = ({
       htmlTemplate,
     }),
   );
+  const [localStorageChecked, setLocalStorageChecked] = useState(false);
+  const [restorableDocument, setRestorableDocument] =
+    useState<EditorContents | null>(null);
 
   const defaultEditorType = getUserDefaultEditor(currentUser);
   const currentEditorType = contents.type || defaultEditorType;
@@ -182,6 +188,15 @@ export const useCommentEditor = ({
     onUnmount: "cancelPending",
     allowExplicitCallAfterUnmount: false,
   });
+
+  useEffect(() => {
+    if (!localStorageChecked) {
+      setLocalStorageChecked(true);
+      setRestorableDocument(
+        getRestorableDocumentFromLocalStorage(currentUser, getLocalStorageHandlers),
+      );
+    }
+  }, [localStorageChecked, getLocalStorageHandlers, currentUser]);
 
   const onChange = useCallback(
     ({ contents, autosave }: EditorOnChangeProps) => {
@@ -278,6 +293,14 @@ export const useCommentEditor = ({
     [onSubmit],
   );
 
+  const restoreAutosave = useCallback(() => {
+    if (restorableDocument) {
+      setRestorableDocument(null);
+      getLocalStorageHandlers(currentEditorType).reset();
+      hasUnsavedDataRef.current.hasUnsavedData = false;
+    }
+  }, [restorableDocument, currentEditorType, getLocalStorageHandlers]);
+
   return {
     formType: comment ? ("edit" as const) : ("new" as const),
     placeholder: choosePlaceholder(shortform, comment),
@@ -287,5 +310,11 @@ export const useCommentEditor = ({
     onChange,
     onSubmit,
     onKeyDown,
+    autosave: restorableDocument?.data?.length
+      ? {
+          contents: restorableDocument,
+          onRestore: restoreAutosave,
+        }
+      : undefined,
   };
 };

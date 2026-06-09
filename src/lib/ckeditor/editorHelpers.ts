@@ -13,6 +13,13 @@ export type EditorTypeString = z.infer<typeof editorTypeStringSchema>;
 export const isEditorTypeString = (ty: string): ty is EditorTypeString =>
   editorTypeStringSchema.safeParse(ty).success;
 
+export const nonAdminEditors: EditorTypeString[] = ["ckEditorMarkup", "markdown"];
+export const adminEditors: EditorTypeString[] = [
+  "html",
+  "ckEditorMarkup",
+  "markdown",
+];
+
 /**
  * Contents of an editor, with `value` in the native format of the editor
  * (whichever editor that is).
