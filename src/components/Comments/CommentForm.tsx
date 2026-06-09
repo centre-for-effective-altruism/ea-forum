@@ -1,7 +1,7 @@
 import type { RefObject, KeyboardEvent } from "react";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import clsx from "clsx";
-import Editor, { EditorOnChangeProps } from "../Editor/Editor";
+import Editor, { EditorAutosave, EditorOnChangeProps } from "../Editor/Editor";
 import Button from "../Button";
 
 export default function CommentForm({
@@ -15,6 +15,7 @@ export default function CommentForm({
   onSubmit,
   onKeyDown,
   onChange,
+  autosave,
   className,
 }: Readonly<{
   formType: "edit" | "new";
@@ -27,6 +28,7 @@ export default function CommentForm({
   onSubmit: () => void;
   onKeyDown: (e: KeyboardEvent<HTMLFormElement>) => void;
   onChange: (props: EditorOnChangeProps) => void;
+  autosave?: EditorAutosave;
   className?: string;
 }>) {
   return (
@@ -47,6 +49,7 @@ export default function CommentForm({
         placeholder={placeholder}
         value={contents}
         onChange={onChange}
+        autosave={autosave}
         commentStyles
         commentEditor
         hideControls
