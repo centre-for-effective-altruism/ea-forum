@@ -3,12 +3,12 @@ import { db, DbOrTransaction } from "../db";
 import { posts, users } from "../schema";
 import type { CurrentUser } from "./currentUser";
 import type { AnyKarmaChange } from "./karmaChangesTypes";
-import type { CareerStageValue } from "./userHelpers";
 import type {
   RelationalFilter,
   RelationalOrderBy,
   RelationalProjection,
 } from "../utils/queryHelpers";
+import { getSignatureWithNote, CareerStageValue } from "./userHelpers";
 import { getReactionsForKarmaChanges } from "../votes/reactions";
 import { filterNonNull } from "../typeHelpers";
 import keyBy from "lodash/keyBy";
@@ -341,3 +341,36 @@ export const fetchKarmaChanges = async ({
   `);
   return results.rows;
 };
+
+export async function appendToSunshineNotes({
+  moderatedUserId,
+  adminName,
+  text,
+}: {
+  moderatedUserId: string;
+  adminName: string;
+  text: string;
+}): Promise<void> {
+  await db.transaction(async (txn) => {
+    const moderatedUser = await txn.query.users.findFirst({
+      columns: {
+        sunshineNotes: true,
+      },
+      where: {
+        _id: moderatedUserId,
+      },
+    });
+    if (!moderatedUser) {
+      throw new Error("Invalid userId in appendToSunshineNotes");
+    }
+    const newNote = getSignatureWithNote(adminName, text);
+    const oldNotes = moderatedUser.sunshineNotes || "";
+    const updatedNotes = `${newNote}${oldNotes}`;
+    await txn
+      .update(users)
+      .set({
+        sunshineNotes: updatedNotes,
+      })
+      .where(eq(users._id, moderatedUserId));
+  });
+}

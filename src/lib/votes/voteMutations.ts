@@ -290,7 +290,7 @@ export const performVote = async ({
       if (moderatorActionType === "votingPatternWarningDelivered") {
         showVotingPatternWarning = true;
       }
-      void createModeratorAction(user._id, moderatorActionType);
+      void createModeratorAction(null, user._id, moderatorActionType);
     }
   }
 
