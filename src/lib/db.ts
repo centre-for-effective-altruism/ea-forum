@@ -15,6 +15,7 @@ import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
   chapters,
+  commentModeratorActions,
   comments,
   conversations,
   forumEvents,
@@ -65,6 +66,7 @@ const relations = defineRelations(
     podcastEpisodes,
     podcasts,
     moderatorActions,
+    commentModeratorActions,
     reports,
     userRateLimits,
     userTagRels,

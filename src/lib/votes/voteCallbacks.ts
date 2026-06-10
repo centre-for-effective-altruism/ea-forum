@@ -11,6 +11,11 @@ import type {
   VoteableDocument,
   VoteableDocumentAuthor,
 } from "./voteableDocument";
+import {
+  commentModeratorActionType,
+  isDownvotedBelowBar,
+} from "../commentModeratorActions/commentModeratorActionsHelpers";
+import { createCommentModeratorAction } from "../commentModeratorActions/commentModeratorActionMutations";
 
 const userVoteGroups = [
   {
@@ -180,7 +185,7 @@ export const increasePostMaxBaseScore = async (
   }
 };
 
-export const triggerCommentAutomod = (
+export const triggerCommentAutomod = async (
   db: DbOrTransaction,
   collectionName: VoteableCollectionName,
   document: VoteableDocument,
@@ -188,10 +193,20 @@ export const triggerCommentAutomod = (
   if (collectionName !== "Comments") {
     return;
   }
-
-  // TODO: See triggerCommentAutomodIfNeeded in ForumMagnum
-  void db;
-  void document;
+  const commentId = document._id;
+  const previousCommentModeratorActions =
+    await db.query.commentModeratorActions.findMany({
+      columns: {},
+      where: {
+        commentId,
+        type: commentModeratorActionType("downvotedCommentAlert"),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  const needsModeration = isDownvotedBelowBar(document, -10);
+  if (previousCommentModeratorActions.length < 1 && needsModeration) {
+    void createCommentModeratorAction(db, commentId, "downvotedCommentAlert");
+  }
 };
 
 export const updatePostDenormalizedTags = async (
