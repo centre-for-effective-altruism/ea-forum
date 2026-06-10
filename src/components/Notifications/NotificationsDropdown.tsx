@@ -128,7 +128,7 @@ export default function NotificationsDropdown({
             "
           >
             <div className="px-2">
-              <div className="flex items-center">
+              <div className="flex">
                 <Type className="text-[24px] font-[600] mb-6 grow">
                   Notifications
                 </Type>
@@ -149,7 +149,7 @@ export default function NotificationsDropdown({
                     },
                   ]}
                 >
-                  <button className="cursor-pointer">
+                  <button className="cursor-pointer mt-1">
                     <EllipsisVerticalIcon className="w-6" />
                   </button>
                 </DropdownMenu>

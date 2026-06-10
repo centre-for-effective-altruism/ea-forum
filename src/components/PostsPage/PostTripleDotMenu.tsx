@@ -193,7 +193,7 @@ export default function PostTripleDotMenu({
         <button
           aria-label="Post options"
           className="
-            text-gray-600 hover:text-gray-1000 cursor-pointer flex items-center
+            text-gray-500 hover:text-gray-1000 cursor-pointer flex items-center
           "
         >
           <TripleDotIcon className={clsx("w-5", className)} />

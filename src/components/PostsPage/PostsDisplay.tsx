@@ -128,7 +128,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           {!post.shortform && (
             <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
               <div className="grow">
-                <PostVoteButtons />
+                <PostVoteButtons divider />
               </div>
               <div className="flex items-center gap-5">
                 <PostShareButton post={post} />

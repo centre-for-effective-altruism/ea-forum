@@ -144,7 +144,8 @@ export default function CommentItem({
     <div
       data-component="CommentItem"
       className={clsx(
-        !borderless && "border rounded-sm pl-3 pt-2 mb-1",
+        !borderless && "border pl-3 pt-2 mb-1",
+        !borderless && (depth === 0 ? "rounded-sm " : "rounded-s-sm"),
         !borderless &&
           (promoted ? "border-promoted-comment" : "border-comment-border"),
         !borderless &&

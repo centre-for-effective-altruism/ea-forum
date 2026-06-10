@@ -1,5 +1,8 @@
-import { ChangeEvent, useCallback, useId } from "react";
-import clsx from "clsx";
+"use client";
+
+import { useCallback, useRef } from "react";
+import DropdownMenu from "../Dropdown/DropdownMenu";
+import Type from "../Type";
 
 type Option<T extends string> = {
   label: string;
@@ -18,39 +21,44 @@ export default function InlineSelect<T extends string>({
   value,
   setValue,
   options,
-  placeholder,
-  className,
 }: Readonly<InlineSelectProps<T>>) {
-  const id = useId();
-  const onChange = useCallback(
-    (ev: ChangeEvent<HTMLSelectElement>) => {
-      setValue(ev.target.value as T);
+  const dismissRef = useRef<(() => void) | null>(null);
+  const onSelect = useCallback(
+    (newValue: T) => {
+      setValue(newValue);
+      dismissRef.current?.();
     },
     [setValue],
   );
+  const selectedOption = options.find((option) => option.value === value);
   return (
-    <select
-      data-component="InlineSelect"
-      id={id}
-      value={value}
-      onChange={onChange}
-      className={clsx(
-        "inline text-sm bg-gray-0 text-primary font-[600] cursor-pointer",
-        "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
-        "bg-none appearance-none",
-        className,
-      )}
-    >
-      {placeholder && (
-        <option value="" disabled>
-          {placeholder}
-        </option>
-      )}
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
+    <DropdownMenu
+      dismissRef={dismissRef}
+      placement="bottom-start"
+      items={options.map((option) => (
+        <Type
+          key={option.value}
+          onClick={() => onSelect(option.value)}
+          style="bodyMedium"
+          As="button"
+          className="
+            cursor-pointer block w-full text-left px-2 py-[6px] rounded
+            text-gray-1000 hover:bg-gray-300
+          "
+        >
           {option.label}
-        </option>
+        </Type>
       ))}
-    </select>
+    >
+      <Type
+        As="span"
+        style="bodyHeavy"
+        className="
+          user-select-none text-primary cursor-pointer hover:text-primary-dark
+        "
+      >
+        {selectedOption?.label ?? "Select an option"}
+      </Type>
+    </DropdownMenu>
   );
 }

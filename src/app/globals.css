@@ -116,6 +116,7 @@
   --zindex-dropdown: 1305;
   --zindex-mobile-nav: 1306;
   --zindex-tooltip: 1308;
+  --zindex-intercom: 1350;
   --zindex-cookie-banner: 1400;
 
   --buzzsprout-opacity: 1;
@@ -368,4 +369,11 @@
  */
 .grecaptcha-badge {
   visibility: hidden;
+}
+
+/**
+ * Place Intercom above everything except the cookie banner
+ */
+#intercom-container {
+  z-index: var(--zindex-intercom);
 }

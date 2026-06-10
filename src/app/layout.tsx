@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Charis_SIL, Inter } from "next/font/google";
+import { Charis_SIL } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
 import {
@@ -18,7 +19,8 @@ import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
-const inter = Inter({
+const inter = localFont({
+  src: "../../public/InterVariable.woff2",
   variable: "--font-inter",
   display: "swap",
   preload: true,

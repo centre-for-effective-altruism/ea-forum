@@ -65,6 +65,7 @@ export default function NotificationsHeaderButton() {
           className="
             absolute top-[-2px] right-[2px] bg-primary rounded-[50%] px-[1px]
             min-w-[19px] text-center font-[600]! pointer-events-none
+            text-always-white
           "
         >
           {unreadNotifications}

@@ -39,7 +39,8 @@
   font-family: var(--font-stack-serif);
   color: var(--color-gray-900);
 }
-.content-base ul {
+.content-base ul,
+.content-base ol {
   list-style-type: revert;
   padding-left: revert;
   margin: 0;
@@ -76,6 +77,9 @@
   margin-top: 0;
   margin-block-start: -3px;
 }
+.content-base h1 strong {
+  font-weight: 600;
+}
 .content-base h2 {
   font-size: 26px;
   font-weight: 650;
@@ -85,6 +89,9 @@
   margin-top: 0;
   margin-block-start: -2px;
 }
+.content-base h2 strong {
+  font-weight: 650;
+}
 .content-base h3 {
   font-size: 20.8px;
   font-weight: 600;
@@ -93,6 +100,9 @@
 .content-base h3:first-child {
   margin-top: 0;
   margin-block-start: 0px;
+}
+.content-base h3 strong {
+  font-weight: 600;
 }
 .content-base h4 {
   font-size: 15.6px;

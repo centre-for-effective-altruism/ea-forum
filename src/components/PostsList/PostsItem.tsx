@@ -34,11 +34,13 @@ export default function PostsItem({
   viewType,
   openInNewTab,
   curatedIconLeft = false,
+  className,
 }: Readonly<{
   post: PostListItem;
   viewType?: PostsListViewType;
   openInNewTab?: boolean;
   curatedIconLeft?: boolean;
+  className?: string;
 }>) {
   const cardView = viewType === "card";
   const {
@@ -118,6 +120,7 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-gray-50",
           "flex flex-col hover:bg-postitemhover",
           cardView ? "justify-between" : "justify-center",
+          className,
         )}
       >
         <div

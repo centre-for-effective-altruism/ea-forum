@@ -20,6 +20,7 @@ export default function PostsList({
   maxOffset,
   bottomRightNode,
   className,
+  postItemClassName,
   curatedIconLeft,
 }: Readonly<{
   posts: PostListItem[];
@@ -33,6 +34,7 @@ export default function PostsList({
   maxOffset?: number;
   bottomRightNode?: ReactNode;
   className?: string;
+  postItemClassName?: string;
   curatedIconLeft?: boolean;
 }>) {
   const [loading, setLoading] = useState(false);
@@ -86,6 +88,7 @@ export default function PostsList({
           post={post}
           viewType={actualViewType}
           curatedIconLeft={curatedIconLeft}
+          className={postItemClassName}
         />
       ))}
       {loadMoreView && (
