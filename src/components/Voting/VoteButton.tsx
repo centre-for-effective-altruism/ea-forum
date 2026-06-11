@@ -144,7 +144,7 @@ export default function VoteButton({
           className={clsx(
             voted && (upvote ? "text-primary" : "text-error"),
             !voted && dimWhenNotVoted && "opacity-70",
-            !voted && "hover:text-gray-800",
+            !voted && "hover:text-gray-900",
           )}
         />
         <Transition

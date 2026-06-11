@@ -200,7 +200,7 @@
   --color-details-title: rgba(255, 255, 255, 0.3);
   --color-conditionally-visible: rgba(255, 255, 255, 0.2);
   --color-post-hr: rgba(255, 255, 255, 0.26);
-  --color-comment-border: #363636;
+  --color-comment-border: rgba(255, 255, 255, 0.2);
   --color-comment-odd: #1f1f1f;
   --color-comment-even: #262626;
   --color-people-directory-row-hover: #2a2a2a;
