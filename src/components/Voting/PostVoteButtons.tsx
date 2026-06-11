@@ -33,7 +33,6 @@ export default function PostVoteButtons({
         direction="Downvote"
         orientation="down"
         onVote={onVote}
-        large
         className="text-gray-600"
       />
       <Tooltip
@@ -54,7 +53,6 @@ export default function PostVoteButtons({
         direction="Upvote"
         orientation="up"
         onVote={onVote}
-        large
         className="text-gray-600 mr-3"
       />
       {!hideReacts && (
