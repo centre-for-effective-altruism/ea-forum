@@ -55,7 +55,9 @@ export const getNotificationDocumentSummary = async (
         : null;
     case "comment":
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           post: {
             columns: {
@@ -103,7 +105,9 @@ export const getNotificationDocumentSummary = async (
         : null;
     case "message":
       const message = await db.query.messages.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           conversation: {
             columns: {
@@ -145,7 +149,9 @@ export const getNotificationDocumentSummary = async (
         : null;
     case "tagRel":
       const tagRel = await db.query.tagRels.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         where: {
           _id: documentId,
         },
@@ -159,7 +165,9 @@ export const getNotificationDocumentSummary = async (
         : null;
     case "sequence":
       const sequence = await db.query.sequences.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         where: {
           _id: documentId,
         },

@@ -178,7 +178,9 @@ export const performVote = async ({
     (document as TagRel).tagId === process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
   ) {
     const tagRel = await txn.query.tagRels.findFirst({
-      columns: {},
+      columns: {
+        _id: true,
+      },
       with: {
         post: {
           columns: {

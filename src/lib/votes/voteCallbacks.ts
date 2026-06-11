@@ -35,7 +35,9 @@ const sendKarmaThresholdNotification = async (
   user: VoteableDocumentAuthor,
 ) => {
   const existingNotifications = await db.query.notifications.findMany({
-    columns: {},
+    columns: {
+      _id: true,
+    },
     where: {
       userId: user._id,
       type: "karmaPowersGained",
@@ -196,7 +198,9 @@ export const triggerCommentAutomod = async (
   const commentId = document._id;
   const previousCommentModeratorActions =
     await db.query.commentModeratorActions.findMany({
-      columns: {},
+      columns: {
+        _id: true,
+      },
       where: {
         commentId,
         type: commentModeratorActionType("downvotedCommentAlert"),
