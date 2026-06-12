@@ -18,7 +18,7 @@ export default async function PostPingbacks({
     return null;
   }
   return (
-    <section data-component="PostPingbacks" className={className}>
+    <section data-component="PostPingbacks" id="mentioned-in" className={className}>
       <Tooltip
         title={<Type style="bodySmall">Posts that linked to this post</Type>}
         placement="top-start"

@@ -17,6 +17,7 @@ import PostTableOfContents from "./PostTableOfContents";
 import StackedUserAvatars from "../StackedUserAvatars";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
+import PostTranslations from "./PostTranslations";
 import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
@@ -146,6 +147,9 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               currentUser={currentUser}
               className="mb-12"
             />
+          </Suspense>
+          <Suspense>
+            <PostTranslations postId={postId} className="mb-12" />
           </Suspense>
           {showRecommendations && (
             <Suspense
