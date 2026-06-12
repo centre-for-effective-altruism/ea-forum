@@ -22,7 +22,7 @@ const AnonymousTooltipContent: FC<{
     <Type style="bodySmall">
       <div>
         {count === 1 ? "1 person" : `${count} people`}{" "}
-        <span className="text-gray-400">reacted with</span>
+        <span className="text-tooltip-text-dim">reacted with</span>
       </div>
       <div className="flex items-center justify-center gap-1">
         <reaction.Component className="text-primary-light w-4" /> {reaction.label}
@@ -71,7 +71,7 @@ const ReactionButton: FC<{
       "cursor-pointer flex items-center gap-1 select-none h-6 px-1 rounded",
       isSelected
         ? "text-primary bg-primary/5 hover:bg-primary/20 border-1 border-primary/50"
-        : "text-gray-600 hover:bg-gray-100",
+        : "text-gray-600 hover:bg-gray-200",
     )}
   >
     {children}

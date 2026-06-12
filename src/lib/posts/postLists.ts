@@ -148,7 +148,7 @@ export const postsListProjection = (
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
+            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 500),
         },
       },
       group: {

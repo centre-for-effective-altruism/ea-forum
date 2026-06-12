@@ -115,9 +115,16 @@ export const getPostReadTimeMinutes = (
   return 1;
 };
 
-const getSocialImagePreviewPrefix = () => {
+type SocialImageOptions = {
+  width?: number;
+  dpr?: number;
+};
+
+const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
   const cloudName = getCloudinaryCloudName();
-  return `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,ar_1.91,g_auto/`;
+  const width = options?.width ? `,w_${options.width}` : "";
+  const dpr = options?.dpr ? `,dpr_${options.dpr}` : "";
+  return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_lfill,ar_1.91,g_auto${width}${dpr}/`;
 };
 
 export type PostWithSocialPreview = Pick<
@@ -125,13 +132,16 @@ export type PostWithSocialPreview = Pick<
   "isEvent" | "eventImageId" | "socialPreview" | "socialPreviewImageAutoUrl"
 >;
 
-export const getPostSocialImageUrl = (post: PostWithSocialPreview) => {
+export const getPostSocialImageUrl = (
+  post: PostWithSocialPreview,
+  options?: SocialImageOptions,
+) => {
   const manualId =
     post.isEvent && post.eventImageId
       ? post.eventImageId
       : (post.socialPreview as JsonRecord)?.imageId;
   if (manualId) {
-    return getSocialImagePreviewPrefix() + manualId;
+    return getSocialImagePreviewPrefix(options) + manualId;
   }
   return post.socialPreviewImageAutoUrl ?? null;
 };

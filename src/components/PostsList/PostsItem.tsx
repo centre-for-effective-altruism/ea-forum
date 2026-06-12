@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { SyntheticEvent, useCallback, useState } from "react";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
@@ -28,6 +28,14 @@ import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
+
+/**
+ * If an image fails to load some browsers show an ugly white border that
+ * we should hide
+ */
+const onImageError = (ev: SyntheticEvent<HTMLImageElement, Event>) => {
+  (ev.target as HTMLImageElement).style.visibility = "hidden";
+};
 
 export default function PostsItem({
   post,
@@ -69,7 +77,7 @@ export default function PostsItem({
     ignoreLinks: true,
   });
   const description = cardView ? getPostPlaintextDescription(post) : null;
-  const imageUrl = getPostSocialImageUrl(post);
+  const imageUrl = getPostSocialImageUrl(post, { width: 160, dpr: 2 });
 
   const [showNewComments, setShowNewComments] = useState(false);
   const [everShownNewComments, setEverShownNewComments] = useState(false);
@@ -129,48 +137,49 @@ export default function PostsItem({
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
             "sm:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start py-2" : "items-center py-[6px]",
+            cardView ? "items-start py-1" : "items-center py-[6px]",
           )}
         >
           <Score
             baseScore={baseScore}
             voteCount={voteCount}
             orientation="vertical"
-            className={clsx("min-w-[24px] sm:min-w-[33px]", cardView && "mt-[10px]")}
+            className={clsx("min-w-[24px] sm:min-w-[33px]", cardView && "mt-4")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
-            <div className="mb-[2px] flex min-w-0 items-center">
-              <Type
-                style="postTitle"
-                className={clsx(
-                  "min-w-0 max-sm:line-clamp-3 sm:truncate",
-                  isRead ? "text-gray-700" : "text-gray-900",
-                )}
-              >
-                <InteractionWrapper className="inline-flex align-middle">
-                  <PostIcons
-                    post={post}
-                    side="left"
-                    curatedIconLeft={curatedIconLeft}
-                  />
-                </InteractionWrapper>
-                <PostsTooltip As="span" post={post}>
-                  <Link
-                    href={postLink}
-                    className="align-middle visited:text-gray-600 hover:opacity-70"
-                  >
-                    {title}
-                  </Link>
-                </PostsTooltip>
-              </Type>
-              <InteractionWrapper className="inline-flex shrink-0 max-sm:hidden">
+            <Type
+              style="postTitle"
+              className={clsx(
+                "mb-[2px] min-w-0",
+                isRead ? "text-gray-700" : "text-gray-900",
+                cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
+              )}
+            >
+              <InteractionWrapper As="span">
+                <PostIcons
+                  post={post}
+                  side="left"
+                  curatedIconLeft={curatedIconLeft}
+                  className="mr-1 translate-y-1"
+                />
+              </InteractionWrapper>
+              <PostsTooltip As="span" post={post}>
+                <Link
+                  href={postLink}
+                  className="align-middle visited:text-gray-600 hover:opacity-70"
+                >
+                  {title}
+                </Link>
+              </PostsTooltip>
+              <InteractionWrapper As="span" className="max-sm:hidden">
                 <PostIcons
                   post={post}
                   side="right"
                   curatedIconLeft={curatedIconLeft}
+                  className="ml-1 translate-y-1"
                 />
               </InteractionWrapper>
-            </div>
+            </Type>
             <Type style="bodySmall" className="min-w-0 flex">
               <InteractionWrapper className="grow min-w-0">
                 <TruncationContainer
@@ -227,30 +236,42 @@ export default function PostsItem({
               </InteractionWrapper>
             </Type>
           </div>
-          <InteractionWrapper className="max-sm:hidden">
+          <InteractionWrapper
+            className={clsx("max-sm:hidden", cardView && "mt-[6px]")}
+          >
             {commentsNode}
           </InteractionWrapper>
-          <InteractionWrapper className="flex items-center max-sm:hidden">
+          <InteractionWrapper
+            className={clsx(
+              "flex items-center max-sm:hidden",
+              cardView && "mt-[6px]",
+            )}
+          >
             <PostTripleDotMenu post={post} orientation="vertical" />
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-2 sm:gap-8 items-end pl-[56px] pr-5 pb-4">
+          <div className="flex gap-2 sm:gap-8 items-end pl-[56px] pr-5 pb-4 -mt-1">
             <Type
               style="postDescription"
-              className="text-gray-600 line-clamp-3 overflow-hidden"
+              className="text-gray-600 line-clamp-3 overflow-hidden grow leading-[165%]"
             >
               {description}
             </Type>
             <div
-              className={clsx(
-                "w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]",
-                "overflow-hidden rounded relative",
-                imageUrl && "h-[80px] min-h-[80px]",
-              )}
+              className="
+                w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]
+                overflow-hidden rounded relative h-[80px] min-h-[80px]
+              "
             >
               {imageUrl && (
-                <Image src={imageUrl} alt="" fill className="object-cover" />
+                <Image
+                  src={imageUrl}
+                  onError={onImageError}
+                  alt=""
+                  fill
+                  className="object-cover"
+                />
               )}
             </div>
           </div>
