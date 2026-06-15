@@ -7,16 +7,32 @@ import {
   useCallback,
   useRef,
   useState,
+  useEffect,
 } from "react";
 import toast from "react-hot-toast";
-import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
+import {
+  isBlank,
+  EditorAPI,
+  EditorContents,
+  EditorData,
+  getLocalStorageKeyPrefix,
+  EditorTypeString,
+  getUserDefaultEditor,
+} from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
 import type { CommentToEdit } from "../comments/commentQueries";
 import type { CommentListItem } from "../comments/commentLists";
 import type { CurrentUser } from "../users/currentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
+import { useDebouncedCallback } from "./useDebouncedCallback";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
+import {
+  getLSHandlers,
+  getRestorableDocumentFromLocalStorage,
+} from "../localStorage";
+
+const autosaveIntervalMs = 3000;
 
 type UseCommentEditorDocument =
   // Creating a post comment
@@ -41,8 +57,21 @@ type UseCommentEditorDocument =
       comment: CommentToEdit | null;
     };
 
-type UseCommentEditorProps = UseCommentEditorDocument & {
+export type CommentPrefilledProps = Pick<
+  Parameters<typeof rpc.comments.create>[0],
+  "forumEventId" | "forumEventMetadata"
+>;
+
+export type UseCommentEditorProps = UseCommentEditorDocument & {
+  beforeSubmit?: (data: EditorData) => void;
   onSuccess?: (comment: CommentListItem) => void;
+  prefilledProps?: CommentPrefilledProps;
+  htmlTemplate?: string;
+};
+
+type SubmitExtraProps = {
+  shortformFrontpage?: boolean;
+  relevantTagIds?: string[];
 };
 
 const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {
@@ -52,13 +81,47 @@ const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) 
   return shortform ? "Write a new quick take..." : "Write a new comment...";
 };
 
-const getInitialContents = (
-  currentUser: CurrentUser | null,
-  comment?: CommentToEdit | null,
-): EditorContents =>
+const getInitialContents = ({
+  currentUser,
+  comment,
+  htmlTemplate,
+}: {
+  currentUser: CurrentUser | null;
+  comment?: CommentToEdit | null;
+  htmlTemplate?: string;
+}): EditorContents =>
   comment?.originalContents ?? {
     type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
-    data: "",
+    data: htmlTemplate ?? "",
+  };
+
+const getCommentLocalStorageId =
+  ({
+    comment,
+    parentCommentId,
+    postId,
+  }: {
+    postId?: string;
+    parentCommentId?: string;
+    comment?: CommentToEdit | null;
+  }) =>
+  () => {
+    if (comment?._id) {
+      return {
+        id: comment._id,
+        verify: true,
+      };
+    }
+    if (parentCommentId) {
+      return {
+        id: "parent:" + parentCommentId,
+        verify: false,
+      };
+    }
+    return {
+      id: "post:" + postId,
+      verify: false,
+    };
   };
 
 export const useCommentEditor = ({
@@ -66,22 +129,102 @@ export const useCommentEditor = ({
   parentCommentId,
   shortform,
   comment,
+  htmlTemplate,
+  beforeSubmit,
   onSuccess,
+  prefilledProps,
 }: UseCommentEditorProps) => {
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const [loading, setLoading] = useState(false);
+  const hasUnsavedDataRef = useRef({ hasUnsavedData: false });
   const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState(getInitialContents(currentUser, comment));
+  const [contents, setContents] = useState(
+    getInitialContents({
+      currentUser,
+      comment,
+      htmlTemplate,
+    }),
+  );
+  const [localStorageChecked, setLocalStorageChecked] = useState(false);
+  const [restorableDocument, setRestorableDocument] =
+    useState<EditorContents | null>(null);
 
-  const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
-    setContents(contents);
-    // TODO Handle autosave
-    void autosave;
-  }, []);
+  const defaultEditorType = getUserDefaultEditor(currentUser);
+  const currentEditorType = contents.type || defaultEditorType;
+
+  const getLocalStorageHandlers = useCallback(
+    (editorType: EditorTypeString) => {
+      return getLSHandlers(
+        getCommentLocalStorageId({ postId, parentCommentId, comment }),
+        comment,
+        "contents",
+        getLocalStorageKeyPrefix(editorType),
+      );
+    },
+    [postId, parentCommentId, comment],
+  );
+
+  const saveBackup = useCallback(
+    (newContents: EditorContents) => {
+      const sameAsSaved = newContents.data === comment?.originalContents?.data;
+      if (isBlank(newContents) || sameAsSaved) {
+        getLocalStorageHandlers(currentEditorType).reset();
+        hasUnsavedDataRef.current.hasUnsavedData = false;
+      } else {
+        const handlers = getLocalStorageHandlers(newContents.type);
+        const success = handlers.set(newContents);
+        if (success) {
+          hasUnsavedDataRef.current.hasUnsavedData = false;
+        }
+      }
+    },
+    [getLocalStorageHandlers, currentEditorType, comment],
+  );
+
+  const throttledSaveBackup = useDebouncedCallback(saveBackup, {
+    rateLimitMs: autosaveIntervalMs,
+    callOnLeadingEdge: false,
+    onUnmount: "cancelPending",
+    allowExplicitCallAfterUnmount: false,
+  });
+
+  useEffect(() => {
+    if (!localStorageChecked) {
+      setLocalStorageChecked(true);
+      setRestorableDocument(
+        getRestorableDocumentFromLocalStorage(currentUser, getLocalStorageHandlers),
+      );
+    }
+  }, [localStorageChecked, getLocalStorageHandlers, currentUser]);
+
+  const onChange = useCallback(
+    ({ contents, autosave }: EditorOnChangeProps) => {
+      setContents(contents);
+      if (!isBlank(contents)) {
+        hasUnsavedDataRef.current.hasUnsavedData = true;
+      }
+      if (autosave) {
+        throttledSaveBackup(contents);
+      }
+    },
+    [throttledSaveBackup],
+  );
+
+  useEffect(() => {
+    const unloadEventListener = (ev: BeforeUnloadEvent) => {
+      if (hasUnsavedDataRef?.current?.hasUnsavedData) {
+        ev.preventDefault();
+        ev.returnValue = "Are you sure you want to close?";
+        return ev.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", unloadEventListener);
+    return () => window.removeEventListener("beforeunload", unloadEventListener);
+  }, [hasUnsavedDataRef]);
 
   const onSubmit = useCallback(
-    async (ev?: SubmitEvent) => {
+    async (ev?: SubmitEvent<HTMLFormElement>, extraProps?: SubmitExtraProps) => {
       ev?.preventDefault();
       if (!currentUser) {
         onSignup();
@@ -92,8 +235,13 @@ export const useCommentEditor = ({
         console.error("Editor API not found");
         return;
       }
-      setLoading(true);
       const data = await editorApi.getSubmitData();
+      if (!data.originalContents.data) {
+        toast.error("Comment is empty");
+        return;
+      }
+      beforeSubmit?.(data);
+      setLoading(true);
       startTransition(async () => {
         try {
           const newComment = comment
@@ -106,6 +254,8 @@ export const useCommentEditor = ({
                 parentCommentId,
                 shortform,
                 editorData: data,
+                ...extraProps,
+                ...prefilledProps,
               });
           if (!newComment) {
             throw new Error("Something went wrong");
@@ -120,7 +270,17 @@ export const useCommentEditor = ({
         }
       });
     },
-    [currentUser, onSignup, postId, parentCommentId, shortform, comment, onSuccess],
+    [
+      currentUser,
+      onSignup,
+      postId,
+      parentCommentId,
+      shortform,
+      comment,
+      beforeSubmit,
+      onSuccess,
+      prefilledProps,
+    ],
   );
 
   const onKeyDown = useCallback(
@@ -133,6 +293,14 @@ export const useCommentEditor = ({
     [onSubmit],
   );
 
+  const restoreAutosave = useCallback(() => {
+    if (restorableDocument) {
+      setRestorableDocument(null);
+      getLocalStorageHandlers(currentEditorType).reset();
+      hasUnsavedDataRef.current.hasUnsavedData = false;
+    }
+  }, [restorableDocument, currentEditorType, getLocalStorageHandlers]);
+
   return {
     formType: comment ? ("edit" as const) : ("new" as const),
     placeholder: choosePlaceholder(shortform, comment),
@@ -142,5 +310,11 @@ export const useCommentEditor = ({
     onChange,
     onSubmit,
     onKeyDown,
+    autosave: restorableDocument?.data?.length
+      ? {
+          contents: restorableDocument,
+          onRestore: restoreAutosave,
+        }
+      : undefined,
   };
 };

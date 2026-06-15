@@ -3,7 +3,9 @@ import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
+import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
+  fetchCommentsForForumEvent,
   fetchCommentsListItem,
   fetchFrontpageQuickTakes,
   fetchNewComments,
@@ -18,12 +20,21 @@ import {
 
 export const commentsRouter = {
   listById: os
-    .input(z.object({ _id: z.string() }))
+    .input(z.object({ _id: z.string().nonempty() }))
     .handler(async ({ input: { _id } }) => {
       const currentUser = await getCurrentUser();
-      return fetchCommentsListItem({
+      return await fetchCommentsListItem({
         currentUser,
         commentId: _id,
+      });
+    }),
+  listByForumEvent: os
+    .input(z.object({ forumEventId: z.string().nonempty() }))
+    .handler(async ({ input: { forumEventId } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchCommentsForForumEvent({
+        currentUser,
+        forumEventId,
       });
     }),
   create: os
@@ -34,6 +45,10 @@ export const commentsRouter = {
         parentCommentId: z.string().nullable().optional(),
         editorData: editorDataSchema,
         draft: z.boolean().optional(),
+        shortformFrontpage: z.boolean().optional(),
+        relevantTagIds: z.array(z.string().nonempty()).optional(),
+        forumEventId: z.string().optional(),
+        forumEventMetadata: forumEventCommentMetadataSchema.optional(),
       }),
     )
     .handler(
@@ -44,6 +59,10 @@ export const commentsRouter = {
           parentCommentId = null,
           editorData,
           draft = false,
+          shortformFrontpage,
+          relevantTagIds,
+          forumEventId,
+          forumEventMetadata,
         },
       }) => {
         const user = await getCurrentUser();
@@ -57,6 +76,10 @@ export const commentsRouter = {
           parentCommentId,
           editorData,
           draft,
+          shortformFrontpage,
+          relevantTagIds,
+          forumEventId,
+          forumEventMetadata,
         });
         return await fetchCommentsListItem({
           currentUser: user,

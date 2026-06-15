@@ -1,13 +1,22 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import type { DbOrTransaction, Transaction } from "../db";
+import intersection from "lodash/intersection";
+import difference from "lodash/difference";
+import union from "lodash/union";
+import uniq from "lodash/uniq";
 import type { CurrentUser } from "../users/currentUser";
 import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
-import { postGetPageUrl } from "../posts/postsHelpers";
-import { akismetCheckComment } from "../akismet";
-import { fetchCommentAncestorIds, PostForCommentCreation } from "./commentQueries";
+import { fetchCommentAncestors, PostForCommentCreation } from "./commentQueries";
 import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
+import { createNotifications } from "../notifications/notificationMutations";
+import { fetchSubscribedUsers } from "../subscriptions/subscriptionQueries";
 import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
+import { subscriptionTypes } from "../subscriptions/subscriptionTypes";
+import { runPangramOnRevision } from "../revisions/pangramMutations";
+import { db, DbOrTransaction, Transaction } from "../db";
 import { captureEvent } from "../analytics/captureEvent";
+import { postGetPageUrl } from "../posts/postsHelpers";
+import { commentIsPublic } from "./commentHelpers";
+import { akismetCheckComment } from "../akismet";
 import { isAnyTest } from "../environment";
 import {
   tags,
@@ -96,7 +105,8 @@ export const updateDescendentCommentCounts = async (
   if (!comment.parentCommentId) {
     return;
   }
-  const ancestorIds = await fetchCommentAncestorIds(txn, comment._id);
+  const ancestors = await fetchCommentAncestors(txn, comment._id);
+  const ancestorIds = ancestors.map(({ _id }) => _id);
   await Promise.all([
     txn
       .update(comments)
@@ -219,4 +229,357 @@ export const checkCommentForSpam = async (
         "This comment has been marked as spam by the Akismet spam integration. We've sent the poster a PM with the content. If this deletion seems wrong to you, please send us a message on Intercom (the icon in the bottom-right of the page).",
     })
     .where(eq(comments._id, commentId));
+};
+
+export const newCommentNotifications = async (commentId: string) => {
+  const comment = await db.query.comments.findFirst({
+    columns: {
+      _id: true,
+      topLevelCommentId: true,
+      shortform: true,
+      userId: true,
+      draft: true,
+      deleted: true,
+      rejected: true,
+      authorIsUnreviewed: true,
+      parentCommentId: true,
+      debateResponse: true,
+      tagId: true,
+      tagCommentType: true,
+    },
+    with: {
+      post: {
+        columns: {
+          _id: true,
+          slug: true,
+          userId: true,
+          coauthorUserIds: true,
+          groupId: true,
+          isEvent: true,
+          rsvps: true,
+        },
+        with: {
+          group: {
+            columns: {
+              organizerIds: true,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      _id: commentId,
+    },
+  });
+  if (!comment || !commentIsPublic(comment)) {
+    return;
+  }
+
+  // Notify event RSVPs
+  if (comment.post?.isEvent && comment.post.rsvps?.length) {
+    // TODO: Send emails to RSVPS - this is currently handled by ForumMagnum
+    // since event pages haven't been migrated yet
+  }
+
+  // Keep track of whom we've notified (so that we don't notify the same user
+  // twice for one comment, if e.g. they're both the author of the post and the
+  // author of a comment being replied to)
+  let notifiedUsers: string[] = [];
+
+  // 1. Notify users who are subscribed to the parent comment
+  if (comment.parentCommentId) {
+    const allParentComments = await fetchCommentAncestors(db, commentId);
+    const parentComments = allParentComments.filter(({ depth }) => depth < 5);
+
+    let newReplyUserIds: string[] = [];
+    let newReplyToYouDirectUserIds: string[] = [];
+    let newReplyToYouIndirectUserIds: string[] = [];
+
+    for (const parentComment of parentComments) {
+      const { _id: currentParentCommentId, userId: currentParentCommentAuthorId } =
+        parentComment;
+
+      const subscribedUsers = await fetchSubscribedUsers({
+        documentId: currentParentCommentId,
+        collectionName: "Comments",
+        type: subscriptionTypes.newReplies,
+        potentiallyDefaultSubscribedUserIds: [currentParentCommentAuthorId],
+        userIsDefaultSubscribed: (u) => u.auto_subscribe_to_my_comments,
+      });
+      const subscribedUserIds = subscribedUsers.map(({ _id }) => _id);
+
+      // Don't notify the author of their own comment, and filter out the author
+      // of the parent-comment to be treated specially (with a newReplyToYou
+      // notification instead of a newReply notification).
+      newReplyUserIds.push(
+        ...difference(subscribedUserIds, [
+          comment.userId,
+          currentParentCommentAuthorId,
+        ]),
+      );
+
+      // Separately notify authors of replies to their own comments
+      if (
+        subscribedUserIds.includes(currentParentCommentAuthorId) &&
+        currentParentCommentAuthorId !== comment.userId
+      ) {
+        if (currentParentCommentId === comment.parentCommentId) {
+          newReplyToYouDirectUserIds.push(currentParentCommentAuthorId);
+        } else {
+          newReplyToYouIndirectUserIds.push(currentParentCommentAuthorId);
+        }
+      }
+    }
+
+    // Take the difference to prevent double-notifying
+    newReplyUserIds = uniq(
+      difference(newReplyUserIds, [
+        ...newReplyToYouDirectUserIds,
+        ...newReplyToYouIndirectUserIds,
+      ]),
+    );
+    // Direct replies take precedence over indirect replies
+    newReplyToYouIndirectUserIds = uniq(
+      difference(newReplyToYouIndirectUserIds, newReplyToYouDirectUserIds),
+    );
+    newReplyToYouDirectUserIds = uniq(newReplyToYouDirectUserIds);
+
+    await Promise.all([
+      createNotifications({
+        userIds: newReplyUserIds,
+        notificationType: "newReply",
+        documentType: "comment",
+        documentId: comment._id,
+      }),
+      createNotifications({
+        userIds: newReplyToYouDirectUserIds,
+        notificationType: "newReplyToYou",
+        documentType: "comment",
+        documentId: comment._id,
+        extraData: { direct: true },
+      }),
+      createNotifications({
+        userIds: newReplyToYouIndirectUserIds,
+        notificationType: "newReplyToYou",
+        documentType: "comment",
+        documentId: comment._id,
+        extraData: { direct: false },
+      }),
+    ]);
+
+    notifiedUsers = [
+      ...notifiedUsers,
+      ...newReplyUserIds,
+      ...newReplyToYouDirectUserIds,
+      ...newReplyToYouIndirectUserIds,
+    ];
+  }
+
+  // 2. If this comment is a debate comment, notify users who are subscribed to
+  // the post as a debate (`newDebateComments`)
+  if (comment.post && comment.debateResponse) {
+    // Get all the debate participants, but exclude the comment author if they're
+    // a debate participant
+    const debateParticipantIds = difference(
+      [comment.post.userId, ...comment.post.coauthorUserIds],
+      [comment.userId],
+    );
+
+    const debateSubscribers = await fetchSubscribedUsers({
+      documentId: comment.post._id,
+      collectionName: "Posts",
+      type: subscriptionTypes.newDebateComments,
+      potentiallyDefaultSubscribedUserIds: debateParticipantIds,
+    });
+
+    const debateSubscriberIds = debateSubscribers.map((sub) => sub._id);
+    // Handle debate readers - filter out debate participants, since they get a
+    // different notification type (we shouldn't have notified any users for
+    // these comments previously, but leaving that in for sanity)
+    const debateSubscriberIdsToNotify = difference(debateSubscriberIds, [
+      ...debateParticipantIds,
+      ...notifiedUsers,
+      comment.userId,
+    ]);
+    await createNotifications({
+      userIds: debateSubscriberIdsToNotify,
+      notificationType: "newDebateComment",
+      documentType: "comment",
+      documentId: comment._id,
+    });
+
+    // Handle debate participants
+    const subscribedParticipantIds = intersection(
+      debateSubscriberIds,
+      debateParticipantIds,
+    );
+    await createNotifications({
+      userIds: subscribedParticipantIds,
+      notificationType: "newDebateReply",
+      documentType: "comment",
+      documentId: comment._id,
+    });
+
+    // Avoid notifying users who are subscribed to both the debate comments and
+    // regular comments on a debate twice
+    notifiedUsers.push(...debateSubscriberIdsToNotify, ...subscribedParticipantIds);
+  }
+
+  // 3. Notify users who are subscribed to the post (which may or may not include
+  // the post's author)
+  let userIdsSubscribedToPost: string[] = [];
+  if (comment.post) {
+    const usersSubscribedToPost = await fetchSubscribedUsers({
+      documentId: comment.post._id,
+      collectionName: "Posts",
+      type: subscriptionTypes.newComments,
+      potentiallyDefaultSubscribedUserIds: comment.post
+        ? [comment.post.userId, ...comment.post.coauthorUserIds]
+        : [],
+      userIsDefaultSubscribed: (u) => u.auto_subscribe_to_my_posts,
+    });
+    userIdsSubscribedToPost = usersSubscribedToPost.map(({ _id }) => _id);
+  }
+
+  // If the post is associated with a group, also (potentially) notify the group
+  // organizers
+  if (comment.post && comment.post.group) {
+    const { organizerIds } = comment.post.group;
+    if (organizerIds && organizerIds.length) {
+      const subsWithOrganizers = await fetchSubscribedUsers({
+        documentId: comment.post._id,
+        collectionName: "Posts",
+        type: subscriptionTypes.newComments,
+        potentiallyDefaultSubscribedUserIds: organizerIds,
+        userIsDefaultSubscribed: (u) => u.autoSubscribeAsOrganizer,
+      });
+      userIdsSubscribedToPost = union(
+        userIdsSubscribedToPost,
+        subsWithOrganizers.map(({ _id }) => _id),
+      );
+    }
+  }
+
+  // Notify users who are subscribed to shortform posts
+  if (comment.post && !comment.topLevelCommentId && comment.shortform) {
+    const usersSubscribedToShortform = await fetchSubscribedUsers({
+      documentId: comment.post._id,
+      collectionName: "Posts",
+      type: subscriptionTypes.newShortform,
+    });
+    const userIdsSubscribedToShortform = usersSubscribedToShortform.map(
+      ({ _id }) => _id,
+    );
+    await createNotifications({
+      userIds: userIdsSubscribedToShortform,
+      notificationType: "newShortform",
+      documentType: "comment",
+      documentId: comment._id,
+    });
+    notifiedUsers = [...userIdsSubscribedToShortform, ...notifiedUsers];
+  }
+
+  // remove userIds of users that have already been notified and of comment
+  // author (they could be replying in a thread they're subscribed to)
+  const postSubscriberIdsToNotify = difference(userIdsSubscribedToPost, [
+    ...notifiedUsers,
+    comment.userId,
+  ]);
+  if (postSubscriberIdsToNotify.length > 0) {
+    await createNotifications({
+      userIds: postSubscriberIdsToNotify,
+      notificationType: "newComment",
+      documentType: "comment",
+      documentId: comment._id,
+    });
+    notifiedUsers = [...notifiedUsers, ...postSubscriberIdsToNotify];
+  }
+
+  // 4. If this comment is in a subforum, notify members with email notifications enabled
+  if (
+    comment.tagId &&
+    comment.tagCommentType === "SUBFORUM" &&
+    !comment.topLevelCommentId &&
+    // FIXME: make this more general, and possibly queue up notifications from
+    // unreviewed users to send once they are approved
+    !comment.authorIsUnreviewed
+  ) {
+    const subforumSubcribedUsers = await db.query.users.findMany({
+      columns: {
+        _id: true,
+      },
+      where: {
+        profileTagIds: { arrayContains: [comment.tagId] },
+      },
+    });
+    const subforumSubscriberIds = subforumSubcribedUsers.map(({ _id }) => _id);
+    const subforumSubscriberRels = await db.query.userTagRels.findMany({
+      columns: {
+        userId: true,
+      },
+      where: {
+        userId: { in: subforumSubscriberIds },
+        tagId: comment.tagId,
+        subforumEmailNotifications: true,
+      },
+    });
+    const subforumSubscriberIdsMaybeNotify = subforumSubscriberRels.map(
+      ({ userId }) => userId,
+    );
+    const subforumSubscriberIdsToNotify = difference(
+      subforumSubscriberIdsMaybeNotify,
+      [...notifiedUsers, comment.userId],
+    );
+    await createNotifications({
+      userIds: subforumSubscriberIdsToNotify,
+      notificationType: "newSubforumComment",
+      documentType: "comment",
+      documentId: comment._id,
+    });
+  }
+
+  // 5. Notify users who are subscribed to comments by the comment author
+  const commentAuthorSubscribers = await fetchSubscribedUsers({
+    documentId: comment.userId,
+    collectionName: "Users",
+    type: subscriptionTypes.newUserComments,
+  });
+  const commentAuthorSubscriberIds = commentAuthorSubscribers.map(({ _id }) => _id);
+  const commentAuthorSubscriberIdsToNotify = difference(
+    commentAuthorSubscriberIds,
+    notifiedUsers,
+  );
+  await createNotifications({
+    userIds: commentAuthorSubscriberIdsToNotify,
+    notificationType: "newUserComment",
+    documentType: "comment",
+    documentId: comment._id,
+  });
+};
+
+// "Not fully reviewed" per getReasonForReview — includes never-reviewed and
+// currently-snoozed users.
+const userIsUnreviewedForPangram = (user: CurrentUser): boolean => {
+  const fullyReviewed = !!user.reviewedByUserId && !user.snoozedUntilContentCount;
+  return !fullyReviewed;
+};
+
+export const runPangramOnComment = async (user: CurrentUser, revisionId: string) => {
+  if (!userIsUnreviewedForPangram(user)) {
+    return;
+  }
+
+  const revision = await db.query.revisions.findFirst({
+    columns: {
+      pangramCheckedAt: true,
+    },
+    where: {
+      _id: revisionId,
+    },
+  });
+  if (!revision || revision.pangramCheckedAt) {
+    return;
+  }
+
+  await runPangramOnRevision(revisionId);
 };

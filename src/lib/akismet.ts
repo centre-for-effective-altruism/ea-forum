@@ -1,5 +1,6 @@
 import "server-only";
 import { AkismetClient } from "@/vendor/akismet-api/akismet";
+import { captureException } from "@sentry/nextjs";
 import { isDevelopment } from "./environment";
 import { getSiteUrl } from "./routeHelpers";
 import type { DbOrTransaction } from "./db";
@@ -86,7 +87,7 @@ export const akismetCheckComment = async (
     }
     return await client.checkSpam(report);
   } catch (e) {
-    // TODO Sentry
+    captureException(e);
     console.error("Akismet spam checker crashed. Classifying as not spam.", e);
     return false;
   }

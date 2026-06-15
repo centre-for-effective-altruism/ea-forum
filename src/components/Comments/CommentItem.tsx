@@ -3,11 +3,13 @@
 import { useCallback, useState } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
+import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
+import { useOptionalCommentsList } from "./useCommentsList";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { useOptionalCommentsList } from "./useCommentsList";
 import {
   userGetProfileUrl,
+  userIsAdminOrMod,
   userIsNew,
   userIsPostAuthor,
 } from "@/lib/users/userHelpers";
@@ -21,8 +23,10 @@ import AuthorIcon from "../Icons/AuthorIcon";
 import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
+import CommentPollVote from "./CommentPollVote";
 import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
+import PangramBadge from "../PangramBadge";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
 import NewComment from "./NewComment";
@@ -30,7 +34,6 @@ import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
-import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 
 /**
  * Render a comment. While you can use this directly, it's often better to instead
@@ -141,7 +144,8 @@ export default function CommentItem({
     <div
       data-component="CommentItem"
       className={clsx(
-        !borderless && "border rounded-sm pl-3 pt-2 mb-1",
+        !borderless && "border pl-3 pt-2 mb-1",
+        !borderless && (depth === 0 ? "rounded-sm " : "rounded-s-sm"),
         !borderless &&
           (promoted ? "border-promoted-comment" : "border-comment-border"),
         !borderless &&
@@ -215,17 +219,24 @@ export default function CommentItem({
               <Type className="text-gray-600 cursor-default">Moderator comment</Type>
             )}
             <CommentVoteButtons comment={comment} />
-            <div className="grow">
-              <CommentTags comment={comment} />
-            </div>
+            <CommentPollVote comment={comment} />
+            {comment.contentsRevision && userIsAdminOrMod(currentUser) && (
+              <PangramBadge revision={comment.contentsRevision} />
+            )}
+            <CommentTags comment={comment} className="grow" />
           </div>
-          <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
-            <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
+          <Link
+            href={commentGetPageUrl({ comment })}
+            onClick={copyLink}
+            className="text-gray-600 hover:text-gray-1000 mt-1"
+          >
+            <LinkIcon className="w-[16px]" />
           </Link>
           {currentUser && (
             <CommentTripleDotMenu
               comment={comment}
               onEdit={isEditing ? undefined : onEdit}
+              className="mt-[2px]"
             />
           )}
         </div>
@@ -236,7 +247,7 @@ export default function CommentItem({
         )}
         {isExpanded &&
           (isEditing ? (
-            <EditComment commentId={comment._id} onFinishEdit={onFinishEdit} />
+            <EditComment commentId={comment._id} onSuccess={onFinishEdit} />
           ) : (
             <>
               {promotedBy?.displayName && (

@@ -1,10 +1,11 @@
+import { cache } from "react";
 import { SQL, sql } from "drizzle-orm";
 import { db } from "../db";
-import { posts, User } from "../schema";
+import { posts } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
+import { sequenceBaseProjection } from "../sequences/sequenceQueries";
 import { postTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "./postsHelpers";
-import { isNotTrue } from "../utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import {
   filterModeToAdditiveKarmaModifier,
@@ -12,6 +13,8 @@ import {
   resolveFrontpageTagFilters,
   type FilterSettings,
 } from "../filterSettings";
+import { userIsAdminOrMod } from "../users/userHelpers";
+import { CurrentUser } from "../users/currentUser";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -26,14 +29,11 @@ export const currentUserSuggestedCurationSelector =
     sql<boolean>`${postsTable}."suggestForCuratedUserIds" @> ARRAY[${currentUserId}::VARCHAR]`;
 
 export const fetchPostDisplay = async (
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null,
+  currentUser: CurrentUser | null,
   postId: string,
 ) => {
   const currentUserId = currentUser?._id ?? null;
-  const currentUserIsModerator =
-    currentUser?.isAdmin ||
-    currentUser?.groups?.includes("sunshineRegiment") ||
-    false;
+  const currentUserIsModerator = userIsAdminOrMod(currentUser);
   const post = await db.query.posts.findFirst({
     columns: {
       _id: true,
@@ -60,10 +60,16 @@ export const fetchPostDisplay = async (
       authorIsUnreviewed: true,
       forceAllowType3Audio: true,
       sharingSettings: true,
+      socialPreview: true,
+      socialPreviewImageAutoUrl: true,
+      eventImageId: true,
+      noIndex: true,
     },
     extras: {
       coauthors: coauthorsSelector,
-      tags: postTagsProjection,
+      tags: (postsTable) => postTagsProjection(postsTable, currentUserId),
+      customHighlightHtml: (posts) =>
+        sql<string | null>`${posts}."customHighlight"->>'html'`,
       reactors: reactorsSelector("Posts"),
       ...(currentUserId
         ? {
@@ -81,10 +87,10 @@ export const fetchPostDisplay = async (
         : [
             ...(currentUserId ? [{ userId: currentUserId }] : []),
             {
-              draft: isNotTrue,
-              deletedDraft: isNotTrue,
-              rejected: isNotTrue,
-              isFuture: isNotTrue,
+              draft: false,
+              deletedDraft: false,
+              rejected: false,
+              isFuture: false,
               postedAt: { isNotNull: true },
               status: postStatuses.STATUS_APPROVED,
             },
@@ -93,10 +99,20 @@ export const fetchPostDisplay = async (
     with: {
       user: userBaseProjection,
       contents: {
-        columns: {
-          html: true,
-          wordCount: true,
-        },
+        columns: userIsAdminOrMod(currentUser)
+          ? {
+              _id: true,
+              html: true,
+              wordCount: true,
+              pangramAiScore: true,
+              pangramCheckedAt: true,
+              pangramStatus: true,
+              pangramRawResponse: true,
+            }
+          : {
+              html: true,
+              wordCount: true,
+            },
       },
       group: {
         columns: {
@@ -105,6 +121,7 @@ export const fetchPostDisplay = async (
           organizerIds: true,
         },
       },
+      canonicalSequence: sequenceBaseProjection,
       podcastEpisode: {
         columns: {
           episodeLink: true,
@@ -160,6 +177,8 @@ export const fetchPostDisplay = async (
 };
 
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
+
+export const fetchPostDisplayCached = cache(fetchPostDisplay);
 
 export const filterSettingsToSelector = (
   filterSettings: FilterSettings,

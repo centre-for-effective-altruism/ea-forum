@@ -6,6 +6,7 @@ import {
   locationHashIsFootnoteBackreference,
   parseLinkContentType,
 } from "@/lib/utils/contentHelpers";
+import LazySequenceTooltip from "../LazySequenceTooltip";
 import LazyPostsTooltip from "../LazyPostsTooltip";
 import LazyUsersTooltip from "../LazyUsersTooltip";
 import LazyTagTooltip from "../LazyTagTooltip";
@@ -97,7 +98,15 @@ export default function HoverPreviewLink({
         </LazyTagTooltip>
       );
     case "sequence":
-    // TODO: Sequence hover previews
+      return (
+        <LazySequenceTooltip
+          As="span"
+          sequenceId={linkContentType.sequenceId}
+          className="[&_a]:after:content-['°'] [&_a]:after:ml-px"
+        >
+          {defaultLinkNode}
+        </LazySequenceTooltip>
+      );
     default:
       break;
   }

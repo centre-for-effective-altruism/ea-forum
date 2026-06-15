@@ -12,6 +12,7 @@ import { calculateKarmaChanges } from "./karmaChanges";
 import {
   fetchOnboardingUsers,
   fetchUserBySlug,
+  fetchUsersById,
   isDisplayNameTaken,
   updateExpandedSection,
   updateWork,
@@ -78,6 +79,12 @@ export const usersRouter = {
     .handler(async ({ input: { slug } }) => {
       const currentUser = await getCurrentUser();
       return await fetchUserBySlug(currentUser, slug);
+    }),
+  listByIds: os
+    .input(z.object({ userIds: z.array(z.string()) }))
+    .handler(async ({ input: { userIds } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchUsersById(currentUser, userIds);
     }),
   hideDigestAd: os.handler(async () => {
     const currentUser = await getCurrentUser();

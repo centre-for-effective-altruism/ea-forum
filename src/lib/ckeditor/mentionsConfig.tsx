@@ -69,7 +69,7 @@ const fetchMentionableSuggestions = async (searchString: string) => {
       },
     },
   ]);
-  const hits = response?.results?.[0]?.hits;
+  const hits = response?.[0]?.hits;
   return Array.isArray(hits) ? filterNonNull(hits.map(formatSearchHit)) : [];
 };
 

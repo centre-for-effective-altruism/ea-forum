@@ -1,7 +1,7 @@
 import type { RefObject, KeyboardEvent } from "react";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import clsx from "clsx";
-import Editor, { EditorOnChangeProps } from "../Editor/Editor";
+import Editor, { EditorAutosave, EditorOnChangeProps } from "../Editor/Editor";
 import Button from "../Button";
 
 export default function CommentForm({
@@ -10,9 +10,12 @@ export default function CommentForm({
   contents,
   editorRef,
   loading,
+  cancelLabel = "Cancel",
+  onCancel,
   onSubmit,
   onKeyDown,
   onChange,
+  autosave,
   className,
 }: Readonly<{
   formType: "edit" | "new";
@@ -20,9 +23,12 @@ export default function CommentForm({
   contents: EditorContents;
   editorRef: RefObject<EditorAPI | null>;
   loading?: boolean;
+  cancelLabel?: string;
+  onCancel?: () => void;
   onSubmit: () => void;
   onKeyDown: (e: KeyboardEvent<HTMLFormElement>) => void;
   onChange: (props: EditorOnChangeProps) => void;
+  autosave?: EditorAutosave;
   className?: string;
 }>) {
   return (
@@ -43,15 +49,23 @@ export default function CommentForm({
         placeholder={placeholder}
         value={contents}
         onChange={onChange}
+        autosave={autosave}
         commentStyles
         commentEditor
         hideControls
         ref={editorRef}
         className="w-full grow"
       />
-      <Button type="submit" loading={loading}>
-        Comment
-      </Button>
+      <div className="flex items-center gap-2">
+        {onCancel && (
+          <Button variant="greyFilled" onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+        )}
+        <Button type="submit" loading={loading}>
+          Comment
+        </Button>
+      </div>
     </form>
   );
 }

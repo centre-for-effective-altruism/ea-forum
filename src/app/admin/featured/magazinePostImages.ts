@@ -1,6 +1,6 @@
-import { getSocialImagePreviewPrefix } from "@/lib/cloudinary/cloudinaryHelpers";
 import {
   getPostSocialImageUrl,
+  getSocialImagePreviewPrefix,
   type PostWithSocialPreview,
 } from "@/lib/posts/postsHelpers";
 

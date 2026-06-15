@@ -7,8 +7,9 @@ import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
 import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
-import { userCanDo, userIsInGroup } from "../users/userHelpers";
+import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
 import { filterSettingsSchema } from "../filterSettings";
+import { tagGetUrl } from "../tags/tagHelpers";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -51,6 +52,23 @@ export const postGetPageUrl = ({
 
 export const postGetCommentsUrl: typeof postGetPageUrl = (...args) =>
   postGetPageUrl(...args) + "#comments";
+
+export const postGetEditUrl = (
+  postId: string,
+  isAbsolute = false,
+  linkSharingKey?: string,
+  version?: string,
+): string => {
+  const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  let url = `${prefix}/editPost?postId=${postId}`;
+  if (linkSharingKey) {
+    url += `&key=${linkSharingKey}`;
+  }
+  if (version) {
+    url += `&version=${version}`;
+  }
+  return url;
+};
 
 export type GoogleLocation = {
   address_components: {
@@ -97,9 +115,16 @@ export const getPostReadTimeMinutes = (
   return 1;
 };
 
-const getSocialImagePreviewPrefix = () => {
+type SocialImageOptions = {
+  width?: number;
+  dpr?: number;
+};
+
+export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
   const cloudName = getCloudinaryCloudName();
-  return `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,ar_1.91,g_auto/`;
+  const width = options?.width ? `,w_${options.width}` : "";
+  const dpr = options?.dpr ? `,dpr_${options.dpr}` : "";
+  return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_lfill,ar_1.91,g_auto${width}${dpr}/`;
 };
 
 export type PostWithSocialPreview = Pick<
@@ -107,13 +132,16 @@ export type PostWithSocialPreview = Pick<
   "isEvent" | "eventImageId" | "socialPreview" | "socialPreviewImageAutoUrl"
 >;
 
-export const getPostSocialImageUrl = (post: PostWithSocialPreview) => {
+export const getPostSocialImageUrl = (
+  post: PostWithSocialPreview,
+  options?: SocialImageOptions,
+) => {
   const manualId =
     post.isEvent && post.eventImageId
       ? post.eventImageId
       : (post.socialPreview as JsonRecord)?.imageId;
   if (manualId) {
-    return getSocialImagePreviewPrefix() + manualId;
+    return getSocialImagePreviewPrefix(options) + manualId;
   }
   return post.socialPreviewImageAutoUrl ?? null;
 };
@@ -161,6 +189,18 @@ export const userIsSharedOnPost = (
     post.sharingSettings.anyoneWithLinkCan !== "none" &&
     post.currentUserUsedLinkKey
   );
+};
+
+export const getPostCollaborateUrl = (
+  postId: string,
+  isAbsolute = false,
+  linkSharingKey?: string,
+) => {
+  const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  if (linkSharingKey) {
+    return `${prefix}/collaborateOnPost?postId=${postId}&key=${linkSharingKey}`;
+  }
+  return `${prefix}/collaborateOnPost?postId=${postId}`;
 };
 
 /**
@@ -266,4 +306,109 @@ export const postHasNewUnreadComments = (post: PostListItem) => {
   const lastVisitedDate = new Date(readStatus[0].lastUpdated);
   const lastCommentedDate = new Date(lastCommentedAt);
   return lastVisitedDate < lastCommentedDate;
+};
+
+const POST_DESCRIPTION_EXCLUSIONS: RegExp[] = [
+  /cross-? ?posted/i,
+  /epistemic status/i,
+  /acknowledgements/i,
+];
+
+/** Get a og:description-appropriate description for a post */
+export const getPostDescription = (post: PostDisplay): string | undefined => {
+  const socialPreview = post.socialPreview as Record<string, unknown> | undefined;
+  if (socialPreview?.text && typeof socialPreview.text === "string") {
+    return socialPreview.text;
+  }
+
+  const longDescriptionHtml = post.customHighlightHtml || post.contents?.html;
+  if (longDescriptionHtml) {
+    const longDescription = htmlToTextDefault(longDescriptionHtml);
+
+    // Concatenate the first few paragraphs together up to some reasonable length
+    const plaintextPars = longDescription
+      // Paragraphs in the plaintext description are separated by double-newlines
+      .split(/\n\n/)
+      // Get rid of opening text ('epistemic status' or 'crossposted from' etc)
+      .filter((par) => !POST_DESCRIPTION_EXCLUSIONS.some((re) => re.test(par)));
+
+    if (!plaintextPars.length) {
+      return undefined;
+    }
+
+    // Concatenate paragraphs together with a delimiter, until they reach an
+    // acceptable length (target is 100-200 characters). This will return a
+    // longer description if one of the first couple of paragraphs is longer
+    // than 200.
+    let firstFewPars = plaintextPars[0];
+    for (const par of plaintextPars.slice(1)) {
+      const concat = `${firstFewPars} • ${par}`;
+      // If we're really short, we need more
+      if (firstFewPars.length < 40) {
+        firstFewPars = concat;
+        continue;
+      }
+      // Otherwise, if we have room for the whole next paragraph, concatenate it
+      if (concat.length < 150) {
+        firstFewPars = concat;
+        continue;
+      }
+      // If we're here, we know we have enough and couldn't fit the last
+      // paragraph, so we should stop
+      break;
+    }
+    if (firstFewPars.length > 148) {
+      return firstFewPars.slice(0, 149).trim() + "…";
+    }
+    return firstFewPars + " …";
+  }
+  if (post.shortform) {
+    const userText = post.user ? `by EA Forum user ${post.user.displayName}` : "";
+    return `A collection of shorter posts ${userText}`;
+  }
+  return undefined;
+};
+
+export const postGetStructuredData = (
+  post: PostDisplay,
+  description = getPostDescription(post) ?? null,
+): JsonRecord => {
+  const url = postGetPageUrl({ post, isAbsolute: true });
+  return {
+    "@context": "http://schema.org",
+    "@type": "DiscussionForumPosting",
+    url: url,
+    text: post.contents?.html ?? description,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
+    headline: post.title,
+    description,
+    datePublished: post.postedAt,
+    about: (post.tags ?? [])
+      .filter((tag) => !!tag.description)
+      .map((tag) => ({
+        "@type": "Thing",
+        name: tag.name,
+        url: tagGetUrl({ tag, isAbsolute: true }),
+        description: tag.description,
+      })),
+    author: [
+      ...(post.user
+        ? [
+            {
+              "@type": "Person",
+              name: post.user.displayName,
+              url: userGetProfileUrl({ user: post.user, isAbsolute: true }),
+            },
+          ]
+        : []),
+      ...(post.coauthors ?? []).map((author) => ({
+        "@type": "Person",
+        name: author.displayName,
+        url: userGetProfileUrl({ user: author, isAbsolute: true }),
+      })),
+    ],
+  };
 };

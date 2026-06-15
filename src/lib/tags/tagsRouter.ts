@@ -8,6 +8,8 @@ import {
   fetchTagsById,
 } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
+import { getCurrentUser } from "../users/currentUser";
+import { addOrUpvoteTag } from "./tagMutations";
 
 export const tagsRouter = {
   listCore: os
@@ -60,4 +62,18 @@ export const tagsRouter = {
       return diffHtml(before?.html ?? "", after.html ?? "", true);
     }),
   fetchOnboardingTags: os.handler(fetchOnboardingTags),
+  addOrUpvoteTag: os
+    .input(
+      z.object({
+        postId: z.string().nonempty(),
+        tagId: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { postId, tagId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await addOrUpvoteTag({ currentUser, postId, tagId });
+    }),
 };

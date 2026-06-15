@@ -1,7 +1,7 @@
-import urlJoin from "url-join";
 import type { CurrentUser } from "./currentUser";
 import type { Localgroup, Post, User } from "../schema";
 import type { UserKarmaChanges } from "./karmaChangesTypes";
+import { combineUrls, getSiteUrl } from "../routeHelpers";
 import { allUserGroupsByName } from "./userGroups";
 import { z } from "zod/v4";
 import uniq from "lodash/uniq";
@@ -13,12 +13,15 @@ export const MINIMUM_APPROVAL_KARMA = 5;
 export const userGetProfileUrl = ({
   user,
   from,
+  isAbsolute,
 }: {
   user: { slug: string | null };
   from?: string;
+  isAbsolute?: boolean;
 }) => {
   const url = user.slug ? `/users/${user.slug}` : "#";
-  return from ? `${url}?from=${from}` : url;
+  const taggedUrl = from ? `${url}?from=${from}` : url;
+  return isAbsolute ? combineUrls(getSiteUrl(), taggedUrl) : taggedUrl;
 };
 
 export const userGetStatsUrl = ({ slug }: Pick<CurrentUser, "slug">) =>
@@ -158,7 +161,7 @@ type SocialMediaProfileField = keyof typeof socalMediaProfileFields;
 const profileFieldToSocialMediaHref = (
   field: SocialMediaProfileField,
   userUrl: string,
-) => urlJoin("https://" + socalMediaProfileFields[field], userUrl);
+) => combineUrls("https://" + socalMediaProfileFields[field], userUrl);
 
 export const socialMediaSiteNameToHref = (
   siteName: SocialMediaSiteName | "website",
@@ -194,7 +197,7 @@ export const userIsAdmin = <T extends Partial<User>>(
   user: T | null,
 ): user is T & { isAdmin: true } => user?.isAdmin ?? false;
 
-type UserPermissions = Pick<User, "groups" | "banned" | "isAdmin">;
+export type UserPermissions = Pick<User, "_id" | "groups" | "banned" | "isAdmin">;
 
 /**
  * Get a list of a user's groups
@@ -222,6 +225,9 @@ export const userGetGroups = (user: UserPermissions | null): string[] => {
  */
 export const userIsInGroup = (user: UserPermissions | null, group: string) =>
   userGetGroups(user).indexOf(group) >= 0;
+
+export const userIsAdminOrMod = (user: UserPermissions | null) =>
+  userIsAdmin(user) || userIsInGroup(user, "sunshineRegiment");
 
 /**
  * Get a list of all the actions a user can perform
@@ -375,3 +381,56 @@ export const userHasKarmaChange = (
   const lastOpened = currentUser.karmaChangeLastOpened ?? new Date(0);
   return lastOpened < (endDate ?? new Date(0)) || updateFrequency === "realtime";
 };
+
+export const userCanMention = (
+  currentUser: CurrentUser,
+  mentionsCount: number,
+  {
+    karmaThreshold = 1,
+    mentionsLimit = 10,
+  }: {
+    karmaThreshold?: number;
+    mentionsLimit?: number;
+  } = {},
+): { result: boolean; reason?: string } => {
+  if (currentUser.isAdmin) {
+    return { result: true };
+  }
+
+  const youCanStillPost = `This will not prevent you from posting, but the mentioned users won't be notified.`;
+
+  if ((currentUser.karma || 0) < karmaThreshold && mentionsCount > 0) {
+    return {
+      result: false,
+      reason: `You must have at least ${karmaThreshold} karma to mention users. ${youCanStillPost}`,
+    };
+  }
+
+  if (mentionsCount > mentionsLimit) {
+    return {
+      result: false,
+      reason: `You can notify ${mentionsLimit} users at most in a single post. ${youCanStillPost}`,
+    };
+  }
+
+  if (currentUser.conversationsDisabled || currentUser.mentionsDisabled) {
+    return {
+      result: false,
+      reason: `Ability to mention users has been disabled for this account. ${youCanStillPost}`,
+    };
+  }
+
+  return { result: true };
+};
+
+const getSignature = (name: string) => {
+  const today = new Date();
+  const todayString = today.toLocaleString("default", {
+    month: "short",
+    day: "numeric",
+  });
+  return `${todayString}, ${name}`;
+};
+
+export const getSignatureWithNote = (name: string, note: string) =>
+  `${getSignature(name)}: ${note}\n`;

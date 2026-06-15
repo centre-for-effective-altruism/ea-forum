@@ -22,10 +22,12 @@ export default function CommentTripleDotMenu({
   comment,
   onEdit,
   small,
+  className,
 }: Readonly<{
   comment: CommentListItem;
   onEdit?: () => void;
   small?: boolean;
+  className?: string;
 }>) {
   const dismissRef = useRef<() => void>(null);
   const { currentUser } = useCurrentUser();
@@ -105,9 +107,10 @@ export default function CommentTripleDotMenu({
       >
         <button
           aria-label="Comment options"
-          className="
-            text-gray-600 hover:text-gray-900 cursor-pointer flex items-center
-          "
+          className={clsx(
+            "text-gray-600 hover:text-gray-900 cursor-pointer flex items-center",
+            className,
+          )}
         >
           <EllipsisVerticalIcon
             className={clsx(

@@ -1,7 +1,7 @@
-import { SearchDocument } from "./searchDocuments";
+import { SearchBase, SearchDocument } from "./searchDocuments";
 
-export type SearchResult = {
-  hits: SearchDocument[];
+export type SearchResult<T extends SearchBase = SearchDocument> = {
+  hits: T[];
   nbHits: number;
   page: number;
   nbPages: number;

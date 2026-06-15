@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { filterNonNull } from "../typeHelpers";
 import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
+import type { VoteType } from "../votes/voteHelpers";
 
 export type TagRelationalProjection = RelationalProjection<typeof db.query.tags>;
 
@@ -67,26 +68,52 @@ export const fetchTagsById = async (
   return keyBy(result, "_id");
 };
 
-export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core" | "postCount"> & {
-  description: string | null;
+export type PostTagRel = {
+  _id: string;
   baseScore: number;
+  voteType?: VoteType;
 };
 
-export const postTagsProjection = (postsTable: typeof posts) =>
+export type PostTag = Pick<Tag, "_id" | "name" | "slug" | "core" | "postCount"> & {
+  description: string | null;
+  tagRel: PostTagRel;
+};
+
+// TODO: It'd be really nice to do this in Drizzle instead of raw SQL, but it
+// doesn't seem possible with the current Drizzle API without tidying up the DB.
+export const postTagsProjection = (
+  postsTable: typeof posts,
+  currentUserId: string | null,
+) =>
   sql<PostTag[] | null>`
     SELECT ARRAY_AGG(JSONB_BUILD_OBJECT(
-      '_id', post_tags."_id",
-      'name', post_tags."name",
-      'slug', post_tags."slug",
-      'core', post_tags."core",
-      'description', ${htmlSubstring(sql`post_tags."description"->>'html'`)},
-      'postCount', post_tags."postCount",
-      'baseScore', rel."baseScore"::INTEGER
+      '_id', post_tag."_id",
+      'name', post_tag."name",
+      'slug', post_tag."slug",
+      'core', post_tag."core",
+      'description', ${htmlSubstring(sql`post_tag."description"->>'html'`)},
+      'postCount', post_tag."postCount",
+      'tagRel', JSONB_BUILD_OBJECT(
+        '_id', tagrel."_id",
+        'baseScore', rel."baseScore"::INTEGER,
+        'voteType', vote."voteType"
+      )
     ))
     FROM "Posts" post_for_tags
     JOIN LATERAL JSONB_EACH(post_for_tags."tagRelevance")
       AS rel("tagId", "baseScore") ON TRUE
-    INNER JOIN "Tags" post_tags ON post_tags."_id" = rel."tagId"
+    INNER JOIN "Tags" post_tag ON post_tag."_id" = rel."tagId"
+    INNER JOIN "TagRels" tagrel ON
+      tagrel."postId" = post_for_tags."_id"
+      AND tagrel."tagId" = post_tag."_id"
+      AND tagrel."deleted" IS NOT TRUE
+    JOIN "Votes" vote ON
+      ${currentUserId !== null}
+      AND vote."collectionName" = 'TagRels'
+      AND vote."documentId" = tagrel."_id"
+      AND vote."userId" = ${currentUserId}
+      AND vote."cancelled" IS NOT TRUE
+      AND vote."isUnvote" IS NOT TRUE
     WHERE
       post_for_tags."_id" = ${postsTable}."_id"
       AND rel."baseScore"::INTEGER > 0
