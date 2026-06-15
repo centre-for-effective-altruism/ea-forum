@@ -4,6 +4,7 @@ import type { CommentTag, PostTag, TagBase } from "@/lib/tags/tagQueries";
 import type { SearchTag } from "@/lib/search/searchDocuments";
 import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import TagBody from "../ContentStyles/TagBody";
+import TagRelevance from "./TagRelevance";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
@@ -30,10 +31,11 @@ export default function TagTooltip({
       placement={placement}
       As={As}
       className={className}
-      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
+      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow-lg w-[270px]"
       title={
         <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">
-          {description && <TagBody html={description} isExcerpt />}
+          {"tagRel" in tag && <TagRelevance tag={tag as PostTag} />}
+          {description && <TagBody html={description} />}
           <Type style="bodyHeavy">
             <Link
               href={tagGetPageUrl({ tag })}

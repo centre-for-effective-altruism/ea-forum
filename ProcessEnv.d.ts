@@ -4,6 +4,7 @@ declare namespace NodeJS {
     LOG_DRIZZLE_QUERIES?: "true" | "false";
     ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
+    NEXT_PUBLIC_IS_BOT_SITE?: "true" | "false";
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
 
@@ -51,6 +52,8 @@ declare namespace NodeJS {
     NEXT_PUBLIC_RECAPTCHA_KEY: string;
     RECAPTCHA_PRIVATE_KEY: string;
     SENTRY_DSN: string;
+    INTERCOM_TOKEN: string;
+    PANGRAM_API_KEY: string;
 
     // Site config
     START_HERE_POST_ID: string;

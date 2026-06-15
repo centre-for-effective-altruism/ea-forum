@@ -26,8 +26,8 @@ export default function CommentVoteButtons({
       <div
         data-component="CommentVoteButtons"
         className="
-          inline-flex items-center h-[22px] px-2
-          rounded-sm border-1 border-comment-border
+          inline-flex items-center h-[22px] px-[3px] rounded-sm
+          border-1 border-comment-border
         "
       >
         <VoteButton
@@ -45,7 +45,7 @@ export default function CommentVoteButtons({
               {voteCount === 1 ? "" : "s"})
             </Type>
           }
-          className="text-[14px] font-500 text-gray-600 cursor-default"
+          className="text-[14px] font-500 text-gray-600 cursor-default -mx-[2px]"
         >
           {baseScore}
         </Tooltip>

@@ -1,3 +1,11 @@
+export type SubscribableCollection =
+  | "Comments"
+  | "Tags"
+  | "Users"
+  | "Sequences"
+  | "Localgroups"
+  | "Posts";
+
 export const subscriptionTypes = {
   newComments: "newComments",
   newUserComments: "newUserComments",

@@ -80,7 +80,7 @@ const fetchFromElasticIndex = async (
       },
     },
   ]);
-  const hits = response?.results?.[0]?.hits ?? [];
+  const hits = response?.[0]?.hits ?? [];
   return filterNonNull(
     hits.map((hit) => (hit as unknown as Record<string, string>)[fieldName]),
   );

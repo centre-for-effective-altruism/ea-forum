@@ -4,30 +4,35 @@ import type { CurrentUser } from "../users/currentUser";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import { userCanEditComment } from "./commentHelpers";
 
-export const fetchCommentAncestorIds = async (
+type CommentWithAncestor = {
+  _id: string;
+  parentCommentId: string | null;
+  userId: string;
+  depth: number;
+};
+
+/**
+ * For a given comment, fetch the ids of all of its parents recursively
+ */
+export const fetchCommentAncestors = async (
   txn: DbOrTransaction,
   commentId: string,
-): Promise<string[]> => {
-  type CommentWithAncestor = {
-    _id: string;
-    parentCommentId: string | null;
-    depth: number;
-  };
+): Promise<CommentWithAncestor[]> => {
   const result = await txn.execute<CommentWithAncestor>(sql`
     WITH RECURSIVE "comment_ancestors" AS (
-      SELECT "_id", "parentCommentId", 0 AS "depth"
+      SELECT "_id", "parentCommentId", "userId", 0 AS "depth"
       FROM "Comments"
       WHERE "_id" = ${commentId}
       UNION ALL
-      SELECT c."_id", c."parentCommentId", ca."depth" + 1
+      SELECT c."_id", c."parentCommentId", c."userId", ca."depth" + 1
       FROM "Comments" c
       INNER JOIN "comment_ancestors" ca ON c."_id" = ca."parentCommentId"
       WHERE ca."parentCommentId" IS NOT NULL
     )
-    SELECT "_id" FROM "comment_ancestors" WHERE "_id" <> ${commentId}
+    SELECT * FROM "comment_ancestors" WHERE "_id" <> ${commentId}
     ORDER BY "depth" ASC
   `);
-  return result.rows.map((row) => row._id);
+  return result.rows;
 };
 
 /** Fetches a post, returning just the fields needed to create a comment on it */

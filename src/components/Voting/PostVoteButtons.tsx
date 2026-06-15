@@ -9,8 +9,10 @@ import Type from "../Type";
 
 export default function PostVoteButtons({
   hideReacts,
+  divider,
 }: Readonly<{
   hideReacts?: boolean;
+  divider?: boolean;
 }>) {
   const {
     post: { reactors },
@@ -31,7 +33,6 @@ export default function PostVoteButtons({
         direction="Downvote"
         orientation="down"
         onVote={onVote}
-        large
         className="text-gray-600"
       />
       <Tooltip
@@ -52,16 +53,25 @@ export default function PostVoteButtons({
         direction="Upvote"
         orientation="up"
         onVote={onVote}
-        large
         className="text-gray-600 mr-3"
       />
       {!hideReacts && (
-        <ReactButtons
-          reactors={reactors}
-          extendedScore={extendedScore}
-          extendedVoteType={extendedVoteType}
-          onReact={onReact}
-        />
+        <>
+          {divider && (
+            <div
+              aria-hidden
+              className="
+                w-[1px] min-w-[1px] bg-gray-200 self-stretch rounded -ml-1 mr-1
+              "
+            />
+          )}
+          <ReactButtons
+            reactors={reactors}
+            extendedScore={extendedScore}
+            extendedVoteType={extendedVoteType}
+            onReact={onReact}
+          />
+        </>
       )}
     </div>
   );

@@ -24,7 +24,7 @@ export default function SiteToggle() {
       data-component="SiteToggle"
       className="
         fixed left-5 bottom-5 z-(--zindex-site-toggle) bg-gray-200/90 rounded-lg
-        shadow-md p-3 flex flex-col gap-2.5 font-sans text-[13px]
+        shadow p-3 flex flex-col gap-2.5 font-sans text-[13px]
         max-sm:hidden print:hidden
       "
     >

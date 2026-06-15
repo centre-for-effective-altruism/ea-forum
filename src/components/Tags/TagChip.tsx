@@ -11,7 +11,7 @@ export default function TagChip({
   variant?: TagChipVariant;
 }>) {
   return (
-    <TagTooltip tag={tag}>
+    <TagTooltip tag={tag} placement="bottom-start">
       <TagChipDisplay
         name={"shortName" in tag && tag.shortName ? tag.shortName : tag.name}
         href={tagGetPageUrl({ tag })}

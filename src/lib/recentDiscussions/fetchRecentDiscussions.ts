@@ -29,14 +29,15 @@ const MAX_COMMENT_AGE_HOURS = 18;
 const MAX_COMMENTS_PER_POST = 5;
 
 const getPostProjection = ({
-  currentUserId,
+  currentUser,
   excludeTopLevel,
 }: {
-  currentUserId: string | null;
+  currentUser: CurrentUser | null;
   excludeTopLevel: boolean;
 }) => {
+  const currentUserId = currentUser?._id ?? null;
   const postProj = postsListProjection(currentUserId, { highlightLength: 500 });
-  const commentProj = commentListProjection(currentUserId);
+  const commentProj = commentListProjection(currentUser);
   return {
     columns: {
       ...postProj.columns,
@@ -76,8 +77,9 @@ export type RecentDiscussionPost = PostFromProjection<
   ReturnType<typeof getPostProjection>
 >;
 
-const getCommentProjection = (currentUserId: string | null) => {
-  const base = commentListProjection(currentUserId);
+const getCommentProjection = (currentUser: CurrentUser | null) => {
+  const currentUserId = currentUser?._id ?? null;
+  const base = commentListProjection(currentUser);
   return {
     ...base,
     with: {
@@ -114,7 +116,7 @@ export type RecentDiscussionComment = CommentFromProjection<
   ReturnType<typeof getCommentProjection>
 >;
 
-const getTagProjection = (currentUserId: string | null) =>
+const getTagProjection = (currentUser: CurrentUser | null) =>
   ({
     columns: {
       _id: true,
@@ -129,9 +131,9 @@ const getTagProjection = (currentUserId: string | null) =>
     },
     with: {
       comments: {
-        ...getCommentProjection(currentUserId),
+        ...getCommentProjection(currentUser),
         where: {
-          ...viewableCommentFilter(currentUserId),
+          ...viewableCommentFilter(currentUser?._id ?? null),
           score: { gt: 0 },
           deletedPublic: false,
           RAW: (commentsTable) => sql`(
@@ -152,7 +154,7 @@ export type RecentDiscussionTag = TagFromProjection<
   ReturnType<typeof getTagProjection>
 >;
 
-const getRevisionProjection = (currentUserId: string | null) =>
+const getRevisionProjection = (currentUser: CurrentUser | null) =>
   ({
     columns: {
       _id: true,
@@ -161,7 +163,7 @@ const getRevisionProjection = (currentUserId: string | null) =>
     },
     with: {
       user: userBaseProjection,
-      tag: getTagProjection(currentUserId),
+      tag: getTagProjection(currentUser),
     },
   }) as const satisfies RevisionRelationalProjection;
 
@@ -224,7 +226,7 @@ const buildRecentDiscussionsSubqueries = (
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
           ...getPostProjection({
-            currentUserId,
+            currentUser,
             excludeTopLevel: false,
           }),
           where: {
@@ -245,7 +247,7 @@ const buildRecentDiscussionsSubqueries = (
       getSortKey: (comment) => new Date(comment.postedAt).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.comments.findMany({
-          ...getCommentProjection(currentUserId),
+          ...getCommentProjection(currentUser),
           where: {
             ...viewableCommentFilter(currentUserId),
             baseScore: { gt: 0 },
@@ -268,7 +270,7 @@ const buildRecentDiscussionsSubqueries = (
       doQuery: (limit, cutoff) =>
         db.query.posts.findMany({
           ...getPostProjection({
-            currentUserId,
+            currentUser,
             excludeTopLevel: true,
           }),
           where: {
@@ -289,7 +291,7 @@ const buildRecentDiscussionsSubqueries = (
       getSortKey: (tag) => new Date(tag.lastCommentedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.tags.findMany({
-          ...getTagProjection(currentUserId),
+          ...getTagProjection(currentUser),
           where: {
             deleted: isNotTrue,
             adminOnly: isNotTrue,
@@ -308,7 +310,7 @@ const buildRecentDiscussionsSubqueries = (
       getSortKey: (tag) => new Date(tag.editedAt ?? 0).getTime(),
       doQuery: (limit, cutoff) =>
         db.query.revisions.findMany({
-          ...getRevisionProjection(currentUserId),
+          ...getRevisionProjection(currentUser),
           where: {
             collectionName: "Tags",
             fieldName: "description",

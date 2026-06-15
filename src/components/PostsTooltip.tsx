@@ -40,7 +40,7 @@ export default function PostsTooltip({
       As={As}
       className={className}
       tooltipClassName="
-        bg-surface-floating! text-gray-900! p-0! shadow-md w-[360px] max-w-full
+        bg-surface-floating! text-gray-900! p-0! shadow-lg w-[360px] max-w-full
       "
       title={
         <div data-component="PostsTooltip">
@@ -69,6 +69,8 @@ export default function PostsTooltip({
                   [&_h5]:text-[14px]! [&_h5]:font-[700]!
                   [&_h6]:text-[14px]! [&_h6]:font-[700]!
                   [&_iframe]:hidden! [&_img]:hidden! [&_video]:hidden!
+                  [&_hr]:hidden! [&_table]:hidden!
+                  line-clamp-6
                 "
               />
             )}

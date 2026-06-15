@@ -10,6 +10,9 @@ import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
 import { recommendationsRouter } from "./recommendations/recommendationsRouter";
 import { reportsRouter } from "./reports/reportsRouter";
+import { revisionsRouter } from "./revisions/revisionsRouter";
+import { searchRouter } from "./search/searchRouter";
+import { sequencesRouter } from "./sequences/sequencesRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
 import { tagsRouter } from "./tags/tagsRouter";
 import { usersRouter } from "./users/usersRouter";
@@ -26,6 +29,9 @@ export const router = {
   recentDiscussions: recentDiscussionsRouter,
   recommendations: recommendationsRouter,
   reports: reportsRouter,
+  revisions: revisionsRouter,
+  search: searchRouter,
+  sequences: sequencesRouter,
   subscriptions: subscriptionsRouter,
   tags: tagsRouter,
   users: usersRouter,

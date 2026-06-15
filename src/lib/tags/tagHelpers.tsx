@@ -30,8 +30,8 @@ export const stableSortTags = (tags: PostTag[]): PostTag[] => {
     if (a.core !== b.core) {
       return a.core ? -1 : 1;
     }
-    if (a.baseScore !== b.baseScore) {
-      return (b.baseScore || 0) - (a.baseScore || 0);
+    if (a.tagRel.baseScore !== b.tagRel.baseScore) {
+      return (b.tagRel.baseScore || 0) - (a.tagRel.baseScore || 0);
     }
     return a.name.localeCompare(b.name);
   });

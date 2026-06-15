@@ -90,3 +90,14 @@ export const userCanEditComment = (
   user: CurrentUser | null,
   comment: OwnableDocument,
 ) => userCanDo(user, "comments.edit.all") || userOwns(user, comment);
+
+export const commentIsPublic = (
+  comment: Pick<Comment, "draft" | "deleted" | "rejected" | "authorIsUnreviewed">,
+) => {
+  return (
+    !comment.draft &&
+    !comment.deleted &&
+    !comment.rejected &&
+    !comment.authorIsUnreviewed
+  );
+};

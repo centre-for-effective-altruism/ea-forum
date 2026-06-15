@@ -1,8 +1,14 @@
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { Source_Serif_4 } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
-import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
+import { getSiteUrl } from "@/lib/routeHelpers";
+import {
+  getSiteLogoUrl,
+  getSiteOgImageUrl,
+} from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
@@ -13,7 +19,8 @@ import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
-const inter = Inter({
+const inter = localFont({
+  src: "../../public/InterVariable.woff2",
   variable: "--font-inter",
   display: "swap",
   preload: true,
@@ -28,13 +35,49 @@ const sourceSerif = Source_Serif_4({
   preload: true,
 });
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s — EA Forum",
-    default: "Effective Altruism Forum",
-  },
-  description:
-    "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "";
+  return {
+    metadataBase: getSiteUrl(),
+    title: {
+      template: "%s — EA Forum",
+      default: "Effective Altruism Forum",
+    },
+    description:
+      "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
+    applicationName: "Effective Altruism Forum",
+    robots: process.env.NEXT_PUBLIC_IS_BOT_SITE ? "noindex" : undefined,
+    alternates: {
+      types: {
+        "application/rss+xml": "/feed.xml",
+      },
+    },
+    icons: {
+      icon: getSiteLogoUrl(96),
+      shortcut: getSiteLogoUrl(50),
+      apple: getSiteLogoUrl(180),
+    },
+    manifest: "/site.webmanifest",
+    openGraph: {
+      type: "website",
+      url: getSiteUrl(),
+      title: "Effective Altruism Forum",
+      images: getSiteOgImageUrl(),
+    },
+    twitter: {
+      card: userAgent.startsWith("Slackbot-LinkExpanding")
+        ? "summary_large_image"
+        : "summary",
+      images: getSiteOgImageUrl(),
+    },
+    bookmarks: "/saved",
+  };
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -45,11 +88,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href={getSiteLogoUrl(96)} sizes="96x96" />
-        <link rel="apple-touch-icon" href={getSiteLogoUrl(180)} sizes="180x180" />
-        <link rel="shortcut icon" href={getSiteLogoUrl(50)} />
-        <meta name="apple-mobile-web-app-title" content="EA Forum" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <meta
+          httpEquiv="delegate-ch"
+          content="sec-ch-dpr https://res.cloudinary.com;"
+        />
       </head>
       <body
         className={clsx(

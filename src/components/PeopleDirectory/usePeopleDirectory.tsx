@@ -310,7 +310,7 @@ export const PeopleDirectoryProvider = ({ children }: { children: ReactNode }) =
             },
           },
         ]);
-        const results = response?.results?.[0];
+        const results = response?.[0];
         const hits = results?.hits ?? [];
         setResults((previousResults) => {
           const newResults = [...previousResults];
