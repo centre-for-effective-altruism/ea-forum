@@ -120,7 +120,7 @@ type SocialImageOptions = {
   dpr?: number;
 };
 
-const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
+export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
   const cloudName = getCloudinaryCloudName();
   const width = options?.width ? `,w_${options.width}` : "";
   const dpr = options?.dpr ? `,dpr_${options.dpr}` : "";
