@@ -17,6 +17,7 @@ import IntercomButton from "@/components/Intercom/IntercomButton";
 import PageLoadListener from "@/components/PageLoadListener";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
 import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
+import PageAnalytics from "@/components/PageAnalytics";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
@@ -102,6 +103,7 @@ export default function RootLayout({
       >
         <Providers>
           <PageLoadListener />
+          <PageAnalytics />
           <div id="tooltip-target" />
           <Header />
           <MobileNav />

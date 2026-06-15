@@ -96,7 +96,7 @@ const clientWriteEvents = async (events: AnalyticsEvent[]) => {
   });
 };
 
-const flushClientEvents = (force: boolean = false) => {
+export const flushClientEvents = (force: boolean = false) => {
   if (!pendingAnalyticsEvents.length) {
     return;
   }
