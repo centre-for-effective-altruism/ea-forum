@@ -8,6 +8,7 @@ import { users } from "@/lib/schema";
 import { db } from "@/lib/db";
 import { createUser } from "./users/userMutations";
 import { getCurrentClientId } from "./clientIds/currentClientId";
+import { isProduction } from "./environment";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -214,7 +215,7 @@ export const loginUserFromIdToken = async (idToken: string) => {
         httpOnly: true,
         maxAge: 315360000, // 10 years
         path: "/",
-        secure: process.env.ENVIRONMENT === "prod",
+        secure: isProduction,
       },
     },
   };

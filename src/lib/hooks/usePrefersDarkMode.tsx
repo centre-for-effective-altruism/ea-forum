@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { captureEvent } from "../../lib/analyticsEvents";
+import { useTracking } from "../../lib/analyticsEvents";
 import { isClient } from "../environment";
 
 const prefersDarkModeContext = createContext(false);
@@ -20,6 +20,7 @@ export const PrefersDarkModeProvider = ({
 }) => {
   const [query] = useState(() => buildQuery());
   const [prefersDarkMode, setPrefersDarkMode] = useState(query.matches);
+  const { captureEvent } = useTracking();
 
   useEffect(() => {
     // Check that query.addEventListener exists before using it, because on
@@ -35,7 +36,7 @@ export const PrefersDarkModeProvider = ({
     }) as (ev: Event) => void;
     query.addEventListener("change", handler);
     return () => query.removeEventListener("change", handler);
-  }, [query]);
+  }, [captureEvent, query]);
 
   return (
     <prefersDarkModeContext.Provider value={prefersDarkMode}>

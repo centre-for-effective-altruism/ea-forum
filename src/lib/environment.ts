@@ -1,15 +1,26 @@
 import Bowser from "bowser";
 import type { JsonRecord } from "./typeHelpers";
 
-export const isProduction = process.env.ENVIRONMENT === "prod";
-
-export const isStaging = process.env.ENVIRONMENT === "staging";
-
-export const isDevelopment = process.env.ENVIRONMENT === "dev";
-
 export const isServer = typeof window === "undefined";
 
 export const isClient = !isServer;
+
+if (isServer && process.env.ENVIRONMENT !== process.env.NEXT_PUBLIC_ENVIRONMENT) {
+  console.error(
+    "Mismatched ENVIRONMENT settings:",
+    process.env.ENVIRONMENT,
+    process.env.NEXT_PUBLIC_ENVIRONMENT,
+  );
+}
+
+const isEnv = (env: string) =>
+  process.env.NEXT_PUBLIC_ENVIRONMENT === env || process.env.ENVIRONMENT === env;
+
+export const isProduction = isEnv("prod");
+
+export const isStaging = isEnv("staging");
+
+export const isDevelopment = isEnv("dev");
 
 const userAgent = new (class {
   private bowser: Bowser.Parser.Parser | null = null;

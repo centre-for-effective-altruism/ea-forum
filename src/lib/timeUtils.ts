@@ -73,6 +73,19 @@ export const formatLongDateWithTime = (when: Date | string, timeZone?: string) =
   });
 };
 
+export const formatConsoleDate = (when: Date | string) => {
+  const date = when instanceof Date ? when : new Date(when);
+  return (
+    [
+      String(date.getHours()).padStart(2, "0"),
+      String(date.getMinutes()).padStart(2, "0"),
+      String(date.getSeconds()).padStart(2, "0"),
+    ].join(":") +
+    "." +
+    String(date.getMilliseconds()).padStart(3, "0")
+  );
+};
+
 export const nDaysAgo = (n: number): Date => {
   const date = new Date();
   date.setDate(date.getDate() - n);

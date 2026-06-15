@@ -13,7 +13,7 @@ import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
 import { subscriptionTypes } from "../subscriptions/subscriptionTypes";
 import { runPangramOnRevision } from "../revisions/pangramMutations";
 import { db, DbOrTransaction, Transaction } from "../db";
-import { captureEvent } from "../analytics/captureEvent";
+import { captureServerEvent } from "../analytics/captureEvent";
 import { postGetPageUrl } from "../posts/postsHelpers";
 import { commentIsPublic } from "./commentHelpers";
 import { akismetCheckComment } from "../akismet";
@@ -136,7 +136,7 @@ export const checkCommentRateLimits = async (
     // Note: This isn't sent when a comment is blocked due to the rate limit, only
     // if the *next* comment would be blocked. See "commentBlockedDueToRateLimit"
     // for tracking comments that are blocked
-    captureEvent("commentRateLimitHit", {
+    captureServerEvent("commentRateLimitHit", {
       rateLimitType: rateLimit.rateLimitType ?? null,
       rateLimitName: rateLimit.rateLimitName,
       userId: user._id,
@@ -189,7 +189,7 @@ export const updateCommentForumEvent = async (
     stickerData,
     maxStickersPerUser: event.maxStickersPerUser,
   });
-  captureEvent("upsertForumEventSticker", {
+  captureServerEvent("upsertForumEventSticker", {
     forumEventId: comment.forumEventId,
     stickerData,
   });
@@ -210,7 +210,7 @@ export const checkCommentForSpam = async (
   const postUrl = postGetPageUrl({ post });
   const isSpam = await akismetCheckComment(txn, user, commentRevision, postUrl);
   const timeElapsed = Date.now() - start;
-  captureEvent("checkForAkismetSpamCompleted", {
+  captureServerEvent("checkForAkismetSpamCompleted", {
     commentId,
     timeElapsed,
   });
