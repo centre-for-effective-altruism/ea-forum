@@ -108,7 +108,7 @@ export default function DigestPopup() {
           data-component="DigestPopup"
           className="
             fixed bottom-7 left-[50%] translate-x-[-50%] w-[880px] max-w-[85%]
-            rounded shadow px-5 py-4 flex items-center justify-between gap-5
+            rounded shadow-lg px-5 py-4 flex items-center justify-between gap-5
             bg-gray-900 border-1 border-gray-700 text-gray-0 print:hidden
             z-(--zindex-digest-popup) animate-fade-in [animation-duration:1s]
           "
