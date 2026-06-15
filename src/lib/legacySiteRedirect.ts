@@ -9,8 +9,7 @@ const oldSitePatterns = [
   /^\/api\/notificationEvents$/,
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
-  /^\/api\/search$/,
-  /^\/api\/search\/userFacets$/,
+  /^\/api\/search.*$/,
 ];
 
 // Middle precedence: Route these to the new site
@@ -30,6 +29,10 @@ const newSitePatterns = [
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
+  /^\/admin$/, // Admin
+  /^\/admin\/onboarding$/, // Admin onboarding test
+  /^\/admin\/org-updates-test$/, // Admin org-updates layout test
+  /^\/admin\/featured$/, // Admin featured page experiment
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match

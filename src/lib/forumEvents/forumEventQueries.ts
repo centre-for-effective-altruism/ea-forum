@@ -1,17 +1,87 @@
-import { sql } from "drizzle-orm";
-import type { DbOrTransaction } from "../db";
-import type { ForumEvent, InsertForumEvent } from "../schema";
+import { and, eq, sql } from "drizzle-orm";
+import type { CurrentUser } from "../users/currentUser";
 import type { EditorContents } from "../ckeditor/editorHelpers";
+import type { RelationalProjection } from "../utils/queryHelpers";
+import { forumEvents, ForumEvent, InsertForumEvent, comments } from "../schema";
+import { db, DbOrTransaction } from "../db";
 import {
   createRevisionForDenormalizedEditableField,
   createRevisionForNormalizedEditableField,
 } from "../revisions/revisionMutations";
 import {
   FORUM_EVENT_STICKER_VERSION,
+  ForumEventPollVote,
   ForumEventSticker,
   ForumEventStickerData,
 } from "./forumEventHelpers";
-import { CurrentUser } from "../users/currentUser";
+
+export type ForumEventRelationalProjection = RelationalProjection<
+  typeof db.query.forumEvents
+>;
+
+export type ForumEventFromProjection<
+  TConfig extends ForumEventRelationalProjection,
+> = Awaited<ReturnType<typeof db.query.forumEvents.findMany<TConfig>>>[number];
+
+export const forumEventBaseProjection = {
+  columns: {
+    _id: true,
+    title: true,
+    eventFormat: true,
+    isGlobal: true,
+    postId: true,
+    bannerImageId: true,
+    darkColor: true,
+    lightColor: true,
+    contrastColor: true,
+    bannerTextColor: true,
+    publicData: true,
+    pollAgreeWording: true,
+    pollDisagreeWording: true,
+    endDate: true,
+  },
+  with: {
+    pollQuestion: {
+      columns: {
+        _id: true,
+        html: true,
+      },
+    },
+    post: {
+      columns: {
+        _id: true,
+        slug: true,
+        isEvent: true,
+        groupId: true,
+      },
+    },
+    comment: {
+      columns: {
+        _id: true,
+      },
+    },
+    tag: {
+      columns: {
+        _id: true,
+        slug: true,
+      },
+    },
+  },
+} as const satisfies ForumEventRelationalProjection;
+
+export type ForumEventBase = ForumEventFromProjection<
+  typeof forumEventBaseProjection
+>;
+
+export const fetchForumEventById = async (_id: string) => {
+  const result = await db.query.forumEvents.findFirst({
+    ...forumEventBaseProjection,
+    where: {
+      _id,
+    },
+  });
+  return result ?? null;
+};
 
 /**
  * Asserts "publicData" is tagged with the format expected. If no format is set
@@ -172,4 +242,62 @@ export const buildForumEventRevisions = async (
   }
   const revisions = await Promise.all(revisionPromises);
   return Object.assign({}, ...revisions);
+};
+
+export const addUserPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  voteData: ForumEventPollVote,
+) => {
+  return db
+    .update(forumEvents)
+    .set({
+      publicData: sql`
+        COALESCE(${forumEvents.publicData}, '{}'::JSONB) ||
+          ${JSON.stringify({ [currentUser._id]: voteData })}::JSONB
+      `,
+    })
+    .where(eq(forumEvents._id, event._id));
+};
+
+export const removeUserPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+) => {
+  await db
+    .update(forumEvents)
+    .set({
+      publicData: sql`${forumEvents.publicData} - ${currentUser._id}`,
+    })
+    .where(eq(forumEvents._id, event._id));
+};
+
+export const setLatestPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  latestVote: number | null,
+) => {
+  await db
+    .update(comments)
+    .set({
+      forumEventMetadata: sql`
+        JSONB_SET(
+          ${comments.forumEventMetadata},
+          '{poll,latestVote}',
+          CASE
+            WHEN ${latestVote}::FLOAT IS NULL THEN 'null'::JSONB
+            ELSE TO_JSONB(${latestVote}::FLOAT)
+          END
+        )
+      `,
+    })
+    .where(
+      and(
+        eq(comments.forumEventId, event._id),
+        eq(comments.userId, currentUser._id),
+      ),
+    );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import type { PostListItem } from "@/lib/posts/postLists";
@@ -20,6 +20,8 @@ export default function PostsList({
   maxOffset,
   bottomRightNode,
   className,
+  postItemClassName,
+  curatedIconLeft,
 }: Readonly<{
   posts: PostListItem[];
   /**
@@ -32,6 +34,8 @@ export default function PostsList({
   maxOffset?: number;
   bottomRightNode?: ReactNode;
   className?: string;
+  postItemClassName?: string;
+  curatedIconLeft?: boolean;
 }>) {
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(posts.length);
@@ -67,10 +71,25 @@ export default function PostsList({
     }
   }, [loadMoreView, offset, maxOffset]);
 
+  useEffect(() => {
+    if (displayedPosts.length === 0 && !loading && canLoadMore) {
+      void onLoadMore();
+    }
+  }, [displayedPosts, loading, canLoadMore, onLoadMore]);
+
   return (
-    <section className={clsx("max-w-full", className)} data-component="PostsList">
+    <section
+      className={clsx("max-w-full space-y-0.5", className)}
+      data-component="PostsList"
+    >
       {displayedPosts.map((post) => (
-        <PostsItem key={post._id} post={post} viewType={actualViewType} />
+        <PostsItem
+          key={post._id}
+          post={post}
+          viewType={actualViewType}
+          curatedIconLeft={curatedIconLeft}
+          className={postItemClassName}
+        />
       ))}
       {loadMoreView && (
         <>

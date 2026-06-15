@@ -4,7 +4,8 @@ import {
   Fragment,
   ReactNode,
   useCallback,
-  useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -34,7 +35,7 @@ export default function TruncationContainer({
   /** Text style for the "n more" text  */
   afterNodeTextStyle?: TextStyle;
   /** Format the "n more" text */
-  afterNodeFormat?: (count: number) => string;
+  afterNodeFormat?: (count: number, totalShown: number) => string;
   /** Node to appear after the "n more" text - this will never be hidden */
   finalNode?: ReactNode;
   /** Class applied to the root of this component  */
@@ -42,112 +43,184 @@ export default function TruncationContainer({
   /** Class applied to the tooltip contents for the "n more" text */
   tooltipClassName?: string;
 }>) {
-  const [numShown, setNumShown] = useState(1);
+  const [numShown, setNumShown] = useState(items.length);
+  const [expanded, setExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
-  const finalNodeRef = useRef<HTMLSpanElement>(null);
 
   const showAll = useCallback(() => {
+    if (!canShowMore) {
+      return;
+    }
+    setExpanded(true);
     setNumShown(items.length);
-  }, [items]);
+  }, [canShowMore, items.length]);
+
+  // Use widest possible "n more" text for stable measurement.
+  const measurementAfterText = useMemo(() => {
+    if (items.length <= 1) {
+      return "";
+    }
+    return afterNodeFormat(items.length - 1, 1);
+  }, [afterNodeFormat, items.length]);
 
   const recalculate = useCallback(() => {
-    if (numShown >= items.length || !items.length) {
+    if (expanded) {
+      setNumShown(items.length);
       return;
     }
 
     const container = containerRef.current;
-    const measureContainer = measureRef.current;
-    if (!container || !measureContainer) {
+    const measure = measureRef.current;
+    if (!container || !measure) {
       return;
     }
 
-    const children = Array.from(measureContainer.children);
-    const afterNode = children[children.length - 1];
-    const itemNodes = children.slice(0, children.length - 1);
+    const containerWidth = container.clientWidth;
+    const children = Array.from(measure.children) as HTMLElement[];
+    const itemNodes = children.slice(0, items.length);
+    const afterNodeEl = children[items.length];
+    const finalNodeEl = finalNode ? children[items.length + 1] : null;
 
-    const containerWidth = container.getBoundingClientRect().width;
-    const afterNodeWidth = afterNode.getBoundingClientRect().width;
-    const itemNodeWidths = itemNodes.map(
-      (node) => node.getBoundingClientRect().width,
-    );
-    const finalNodeWidth = finalNodeRef.current?.getBoundingClientRect().width ?? 0;
-
-    // Add 8px of leeway
-    let width = itemNodeWidths[0] + gap + afterNodeWidth + finalNodeWidth + 8;
-    let total = 1;
-    while (total < itemNodeWidths.length) {
-      const nextItemWidth = itemNodeWidths[total];
-      const nextWidth = width + gap + nextItemWidth;
-      if (nextWidth > containerWidth) {
-        break;
-      }
-      total++;
-      width = nextWidth;
+    let trailingWidth = afterNodeEl.offsetWidth;
+    if (finalNodeEl) {
+      trailingWidth =
+        finalNodeEl.offsetLeft + finalNodeEl.offsetWidth - afterNodeEl.offsetLeft;
     }
 
-    setNumShown(total);
-  }, [items, numShown, gap]);
+    if (trailingWidth > containerWidth) {
+      setNumShown(0);
+      return;
+    }
 
-  useEffect(() => {
-    queueMicrotask(recalculate);
-    window.addEventListener("resize", recalculate);
-    return () => window.removeEventListener("resize", recalculate);
+    let shown = 0;
+    for (const node of itemNodes) {
+      const itemsWidth =
+        node.offsetLeft + node.offsetWidth - itemNodes[0].offsetLeft;
+      const totalWidth = itemsWidth + trailingWidth;
+      if (totalWidth > containerWidth) {
+        break;
+      }
+      shown++;
+    }
+
+    if (shown === items.length) {
+      if (finalNodeEl) {
+        const totalWidth =
+          finalNodeEl.offsetLeft + finalNodeEl.offsetWidth - itemNodes[0].offsetLeft;
+        if (totalWidth <= containerWidth) {
+          setNumShown(items.length);
+          return;
+        }
+      } else {
+        const lastItem = itemNodes[itemNodes.length - 1];
+        const totalWidth =
+          lastItem.offsetLeft + lastItem.offsetWidth - itemNodes[0].offsetLeft;
+        if (totalWidth <= containerWidth) {
+          setNumShown(items.length);
+          return;
+        }
+      }
+    }
+
+    setNumShown(shown);
+  }, [expanded, finalNode, items.length]);
+
+  useLayoutEffect(recalculate, [recalculate]);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const observer = new ResizeObserver(recalculate);
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+    };
   }, [recalculate]);
 
   const shownItems = items.slice(0, numShown);
   const hiddenItems = items.slice(numShown);
-  const afterNode = (
-    <Tooltip
-      As="span"
-      placement="bottom-start"
-      tooltipClassName={tooltipClassName}
-      title={
-        hiddenItemsTooltip ? (
-          <Type style="bodySmall">
-            {hiddenItems.map((item, i) => (
-              <div key={i}>{item}</div>
-            ))}
-          </Type>
-        ) : null
-      }
-    >
-      <Type
-        style={afterNodeTextStyle}
-        className="inline-flex items-center text-gray-600 pl-1 cursor-pointer"
-        {...(canShowMore ? { onClick: showAll, role: "button" } : {})}
+
+  const afterNode =
+    hiddenItems.length > 0 ? (
+      <Tooltip
+        As="span"
+        placement="bottom-start"
+        tooltipClassName={tooltipClassName}
+        title={
+          hiddenItemsTooltip ? (
+            <Type style="bodySmall">
+              {hiddenItems.map((item, i) => (
+                <div key={i}>{item}</div>
+              ))}
+            </Type>
+          ) : null
+        }
       >
-        {afterNodeFormat(items.length - numShown)}
-      </Type>
-    </Tooltip>
-  );
+        <Type
+          style={afterNodeTextStyle}
+          className={clsx(
+            "inline-flex items-center text-gray-600",
+            canShowMore && "cursor-pointer",
+          )}
+          {...(canShowMore
+            ? {
+                onClick: showAll,
+                role: "button",
+                tabIndex: 0,
+              }
+            : {})}
+        >
+          {afterNodeFormat(hiddenItems.length, numShown)}
+        </Type>
+      </Tooltip>
+    ) : null;
 
   return (
     <>
       {/* Main visible container */}
       <div
         data-component="TruncationContainer"
-        style={{ gap: `${gap}px` }}
         ref={containerRef}
-        className={clsx("flex items-center", className)}
+        style={{ gap }}
+        className={clsx(
+          "flex items-center whitespace-nowrap overflow-hidden min-w-0",
+          className,
+        )}
       >
         {shownItems.map((item, i) => (
           <Fragment key={i}>{item}</Fragment>
         ))}
-        {numShown < items.length && afterNode}
-        {finalNode && <span ref={finalNodeRef}>{finalNode}</span>}
+        {afterNode}
+        {finalNode}
       </div>
-      {/* Hidden container for measuring hidden nodes */}
+
+      {/* Hidden container for measurements */}
       <div
         ref={measureRef}
-        className="absolute flex invisible h-0 overflow-hidden pointer-events-none"
-        aria-hidden="true"
         inert
+        aria-hidden="true"
+        style={{ gap }}
+        className="
+          absolute invisible pointer-events-none flex items-center h-0
+          whitespace-nowrap overflow-hidden
+        "
       >
         {items.map((item, i) => (
-          <Fragment key={i}>{item}</Fragment>
+          <span key={i}>{item}</span>
         ))}
-        {afterNode}
+        <span>
+          <Type
+            style={afterNodeTextStyle}
+            className="inline-flex items-center text-gray-600"
+          >
+            {measurementAfterText}
+          </Type>
+        </span>
+        {finalNode && <span>{finalNode}</span>}
       </div>
     </>
   );

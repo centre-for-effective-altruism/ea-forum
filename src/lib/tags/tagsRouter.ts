@@ -1,9 +1,26 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { db } from "../db";
+import {
+  fetchCoreTags,
+  fetchOnboardingTags,
+  fetchTagBySlug,
+  fetchTagsById,
+} from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
+import { getCurrentUser } from "../users/currentUser";
+import { addOrUpvoteTag } from "./tagMutations";
 
 export const tagsRouter = {
+  listCore: os
+    .input(z.object({ limit: z.number().optional() }).optional())
+    .handler(({ input }) => fetchCoreTags(input?.limit)),
+  listByIds: os
+    .input(z.object({ tagIds: z.array(z.string()) }))
+    .handler(({ input: { tagIds } }) => fetchTagsById(tagIds)),
+  listBySlug: os
+    .input(z.object({ slug: z.string().nonempty() }))
+    .handler(({ input: { slug } }) => fetchTagBySlug(slug)),
   diff: os
     .input(z.object({ revisionId: z.string().nonempty() }))
     .handler(async ({ input: { revisionId } }) => {
@@ -43,5 +60,20 @@ export const tagsRouter = {
         },
       });
       return diffHtml(before?.html ?? "", after.html ?? "", true);
+    }),
+  fetchOnboardingTags: os.handler(fetchOnboardingTags),
+  addOrUpvoteTag: os
+    .input(
+      z.object({
+        postId: z.string().nonempty(),
+        tagId: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { postId, tagId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await addOrUpvoteTag({ currentUser, postId, tagId });
     }),
 };

@@ -1,7 +1,6 @@
 "use client";
 
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { defaultCommentSorting } from "@/lib/comments/commentSortings";
 import RecentDiscussionsItem, {
   RecentDiscussionItemProps,
 } from "./RecentDiscussionsItem";
@@ -10,16 +9,16 @@ import {
   postGetCommentsUrl,
   postGetPageUrl,
 } from "@/lib/posts/postsHelpers";
-import { commentsToCommentTree } from "@/lib/comments/CommentTree";
+import { CommentsListProvider } from "@/components/Comments/useCommentsList";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import LinkPostMessage from "@/components/PostsPage/LinkPostMessage";
+import CommentsList from "@/components/Comments/CommentsList";
+import PostBody from "@/components/ContentStyles/PostBody";
+import PostsTooltip from "@/components/PostsTooltip";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Score from "@/components/Score";
 import Type from "@/components/Type";
-import PostsTooltip from "@/components/PostsTooltip";
-import LinkPostMessage from "@/components/PostsPage/LinkPostMessage";
-import CommentItem from "@/components/Comments/CommentItem";
-import PostBody from "@/components/ContentStyles/PostBody";
 import Link from "@/components/Link";
 
 const getItemProps = (post: RecentDiscussionPost): RecentDiscussionItemProps => {
@@ -68,10 +67,6 @@ export default function RecentDiscussionsPostCommented({
     // If we get here it usually means a spam comment was deleted
     return null;
   }
-  const nestedComments = commentsToCommentTree(
-    defaultCommentSorting,
-    comments ?? [],
-  );
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
   const commentsLink = postGetCommentsUrl({ post });
@@ -90,11 +85,11 @@ export default function RecentDiscussionsPostCommented({
             className="min-w-[33px]"
           />
           <div className="truncate grow">
-            <Type style="postTitle" className="text-black truncate">
+            <Type style="postTitle" className="text-gray-1000 truncate">
               <PostsTooltip As="span" post={post}>
                 <Link
                   href={postLink}
-                  className="visited:text-gray-700 hover:opacity-60"
+                  className="visited:text-gray-600 hover:opacity-60"
                 >
                   {title}
                 </Link>
@@ -116,7 +111,7 @@ export default function RecentDiscussionsPostCommented({
           {!isEvent && (
             <Link
               href={commentsLink}
-              className="flex items-center gap-1 hover:text-black"
+              className="flex items-center gap-1 hover:text-gray-1000"
             >
               <ChatBubbleLeftIcon className="w-[18px]" />
               <Type>{commentCount}</Type>
@@ -124,15 +119,15 @@ export default function RecentDiscussionsPostCommented({
           )}
         </div>
         <LinkPostMessage post={post} />
-        <PostBody html={post.contents?.htmlHighlight ?? ""} isExcerpt />
+        <PostBody html={post.contents?.htmlHighlight ?? ""} />
         <Type style="bodyMedium">
           <Link href={postLink} className="text-primary hover:opacity-70">
             Continue reading
           </Link>
         </Type>
-        {nestedComments.map((comment) => (
-          <CommentItem key={comment.comment._id} node={comment} />
-        ))}
+        <CommentsListProvider comments={comments}>
+          <CommentsList />
+        </CommentsListProvider>
       </div>
     </RecentDiscussionsItem>
   );

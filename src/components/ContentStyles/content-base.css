@@ -1,5 +1,5 @@
 .content-base {
-  color: var(--foreground);
+  color: var(--color-foreground);
   font-family: var(--font-stack-serif);
   font-size: 17px;
   font-weight: 450;
@@ -39,7 +39,8 @@
   font-family: var(--font-stack-serif);
   color: var(--color-gray-900);
 }
-.content-base ul {
+.content-base ul,
+.content-base ol {
   list-style-type: revert;
   padding-left: revert;
   margin: 0;
@@ -59,7 +60,7 @@
 .content-base h5,
 .content-base h6 {
   color: var(--color-gray-1000);
-  font-family: var(--font-stack-serif);
+  font-family: var(--font-stack-sans);
 }
 .content-base h1,
 .content-base h2,
@@ -76,6 +77,9 @@
   margin-top: 0;
   margin-block-start: -3px;
 }
+.content-base h1 strong {
+  font-weight: 600;
+}
 .content-base h2 {
   font-size: 26px;
   font-weight: 650;
@@ -85,6 +89,9 @@
   margin-top: 0;
   margin-block-start: -2px;
 }
+.content-base h2 strong {
+  font-weight: 650;
+}
 .content-base h3 {
   font-size: 20.8px;
   font-weight: 600;
@@ -93,6 +100,9 @@
 .content-base h3:first-child {
   margin-top: 0;
   margin-block-start: 0px;
+}
+.content-base h3 strong {
+  font-weight: 600;
 }
 .content-base h4 {
   font-size: 15.6px;
@@ -306,10 +316,15 @@
 }
 .content-base .footnote-back-link {
   position: relative;
-  top: -0.2em;
+  top: 10px;
 }
 .content-base .footnotes .footnote-back-link > sup {
   margin-right: 0;
+}
+.content-base .footnote-back-link a::after {
+  display: inline-block;
+  content: "^";
+  font-size: 20px;
 }
 .content-base .footnote-content {
   display: inline-block;
@@ -395,23 +410,23 @@
   border-radius: 6px;
   box-shadow: none;
   background-color: var(--color-primary);
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
   transition: background-color 0.3s ease;
 }
 .content-base .ck-cta-button:hover {
   opacity: 1;
   background-color: var(--color-primary-dark);
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
 }
 .content-base .ck-cta-button:visited,
 .content-base .ck-cta-button.visited,
 .content-base .ck-cta-button:visited:hover,
 .content-base .ck-cta-button.visited:hover {
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
 }
 .content-base .ck-cta-button:disabled {
   background-color: var(--color-primary);
-  color: var(--color-gray-50);
+  color: var(--color-always-white);
   opacity: 0.5;
 }
 .content-base .ck-cta-button-centered {
@@ -422,6 +437,8 @@
   margin-top: 40px;
   padding-top: 40px;
   border-top: 1px solid var(--color-gray-300);
+  list-style: decimal;
+  padding-left: 1.5em;
 }
 .content-base .footnotes sup {
   margin-right: 10px;

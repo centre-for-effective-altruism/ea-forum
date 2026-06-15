@@ -5,16 +5,16 @@ import clsx from "clsx";
 
 export default function ToggleSwitch({
   value,
-  onChange,
+  setValue,
   As = "button",
+  className,
 }: Readonly<{
   value: boolean;
-  onChange?: (value: boolean) => void;
+  setValue?: (value: boolean) => void;
   As?: ElementType;
+  className?: string;
 }>) {
-  const onClick = useCallback(() => {
-    onChange?.(!value);
-  }, [value, onChange]);
+  const onClick = useCallback(() => setValue?.(!value), [value, setValue]);
   return (
     <As
       type="button"
@@ -25,11 +25,12 @@ export default function ToggleSwitch({
         "relative w-[28px] min-w-[28px] h-[16px] rounded-full",
         "cursor-pointer transition-colors",
         value ? "bg-primary" : "bg-gray-400",
+        className,
       )}
     >
       <div
         className={clsx(
-          "absolute top-[2px] w-[12px] h-[12px] rounded-full bg-white transition-all",
+          "absolute top-[2px] w-3 h-3 rounded-full bg-gray-0 transition-all",
           value ? "left-[14px]" : "left-[2px]",
         )}
       />

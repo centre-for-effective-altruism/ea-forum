@@ -7,6 +7,7 @@ import { DbOrTransaction } from "../db";
 import { dataToHtml } from "../conversionUtils/dataToHtml";
 import { dataToWordCount } from "../conversionUtils/dataToWordCount";
 import { htmlToChangeMetrics } from "./htmlToChangeMetrics";
+import { upvoteOwnTagRevision } from "./revisionCallbacks";
 
 export const createRevision = async (
   txn: DbOrTransaction,
@@ -23,6 +24,7 @@ export const createRevision = async (
     fieldName: string;
     draft?: boolean;
     googleDocMetadata?: Json;
+    version?: string;
   },
 ): Promise<Revision> => {
   const editorType = originalContents.type;
@@ -38,7 +40,7 @@ export const createRevision = async (
       ...data,
       _id: randomId(),
       userId: user._id,
-      version: data.draft ? "0.1.0" : "1.0.0",
+      version: data.version ?? (data.draft ? "0.1.0" : "1.0.0"),
       updateType: updateType ?? "initial",
       html,
       wordCount,
@@ -50,10 +52,15 @@ export const createRevision = async (
       createdAt: now,
     })
     .returning();
-  // TODO:
-  // upvoteOwnTagRevision
-  // updateDenormalizedHtmlAttributionsDueToRev
-  return result[0];
+  const revision = result[0];
+  await Promise.all([
+    upvoteOwnTagRevision(txn, revision),
+    // TODO: ForumMagnum has this for tags. We don't need it yet since tags can't
+    // yet be edited in this codebase. Even when we do implement it, it's not obvious
+    // to me if we still need this functionality or not - maybe we can just drop it.
+    // updateDenormalizedHtmlAttributionsDueToRev(txn, revision),
+  ]);
+  return revision;
 };
 
 type NormalizedFieldRevision<T extends string> = {

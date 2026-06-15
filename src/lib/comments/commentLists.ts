@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { User } from "../schema";
+import { userIsAdminOrMod, UserPermissions } from "../users/userHelpers";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
 import { commentTagsProjection } from "../tags/tagQueries";
@@ -17,7 +18,7 @@ export type CommentRelationalProjection = RelationalProjection<
 export type CommentFromProjection<TConfig extends CommentRelationalProjection> =
   Awaited<ReturnType<typeof db.query.comments.findMany<TConfig>>>[number];
 
-export type CommentsList = Awaited<ReturnType<typeof fetchCommentsList>>[number];
+export type CommentListItem = Awaited<ReturnType<typeof fetchCommentsList>>[number];
 
 type CommentsFilter = NonNullable<
   Parameters<typeof db.query.comments.findMany>[0]
@@ -40,7 +41,7 @@ export const viewableCommentFilter = (currentUserId: string | null) => ({
   ],
 });
 
-export const commentListProjection = (currentUserId: string | null) =>
+export const commentListProjection = (currentUser: UserPermissions | null) =>
   ({
     columns: {
       _id: true,
@@ -61,6 +62,7 @@ export const commentListProjection = (currentUserId: string | null) =>
       shortformFrontpage: true,
       moderatorHat: true,
       promoted: true,
+      forumEventMetadata: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -68,6 +70,19 @@ export const commentListProjection = (currentUserId: string | null) =>
       tags: commentTagsProjection,
     },
     with: {
+      ...(userIsAdminOrMod(currentUser)
+        ? {
+            contentsRevision: {
+              columns: {
+                _id: true,
+                pangramAiScore: true,
+                pangramCheckedAt: true,
+                pangramStatus: true,
+                pangramRawResponse: true,
+              },
+            },
+          }
+        : {}),
       user: {
         ...userBaseProjection,
         where: {
@@ -79,6 +94,21 @@ export const commentListProjection = (currentUserId: string | null) =>
           displayName: true,
         },
       },
+      forumEvent: {
+        columns: {
+          _id: true,
+          isGlobal: true,
+          pollAgreeWording: true,
+          pollDisagreeWording: true,
+        },
+        with: {
+          pollQuestion: {
+            columns: {
+              html: true,
+            },
+          },
+        },
+      },
       post: {
         columns: {
           _id: true,
@@ -88,14 +118,14 @@ export const commentListProjection = (currentUserId: string | null) =>
           coauthorUserIds: true,
         },
         with: {
-          ...(currentUserId
+          ...(currentUser
             ? {
                 readStatus: {
                   columns: {
                     lastUpdated: true,
                   },
                   where: {
-                    userId: currentUserId,
+                    userId: currentUser._id,
                   },
                 },
               }
@@ -107,14 +137,14 @@ export const commentListProjection = (currentUserId: string | null) =>
           slug: true,
         },
       },
-      ...(currentUserId
+      ...(currentUser
         ? {
             bookmarks: {
               columns: {
                 active: true,
               },
               where: {
-                userId: currentUserId,
+                userId: currentUser._id,
               },
             },
             votes: {
@@ -124,7 +154,7 @@ export const commentListProjection = (currentUserId: string | null) =>
                 power: true,
               },
               where: {
-                userId: currentUserId,
+                userId: currentUser._id,
               },
               orderBy: {
                 votedAt: "desc",
@@ -143,7 +173,7 @@ const fetchCommentsList = ({
   offset,
   limit,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
   offset?: number;
@@ -155,7 +185,7 @@ const fetchCommentsList = ({
     currentUser?.groups?.includes("sunshineRegiment") ||
     false;
   return db.query.comments.findMany({
-    ...commentListProjection(currentUserId),
+    ...commentListProjection(currentUser),
     where: {
       ...viewableCommentFilter(currentUserId),
       post: currentUserIsModerator
@@ -181,7 +211,7 @@ export const fetchCommentsListItem = async ({
   currentUser,
   commentId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   commentId: string;
 }) => {
   const result = await fetchCommentsList({
@@ -196,12 +226,24 @@ export const fetchCommmentsForPost = ({
   currentUser,
   postId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   postId: string;
 }) =>
   fetchCommentsList({
     currentUser,
     where: { postId },
+  });
+
+export const fetchCommentsForForumEvent = ({
+  currentUser,
+  forumEventId,
+}: {
+  currentUser: UserPermissions | null;
+  forumEventId: string;
+}) =>
+  fetchCommentsList({
+    currentUser,
+    where: { forumEventId },
   });
 
 export const fetchFrontpageQuickTakes = ({
@@ -210,7 +252,7 @@ export const fetchFrontpageQuickTakes = ({
   offset,
   limit = 5,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   includeCommunity?: boolean;
   offset?: number;
   limit?: number;
@@ -224,10 +266,12 @@ export const fetchFrontpageQuickTakes = ({
       shortformFrontpage: true,
       parentCommentId: { isNull: true },
       createdAt: { gt: fiveDaysAgo },
-      ...(!includeCommunity && process.env.COMMUNITY_TAG_ID
+      ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
         ? {
             NOT: {
-              relevantTagIds: { arrayContains: [process.env.COMMUNITY_TAG_ID] },
+              relevantTagIds: {
+                arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
+              },
             },
           }
         : null),
@@ -265,8 +309,23 @@ export const fetchFrontpageQuickTakes = ({
   });
 };
 
+export const fetchNewComments = async (
+  currentUser: UserPermissions | null,
+  postId: string,
+  limit: number,
+) => {
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      postId,
+    },
+    orderBy: { postedAt: "desc" },
+    limit,
+  });
+};
+
 type PopularCommentsConfig = {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups" | "banned"> | null;
   offset?: number;
   limit?: number;
   minScore?: number;
@@ -277,19 +336,15 @@ type PopularCommentsConfig = {
   recencyBias?: number;
 };
 
-/**
- * Fetch a list of popular comments for the homepage. Note that this is quite
- * slow so we actually use a cached version of this below.
- */
-const fetchPopularCommentsUncached = async ({
+export const fetchPopularComments = async ({
   currentUser,
   minScore = 12,
   offset = 0,
   limit = 3,
   recencyFactor = 250000,
   recencyBias = 60 * 60 * 2,
-}: PopularCommentsConfig): Promise<CommentsList[]> => {
-  const communityTopicId = process.env.COMMUNITY_TAG_ID;
+}: PopularCommentsConfig): Promise<CommentListItem[]> => {
+  const communityTopicId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
   const popularComments = await db.execute<{ _id: string }>(sql`
     SELECT c._id
     FROM (
@@ -339,20 +394,4 @@ const fetchPopularCommentsUncached = async ({
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
   return sortBy(result, (c) => order[c._id] ?? Number.MAX_SAFE_INTEGER);
-};
-
-const popularCommentsCache = {
-  comments: [] as CommentsList[],
-  lastFetchedAt: new Date(0).getTime(),
-  maxAgeSeconds: 60,
-};
-
-export const fetchPopularComments = async (config: PopularCommentsConfig) => {
-  const now = new Date().getTime();
-  const maxAgeMs = popularCommentsCache.maxAgeSeconds * 1000;
-  if (now - maxAgeMs > popularCommentsCache.lastFetchedAt) {
-    popularCommentsCache.comments = await fetchPopularCommentsUncached(config);
-    popularCommentsCache.lastFetchedAt = now;
-  }
-  return popularCommentsCache.comments;
 };

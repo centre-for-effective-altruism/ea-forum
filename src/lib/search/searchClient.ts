@@ -2,6 +2,8 @@ import stringify from "json-stringify-deterministic";
 import { LRUCache } from "lru-cache";
 import { z } from "zod/v4";
 import type { SearchBase } from "./searchDocuments";
+import { rpc } from "../rpc";
+import { SearchResult } from "./SearchResult";
 
 const searchQuerySchema = z.object({
   indexName: z.string(),
@@ -36,71 +38,34 @@ export const queryRequestSchema = z.object({
   queries: z.array(searchQuerySchema),
 });
 
-interface Response<T extends SearchBase> {
-  hits: T[];
-  page: number;
-  nbHits: number;
-  nbPages: number;
-  hitsPerPage: number;
-  processingTimeMS: number;
-  query: string;
-  params: string;
-  /**
-   * A mapping of each facet name to the corresponding facet counts.
-   */
-  facets?: {
-    [facetName: string]: { [facetValue: string]: number };
-  };
-}
-
-interface MultiResponse<T extends SearchBase> {
-  results: Response<T>[];
-}
-
 export const getSearchIndexPrefix = () =>
   process.env.NEXT_PUBLIC_SEARCH_INDEX_PREFIX ?? "";
 
 export class SearchClient {
-  private cache = new LRUCache<string, Promise<MultiResponse<SearchBase>>>({
+  private cache = new LRUCache<string, Promise<SearchResult<SearchBase>[]>>({
     max: 200,
   });
 
   constructor(private options: SearchOptions) {}
 
-  search<T extends SearchBase>(queries: SearchQuery[]): Promise<MultiResponse<T>> {
+  search<T extends SearchBase>(queries: SearchQuery[]): Promise<SearchResult<T>[]> {
     const indexPrefix = getSearchIndexPrefix();
     if (indexPrefix) {
       for (const query of queries) {
         query.indexName = indexPrefix + query.indexName;
       }
     }
-    const body = stringify({
+    const body = {
       options: this.options,
       queries,
-    });
-    const cached = this.cache.get(body);
+    };
+    const cacheKey = stringify(body);
+    const cached = this.cache.get(cacheKey);
     if (cached) {
-      return Promise.resolve(cached) as Promise<MultiResponse<T>>;
+      return Promise.resolve(cached) as Promise<SearchResult<T>[]>;
     }
-    const promise = new Promise<MultiResponse<T>>((resolve, reject) => {
-      fetch("/api/search-v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body,
-      })
-        .then((response) => {
-          response
-            .json()
-            .then((results) => {
-              resolve({ results });
-            })
-            .catch(reject);
-        })
-        .catch(reject);
-    });
-    this.cache.set(body, promise);
+    const promise = rpc.search.search(body) as unknown as Promise<SearchResult<T>[]>;
+    this.cache.set(cacheKey, promise);
     return promise;
   }
 }

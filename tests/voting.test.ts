@@ -1,12 +1,25 @@
-import { expect, suite, test } from "vitest";
-import { createTestComment, createTestPost, createTestUser } from "./testHelpers";
+import { afterEach, expect, suite, test, vi } from "vitest";
+import {
+  createTestComment,
+  createTestPost,
+  createTestTag,
+  createTestTagRel,
+  createTestUser,
+} from "./testHelpers";
 import { nDaysAgo } from "@/lib/timeUtils";
 import { userSmallVotePower } from "@/lib/votes/voteHelpers";
 import { performVote } from "@/lib/votes/voteMutations";
+import { tags } from "@/lib/schema";
 import { db } from "@/lib/db";
+
+const COMMUNITY_TAG_ID = "community-test";
+vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", COMMUNITY_TAG_ID);
 
 suite("Voting", () => {
   suite("Perform vote", () => {
+    afterEach(async () => {
+      await db.delete(tags);
+    });
     test("Can vote and undo vote on post", async () => {
       const author = await createTestUser();
       expect(author.karma).toBe(0);
@@ -575,6 +588,215 @@ suite("Voting", () => {
         expect(vote!.power).toBe(-power);
         expect(vote!.cancelled).toBe(false);
         expect(vote!.isUnvote).toBe(false);
+      }
+    });
+    test("Can upvote tag rel", async () => {
+      const [user, post, tag] = await Promise.all([
+        createTestUser(),
+        createTestPost(),
+        createTestTag(),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+      const voteResult = await db.transaction((txn) =>
+        performVote({
+          txn,
+          collectionName: "TagRels",
+          document: tagRel,
+          user,
+          voteType: "smallUpvote",
+        }),
+      );
+      expect(voteResult.voteType).toBe("smallUpvote");
+      expect(voteResult.baseScore).toBe(power);
+    });
+    test("Can downvote tag rel", async () => {
+      const [user, post, tag] = await Promise.all([
+        createTestUser(),
+        createTestPost(),
+        createTestTag(),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+      const voteResult = await db.transaction((txn) =>
+        performVote({
+          txn,
+          collectionName: "TagRels",
+          document: tagRel,
+          user,
+          voteType: "smallDownvote",
+        }),
+      );
+      expect(voteResult.voteType).toBe("smallDownvote");
+      expect(voteResult.baseScore).toBe(-power);
+    });
+    test("Cannot vote on community tag rel", async () => {
+      const [user, post, tag] = await Promise.all([
+        createTestUser(),
+        createTestPost(),
+        createTestTag({ _id: COMMUNITY_TAG_ID }),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+      await expect(
+        db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "TagRels",
+            document: tagRel,
+            user,
+            voteType: "smallUpvote",
+          }),
+        ),
+      ).rejects.toThrow("You do not have permission");
+    });
+    test("Authors can upvote community tag rel", async () => {
+      const user = await createTestUser();
+      const [post, tag] = await Promise.all([
+        createTestPost({ userId: user._id }),
+        createTestTag({ _id: COMMUNITY_TAG_ID }),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+      const voteResult = await db.transaction((txn) =>
+        performVote({
+          txn,
+          collectionName: "TagRels",
+          document: tagRel,
+          user,
+          voteType: "smallUpvote",
+        }),
+      );
+      expect(voteResult.voteType).toBe("smallUpvote");
+      expect(voteResult.baseScore).toBe(power);
+    });
+    test("Authors cannot downvote community tag rel", async () => {
+      const user = await createTestUser();
+      const [post, tag] = await Promise.all([
+        createTestPost({ userId: user._id }),
+        createTestTag({ _id: COMMUNITY_TAG_ID }),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+      await expect(
+        db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "TagRels",
+            document: tagRel,
+            user,
+            voteType: "smallDownvote",
+          }),
+        ),
+      ).rejects.toThrow("You do not have permission");
+    });
+    test("Admins can vote on community tag rel", async () => {
+      const [user, post, tag] = await Promise.all([
+        createTestUser({ isAdmin: true }),
+        createTestPost(),
+        createTestTag({ _id: COMMUNITY_TAG_ID }),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+
+      {
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "TagRels",
+            document: tagRel,
+            user,
+            voteType: "smallUpvote",
+          }),
+        );
+        expect(voteResult.voteType).toBe("smallUpvote");
+        expect(voteResult.baseScore).toBe(power);
+      }
+
+      {
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "TagRels",
+            document: tagRel,
+            user,
+            voteType: "smallDownvote",
+          }),
+        );
+        expect(voteResult.voteType).toBe("smallDownvote");
+        expect(voteResult.baseScore).toBe(-power);
+      }
+    });
+    test("Moderators can vote on community tag rel", async () => {
+      const [user, post, tag] = await Promise.all([
+        createTestUser({ groups: ["sunshineRegiment"] }),
+        createTestPost(),
+        createTestTag({ _id: COMMUNITY_TAG_ID }),
+      ]);
+      const power = userSmallVotePower(user.karma, 1);
+      expect(power).toBe(1);
+      const tagRel = await createTestTagRel({
+        postId: post._id,
+        tagId: tag._id,
+      });
+      expect(tagRel.baseScore).toBe(0);
+
+      {
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "TagRels",
+            document: tagRel,
+            user,
+            voteType: "smallUpvote",
+          }),
+        );
+        expect(voteResult.voteType).toBe("smallUpvote");
+        expect(voteResult.baseScore).toBe(power);
+      }
+
+      {
+        const voteResult = await db.transaction((txn) =>
+          performVote({
+            txn,
+            collectionName: "TagRels",
+            document: tagRel,
+            user,
+            voteType: "smallDownvote",
+          }),
+        );
+        expect(voteResult.voteType).toBe("smallDownvote");
+        expect(voteResult.baseScore).toBe(-power);
       }
     });
   });

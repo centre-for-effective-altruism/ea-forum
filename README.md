@@ -15,9 +15,7 @@ forum with `npm run dev`. CEA devs can find a development `.env` file in
 
  - Where possible fetch data from within
    [server components](https://react.dev/reference/rsc/server-components),
-   when not possible use a
-   [server function](https://react.dev/reference/rsc/server-functions)
- - Server functions should be wrapped with `actionClient`
+   when not possible use a [oRPC](https://orpc.dev/)
  - Combine multiple class names using [clsx](https://www.npmjs.com/package/clsx)
  - Where possible prefer Drizzle's
    [relational API](https://orm.drizzle.team/docs/rqb-v2) for querying

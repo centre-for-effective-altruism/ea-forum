@@ -1,14 +1,11 @@
 import { z } from "zod/v4";
-import { TupleSet, UnionOf } from "../typeHelpers";
 import type { Revision } from "../schema";
+import { ForumEventBase } from "./forumEventQueries";
+import { CurrentUser } from "../users/currentUser";
 
-export const FORUM_EVENT_FORMATS = new TupleSet([
-  "BASIC",
-  "POLL",
-  "STICKERS",
-] as const);
+const forumEventFormatSchema = z.enum(["BASIC", "POLL", "STICKERS"] as const);
 
-export type ForumEventFormat = UnionOf<typeof FORUM_EVENT_FORMATS>;
+export type ForumEventFormat = z.infer<typeof forumEventFormatSchema>;
 
 /**
  * Bump this version when the format of `publicData` changes, so we can interpret
@@ -16,13 +13,15 @@ export type ForumEventFormat = UnionOf<typeof FORUM_EVENT_FORMATS>;
  */
 export const FORUM_EVENT_STICKER_VERSION = "STICKERS_1.0";
 
-export type ForumEventStickerInput = {
-  _id: string;
-  x: number;
-  y: number;
-  theta: number;
-  emoji: string | null;
-};
+const forumEventStickerInputSchema = z.object({
+  _id: z.string(),
+  x: z.number(),
+  y: z.number(),
+  theta: z.number(),
+  emoji: z.string().nullable(),
+});
+
+export type ForumEventStickerInput = z.infer<typeof forumEventStickerInputSchema>;
 
 export type ForumEventSticker = ForumEventStickerInput & {
   commentId?: string;
@@ -34,23 +33,35 @@ export type ForumEventStickerData = {
   data: ForumEventSticker[];
 };
 
-export type ForumEventCommentMetadata = {
-  eventFormat: ForumEventFormat;
-  sticker?: Partial<ForumEventStickerInput> | null;
-  poll?: {
-    /** 0 to 1 */
-    voteWhenPublished: number;
-    /**
-     * 0 to 1, in the case where the vote hasn't changed, latestVote will be
-     * null and voteWhenPublished will have the latest vote
-     */
-    latestVote?: number | null;
-    /** _id of the revision of the question when the comment was published */
-    pollQuestionWhenPublished?: string | null;
-    /** The content that is prefilled into the comment box after voting */
-    commentPrompt?: string | null;
-  } | null;
+export type ForumEventPollVote = {
+  x: number;
+  points: Record<string, number>;
 };
+
+export const forumEventCommentMetadataSchema = z.object({
+  eventFormat: forumEventFormatSchema,
+  sticker: forumEventStickerInputSchema.nullable().optional(),
+  poll: z
+    .object({
+      /** 0 to 1 - 0.5 is a neutral vote in the middle */
+      voteWhenPublished: z.number(),
+      /**
+       * 0 to 1, in the case where the vote hasn't changed, latestVote will be
+       * null and voteWhenPublished will have the latest vote
+       */
+      latestVote: z.number().nullable().optional(),
+      /** _id of the revision of the question when the comment was published */
+      pollQuestionWhenPublished: z.string().nullable().optional(),
+      /** The content that is prefilled into the comment box after voting */
+      commentPrompt: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
+export type ForumEventCommentMetadata = z.infer<
+  typeof forumEventCommentMetadataSchema
+>;
 
 const pollsAllowedFields = [
   { collectionName: "Comments", fieldName: "contents" },
@@ -98,3 +109,17 @@ export const endDateFromDuration = (duration: PollProps["duration"]) =>
       duration.hours * ONE_HOUR_MS +
       duration.minutes * ONE_MINUTE_MS,
   );
+
+/**
+ * Pull out the given user's vote in the forum event. Note that 0 is a valid vote.
+ */
+export const getForumEventVoteForUser = (
+  event: ForumEventBase | null,
+  user: CurrentUser | null,
+): number | null => {
+  const data = event?.publicData as Record<string, { x: number }> | null;
+  return user ? (data?.[user._id]?.x ?? null) : null;
+};
+
+export const getForumEventVoteCount = (event: ForumEventBase) =>
+  Object.keys(event.publicData || {}).length;

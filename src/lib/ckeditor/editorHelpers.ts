@@ -10,6 +10,16 @@ const editorTypeStringSchema = z.enum(["html", "markdown", "ckEditorMarkup"]);
 
 export type EditorTypeString = z.infer<typeof editorTypeStringSchema>;
 
+export const isEditorTypeString = (ty: string): ty is EditorTypeString =>
+  editorTypeStringSchema.safeParse(ty).success;
+
+export const nonAdminEditors: EditorTypeString[] = ["ckEditorMarkup", "markdown"];
+export const adminEditors: EditorTypeString[] = [
+  "html",
+  "ckEditorMarkup",
+  "markdown",
+];
+
 /**
  * Contents of an editor, with `value` in the native format of the editor
  * (whichever editor that is).
@@ -87,4 +97,49 @@ export const checkEditorValid = (
     valid: verifyCanMention.result,
     message: verifyCanMention.reason,
   };
+};
+
+export const isBlank = (editorContents: EditorContents): boolean => {
+  if (!editorContents.data) {
+    return true;
+  }
+  return editorContents.data.trim() === "";
+};
+
+export const getDefaultLocalStorageIdGenerator = <N extends "Posts" | "Comments">(
+  collectionName: N,
+) => {
+  return (
+    doc: { _id?: string; conversationId?: string },
+    name: string,
+  ): { id: string; verify: boolean } => {
+    const { _id, conversationId } = doc;
+    if (_id && name) {
+      return { id: `${_id}${name}`, verify: true };
+    } else if (_id) {
+      return { id: _id, verify: true };
+    } else if (conversationId) {
+      return { id: conversationId, verify: true };
+    } else if (name) {
+      return { id: `${collectionName}_new_${name}`, verify: true };
+    }
+    throw Error(`Can't get storage ID for this document: ${doc}`);
+  };
+};
+
+/**
+ * Get an editor-type-specific prefix to use on localStorage keys, to prevent
+ * drafts written with different editors from having conflicting names.
+ */
+export const getLocalStorageKeyPrefix = (editorType: EditorTypeString): string => {
+  switch (editorType) {
+    case "markdown":
+      return "md_";
+    case "html":
+      return "html_";
+    case "ckEditorMarkup":
+      return "ckeditor_";
+    default:
+      return "";
+  }
 };

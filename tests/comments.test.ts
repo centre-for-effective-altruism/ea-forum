@@ -1,6 +1,6 @@
 import { beforeEach, expect, suite, test, vi } from "vitest";
 import { createTestPost, createTestUser } from "./testHelpers";
-import { createPostComment } from "@/lib/comments/commentMutations";
+import { createPostComment, updateComment } from "@/lib/comments/commentMutations";
 import { userSmallVotePower } from "@/lib/votes/voteHelpers";
 import { db } from "@/lib/db";
 
@@ -256,5 +256,53 @@ suite("Comments", () => {
     expect(post2!._id).toBe(post!._id);
     expect(post2!.commentCount).toBe(2);
     expect(author2!.postCount).toBe(1);
+  });
+  test("Edit comments", async () => {
+    const [post, commenter] = await Promise.all([
+      createTestPost(),
+      createTestUser(),
+    ]);
+    const commentId = await createPostComment({
+      user: commenter,
+      postId: post._id,
+      parentCommentId: null,
+      editorData: {
+        originalContents: {
+          type: "ckEditorMarkup",
+          data: "<p>Original comment</p>",
+        },
+        updateType: "initial",
+        commitMessage: "",
+      },
+    });
+    const originalComment = await db.query.comments.findFirst({
+      where: {
+        _id: commentId,
+      },
+    });
+    expect(originalComment).not.toBeNull();
+    expect(originalComment?.contents?.html).toContain("Original comment");
+    expect(originalComment?.contents?.version).toBe("1.0.0");
+    await updateComment({
+      user: commenter,
+      commentId,
+      editorData: {
+        originalContents: {
+          type: "ckEditorMarkup",
+          data: "<p>Updated comment</p>",
+        },
+        updateType: "minor",
+        commitMessage: "",
+      },
+    });
+    const updatedComment = await db.query.comments.findFirst({
+      where: {
+        _id: commentId,
+      },
+    });
+    expect(updatedComment).not.toBeNull();
+    expect(updatedComment?.contents?.html).toContain("Updated comment");
+    expect(updatedComment?.contents?.html).not.toContain("Original comment");
+    expect(updatedComment?.contents?.version).toBe("1.1.0");
   });
 });

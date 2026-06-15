@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import type { PostDisplay } from "@/lib/posts/postQueries";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
+import type { PostTagRel } from "@/lib/tags/tagQueries";
 import { useOptimisticState } from "@/lib/hooks/useOptimisticState";
 import { calculateVotePower, VoteType } from "@/lib/votes/voteHelpers";
 import { getReactionMutuallyExclusivePartner } from "@/lib/votes/reactions";
@@ -22,12 +23,20 @@ type VoteState = {
 
 type VoteStateUpdate = Parameters<typeof rpc.votes.create>[0];
 
-const getInitialVoteState = (document: PostDisplay | CommentsList): VoteState => ({
+const getInitialVoteState = (
+  document: PostDisplay | CommentListItem | PostTagRel,
+): VoteState => ({
   baseScore: document.baseScore,
-  voteCount: document.voteCount,
-  extendedScore: document.extendedScore ?? {},
-  voteType: document.votes?.[0]?.voteType ?? "neutral",
-  extendedVoteType: document.votes?.[0]?.extendedVoteType ?? undefined,
+  voteCount: "voteCount" in document ? document.voteCount : 0,
+  extendedScore: "extendedScore" in document ? (document.extendedScore ?? {}) : {},
+  voteType:
+    "votes" in document
+      ? (document.votes?.[0]?.voteType ?? "neutral")
+      : (document.voteType ?? "neutral"),
+  extendedVoteType:
+    "votes" in document
+      ? (document.votes?.[0]?.extendedVoteType ?? undefined)
+      : undefined,
   showVotingPatternWarning: false,
 });
 
@@ -82,7 +91,11 @@ type UseVoteProps =
     }
   | {
       collectionName: "Comments";
-      document: CommentsList;
+      document: CommentListItem;
+    }
+  | {
+      collectionName: "TagRels";
+      document: PostTagRel;
     };
 
 export type UseVoteResult = VoteState & {

@@ -12,6 +12,7 @@ import {
   InsertPost,
   InsertRevision,
   InsertTag,
+  InsertTagRel,
   InsertUser,
   InsertVote,
   Localgroup,
@@ -21,6 +22,8 @@ import {
   Revision,
   revisions,
   Tag,
+  TagRel,
+  tagRels,
   tags,
   User,
   users,
@@ -39,6 +42,7 @@ export const createTestUser = async (data?: Partial<InsertUser>): Promise<User> 
     email: testUsername + "@effectivealtruism.org",
     reviewedByUserId: "fakeuserid",
     acceptedTos: true,
+    abTestKey: randomId(),
     ...data,
   };
   const result = await db.insert(users).values(insertValues).returning();
@@ -150,6 +154,23 @@ export const createTestTag = async (data?: Partial<InsertTag>): Promise<Tag> => 
     ...data,
   };
   const result = await db.insert(tags).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestTagRel = async (
+  data?: Partial<InsertTagRel>,
+): Promise<TagRel> => {
+  const userId = data?.userId ?? (await createTestUser())._id;
+  const tagId = data?.tagId ?? (await createTestTag())._id;
+  const postId = data?.postId ?? (await createTestPost())._id;
+  const insertValues: InsertTagRel = {
+    _id: randomId(),
+    userId,
+    tagId,
+    postId,
+    ...data,
+  };
+  const result = await db.insert(tagRels).values(insertValues).returning();
   return result[0];
 };
 

@@ -49,7 +49,6 @@ export type AnalyticsProps = {
    * very good reason.
    */
   nestedPageElementContext?: string;
-  /** @deprecated Use `pageSectionContext` instead */
   listContext?: string;
   /** @deprecated Use `pageSectionContext` instead */
   pageSection?: "karmaChangeNotifer";

@@ -1,22 +1,32 @@
 import { Fragment, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchPostDisplay } from "@/lib/posts/postQueries";
-import { getPostReadTimeMinutes } from "@/lib/posts/postsHelpers";
+import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
-import { formatShortDate } from "@/lib/timeUtils";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
+import { formatShortDate } from "@/lib/timeUtils";
+import {
+  getPostReadTimeMinutes,
+  postGetStructuredData,
+} from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import PostSequenceNavigation from "./PostSequenceNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
+import StackedUserAvatars from "../StackedUserAvatars";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
-import UserProfileImage from "../UserProfileImage";
+import PostTranslations from "./PostTranslations";
+import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
+import StructuredData from "../StructuredData";
+import PostPingbacks from "./PostPingbacks";
+import PangramBadge from "../PangramBadge";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
 import PostTags from "../Tags/PostTags";
@@ -28,7 +38,7 @@ import Link from "../Link";
 
 export default async function PostDisplay({ postId }: { postId: string }) {
   const currentUser = await getCurrentUser();
-  const post = await fetchPostDisplay(currentUser, postId);
+  const post = await fetchPostDisplayCached(currentUser, postId);
   if (!post) {
     notFound();
   }
@@ -49,13 +59,18 @@ export default async function PostDisplay({ postId }: { postId: string }) {
 
   return (
     <PostDisplayProvider post={post}>
+      <StructuredData data={postGetStructuredData(post)} />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
+          <PostSequenceNavigation post={post} className="mb-2" />
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
             {post.title}
           </Type>
           <div className="flex gap-3 mb-6">
-            <UserProfileImage user={post.user} size={36} />
+            <StackedUserAvatars
+              users={[post.user, ...(post.coauthors ?? [])]}
+              size={36}
+            />
             <div>
               <Type style="bodyMedium">
                 <UsersName user={post.user} pageSectionContext="post_header" />
@@ -74,7 +89,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           </div>
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
-              <PostVoteButtons />
+              <PostVoteButtons hideReacts />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
                   <Type style="bodyMedium" className="flex items-center gap-1">
@@ -83,6 +98,11 @@ export default async function PostDisplay({ postId }: { postId: string }) {
                   </Type>
                 </Link>
               </Tooltip>
+              {post.contents &&
+                "pangramAiScore" in post.contents &&
+                userIsAdminOrMod(currentUser) && (
+                  <PangramBadge revision={post.contents} />
+                )}
             </div>
             <div className="flex items-center gap-5">
               <PostAudioToggle />
@@ -109,7 +129,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           {!post.shortform && (
             <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
               <div className="grow">
-                <PostVoteButtons />
+                <PostVoteButtons divider />
               </div>
               <div className="flex items-center gap-5">
                 <PostShareButton post={post} />
@@ -121,6 +141,16 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               </div>
             </div>
           )}
+          <Suspense>
+            <PostPingbacks
+              postId={postId}
+              currentUser={currentUser}
+              className="mb-12"
+            />
+          </Suspense>
+          <Suspense>
+            <PostTranslations postId={postId} className="mb-12" />
+          </Suspense>
           {showRecommendations && (
             <Suspense
               fallback={<div className="rounded bg-gray-100 w-full h-[182px]" />}
@@ -130,6 +160,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           )}
         </PostColumn>
       </ReadProgress>
+      <DigestPopup />
     </PostDisplayProvider>
   );
 }

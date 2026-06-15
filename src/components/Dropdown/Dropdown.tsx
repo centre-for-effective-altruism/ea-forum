@@ -1,6 +1,12 @@
 "use client";
 
-import { ReactNode, RefObject, useImperativeHandle, useState } from "react";
+import {
+  ReactNode,
+  RefObject,
+  useCallback,
+  useImperativeHandle,
+  useState,
+} from "react";
 import {
   autoUpdate,
   flip,
@@ -15,19 +21,34 @@ import {
   useInteractions,
   useRole,
 } from "@floating-ui/react";
+import clsx from "clsx";
+
+export type DropdownDismissRef = RefObject<(() => void) | null>;
 
 export default function Dropdown({
   placement,
   menu,
   dismissRef,
+  onToggleOpen,
+  className,
   children,
 }: Readonly<{
   placement?: Placement;
   menu: ReactNode;
-  dismissRef?: RefObject<(() => void) | null>;
+  dismissRef?: DropdownDismissRef;
+  onToggleOpen?: (open: boolean) => void;
+  className?: string;
   children: ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const onOpenChange = useCallback(
+    (open: boolean) => {
+      onToggleOpen?.(open);
+      setIsOpen(open);
+    },
+    [onToggleOpen],
+  );
 
   const nodeId = useFloatingNodeId();
   const {
@@ -37,7 +58,7 @@ export default function Dropdown({
   } = useFloating({
     nodeId,
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange,
     middleware: [flip(), shift()],
     whileElementsMounted: autoUpdate,
     placement,
@@ -56,7 +77,7 @@ export default function Dropdown({
   return (
     <FloatingTree>
       <div
-        className="inline-block"
+        className={clsx("inline-block", className)}
         ref={setReference}
         {...getReferenceProps()}
         data-component="Dropdown"

@@ -1,4 +1,5 @@
 import "server-only";
+
 import { isAnyTest } from "./environment";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
@@ -13,22 +14,30 @@ import { defineRelations } from "drizzle-orm";
 import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
+  chapters,
+  commentModeratorActions,
   comments,
+  conversations,
   forumEvents,
   images,
   localgroups,
   lwEvents,
+  messages,
   moderatorActions,
+  notifications,
   podcastEpisodes,
   podcasts,
   posts,
   readStatuses,
   reports,
   revisions,
+  sequences,
   subscriptions,
+  tagRels,
   tags,
   userLoginTokens,
   userRateLimits,
+  userTagRels,
   users,
   votes,
 } from "./schema";
@@ -39,20 +48,28 @@ const relations = defineRelations(
     posts,
     readStatuses,
     bookmarks,
+    chapters,
     comments,
+    conversations,
     revisions,
     votes,
     localgroups,
+    messages,
+    notifications,
+    sequences,
     subscriptions,
     tags,
+    tagRels,
     images,
     lwEvents,
     forumEvents,
     podcastEpisodes,
     podcasts,
     moderatorActions,
+    commentModeratorActions,
     reports,
     userRateLimits,
+    userTagRels,
     userLoginTokens,
   },
   (r) => ({
@@ -73,6 +90,14 @@ const relations = defineRelations(
         to: r.localgroups._id,
         where: {
           deleted: false,
+        },
+      }),
+      canonicalSequence: r.one.sequences({
+        from: r.posts.canonicalSequenceId,
+        to: r.sequences._id,
+        where: {
+          draft: false,
+          isDeleted: false,
         },
       }),
       podcastEpisode: r.one.podcastEpisodes({
@@ -107,6 +132,19 @@ const relations = defineRelations(
         },
       }),
     },
+    sequences: {
+      user: r.one.users({
+        from: r.sequences.userId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      chapters: r.many.chapters({
+        from: r.sequences._id,
+        to: r.chapters.sequenceId,
+      }),
+    },
     podcastEpisodes: {
       podcast: r.one.podcasts({
         from: r.podcastEpisodes.podcastId,
@@ -114,6 +152,10 @@ const relations = defineRelations(
       }),
     },
     comments: {
+      contentsRevision: r.one.revisions({
+        from: r.comments.contentsLatest,
+        to: r.revisions._id,
+      }),
       post: r.one.posts({
         from: r.comments.postId,
         to: r.posts._id,
@@ -162,6 +204,10 @@ const relations = defineRelations(
           collectionName: "Comments",
         },
       }),
+      forumEvent: r.one.forumEvents({
+        from: r.comments.forumEventId,
+        to: r.forumEvents._id,
+      }),
     },
     tags: {
       comments: r.many.comments({
@@ -169,6 +215,23 @@ const relations = defineRelations(
         to: r.comments.tagId,
         where: {
           deleted: false,
+        },
+      }),
+    },
+    tagRels: {
+      tag: r.one.tags({
+        from: r.tagRels.tagId,
+        to: r.tags._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      post: r.one.posts({
+        from: r.tagRels.postId,
+        to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
         },
       }),
     },
@@ -195,6 +258,53 @@ const relations = defineRelations(
           deletedDraft: false,
         },
       }),
+      comment: r.one.comments({
+        from: r.revisions.documentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
+        },
+      }),
+    },
+    forumEvents: {
+      pollQuestion: r.one.revisions({
+        from: r.forumEvents.pollQuestionLatest,
+        to: r.revisions._id,
+      }),
+      post: r.one.posts({
+        from: r.forumEvents.postId,
+        to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
+        },
+      }),
+      comment: r.one.comments({
+        from: r.forumEvents.commentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
+        },
+      }),
+      tag: r.one.tags({
+        from: r.forumEvents.tagId,
+        to: r.tags._id,
+        where: {
+          deleted: false,
+        },
+      }),
+    },
+    messages: {
+      user: r.one.users({
+        from: r.messages.userId,
+        to: r.users._id,
+      }),
+      conversation: r.one.conversations({
+        from: r.messages.conversationId,
+        to: r.conversations._id,
+      }),
     },
     userLoginTokens: {
       user: r.one.users({
@@ -209,7 +319,7 @@ const createDb = () => {
   if (isAnyTest()) {
     return pgLiteDrizzle({
       relations,
-      logger: process.env.LOG_DRIZZLE_QUERIES === "true",
+      logger: false,
       // We supply a custom client here with extensions. Note this just makes the
       // extensions _available_ - we still have to manually install them. Some
       // extensions (such as cube) are not used directly, but are dependencies of

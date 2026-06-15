@@ -14,6 +14,7 @@ import stringify from "json-stringify-deterministic";
 import type { PostListItem } from "../posts/postLists";
 import type { PostDisplay } from "../posts/postQueries";
 import type { CurrentUser } from "../users/currentUser";
+import { rpc } from "../rpc";
 import { useCurrentUser } from "./useCurrentUser";
 import { userGetDisplayName } from "../users/userHelpers";
 import {
@@ -21,7 +22,6 @@ import {
   subscriptionTypes,
 } from "../subscriptions/subscriptionTypes";
 import SubscriptionToggle from "@/components/PostsPage/SubscriptionToggle";
-import { rpc } from "../rpc";
 
 type SubscriptionId = {
   collectionName: string;
@@ -154,7 +154,11 @@ export const SubscriptionProvider = ({
   );
 };
 
-export const useSubscription = (id: SubscriptionId) => {
+export const useSubscription = (
+  id: SubscriptionId,
+): SubscriptionState & {
+  update: (subscribed: boolean) => void;
+} => {
   const ctx = useContext(subscriptionContext);
   if (!ctx) {
     throw new Error("No subscription provider found");

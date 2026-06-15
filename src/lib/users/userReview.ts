@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { captureException } from "@sentry/nextjs";
 import { fetchUserForReview, UserForReview } from "./userQueries";
 import { Revision, users } from "../schema";
 import { db } from "../db";
@@ -87,7 +88,7 @@ const getReasonForReview = (user: UserForReview): GetReasonForReviewResult => {
 };
 
 // ForumMagnum TODO: Save the reason somewhere
-const triggerReview = (userId: string, _reason?: string) =>
+export const triggerReview = (userId: string, _reason?: string) =>
   db.update(users).set({ needsReview: true }).where(eq(users._id, userId));
 
 /**
@@ -107,7 +108,7 @@ export const triggerReviewIfNeededById = async (userId: string) => {
   if (userForReview) {
     await triggerReviewIfNeeded(userForReview);
   } else {
-    // TODO: Sentry
+    captureException(new Error(`Couldn't fetch user id ${userId} for review`));
     console.error("Couldn't fetch user for review:", userId);
   }
 };

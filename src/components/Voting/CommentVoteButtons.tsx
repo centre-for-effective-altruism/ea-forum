@@ -1,7 +1,6 @@
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { getVoteDownStrength, getVoteUpStrength } from "@/lib/votes/voteHelpers";
 import { useVote } from "./useVote";
-import clsx from "clsx";
 import ReactButtons from "./ReactButtons";
 import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
@@ -9,8 +8,7 @@ import Type from "../Type";
 
 export default function CommentVoteButtons({
   comment,
-  className,
-}: Readonly<{ comment: CommentsList; className?: string }>) {
+}: Readonly<{ comment: CommentListItem }>) {
   const {
     onVote,
     onReact,
@@ -24,14 +22,12 @@ export default function CommentVoteButtons({
     document: comment,
   });
   return (
-    <div
-      data-component="CommentVoteButtons"
-      className={clsx("flex items-center gap-1", className)}
-    >
+    <>
       <div
+        data-component="CommentVoteButtons"
         className="
-          inline-flex items-center h-[22px] px-2
-          rounded-sm border-1 border-comment-border
+          inline-flex items-center h-[22px] px-[3px] rounded-sm
+          border-1 border-comment-border
         "
       >
         <VoteButton
@@ -49,7 +45,7 @@ export default function CommentVoteButtons({
               {voteCount === 1 ? "" : "s"})
             </Type>
           }
-          className="text-[14px] font-500 text-gray-600 cursor-default"
+          className="text-[14px] font-500 text-gray-600 cursor-default -mx-[2px]"
         >
           {baseScore}
         </Tooltip>
@@ -68,6 +64,6 @@ export default function CommentVoteButtons({
         extendedVoteType={extendedVoteType}
         onReact={onReact}
       />
-    </div>
+    </>
   );
 }

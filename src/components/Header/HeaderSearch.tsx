@@ -65,7 +65,7 @@ export default function HeaderSearch({
           const results: Partial<HeaderSearchResults> = {};
           for (let i = 0; i < indexes.length; i++) {
             const index = indexes[i];
-            const hits = response.results[i].hits;
+            const hits = response[i].hits;
             if (hits.length) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               results[index] = hits as any;
@@ -93,7 +93,9 @@ export default function HeaderSearch({
         onChange={onChange}
         ref={inputRef}
         placeholder="Search here..."
-        className="w-[220px] outline-none font-sans text-[14px]"
+        className="
+          w-[100px] sm:w-[160px] md:w-[220px] outline-none font-sans text-[14px]
+        "
       />
       <button
         onClick={onClose}
@@ -104,7 +106,7 @@ export default function HeaderSearch({
       {query && (
         <div
           className="
-            absolute top-[66px] right-0 w-[440px] max-w-full bg-gray-0 shadow-md
+            absolute top-[66px] right-0 w-[440px] max-w-full bg-surface-floating shadow
           "
         >
           {loading && (
@@ -116,7 +118,7 @@ export default function HeaderSearch({
             <div
               className="
                 flex flex-col gap-[1px] bg-gray-300 overflow-auto
-                max-h-[calc(100vh-66px)] [&>*]:bg-gray-0 [&>*]:p-2
+                max-h-[calc(100vh-66px)] [&>*]:bg-surface-floating [&>*]:p-2
               "
             >
               {results.users && results.users.length > 0 && (

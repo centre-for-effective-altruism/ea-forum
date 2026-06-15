@@ -7,51 +7,224 @@ import {
   useCallback,
   useRef,
   useState,
+  useEffect,
 } from "react";
 import toast from "react-hot-toast";
-import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
+import {
+  isBlank,
+  EditorAPI,
+  EditorContents,
+  EditorData,
+  getLocalStorageKeyPrefix,
+  EditorTypeString,
+  getUserDefaultEditor,
+} from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
-import type { CommentsList } from "../comments/commentLists";
+import type { CommentToEdit } from "../comments/commentQueries";
+import type { CommentListItem } from "../comments/commentLists";
+import type { CurrentUser } from "../users/currentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
+import { useDebouncedCallback } from "./useDebouncedCallback";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
+import {
+  getLSHandlers,
+  getRestorableDocumentFromLocalStorage,
+} from "../localStorage";
+
+const autosaveIntervalMs = 3000;
 
 type UseCommentEditorDocument =
+  // Creating a post comment
   | {
       postId: string;
+      parentCommentId?: string;
       shortform?: false;
+      comment?: never;
     }
+  // Creating a quick take
   | {
       postId?: never;
+      parentCommentId?: never;
       shortform: true;
+      comment?: never;
+    }
+  // Editing a comment or quick take
+  | {
+      postId?: never;
+      parentCommentId?: never;
+      shortform?: never;
+      comment: CommentToEdit | null;
     };
 
-type UseCommentEditorProps = UseCommentEditorDocument & {
-  onSuccess?: (comment: CommentsList) => void;
+export type CommentPrefilledProps = Pick<
+  Parameters<typeof rpc.comments.create>[0],
+  "forumEventId" | "forumEventMetadata"
+>;
+
+export type UseCommentEditorProps = UseCommentEditorDocument & {
+  beforeSubmit?: (data: EditorData) => void;
+  onSuccess?: (comment: CommentListItem) => void;
+  prefilledProps?: CommentPrefilledProps;
+  htmlTemplate?: string;
 };
+
+type SubmitExtraProps = {
+  shortformFrontpage?: boolean;
+  relevantTagIds?: string[];
+};
+
+const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {
+  if (comment !== undefined) {
+    return comment?.shortform ? "Edit quick take..." : "Edit comment...";
+  }
+  return shortform ? "Write a new quick take..." : "Write a new comment...";
+};
+
+const getInitialContents = ({
+  currentUser,
+  comment,
+  htmlTemplate,
+}: {
+  currentUser: CurrentUser | null;
+  comment?: CommentToEdit | null;
+  htmlTemplate?: string;
+}): EditorContents =>
+  comment?.originalContents ?? {
+    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
+    data: htmlTemplate ?? "",
+  };
+
+const getCommentLocalStorageId =
+  ({
+    comment,
+    parentCommentId,
+    postId,
+  }: {
+    postId?: string;
+    parentCommentId?: string;
+    comment?: CommentToEdit | null;
+  }) =>
+  () => {
+    if (comment?._id) {
+      return {
+        id: comment._id,
+        verify: true,
+      };
+    }
+    if (parentCommentId) {
+      return {
+        id: "parent:" + parentCommentId,
+        verify: false,
+      };
+    }
+    return {
+      id: "post:" + postId,
+      verify: false,
+    };
+  };
 
 export const useCommentEditor = ({
   postId,
+  parentCommentId,
   shortform,
+  comment,
+  htmlTemplate,
+  beforeSubmit,
   onSuccess,
+  prefilledProps,
 }: UseCommentEditorProps) => {
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const [loading, setLoading] = useState(false);
+  const hasUnsavedDataRef = useRef({ hasUnsavedData: false });
   const editorRef = useRef<EditorAPI>(null);
-  const [contents, setContents] = useState<EditorContents>({
-    type: "ckEditorMarkup",
-    data: "",
+  const [contents, setContents] = useState(
+    getInitialContents({
+      currentUser,
+      comment,
+      htmlTemplate,
+    }),
+  );
+  const [localStorageChecked, setLocalStorageChecked] = useState(false);
+  const [restorableDocument, setRestorableDocument] =
+    useState<EditorContents | null>(null);
+
+  const defaultEditorType = getUserDefaultEditor(currentUser);
+  const currentEditorType = contents.type || defaultEditorType;
+
+  const getLocalStorageHandlers = useCallback(
+    (editorType: EditorTypeString) => {
+      return getLSHandlers(
+        getCommentLocalStorageId({ postId, parentCommentId, comment }),
+        comment,
+        "contents",
+        getLocalStorageKeyPrefix(editorType),
+      );
+    },
+    [postId, parentCommentId, comment],
+  );
+
+  const saveBackup = useCallback(
+    (newContents: EditorContents) => {
+      const sameAsSaved = newContents.data === comment?.originalContents?.data;
+      if (isBlank(newContents) || sameAsSaved) {
+        getLocalStorageHandlers(currentEditorType).reset();
+        hasUnsavedDataRef.current.hasUnsavedData = false;
+      } else {
+        const handlers = getLocalStorageHandlers(newContents.type);
+        const success = handlers.set(newContents);
+        if (success) {
+          hasUnsavedDataRef.current.hasUnsavedData = false;
+        }
+      }
+    },
+    [getLocalStorageHandlers, currentEditorType, comment],
+  );
+
+  const throttledSaveBackup = useDebouncedCallback(saveBackup, {
+    rateLimitMs: autosaveIntervalMs,
+    callOnLeadingEdge: false,
+    onUnmount: "cancelPending",
+    allowExplicitCallAfterUnmount: false,
   });
 
-  const onChange = useCallback(({ contents, autosave }: EditorOnChangeProps) => {
-    setContents(contents);
-    // TODO Handle autosave
-    void autosave;
-  }, []);
+  useEffect(() => {
+    if (!localStorageChecked) {
+      setLocalStorageChecked(true);
+      setRestorableDocument(
+        getRestorableDocumentFromLocalStorage(currentUser, getLocalStorageHandlers),
+      );
+    }
+  }, [localStorageChecked, getLocalStorageHandlers, currentUser]);
+
+  const onChange = useCallback(
+    ({ contents, autosave }: EditorOnChangeProps) => {
+      setContents(contents);
+      if (!isBlank(contents)) {
+        hasUnsavedDataRef.current.hasUnsavedData = true;
+      }
+      if (autosave) {
+        throttledSaveBackup(contents);
+      }
+    },
+    [throttledSaveBackup],
+  );
+
+  useEffect(() => {
+    const unloadEventListener = (ev: BeforeUnloadEvent) => {
+      if (hasUnsavedDataRef?.current?.hasUnsavedData) {
+        ev.preventDefault();
+        ev.returnValue = "Are you sure you want to close?";
+        return ev.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", unloadEventListener);
+    return () => window.removeEventListener("beforeunload", unloadEventListener);
+  }, [hasUnsavedDataRef]);
 
   const onSubmit = useCallback(
-    async (ev?: SubmitEvent) => {
+    async (ev?: SubmitEvent<HTMLFormElement>, extraProps?: SubmitExtraProps) => {
       ev?.preventDefault();
       if (!currentUser) {
         onSignup();
@@ -62,16 +235,28 @@ export const useCommentEditor = ({
         console.error("Editor API not found");
         return;
       }
-      setLoading(true);
       const data = await editorApi.getSubmitData();
+      if (!data.originalContents.data) {
+        toast.error("Comment is empty");
+        return;
+      }
+      beforeSubmit?.(data);
+      setLoading(true);
       startTransition(async () => {
         try {
-          const newComment = await rpc.comments.create({
-            postId,
-            shortform,
-            parentCommentId: null,
-            editorData: data,
-          });
+          const newComment = comment
+            ? await rpc.comments.edit({
+                commentId: comment._id,
+                editorData: data,
+              })
+            : await rpc.comments.create({
+                postId,
+                parentCommentId,
+                shortform,
+                editorData: data,
+                ...extraProps,
+                ...prefilledProps,
+              });
           if (!newComment) {
             throw new Error("Something went wrong");
           }
@@ -85,7 +270,17 @@ export const useCommentEditor = ({
         }
       });
     },
-    [currentUser, onSignup, postId, shortform, onSuccess],
+    [
+      currentUser,
+      onSignup,
+      postId,
+      parentCommentId,
+      shortform,
+      comment,
+      beforeSubmit,
+      onSuccess,
+      prefilledProps,
+    ],
   );
 
   const onKeyDown = useCallback(
@@ -98,12 +293,28 @@ export const useCommentEditor = ({
     [onSubmit],
   );
 
+  const restoreAutosave = useCallback(() => {
+    if (restorableDocument) {
+      setRestorableDocument(null);
+      getLocalStorageHandlers(currentEditorType).reset();
+      hasUnsavedDataRef.current.hasUnsavedData = false;
+    }
+  }, [restorableDocument, currentEditorType, getLocalStorageHandlers]);
+
   return {
+    formType: comment ? ("edit" as const) : ("new" as const),
+    placeholder: choosePlaceholder(shortform, comment),
     contents,
     editorRef,
     loading,
     onChange,
     onSubmit,
     onKeyDown,
+    autosave: restorableDocument?.data?.length
+      ? {
+          contents: restorableDocument,
+          onRestore: restoreAutosave,
+        }
+      : undefined,
   };
 };

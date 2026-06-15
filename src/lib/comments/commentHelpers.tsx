@@ -1,8 +1,9 @@
 import type { CurrentUser } from "../users/currentUser";
+import type { CommentListItem } from "./commentLists";
 import type { Comment } from "../schema";
-import type { CommentsList } from "./commentLists";
 import { getSiteUrl } from "../routeHelpers";
 import { TagCommentType, tagGetCommentLink } from "../tags/tagHelpers";
+import { OwnableDocument, userCanDo, userOwns } from "../users/userHelpers";
 
 export const commentGetPageUrlFromIds = ({
   commentId,
@@ -71,7 +72,7 @@ export const commentGetPageUrl = ({
 
 export const userCanPinCommentOnProfile = (
   user: CurrentUser | null,
-  comment: Pick<Comment, "userId"> | CommentsList,
+  comment: Pick<Comment, "userId"> | CommentListItem,
 ) => {
   if (!user) {
     return false;
@@ -83,4 +84,20 @@ export const userCanPinCommentOnProfile = (
     return user._id === comment.user?._id;
   }
   return user._id === comment.userId;
+};
+
+export const userCanEditComment = (
+  user: CurrentUser | null,
+  comment: OwnableDocument,
+) => userCanDo(user, "comments.edit.all") || userOwns(user, comment);
+
+export const commentIsPublic = (
+  comment: Pick<Comment, "draft" | "deleted" | "rejected" | "authorIsUnreviewed">,
+) => {
+  return (
+    !comment.draft &&
+    !comment.deleted &&
+    !comment.rejected &&
+    !comment.authorIsUnreviewed
+  );
 };

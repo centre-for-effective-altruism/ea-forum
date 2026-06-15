@@ -9,11 +9,7 @@ type CookiePreferencesChangedCallbackProps = {
 };
 
 /**
- * (Re)-initialise datadog RUM and ReCaptcha with the current cookie preferences.
- * NOTE: this will not turn it OFF if they have previously accepted and are now
- * rejecting analytics cookies, it will only turn it ON if they are now accepting.
- * There is no way to turn it off without reloading currently
- * (see https://github.com/DataDog/browser-sdk/issues/1008)
+ * (Re)-initialise ReCaptcha, etc. with the current cookie preferences.
  */
 export const cookiePreferencesChanged = ({
   cookiePreferences,

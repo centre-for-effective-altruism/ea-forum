@@ -14,7 +14,10 @@ export default function PostsListSkeleton({
   const { view } = usePostsListView();
   const actualViewType = viewType === "fromContext" ? view : viewType;
   return (
-    <section className="max-w-full" data-component="PostsListSkeleton">
+    <section
+      data-component="PostsListSkeleton"
+      className="max-w-full flex flex-col gap-[2px]"
+    >
       {new Array(count).fill(null).map((_, i) => (
         <PostsItemSkeleton key={i} viewType={actualViewType} />
       ))}

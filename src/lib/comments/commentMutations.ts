@@ -1,20 +1,21 @@
 import "server-only";
-import type { EditorData } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
+import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { randomId } from "../utils/random";
 import { comments } from "../schema";
 import { createRevision } from "../revisions/revisionMutations";
-import { denormalizeRevision } from "../revisions/revisionHelpers";
-import { htmlToPingbacks } from "../pingbacks";
+import { denormalizeRevision, getNextVersion } from "../revisions/revisionHelpers";
+import { htmlToPingbacks, notifyUsersOfPingbackMentions } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
-import { getPostForCommentCreation } from "./commentQueries";
+import { fetchPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
+import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
 import { MINIMUM_APPROVAL_KARMA, userCanDo, userOwns } from "../users/userHelpers";
 import { userCanPinCommentOnProfile } from "./commentHelpers";
 import { logFieldChanges } from "../fieldChanges";
@@ -27,7 +28,22 @@ import {
   updateCommentTag,
   updateDescendentCommentCounts,
   updateReadStatusAfterComment,
+  newCommentNotifications,
+  runPangramOnComment,
 } from "./commentCallbacks";
+
+const validateEditorContents = (
+  editorData: EditorData,
+  shortform?: boolean | null,
+) => {
+  const { originalContents } = editorData;
+  if (!isEditorTypeString(originalContents.type)) {
+    throw new Error("Invalid editor type");
+  }
+  if (!originalContents.data) {
+    throw new Error(shortform ? "Quick take is empty" : "Comment is empty");
+  }
+};
 
 export const createPostComment = async ({
   user,
@@ -36,6 +52,10 @@ export const createPostComment = async ({
   parentCommentId,
   editorData,
   draft,
+  shortformFrontpage,
+  relevantTagIds,
+  forumEventId,
+  forumEventMetadata,
 }: {
   user: CurrentUser;
   postId?: string;
@@ -43,25 +63,22 @@ export const createPostComment = async ({
   parentCommentId: string | null;
   editorData: EditorData;
   draft?: boolean;
+  shortformFrontpage?: boolean;
+  relevantTagIds?: string[];
+  forumEventId?: string;
+  forumEventMetadata?: ForumEventCommentMetadata;
 }) => {
   if (user.banned) {
     throw new Error("Banned");
   }
-
-  const { originalContents } = editorData;
-  if (originalContents.type !== "ckEditorMarkup") {
-    throw new Error("Invalid editor type");
-  }
-  if (!originalContents.data) {
-    throw new Error(shortform ? "Quick take is empty" : "Comment is empty");
-  }
   if (!postId && !shortform) {
     throw new Error("No post provided");
   }
+  validateEditorContents(editorData, shortform);
 
   // eslint-disable-next-line prefer-const
   let [post, parentComment] = await Promise.all([
-    getPostForCommentCreation({ txn: db, postId, shortform, userId: user._id }),
+    fetchPostForCommentCreation({ txn: db, postId, shortform, userId: user._id }),
     parentCommentId
       ? db.query.comments.findFirst({
           columns: {
@@ -84,7 +101,7 @@ export const createPostComment = async ({
       throw new Error("Post not found");
     }
     await createShortformPost(user);
-    post = await getPostForCommentCreation({
+    post = await fetchPostForCommentCreation({
       txn: db,
       postId,
       shortform,
@@ -100,7 +117,7 @@ export const createPostComment = async ({
   }
 
   const commentId = randomId();
-  const revision = await db.transaction(async (txn) => {
+  const [revision, comment] = await db.transaction(async (txn) => {
     const revision = await createRevision(txn, user, editorData, {
       documentId: commentId,
       collectionName: "Comments",
@@ -130,8 +147,10 @@ export const createPostComment = async ({
         pingbacks,
         postVersion: post.contents?.version || "1.0.0",
         shortform,
-        // TODO: shortformFrontpage, relevantTagIds
-        shortformFrontpage: true,
+        shortformFrontpage,
+        relevantTagIds,
+        forumEventId,
+        forumEventMetadata,
         postedAt: now,
         createdAt: now,
         lastEditedAt: now,
@@ -158,15 +177,14 @@ export const createPostComment = async ({
         skipRateLimits: true,
       }),
     ]);
-    return revision;
+    return [revision, comment];
   });
 
   void checkCommentForSpam(db, user, commentId, revision, post);
   void triggerReviewIfNeededById(user._id);
-
-  // TODO: Notifications:
-  // commentsNewNotifications
-  // notifyUsersOfPingbackMentions
+  void newCommentNotifications(commentId);
+  void notifyUsersOfPingbackMentions(user, "Comments", comment);
+  void runPangramOnComment(user, revision._id);
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock
@@ -184,6 +202,100 @@ export const createPostComment = async ({
   void elasticSyncDocument("Comments", commentId);
 
   return commentId;
+};
+
+export const updateComment = async ({
+  user,
+  commentId,
+  editorData,
+}: {
+  user: CurrentUser;
+  commentId: string;
+  editorData: EditorData;
+}) => {
+  if (user.banned) {
+    throw new Error("Banned");
+  }
+
+  const oldComment = await db.query.comments.findFirst({
+    columns: {
+      _id: true,
+      userId: true,
+      postId: true,
+      shortform: true,
+      draft: true,
+      contents: true,
+      pingbacks: true,
+    },
+    where: {
+      _id: commentId,
+    },
+  });
+  if (!oldComment) {
+    throw new Error("Comment not found");
+  }
+
+  validateEditorContents(editorData, oldComment.shortform);
+
+  const post = await fetchPostForCommentCreation({
+    txn: db,
+    postId: oldComment.postId ?? undefined,
+    shortform: oldComment.shortform ?? false,
+    userId: user._id,
+  });
+  if (!post) {
+    throw new Error("Post not found");
+  }
+
+  const [revision, updatedComment] = await db.transaction(async (txn) => {
+    const revision = await createRevision(txn, user, editorData, {
+      documentId: commentId,
+      collectionName: "Comments",
+      fieldName: "contents",
+      draft: oldComment.draft,
+      version: getNextVersion(
+        oldComment.contents,
+        editorData.updateType,
+        oldComment.draft,
+      ),
+    });
+    const pingbacks = revision.html ? await htmlToPingbacks(revision.html) : null;
+
+    const [updatedComment] = await txn
+      .update(comments)
+      .set({
+        contents: denormalizeRevision(revision),
+        contentsLatest: revision._id,
+        pingbacks,
+        lastEditedAt: new Date().toISOString(),
+      })
+      .where(eq(comments._id, commentId))
+      .returning();
+
+    await Promise.all([
+      updateCommentForumEvent(txn, updatedComment),
+      upsertPolls({ txn, user, revision, post, comment: updatedComment }),
+    ]);
+
+    return [revision, updatedComment];
+  });
+
+  void checkCommentForSpam(db, user, commentId, revision, post);
+  void notifyUsersOfPingbackMentions(user, "Comments", updatedComment, oldComment);
+  void runPangramOnComment(user, revision._id);
+
+  const { newRevision } = await convertImagesInObject(db, revision);
+  if (newRevision) {
+    await db
+      .update(comments)
+      .set({
+        contentsLatest: newRevision._id,
+        contents: denormalizeRevision(newRevision),
+      })
+      .where(eq(comments._id, commentId));
+  }
+
+  void elasticSyncDocument("Comments", commentId);
 };
 
 export const updateCommentPinnedOnProfile = async (

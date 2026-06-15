@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CommentsList } from "@/lib/comments/commentLists";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
@@ -10,6 +10,7 @@ import CommentTripleDotMenu from "../Comments/CommentTripleDotMenu";
 import CommentBody from "../ContentStyles/CommentBody";
 import CommentItem from "../Comments/CommentItem";
 import CommentDate from "../Comments/CommentDate";
+import CommentTags from "../Tags/CommentTags";
 import UsersTooltip from "../UsersTooltip";
 import Score from "../Score";
 import Type from "../Type";
@@ -18,7 +19,7 @@ import Link from "../Link";
 export default function QuickTakeItem({
   quickTake,
 }: Readonly<{
-  quickTake: CommentsList;
+  quickTake: CommentListItem;
 }>) {
   const { currentUser } = useCurrentUser();
   const [expanded, setExpanded] = useState(false);
@@ -41,7 +42,7 @@ export default function QuickTakeItem({
       data-component="QuickTakeItem"
       onClick={onClick}
       className="
-        max-w-full rounded bg-gray-50 border border-gray-100 px-4 py-3
+        max-w-full rounded bg-comment-odd border border-comment-border px-4 py-3
         cursor-pointer
       "
     >
@@ -51,7 +52,7 @@ export default function QuickTakeItem({
           voteCount={voteCount}
           orientation="horizontal"
         />
-        <Type style="body" className="text-black font-[700]">
+        <Type style="body" className="text-gray-1000 font-[700]">
           {user ? (
             <InteractionWrapper>
               <Link href={userGetProfileUrl({ user })}>
@@ -65,10 +66,12 @@ export default function QuickTakeItem({
           )}
         </Type>
         <CommentDate comment={quickTake} />
-        <div className="grow" />
+        <div className="grow">
+          <CommentTags comment={quickTake} />
+        </div>
         <Type
           style="body"
-          className="flex flex-row gap-1 cursor-pointer hover:text-black"
+          className="flex flex-row gap-1 cursor-pointer hover:text-gray-1000"
         >
           <ChatBubbleLeftIcon className="w-[16px]" />
           {descendentCount}

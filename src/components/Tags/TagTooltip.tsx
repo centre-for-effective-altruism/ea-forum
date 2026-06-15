@@ -1,0 +1,53 @@
+import type { ElementType, ReactNode } from "react";
+import type { Placement } from "@floating-ui/react";
+import type { CommentTag, PostTag, TagBase } from "@/lib/tags/tagQueries";
+import type { SearchTag } from "@/lib/search/searchDocuments";
+import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
+import TagBody from "../ContentStyles/TagBody";
+import TagRelevance from "./TagRelevance";
+import Tooltip from "../Tooltip";
+import Type from "../Type";
+import Link from "../Link";
+
+export default function TagTooltip({
+  tag,
+  placement,
+  As = "div",
+  className,
+  children,
+}: Readonly<{
+  tag: TagBase | SearchTag | PostTag | CommentTag;
+  placement?: Placement;
+  As?: ElementType;
+  className?: string;
+  children: ReactNode;
+}>) {
+  // If this tag came from elasticsearch we need to manually trim the body
+  const description =
+    "_index" in tag ? tag.description?.slice(0, 350) + "..." : tag.description;
+  return (
+    <Tooltip
+      interactable
+      placement={placement}
+      As={As}
+      className={className}
+      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow-lg w-[270px]"
+      title={
+        <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">
+          {"tagRel" in tag && <TagRelevance tag={tag as PostTag} />}
+          {description && <TagBody html={description} />}
+          <Type style="bodyHeavy">
+            <Link
+              href={tagGetPageUrl({ tag })}
+              className="text-primary hover:opacity-70"
+            >
+              View all {tag.postCount} posts
+            </Link>
+          </Type>
+        </div>
+      }
+    >
+      {children}
+    </Tooltip>
+  );
+}

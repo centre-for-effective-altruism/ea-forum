@@ -1,10 +1,12 @@
-import { sql } from "drizzle-orm";
+import { SQL, sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
+import type { FilterSettings } from "../filterSettings";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
-import { postTagsProjection } from "../tags/tagQueries";
+import { fetchTagBySlug, postTagsProjection } from "../tags/tagQueries";
+import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
   RelationalFilter,
@@ -15,6 +17,7 @@ import {
   currentUserIsSharedSelector,
   currentUserUsedLinkKeySelector,
   currentUserSuggestedCurationSelector,
+  filterSettingsToSelector,
 } from "./postQueries";
 
 const SCORE_BIAS = 2;
@@ -22,8 +25,8 @@ const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
 const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 
-// TODO: This should be a function that takes the current user and does permission
-// checks
+// TODO: Maybe this should be a function that takes the current user and does
+// permission checks
 export const viewablePostFilter = {
   draft: false,
   deletedDraft: false,
@@ -45,21 +48,27 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
 export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
 
-const getFrontpageCutoffDate = () =>
-  new Date(new Date().getTime() - CUTOFF_DAYS * 24 * 60 * 60 * 1000);
+// TODO: Remove the onsiteDigestFilter, FEATURED_CUTOFF_DAYS,
+// fetchFeaturedCuratedPostsList, and fetchFeaturedPostsList below along with
+// the /admin/featured page once the featured-page experiment is concluded.
+const onsiteDigestFilter = (postsTable: typeof posts) => sql`
+  EXISTS (
+    SELECT 1 FROM "DigestPosts" dp
+    WHERE dp."postId" = ${postsTable}."_id"
+      AND dp."onsiteDigestStatus" = 'yes'
+  )
+`;
 
 /**
  * New and upvoted sorting: Calculate score from karma with bonuses for
  * frontpage/curated posts, then divide by a time decay factor.
  */
-const magicSort = (postsTable: typeof posts) => sql`
+const magicSort =
+  (scoreField = (postsTable: typeof posts) => sql`${postsTable}."score"`) =>
+  (postsTable: typeof posts) => sql`
   ${postsTable}."sticky" DESC,
   ${postsTable}."stickyPriority" DESC,
-  (
-    ${postsTable}."baseScore"
-      + (CASE WHEN ${postsTable}."frontpageDate" IS NOT NULL THEN 10 ELSE 0 END)
-      + (CASE WHEN ${postsTable}."curatedDate" IS NOT NULL THEN 10 ELSE 0 END)
-  ) / POW(
+  (${scoreField(postsTable)}) / POW(
     EXTRACT(EPOCH FROM NOW() - ${postsTable}."postedAt") / 3600000 + ${SCORE_BIAS},
     ${TIME_DECAY_FACTOR}
   ) DESC,
@@ -109,6 +118,10 @@ export const postsListProjection = (
       lastCommentedAt: true,
       sharingSettings: true,
       shortform: true,
+      // TODO: Move these rarely used event fields into a separate type?
+      startTime: true,
+      onlineEvent: true,
+      googleLocation: true,
     },
     extras: {
       coauthors: coauthorsSelector,
@@ -117,7 +130,7 @@ export const postsListProjection = (
           sql`${posts}."customHighlight"->>'html'`,
           options?.highlightLength || 350,
         ),
-      tags: postTagsProjection,
+      tags: (postsTable) => postTagsProjection(postsTable, currentUserId),
       ...(currentUserId
         ? {
             currentUserIsShared: currentUserIsSharedSelector(currentUserId),
@@ -135,7 +148,7 @@ export const postsListProjection = (
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
+            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 500),
         },
       },
       group: {
@@ -200,27 +213,94 @@ export const fetchFrontpagePostsList = ({
   limit,
   onlyTagId,
   excludeTagId,
+  filterSettings,
 }: {
   currentUserId: string | null;
   offset?: number;
   limit: number;
   onlyTagId?: string;
-  excludeTagId?: string;
+  excludeTagId?: string | string[];
+  filterSettings?: FilterSettings;
 }) => {
+  let scoreField: ((postsTable: typeof posts) => SQL) | undefined;
+  const filters: ((postsTable: typeof posts) => SQL)[] = [];
+  if (onlyTagId) {
+    filters.push(onlyTagFilter(onlyTagId));
+  }
+  if (excludeTagId) {
+    const ids = Array.isArray(excludeTagId) ? excludeTagId : [excludeTagId];
+    for (const id of ids) {
+      filters.push(excludeTagFilter(id));
+    }
+  }
+  if (filterSettings) {
+    const { filter, score } = filterSettingsToSelector(filterSettings);
+    filters.push(filter);
+    scoreField = score;
+  }
   return fetchPostsList({
     currentUserId,
     where: {
-      ...(onlyTagId ? { RAW: onlyTagFilter(onlyTagId) } : null),
-      ...(excludeTagId ? { RAW: excludeTagFilter(excludeTagId) } : null),
       isEvent: false,
       sticky: false,
       groupId: { isNull: true },
-      frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
+      AND: filters.map((filter) => ({ RAW: (posts) => filter(posts) })),
     },
-    orderBy: magicSort,
+    orderBy: magicSort(scoreField),
     offset,
     limit,
+  });
+};
+
+export const fetchFrontpageCuratedPostsList = async (
+  currentUserId: string | null,
+) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      curatedDate: { gte: nDaysAgo(5).toISOString() },
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    limit: currentUserId ? 3 : 2,
+  });
+};
+
+const FEATURED_CUTOFF_DAYS = 14;
+
+export const fetchFeaturedCuratedPostsList = async (
+  currentUserId: string | null,
+) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      curatedDate: { gte: nDaysAgo(5).toISOString() },
+      RAW: onsiteDigestFilter,
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    limit: currentUserId ? 3 : 2,
+  });
+};
+
+export const fetchFeaturedPostsList = (currentUserId: string | null) => {
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: false,
+      sticky: false,
+      groupId: { isNull: true },
+      postedAt: { gt: nDaysAgo(FEATURED_CUTOFF_DAYS).toISOString() },
+      RAW: onsiteDigestFilter,
+    },
+    orderBy: magicSort(),
   });
 };
 
@@ -280,54 +360,51 @@ export const fetchPostsListByIds = async (
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
 };
 
-export const fetchSidebarOpportunities = (limit: number) => {
+export const fetchPingbackPosts = async (
+  currentUserId: string | null,
+  postId: string,
+) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      baseScore: { gt: 0 },
+      RAW: (posts) =>
+        sql`(${posts}."pingbacks"->'Posts') @> ${`"${postId}"`}::JSONB`,
+    },
+    orderBy: {
+      baseScore: "desc",
+    },
+  });
+
+export const fetchSidebarOpportunities = (
+  currentUserId: string | null,
+  limit: number,
+) => {
   const tagId = process.env.OPPORTUNITIES_TAG_ID;
   if (!tagId) {
     console.warn("Opportunities tag ID is not configured");
     return Promise.resolve([]);
   }
-  return db.query.posts.findMany({
-    columns: {
-      _id: true,
-      slug: true,
-      title: true,
-      postedAt: true,
-      isEvent: true,
-      groupId: true,
-    },
+  return fetchPostsList({
+    currentUserId,
     where: {
-      ...viewablePostFilter,
       isEvent: false,
       sticky: false,
       groupId: { isNull: true },
       frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: getFrontpageCutoffDate().toISOString() },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
       RAW: (postsTable: typeof posts) =>
-        sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`,
+        sql`(${postsTable.tagRelevance}->>${tagId})::FLOAT >= 1`,
     },
-    orderBy: magicSort,
+    orderBy: magicSort(),
     limit,
   });
 };
 
-export type SidebarOpportunityItem = Awaited<
-  ReturnType<typeof fetchSidebarOpportunities>
->[number];
-
-export const fetchSidebarEvents = (limit: number) => {
-  return db.query.posts.findMany({
-    columns: {
-      _id: true,
-      slug: true,
-      title: true,
-      startTime: true,
-      onlineEvent: true,
-      googleLocation: true,
-      isEvent: true,
-      groupId: true,
-    },
+export const fetchSidebarEvents = (currentUserId: string | null, limit: number) => {
+  return fetchPostsList({
+    currentUserId,
     where: {
-      ...viewablePostFilter,
       isEvent: true,
       startTime: { gt: new Date().toISOString() },
     },
@@ -339,10 +416,6 @@ export const fetchSidebarEvents = (limit: number) => {
     limit,
   });
 };
-
-export type SidebarEventItem = Awaited<
-  ReturnType<typeof fetchSidebarEvents>
->[number];
 
 export const fetchMoreFromAuthorPostsList = async ({
   currentUserId,
@@ -387,6 +460,25 @@ export const fetchMoreFromAuthorPostsList = async ({
   });
 };
 
+const unreadPostFilter = (postsTable: typeof posts, currentUserId: string | null) =>
+  currentUserId
+    ? sql`
+      AND (
+        NOT EXISTS (
+          SELECT 1 FROM "ReadStatuses"
+          WHERE "postId" = ${postsTable._id}
+            AND "userId" = ${currentUserId}
+        )
+        OR EXISTS (
+          SELECT 1 FROM "ReadStatuses"
+          WHERE "postId" = ${postsTable._id}
+            AND "userId" = ${currentUserId}
+            AND "isRead" IS NULL
+        )
+      )
+    `
+    : sql``;
+
 export const fetchCuratedAndPopularPostsList = async ({
   currentUserId,
   limit,
@@ -399,9 +491,11 @@ export const fetchCuratedAndPopularPostsList = async ({
       currentUserId,
       where: {
         RAW: (postsTable) =>
-          sql`${postsTable.curatedDate} > NOW() - '7 days'::INTERVAL`,
+          sql`
+            ${postsTable.curatedDate} > NOW() - '7 days'::INTERVAL
+            ${unreadPostFilter(postsTable, currentUserId)}
+          `,
         disableRecommendation: false,
-        readStatus: currentUserId ? { isRead: false } : undefined,
       },
       orderBy: {
         curatedDate: "desc",
@@ -413,12 +507,12 @@ export const fetchCuratedAndPopularPostsList = async ({
       where: {
         RAW: (postsTable) => sql`
           ${postsTable.frontpageDate} > NOW() - '7 days'::INTERVAL AND
-          ${excludeTagFilter(process.env.COMMUNITY_TAG_ID)(postsTable)}
+          ${excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID)(postsTable)}
+          ${unreadPostFilter(postsTable, currentUserId)}
         `,
         curatedDate: { isNull: true },
         groupId: { isNull: true },
         disableRecommendation: false,
-        readStatus: currentUserId ? { isRead: false } : undefined,
         user: {
           deleted: false,
         },
@@ -446,7 +540,38 @@ export const fetchRecentOpportunitiesPostsList = async ({
     where: {
       RAW: onlyTagFilter(process.env.OPPORTUNITIES_TAG_ID),
     },
-    orderBy: magicSort,
+    orderBy: magicSort(),
+    limit,
+  });
+};
+
+// TODO: Remove along with the /admin/org-updates-test page once the
+// organization-updates layout experiment is concluded.
+export const fetchOrgUpdatesPostsList = async ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) => {
+  const tag = await fetchTagBySlug("organization-updates");
+  if (!tag) {
+    console.warn("Organization updates tag not found by slug");
+    return [];
+  }
+  return fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: false,
+      sticky: false,
+      groupId: { isNull: true },
+      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
+      RAW: onlyTagFilter(tag._id),
+    },
+    orderBy: magicSort(),
+    offset,
     limit,
   });
 };
@@ -460,6 +585,8 @@ export const fetchPostsListFromView = (
       return fetchFrontpagePostsList({ currentUserId, ...props });
     case "sticky":
       return fetchStickyPostsList({ currentUserId, ...props });
+    case "orgUpdates":
+      return fetchOrgUpdatesPostsList({ currentUserId, ...props });
     default:
       throw new Error("Invalid posts list view");
   }

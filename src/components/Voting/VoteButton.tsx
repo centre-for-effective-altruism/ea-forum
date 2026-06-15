@@ -29,7 +29,7 @@ export default function VoteButton({
   orientation,
   onVote,
   dimWhenNotVoted,
-  large,
+  disabled,
   className,
 }: Readonly<{
   currentVoteStrength: VoteStrength;
@@ -37,7 +37,7 @@ export default function VoteButton({
   orientation: Orientation;
   onVote: (voteType: VoteType) => void;
   dimWhenNotVoted?: boolean;
-  large?: boolean;
+  disabled?: boolean;
   className?: string;
 }>) {
   const [votingTransition, setVotingTransition] = useState<NodeJS.Timeout | null>(
@@ -105,19 +105,26 @@ export default function VoteButton({
   return (
     <Tooltip
       title={
-        <Type>
-          <strong>Overall karma: {direction}</strong>
-          <br />
-          Is this a valuable contribution?
-          <br />
-          <em>
-            For strong {direction.toLowerCase()}, click-and-hold
+        disabled ? (
+          <Type>You do not have permission</Type>
+        ) : (
+          <Type>
+            <strong>Overall karma: {direction}</strong>
             <br />
-            (Press twice on mobile)
-          </em>
-        </Type>
+            Is this a valuable contribution?
+            <br />
+            <em>
+              For strong {direction.toLowerCase()}, click-and-hold
+              <br />
+              (Press twice on mobile)
+            </em>
+          </Type>
+        )
       }
-      className="flex items-center"
+      className={clsx(
+        "flex items-center",
+        disabled && "pointer-events-none cursor-not-allowed",
+      )}
     >
       <button
         data-component="VoteButton"
@@ -132,12 +139,12 @@ export default function VoteButton({
         )}
       >
         <ChevronUpIcon
-          width={large ? 20 : 16}
-          height={large ? 20 : 16}
+          width={22}
+          height={22}
           className={clsx(
             voted && (upvote ? "text-primary" : "text-error"),
             !voted && dimWhenNotVoted && "opacity-70",
-            !voted && "hover:text-gray-800",
+            !voted && "hover:text-gray-900",
           )}
         />
         <Transition
@@ -148,11 +155,10 @@ export default function VoteButton({
           {(state) => (
             <ChevronUpIcon
               ref={ref}
-              width={large ? 30 : 24}
-              height={large ? 30 : 24}
+              width={32}
+              height={32}
               className={clsx(
-                "pointer-events-none absolute",
-                large ? "-top-[9px] -left-[5px]" : "-top-[7px] -left-[4px]",
+                "pointer-events-none absolute -top-[10px] -left-[5px]",
                 (bigVoteCompleted || bigVoted) &&
                   (upvote ? "text-primary-light" : "text-error-light"),
                 state === "entering" || state === "entered"

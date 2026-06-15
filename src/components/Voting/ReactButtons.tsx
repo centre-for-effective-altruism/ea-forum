@@ -22,7 +22,7 @@ const AnonymousTooltipContent: FC<{
     <Type style="bodySmall">
       <div>
         {count === 1 ? "1 person" : `${count} people`}{" "}
-        <span className="text-gray-400">reacted with</span>
+        <span className="text-tooltip-text-dim">reacted with</span>
       </div>
       <div className="flex items-center justify-center gap-1">
         <reaction.Component className="text-primary-light w-4" /> {reaction.label}
@@ -68,10 +68,10 @@ const ReactionButton: FC<{
   <button
     onClick={onClick}
     className={clsx(
-      "cursor-pointer flex items-center gap-1 user-select-none h-6 px-1 rounded",
+      "cursor-pointer flex items-center gap-1 select-none h-6 px-1 rounded",
       isSelected
         ? "text-primary bg-primary/5 hover:bg-primary/20 border-1 border-primary/50"
-        : "text-gray-600 hover:bg-gray-100",
+        : "text-gray-600 hover:bg-gray-200",
     )}
   >
     {children}
@@ -83,18 +83,16 @@ export default function ReactButtons({
   extendedScore,
   extendedVoteType,
   onReact,
-  className,
 }: Readonly<{
   reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
-  className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
   const reactions = countCurrentReactions(extendedScore);
   return (
-    <div className={clsx("flex items-center gap-[2px]", className)}>
+    <>
       {reactions.map(({ reaction, score, anonymous }) => {
         const isSelected = isReactionSelected(extendedVoteType, reaction);
         return (
@@ -138,6 +136,6 @@ export default function ReactButtons({
           </ReactionButton>
         </Tooltip>
       </Dropdown>
-    </div>
+    </>
   );
 }

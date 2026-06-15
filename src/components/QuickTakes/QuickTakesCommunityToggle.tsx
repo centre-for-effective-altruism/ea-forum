@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
 import CheckIcon from "@heroicons/react/16/solid/CheckIcon";
 import clsx from "clsx";
@@ -12,10 +11,7 @@ export default function QuickTakesCommunityToggle({
 }: Readonly<{
   className?: string;
 }>) {
-  const { showCommunity, setShowCommunity } = useQuickTakesListContext();
-  const onToggle = useCallback(() => {
-    setShowCommunity((checked) => !checked);
-  }, [setShowCommunity]);
+  const { showCommunity, toggleShowCommunity } = useQuickTakesListContext();
   return (
     <Tooltip
       title={
@@ -27,7 +23,7 @@ export default function QuickTakesCommunityToggle({
         style="loadMore"
         role="button"
         aria-label={showCommunity ? "Hide community" : "Show community"}
-        onClick={onToggle}
+        onClick={toggleShowCommunity}
         className="
           flex items-center gap-1 cursor-pointer select-none
           text-gray-600 hover:text-gray-1000

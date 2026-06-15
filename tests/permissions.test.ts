@@ -1,4 +1,4 @@
-import { afterEach, expect, suite, test } from "vitest";
+import { beforeEach, expect, suite, test } from "vitest";
 import {
   createTestComment,
   createTestGroup,
@@ -118,7 +118,7 @@ suite("Permissions", () => {
     });
   });
   suite("Post list permissions", () => {
-    afterEach(async () => {
+    beforeEach(async () => {
       await db.delete(posts);
     });
     test("Post lists don't include drafts", async () => {

@@ -2,9 +2,15 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,
   devIndicators: false,
   images: {
+    unoptimized: true,
     remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "*",
+      },
       {
         protocol: "https",
         hostname: "*",
@@ -42,6 +48,7 @@ const nextConfig: NextConfig = {
     },
   ],
   serverExternalPackages: ["mathjax-full"],
+  poweredByHeader: false,
 };
 
 export default withSentryConfig(nextConfig, {
