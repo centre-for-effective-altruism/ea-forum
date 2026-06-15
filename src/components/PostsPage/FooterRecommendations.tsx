@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
+import { AnalyticsContext } from "@/lib/analyticsEvents";
 import {
   fetchCuratedAndPopularPostsList,
   fetchMoreFromAuthorPostsList,
@@ -29,7 +30,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
   return (
     <>
       {moreFromAuthor.length > 0 && (
-        <>
+        <AnalyticsContext pageSubSectionContext="moreFromAuthor">
           <Type style="sectionTitleLarge" className="mb-3">
             More from the author
           </Type>
@@ -38,10 +39,10 @@ export default async function FooterRecommendations({ postId }: { postId: string
             className="mb-12"
             postItemClassName="bg-background!"
           />
-        </>
+        </AnalyticsContext>
       )}
       {curatedAndPopular.length > 0 && (
-        <>
+        <AnalyticsContext pageSubSectionContext="curatedAndPopular">
           <Type style="sectionTitleLarge" className="mb-3">
             Curated and popular this week
           </Type>
@@ -51,10 +52,10 @@ export default async function FooterRecommendations({ postId }: { postId: string
             className="mb-12"
             postItemClassName="bg-background!"
           />
-        </>
+        </AnalyticsContext>
       )}
       {recentOpportunities.length > 0 && (
-        <>
+        <AnalyticsContext pageSubSectionContext="recentOpportunities">
           <Type style="sectionTitleLarge" className="mb-3">
             Recent opportunities to take action
           </Type>
@@ -62,7 +63,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
             posts={recentOpportunities}
             postItemClassName="bg-background!"
           />
-        </>
+        </AnalyticsContext>
       )}
     </>
   );

@@ -51,7 +51,6 @@ const getTranslationsData = async (): Promise<TranslationsData | null> => {
   if (cachedTranslationsData && now < cacheExpiry) {
     return cachedTranslationsData;
   }
-  console.warn("Fetching translations data...");
   const data = await fetchTranslationsData();
   if (data) {
     cachedTranslationsData = data;
