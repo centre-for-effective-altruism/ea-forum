@@ -255,14 +255,16 @@ export default function LoginPopover() {
           <Button
             variant="greyOutlined"
             onClick={onClickGoogle}
-            className="w-full h-[50px] px-[17px] py-[15px] font-[600] flex gap-2"
+            className="
+              w-full h-[50px] p-4 font-[600] flex gap-2 items-center justify-center
+            "
           >
             <Image
               src="/googleLogo.png"
               alt="Containue with google"
               width={20}
               height={20}
-              className="w-[20px] h-[20px]"
+              className="w-5 h-5"
             />
             <Type>Continue with Google</Type>
           </Button>

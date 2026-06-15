@@ -85,7 +85,9 @@ export const addOrUpvoteTag = async ({
   );
 
   const updatedPostWithTags = await db.query.posts.findFirst({
-    columns: {},
+    columns: {
+      _id: true,
+    },
     extras: {
       tags: (postsTable) => postTagsProjection(postsTable, currentUser._id),
     },

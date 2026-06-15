@@ -76,7 +76,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing new comment _id for notification");
       }
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {
@@ -220,7 +222,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing new comment _id for notification");
       }
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {
@@ -258,7 +262,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing new subforum comment _id for notification");
       }
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {
@@ -353,7 +359,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing new quick take _id for notification");
       }
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {
@@ -384,7 +392,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing tag rel _id for notification");
       }
       const tagRel = await db.query.tagRels.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           tag: {
             columns: {
@@ -439,7 +449,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing new reply _id for notification");
       }
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {
@@ -477,7 +489,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing new reply _id for notification");
       }
       const comment = await db.query.comments.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {
@@ -516,7 +530,9 @@ export const notificationTypesArray: NotificationType[] = [
         throw new Error("Missing message _id for notification");
       }
       const message = await db.query.messages.findFirst({
-        columns: {},
+        columns: {
+          _id: true,
+        },
         with: {
           user: {
             columns: {

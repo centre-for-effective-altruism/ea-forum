@@ -69,7 +69,9 @@ export const fetchSequencePosts = async ({
   sequenceId: string;
 }) => {
   const sequence = await db.query.sequences.findFirst({
-    columns: {},
+    columns: {
+      _id: true,
+    },
     with: {
       chapters: {
         columns: {

@@ -37,6 +37,7 @@
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
   --color-tooltip-text: #ffffff;
+  --color-tooltip-text-dim: #c2c2c2;
   --color-posts-page-hr: #e4e4e4;
   --color-visited-link: #7130a6;
   --color-table-border: #b3b3b3;
@@ -116,6 +117,7 @@
   --zindex-dropdown: 1305;
   --zindex-mobile-nav: 1306;
   --zindex-tooltip: 1308;
+  --zindex-intercom: 1350;
   --zindex-cookie-banner: 1400;
 
   --buzzsprout-opacity: 1;
@@ -199,7 +201,7 @@
   --color-details-title: rgba(255, 255, 255, 0.3);
   --color-conditionally-visible: rgba(255, 255, 255, 0.2);
   --color-post-hr: rgba(255, 255, 255, 0.26);
-  --color-comment-border: #363636;
+  --color-comment-border: rgba(255, 255, 255, 0.2);
   --color-comment-odd: #1f1f1f;
   --color-comment-even: #262626;
   --color-people-directory-row-hover: #2a2a2a;
@@ -368,4 +370,11 @@
  */
 .grecaptcha-badge {
   visibility: hidden;
+}
+
+/**
+ * Place Intercom above everything except the cookie banner
+ */
+#intercom-container {
+  z-index: var(--zindex-intercom);
 }

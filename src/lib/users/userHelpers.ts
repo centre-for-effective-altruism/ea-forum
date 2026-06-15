@@ -422,3 +422,15 @@ export const userCanMention = (
 
   return { result: true };
 };
+
+const getSignature = (name: string) => {
+  const today = new Date();
+  const todayString = today.toLocaleString("default", {
+    month: "short",
+    day: "numeric",
+  });
+  return `${todayString}, ${name}`;
+};
+
+export const getSignatureWithNote = (name: string, note: string) =>
+  `${getSignature(name)}: ${note}\n`;

@@ -148,7 +148,7 @@ export const postsListProjection = (
         },
         extras: {
           htmlHighlight: (revisions, { sql }) =>
-            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 350),
+            htmlSubstring(sql`${revisions}."html"`, options?.highlightLength || 500),
         },
       },
       group: {
@@ -460,6 +460,25 @@ export const fetchMoreFromAuthorPostsList = async ({
   });
 };
 
+const unreadPostFilter = (postsTable: typeof posts, currentUserId: string | null) =>
+  currentUserId
+    ? sql`
+      AND (
+        NOT EXISTS (
+          SELECT 1 FROM "ReadStatuses"
+          WHERE "postId" = ${postsTable._id}
+            AND "userId" = ${currentUserId}
+        )
+        OR EXISTS (
+          SELECT 1 FROM "ReadStatuses"
+          WHERE "postId" = ${postsTable._id}
+            AND "userId" = ${currentUserId}
+            AND "isRead" IS NULL
+        )
+      )
+    `
+    : sql``;
+
 export const fetchCuratedAndPopularPostsList = async ({
   currentUserId,
   limit,
@@ -472,9 +491,11 @@ export const fetchCuratedAndPopularPostsList = async ({
       currentUserId,
       where: {
         RAW: (postsTable) =>
-          sql`${postsTable.curatedDate} > NOW() - '7 days'::INTERVAL`,
+          sql`
+            ${postsTable.curatedDate} > NOW() - '7 days'::INTERVAL
+            ${unreadPostFilter(postsTable, currentUserId)}
+          `,
         disableRecommendation: false,
-        readStatus: currentUserId ? { isRead: false } : undefined,
       },
       orderBy: {
         curatedDate: "desc",
@@ -487,11 +508,11 @@ export const fetchCuratedAndPopularPostsList = async ({
         RAW: (postsTable) => sql`
           ${postsTable.frontpageDate} > NOW() - '7 days'::INTERVAL AND
           ${excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID)(postsTable)}
+          ${unreadPostFilter(postsTable, currentUserId)}
         `,
         curatedDate: { isNull: true },
         groupId: { isNull: true },
         disableRecommendation: false,
-        readStatus: currentUserId ? { isRead: false } : undefined,
         user: {
           deleted: false,
         },

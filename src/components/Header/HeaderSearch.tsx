@@ -106,7 +106,7 @@ export default function HeaderSearch({
       {query && (
         <div
           className="
-            absolute top-[66px] right-0 w-[440px] max-w-full bg-surface-floating shadow-md
+            absolute top-[66px] right-0 w-[440px] max-w-full bg-surface-floating shadow
           "
         >
           {loading && (

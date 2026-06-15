@@ -1,4 +1,4 @@
-import { FC, ReactNode, MouseEvent, useCallback } from "react";
+import { FC, ReactNode, MouseEvent, useCallback, ElementType } from "react";
 import { useRouter } from "next/navigation";
 import { useTracking } from "@/lib/analyticsEvents";
 
@@ -72,9 +72,10 @@ export const useClickableCell = <T extends HTMLElement = HTMLDivElement>({
 export const InteractionWrapper: FC<{
   href?: string;
   openInNewTab?: boolean;
+  As?: ElementType;
   children: ReactNode;
   className?: string;
-}> = ({ href, openInNewTab, children, className }) => {
+}> = ({ href, openInNewTab, As = "div", children, className }) => {
   const router = useRouter();
   const onClick = useCallback(
     (e: MouseEvent) => {
@@ -90,8 +91,8 @@ export const InteractionWrapper: FC<{
     [router, href, openInNewTab],
   );
   return (
-    <div data-component="InteractionWrapper" onClick={onClick} className={className}>
+    <As data-component="InteractionWrapper" onClick={onClick} className={className}>
       {children}
-    </div>
+    </As>
   );
 };

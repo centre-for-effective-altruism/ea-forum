@@ -78,7 +78,7 @@ export default function TagSelect({
       menu={
         <div
           className="
-            bg-surface-floating border-1 border-gray-100 rounded shadow py-1
+            bg-surface-floating border-1 border-gray-100 rounded shadow-md py-1
             flex flex-col gap-1 w-[240px] max-w-full
           "
         >

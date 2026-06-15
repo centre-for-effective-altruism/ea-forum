@@ -65,16 +65,18 @@ export async function generateMetadata({
 export default async function PostsPage({ params }: PostsPageProps) {
   const { _id } = await params;
   return (
-    <div data-component="PostsPage">
-      <Suspense fallback={<PostDisplaySkeleton />}>
-        <PostsDisplay postId={_id} />
-      </Suspense>
-      <PostColumn>
-        <Suspense fallback={<CommentsSectionSkeleton />}>
-          <CommentsSection postId={_id} className="mb-20" />
+    <div data-component="PostsPage" className="pt-[110px]">
+      <div className="px-2">
+        <Suspense fallback={<PostDisplaySkeleton />}>
+          <PostsDisplay postId={_id} />
         </Suspense>
-      </PostColumn>
-      <div className="w-full bg-background pt-15 pb-20">
+        <PostColumn>
+          <Suspense fallback={<CommentsSectionSkeleton />}>
+            <CommentsSection postId={_id} className="mb-20" />
+          </Suspense>
+        </PostColumn>
+      </div>
+      <div className="w-full bg-gray-0 pt-15 pb-20">
         <PostColumn>
           <Suspense>
             <FooterRecommendations postId={_id} />

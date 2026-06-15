@@ -27,7 +27,7 @@ export default function CommentsTooltip({
       As={As}
       className={className}
       tooltipClassName="
-        bg-surface-floating! text-gray-900! px-3! py-2! shadow-md w-[360px] max-w-full
+        bg-surface-floating! text-gray-900! px-3! py-2! shadow-lg w-[360px] max-w-full
       "
       title={
         <div data-component="CommentsTooltip">

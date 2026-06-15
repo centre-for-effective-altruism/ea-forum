@@ -144,7 +144,8 @@ export default function CommentItem({
     <div
       data-component="CommentItem"
       className={clsx(
-        !borderless && "border rounded-sm pl-3 pt-2 mb-1",
+        !borderless && "border pl-3 pt-2 mb-1",
+        !borderless && (depth === 0 ? "rounded-sm " : "rounded-s-sm"),
         !borderless &&
           (promoted ? "border-promoted-comment" : "border-comment-border"),
         !borderless &&
@@ -224,13 +225,18 @@ export default function CommentItem({
             )}
             <CommentTags comment={comment} className="grow" />
           </div>
-          <Link href={commentGetPageUrl({ comment })} onClick={copyLink}>
-            <LinkIcon className="w-[16px] text-gray-600 hover:text-gray-1000" />
+          <Link
+            href={commentGetPageUrl({ comment })}
+            onClick={copyLink}
+            className="text-gray-600 hover:text-gray-1000 mt-1"
+          >
+            <LinkIcon className="w-[16px]" />
           </Link>
           {currentUser && (
             <CommentTripleDotMenu
               comment={comment}
               onEdit={isEditing ? undefined : onEdit}
+              className="mt-[2px]"
             />
           )}
         </div>

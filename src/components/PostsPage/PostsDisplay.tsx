@@ -17,6 +17,7 @@ import PostTableOfContents from "./PostTableOfContents";
 import StackedUserAvatars from "../StackedUserAvatars";
 import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
+import PostTranslations from "./PostTranslations";
 import DigestPopup from "../Digest/DigestPopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
@@ -128,7 +129,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
           {!post.shortform && (
             <div className="py-4 border-t border-posts-page-hr text-gray-600 flex mb-6">
               <div className="grow">
-                <PostVoteButtons />
+                <PostVoteButtons divider />
               </div>
               <div className="flex items-center gap-5">
                 <PostShareButton post={post} />
@@ -146,6 +147,9 @@ export default async function PostDisplay({ postId }: { postId: string }) {
               currentUser={currentUser}
               className="mb-12"
             />
+          </Suspense>
+          <Suspense>
+            <PostTranslations postId={postId} className="mb-12" />
           </Suspense>
           {showRecommendations && (
             <Suspense

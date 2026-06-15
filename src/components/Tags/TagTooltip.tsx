@@ -31,7 +31,7 @@ export default function TagTooltip({
       placement={placement}
       As={As}
       className={className}
-      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
+      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow-lg w-[270px]"
       title={
         <div className="flex flex-col gap-3 p-3 border border-gray-200 rounded">
           {"tagRel" in tag && <TagRelevance tag={tag as PostTag} />}

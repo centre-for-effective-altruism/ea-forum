@@ -25,7 +25,11 @@ const PostIcon: FC<{
       placement="bottom-start"
       title={<Type style="bodySmall">{children}</Type>}
     >
-      <Link href={href} openInNewTab={openInNewTab} className="text-gray-600">
+      <Link
+        href={href}
+        openInNewTab={openInNewTab}
+        className="text-gray-600 hover:text-gray-1000"
+      >
         <Icon className={clsx("w-4", className)} />
       </Link>
     </Tooltip>
@@ -36,10 +40,12 @@ export default function PostIcons({
   post,
   side,
   curatedIconLeft = false,
+  className,
 }: Readonly<{
   post: PostListItem;
   side: "left" | "right";
   curatedIconLeft?: boolean;
+  className?: string;
 }>) {
   const openThreadTagId = process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID;
   const amaTagid = process.env.NEXT_PUBLIC_AMA_TAG_ID;
@@ -76,10 +82,7 @@ export default function PostIcons({
   return (
     <div
       data-component="PostIcons"
-      className={clsx(
-        "inline-flex items-center gap-1",
-        side === "left" ? "mr-[6px]" : "ml-[6px]",
-      )}
+      className={clsx("inline-flex items-baseline gap-1", className)}
     >
       {showPinned && (
         <PostIcon
