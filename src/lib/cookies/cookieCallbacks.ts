@@ -19,12 +19,10 @@ export const cookiePreferencesChanged = ({
 
   // Send a cookie_preferences_changed event to Google Tag Manager, which
   // triggers google analytics and hotjar to start
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dataLayer = (window as any).dataLayer;
-  if (!dataLayer) {
-    console.warn("Trying to call gtag before dataLayer has been initialized");
+  if (window.dataLayer) {
+    window.dataLayer.push({ event: "cookie_preferences_changed" });
   } else {
-    dataLayer.push({ event: "cookie_preferences_changed" });
+    console.warn("Trying to call gtag before dataLayer has been initialized");
   }
 
   // Remove all cookies that are not allowed. Don't try to remove any cookies if:

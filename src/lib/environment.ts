@@ -1,14 +1,26 @@
 import Bowser from "bowser";
-
-export const isProduction = process.env.ENVIRONMENT === "prod";
-
-export const isStaging = process.env.ENVIRONMENT === "staging";
-
-export const isDevelopment = process.env.ENVIRONMENT === "dev";
+import type { JsonRecord } from "./typeHelpers";
 
 export const isServer = typeof window === "undefined";
 
 export const isClient = !isServer;
+
+if (isServer && process.env.ENVIRONMENT !== process.env.NEXT_PUBLIC_ENVIRONMENT) {
+  console.error(
+    "Mismatched ENVIRONMENT settings:",
+    process.env.ENVIRONMENT,
+    process.env.NEXT_PUBLIC_ENVIRONMENT,
+  );
+}
+
+const isEnv = (env: string) =>
+  process.env.NEXT_PUBLIC_ENVIRONMENT === env || process.env.ENVIRONMENT === env;
+
+export const isProduction = isEnv("prod");
+
+export const isStaging = isEnv("staging");
+
+export const isDevelopment = isEnv("dev");
 
 const userAgent = new (class {
   private bowser: Bowser.Parser.Parser | null = null;
@@ -27,6 +39,27 @@ const userAgent = new (class {
     // Platform type is one of: mobile, tablet, desktop, tv or bot
     return this.getBowser().getPlatformType() === "mobile";
   }
+
+  isTablet() {
+    // Platform type is one of: mobile, tablet, desktop, tv or bot
+    return this.getBowser().getPlatformType() === "tablet";
+  }
+
+  isChrome() {
+    return this.getBowser().getBrowserName() === "Chrome";
+  }
+
+  isFirefox() {
+    return this.getBowser().getBrowserName() === "Firefox";
+  }
+
+  isSafari() {
+    return this.getBowser().getBrowserName() === "Safari";
+  }
+
+  os() {
+    return this.getBowser().getOS().name ?? null;
+  }
 })();
 
 /**
@@ -40,3 +73,20 @@ const userAgent = new (class {
 export const isMobile = () => isClient && userAgent.isMobile();
 
 export const isAnyTest = () => process.env.VITEST === "true";
+
+export const getBrowserProperties = (): JsonRecord => {
+  if (!isClient || !window?.navigator?.userAgent) {
+    return {};
+  }
+  return {
+    userAgent: window?.navigator?.userAgent,
+    mobile: userAgent.isMobile(),
+    tablet: userAgent.isTablet(),
+    chrome: userAgent.isChrome(),
+    firefox: userAgent.isFirefox(),
+    safari: userAgent.isSafari(),
+    osname: userAgent.os(),
+    blocksGA: !window.ga?.create,
+    blocksGTM: !window.google_tag_manager,
+  };
+};
