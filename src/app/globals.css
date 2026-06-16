@@ -73,6 +73,8 @@
   --color-pangram-ai-fraction: #b71c1c;
   --color-pangram-assisted-fraction: #ef6c00;
   --color-pangram-human-fraction: #2e7d32;
+  --color-post-body-bg: var(--color-gray-0);
+  --color-post-footer-bg: var(--color-background);
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -219,6 +221,8 @@
   --color-pangram-ai-fraction: #ff8a80;
   --color-pangram-assisted-fraction: #ffb74d;
   --color-pangram-human-fraction: #81c784;
+  --color-post-body-bg: var(--color-background);
+  --color-post-footer-bg: var(--color-gray-0);
 
   --color-editor-bg: #2a2a2a;
   --color-editor-comment-bg: #333333;
