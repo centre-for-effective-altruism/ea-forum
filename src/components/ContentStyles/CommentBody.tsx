@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import ContentProgressiveEnhancements from "./ContentProgressiveEnhancements";
 import clsx from "clsx";
 import "./content-base.css";
@@ -18,22 +18,28 @@ type CommentBodyContent = CommentBodyHTML | CommentBodyChildren;
 
 export default function CommentBody({
   html,
+  innerRef,
   children,
   className = "",
 }: Readonly<
   CommentBodyContent & {
+    innerRef?: RefObject<HTMLDivElement | null>;
     className?: string;
   }
 >) {
   const styledClassName = clsx("content-base comment-body", className);
   if (html) {
     return (
-      <ContentProgressiveEnhancements html={html} className={styledClassName} />
+      <ContentProgressiveEnhancements
+        html={html}
+        innerRef={innerRef}
+        className={styledClassName}
+      />
     );
   }
   if (children) {
     return (
-      <div data-component="CommentBody" className={styledClassName}>
+      <div data-component="CommentBody" ref={innerRef} className={styledClassName}>
         {children}
       </div>
     );

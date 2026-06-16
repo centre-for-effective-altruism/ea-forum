@@ -7,6 +7,7 @@ import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useOptionalCommentsList } from "./useCommentsList";
 import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useIsClamped } from "@/lib/hooks/useIsClamped";
 import {
   userGetProfileUrl,
   userIsAdminOrMod,
@@ -65,13 +66,38 @@ export default function CommentItem({
   borderless?: boolean;
   className?: string;
 }>) {
+  const commentsListContext = useOptionalCommentsList();
+  const {
+    _id,
+    user,
+    html,
+    postedAt,
+    parentCommentId,
+    post,
+    promoted,
+    promotedBy,
+    moderatorHat,
+  } = comment;
+  const isNew =
+    !!post?.readStatus?.[0]?.lastUpdated &&
+    new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
+  const collapsedBecauseRepliedTo =
+    commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew;
+
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
-  const commentsListContext = useOptionalCommentsList();
   const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(!startCollapsed);
+  const [isExpanded, setIsExpanded] = useState(
+    !startCollapsed && !collapsedBecauseRepliedTo,
+  );
+  const [isTruncated, setIsTruncated] = useState(
+    commentsListContext?.collapsedIfRepliedTo && !collapsedBecauseRepliedTo,
+  );
   const [isLoadingParent, setIsLoadingParent] = useState(false);
+  const { ref, isClamped } = useIsClamped();
+
+  const untruncate = useCallback(() => setIsTruncated(false), []);
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded((expanded) => {
@@ -108,21 +134,7 @@ export default function CommentItem({
   const onEdit = useCallback(() => setIsEditing(true), []);
   const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
-  const {
-    _id,
-    user,
-    html,
-    postedAt,
-    parentCommentId,
-    post,
-    promoted,
-    promotedBy,
-    moderatorHat,
-  } = comment;
   const isPostAuthor = userIsPostAuthor(user, post);
-  const isNew =
-    !!post?.readStatus?.[0]?.lastUpdated &&
-    new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
 
   const canLoadParent =
     !!commentsListContext &&
@@ -258,7 +270,21 @@ export default function CommentItem({
                   Promoted by {promotedBy.displayName}
                 </Type>
               )}
-              <CommentBody html={html} className="cursor-default" />
+              <CommentBody
+                html={html}
+                innerRef={ref}
+                className={clsx("cursor-default", isTruncated && "line-clamp-12")}
+              />
+              {isTruncated && isClamped && (
+                <Type
+                  onClick={untruncate}
+                  As="button"
+                  style="bodyHeavy"
+                  className="cursor-pointer text-gray-500 hover:text-gray-900 mt-1"
+                >
+                  Read more
+                </Type>
+              )}
             </>
           ))}
         {isExpanded && post && (
@@ -266,7 +292,8 @@ export default function CommentItem({
             <Type
               onClick={onClickReply}
               As="button"
-              className="text-gray-500 font-[600]! cursor-pointer mt-[2px]"
+              style="bodyHeavy"
+              className="cursor-pointer text-gray-500 hover:text-gray-900 mt-1"
             >
               Reply
             </Type>
@@ -282,7 +309,7 @@ export default function CommentItem({
           </div>
         )}
       </article>
-      {isExpanded && children.length > 0 && (
+      {children.length > 0 && (
         <div>
           {children.map((node) => (
             <CommentItem node={node} key={node.comment._id} />

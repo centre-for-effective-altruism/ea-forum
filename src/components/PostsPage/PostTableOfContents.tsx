@@ -86,7 +86,7 @@ export default function PostTableOfContents({
               </Link>
             </Type>
           ))}
-          {commentCount && (
+          {commentCount > 0 && (
             <>
               <hr className="border-gray-300" />
               <Type>

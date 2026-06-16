@@ -37,7 +37,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
           <PostsList
             posts={moreFromAuthor}
             className="mb-12"
-            postItemClassName="bg-background!"
+            postItemClassName="bg-post-body-bg!"
           />
         </AnalyticsContext>
       )}
@@ -50,7 +50,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
             posts={curatedAndPopular}
             viewType="card"
             className="mb-12"
-            postItemClassName="bg-background!"
+            postItemClassName="bg-post-body-bg!"
           />
         </AnalyticsContext>
       )}
@@ -61,7 +61,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
           </Type>
           <PostsList
             posts={recentOpportunities}
-            postItemClassName="bg-background!"
+            postItemClassName="bg-post-body-bg!"
           />
         </AnalyticsContext>
       )}

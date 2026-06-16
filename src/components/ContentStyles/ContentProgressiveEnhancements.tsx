@@ -156,13 +156,16 @@ type EnhancedContent =
 export default function ContentProgressiveEnhancements({
   html,
   document: document_,
+  innerRef,
   className,
 }: Readonly<
   EnhancedContent & {
+    innerRef?: RefObject<HTMLDivElement | null>;
     className?: string;
   }
 >) {
-  const bodyRef = useRef<HTMLDivElement>(null);
+  const backupRef = useRef<HTMLDivElement>(null);
+  const bodyRef = innerRef ?? backupRef;
   const document = useMemo(() => {
     return document_ ?? parseDocument(html);
   }, [html, document_]);
