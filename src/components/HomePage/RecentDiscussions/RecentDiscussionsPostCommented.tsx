@@ -122,7 +122,7 @@ export default function RecentDiscussionsPostCommented({
           </Link>
         </Type>
         {comments.length > 0 && (
-          <CommentsListProvider comments={comments}>
+          <CommentsListProvider comments={comments} collapsedIfRepliedTo>
             <CommentsList />
           </CommentsListProvider>
         )}

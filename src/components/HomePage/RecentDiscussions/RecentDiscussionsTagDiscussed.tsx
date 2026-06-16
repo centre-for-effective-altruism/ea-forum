@@ -35,7 +35,7 @@ export default function RecentDiscussionsTagDiscussed({
         </Type>
       </div>
       <TagBody html={tag.html ?? ""} className="mb-4" />
-      <CommentsListProvider comments={comments}>
+      <CommentsListProvider comments={comments} collapsedIfRepliedTo>
         <CommentsList />
       </CommentsListProvider>
     </RecentDiscussionsItem>
