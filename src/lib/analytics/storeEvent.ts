@@ -1,8 +1,8 @@
 import throttle from "lodash/throttle";
-import { isClient } from "../environment";
-import { RateLimiter } from "../rateLimiter";
-import { combineUrls, getSiteUrl } from "../routeHelpers";
 import { AnalyticsEvent, showAnalyticsDebug } from "./analyticsHelpers";
+import { combineUrls, getSiteUrl } from "../routeHelpers";
+import { isAnyTest, isClient } from "../environment";
+import { RateLimiter } from "../rateLimiter";
 
 // Analytics events have two rate limits, one denominated in events per second,
 // the other denominated in uncompressed kilobytes per second. Each of these
@@ -84,6 +84,9 @@ export const throttledStoreEvent = (
  * Available only on the client and when the react tree is mounted.
  */
 const clientWriteEvents = async (events: AnalyticsEvent[]) => {
+  if (isAnyTest()) {
+    return;
+  }
   await fetch(combineUrls(getSiteUrl(), "/analyticsEvent"), {
     method: "POST",
     body: JSON.stringify({
