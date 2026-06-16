@@ -48,5 +48,8 @@ export const generatePostMetadata = async (
       citation_author: authors,
       citation_publication_date: citationDate,
     },
+    alternates: {
+      canonical: canonicalUrl,
+    },
   };
 };
