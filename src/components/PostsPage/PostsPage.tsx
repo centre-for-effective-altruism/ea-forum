@@ -14,7 +14,7 @@ export default async function PostsPage({
   sequenceId?: string;
 }>) {
   return (
-    <div data-component="PostsPage" className="pt-[110px]">
+    <div data-component="PostsPage">
       <div className="px-2 pt-28 pb-16 bg-post-body-bg">
         <Suspense fallback={<PostDisplaySkeleton />}>
           <PostsDisplay postId={postId} sequenceId={sequenceId} />
