@@ -62,11 +62,7 @@ export default function RecentDiscussionsPostCommented({
 }: {
   post: RecentDiscussionPost;
 }) {
-  const comments = post.comments;
-  if (!comments || !comments.length) {
-    // If we get here it usually means a spam comment was deleted
-    return null;
-  }
+  const comments = post.comments ?? [];
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
   const commentsLink = postGetCommentsUrl({ post });
@@ -125,9 +121,11 @@ export default function RecentDiscussionsPostCommented({
             Continue reading
           </Link>
         </Type>
-        <CommentsListProvider comments={comments}>
-          <CommentsList />
-        </CommentsListProvider>
+        {comments.length > 0 && (
+          <CommentsListProvider comments={comments}>
+            <CommentsList />
+          </CommentsListProvider>
+        )}
       </div>
     </RecentDiscussionsItem>
   );
