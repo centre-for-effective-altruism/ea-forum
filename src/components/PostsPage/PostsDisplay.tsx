@@ -2,6 +2,7 @@ import { Fragment, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
+import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
@@ -36,9 +37,18 @@ import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
 
-export default async function PostDisplay({ postId }: { postId: string }) {
+export default async function PostDisplay({
+  postId,
+  sequenceId,
+}: {
+  postId: string;
+  sequenceId?: string;
+}) {
   const currentUser = await getCurrentUser();
-  const post = await fetchPostDisplayCached(currentUser, postId);
+  const [post, sequence] = await Promise.all([
+    fetchPostDisplayCached(currentUser, postId),
+    sequenceId ? fetchSequenceById({ currentUser, sequenceId }) : null,
+  ]);
   if (!post) {
     notFound();
   }
@@ -50,8 +60,8 @@ export default async function PostDisplay({ postId }: { postId: string }) {
     post.contents?.wordCount ?? null,
   );
 
-  // TODO: When we implement sequence UI, that should also hide recommendations
   const showRecommendations =
+    !sequence &&
     !post.shortform &&
     !post.draft &&
     !post.isEvent &&
@@ -62,7 +72,7 @@ export default async function PostDisplay({ postId }: { postId: string }) {
       <StructuredData data={postGetStructuredData(post)} />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
-          <PostSequenceNavigation post={post} className="mb-2" />
+          <PostSequenceNavigation post={post} sequence={sequence} className="mb-2" />
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
             {post.title}
           </Type>
