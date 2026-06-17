@@ -28,6 +28,7 @@ const inter = localFont({
 
 const newsreader = Newsreader({
   weight: "variable",
+  style: ["normal", "italic"],
   variable: "--font-newsreader",
   display: "swap",
   preload: true,
