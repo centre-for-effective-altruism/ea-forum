@@ -13,7 +13,7 @@ type CommentWithAncestor = {
 };
 
 /**
- * For a given comment, fetch the ids of all of its parents recursively
+ * For a given comment, fetch all of its parents recursively
  */
 export const fetchCommentAncestors = async (
   txn: DbOrTransaction,
@@ -32,6 +32,25 @@ export const fetchCommentAncestors = async (
     )
     SELECT * FROM "comment_ancestors" WHERE "_id" <> ${commentId}
     ORDER BY "depth" ASC
+  `);
+  return result.rows;
+};
+
+/**
+ * For a given comment, fetch all of its children recursively
+ */
+export const fetchCommentDescendants = async (
+  txn: DbOrTransaction,
+  commentId: string,
+) => {
+  const result = await txn.execute<{ _id: string }>(sql`
+    WITH RECURSIVE descendants AS (
+      SELECT "_id" FROM "Comments" WHERE "_id" = ${commentId}
+      UNION ALL
+      SELECT c."_id" FROM "Comments" c JOIN descendants d
+        ON c."parentCommentId" = d."_id"
+    )
+    SELECT "_id" FROM descendants WHERE "_id" <> ${commentId};
   `);
   return result.rows;
 };

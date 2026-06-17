@@ -10,13 +10,17 @@ import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision, getNextVersion } from "../revisions/revisionHelpers";
 import { htmlToPingbacks, notifyUsersOfPingbackMentions } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
-import { fetchPostForCommentCreation } from "./commentQueries";
+import {
+  fetchCommentDescendants,
+  fetchPostForCommentCreation,
+} from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
 import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
+import { nYearsFromNow } from "../timeUtils";
 import {
   MINIMUM_APPROVAL_KARMA,
   userCanDo,
@@ -27,7 +31,7 @@ import {
   userCanModerateComment,
   userCanPinCommentOnProfile,
 } from "./commentHelpers";
-import { logFieldChanges } from "../fieldChanges";
+import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
 import {
   updateCommentForumEvent,
   checkCommentForSpam,
@@ -487,10 +491,35 @@ export const toggleCommentRetracted = async ({
   if (comment.userId !== user._id) {
     throw new Error("You don't have permission to retract this comment");
   }
-  await db
-    .update(comments)
-    .set({ retracted: !comment.retracted })
-    .where(eq(comments._id, commentId));
+  await updateWithFieldChanges(db, user, comments, commentId, {
+    retracted: !comment.retracted,
+  });
   void elasticSyncDocument("Comments", commentId);
   return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
+};
+
+export const lockCommentThread = async ({
+  user,
+  commentId,
+  until,
+}: {
+  user: CurrentUser;
+  commentId: string;
+  until: Date | null;
+}) => {
+  if (!userIsAdminOrMod(user)) {
+    throw new Error("Permission denied");
+  }
+  const repliesBlockedUntil = (until ?? nYearsFromNow(1000)).toISOString();
+  const descendants = await fetchCommentDescendants(db, commentId);
+  await Promise.all([
+    updateWithFieldChanges(db, user, comments, commentId, {
+      repliesBlockedUntil,
+    }),
+    ...descendants.map(({ _id }) =>
+      updateWithFieldChanges(db, user, comments, _id, {
+        repliesBlockedUntil,
+      }),
+    ),
+  ]);
 };

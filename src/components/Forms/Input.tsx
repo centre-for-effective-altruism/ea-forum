@@ -48,6 +48,7 @@ export default function Input({
           "clock w-full px-1 py-2 text-sm bg-gray-0 text-gray-900 outline-none",
           "border-b-2 border-gray-400 focus:border-primary cursor-text transition-all",
           "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
+          "font-sans font-[400]",
           inputClassName,
         )}
       />
