@@ -8,6 +8,7 @@ export default function Input({
   label,
   placeholder,
   readOnly,
+  multiline,
   disabled,
   onClick,
   className,
@@ -18,6 +19,7 @@ export default function Input({
   label?: string;
   placeholder?: string;
   readOnly?: boolean;
+  multiline?: boolean;
   disabled?: boolean;
   onClick?: () => void;
   className?: string;
@@ -25,15 +27,16 @@ export default function Input({
 }>) {
   const id = useId();
   const onChange = useCallback(
-    (ev: ChangeEvent<HTMLInputElement>) => {
+    (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setValue(ev.target.value);
     },
     [setValue],
   );
+  const As = multiline ? "textarea" : "input";
   return (
     <div data-component="Input" className={className}>
       {label && <Label htmlFor={id}>{label}</Label>}
-      <input
+      <As
         id={id}
         value={value}
         onChange={onChange}

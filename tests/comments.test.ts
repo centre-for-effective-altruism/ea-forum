@@ -1,8 +1,18 @@
 import { beforeEach, expect, suite, test, vi } from "vitest";
-import { createTestPost, createTestUser } from "./testHelpers";
-import { createPostComment, updateComment } from "@/lib/comments/commentMutations";
+import { createTestComment, createTestPost, createTestUser } from "./testHelpers";
+import type { DenormalizedRevision } from "@/lib/revisions/revisionHelpers";
+import {
+  createPostComment,
+  deleteComment,
+  undeleteComment,
+  updateComment,
+} from "@/lib/comments/commentMutations";
 import { userSmallVotePower } from "@/lib/votes/voteHelpers";
+import { sleep } from "@/lib/utils/asyncUtils";
+import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+
+const MOCK_ADMIN_EMAIL = "mock-admin-email";
 
 const mockAkismetCheckComment = vi.hoisted(() => vi.fn());
 
@@ -15,6 +25,8 @@ vi.mock(import("@/lib/akismet"), async (importOriginal) => {
 });
 
 suite("Comments", () => {
+  vi.stubEnv("ADMIN_ACCOUNT_EMAIL", MOCK_ADMIN_EMAIL);
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockAkismetCheckComment.mockResolvedValue(false);
@@ -304,5 +316,111 @@ suite("Comments", () => {
     expect(updatedComment?.contents?.html).toContain("Updated comment");
     expect(updatedComment?.contents?.html).not.toContain("Original comment");
     expect(updatedComment?.contents?.version).toBe("1.1.0");
+  });
+  test("Delete and undelete comments", async () => {
+    const post = await createTestPost({ commentCount: 1 });
+    expect(post.commentCount).toBe(1);
+
+    const user = await createTestUser({ commentCount: 1 });
+    expect(user.commentCount).toBe(1);
+
+    const comment = await createTestComment({ userId: user._id, postId: post._id });
+    expect(comment.deleted).toBe(false);
+    expect(comment.deletedPublic).toBe(false);
+    expect(comment.deletedReason).toBeNull();
+    expect(comment.deletedDate).toBeNull();
+    expect(comment.deletedByUserId).toBeNull();
+
+    {
+      await deleteComment({ user, commentId: comment._id, reason: "Test reason" });
+      const [updatedComment, updatedUser, updatedPost] = await Promise.all([
+        db.query.comments.findFirst({
+          where: {
+            _id: comment._id,
+          },
+        }),
+        db.query.users.findFirst({
+          where: {
+            _id: user._id,
+          },
+        }),
+        db.query.posts.findFirst({
+          where: {
+            _id: post._id,
+          },
+        }),
+      ]);
+      expect(updatedComment).not.toBeNull();
+      expect(updatedComment!.deleted).toBe(true);
+      expect(updatedComment!.deletedPublic).toBe(true);
+      expect(updatedComment!.deletedReason).toBe("Test reason");
+      expect(updatedComment!.deletedDate).toBeTruthy();
+      expect(updatedComment!.deletedByUserId).toBe(user._id);
+      expect(updatedUser).not.toBeNull();
+      expect(updatedUser!.commentCount).toBe(0);
+      expect(updatedPost).not.toBeNull();
+      expect(updatedPost!.commentCount).toBe(0);
+      expect(updatedPost!.lastCommentedAt).toBe(post.postedAt);
+    }
+
+    {
+      await undeleteComment({ user, commentId: comment._id });
+      const [updatedComment, updatedUser, updatedPost] = await Promise.all([
+        db.query.comments.findFirst({
+          where: {
+            _id: comment._id,
+          },
+        }),
+        db.query.users.findFirst({
+          where: {
+            _id: user._id,
+          },
+        }),
+        db.query.posts.findFirst({
+          where: {
+            _id: post._id,
+          },
+        }),
+      ]);
+      expect(updatedComment).not.toBeNull();
+      expect(updatedComment!.deleted).toBe(false);
+      expect(updatedComment!.deletedPublic).toBe(false);
+      expect(updatedComment!.deletedReason).toBeNull();
+      expect(updatedComment!.deletedDate).toBeNull();
+      expect(updatedComment!.deletedByUserId).toBeNull();
+      expect(updatedUser).not.toBeNull();
+      expect(updatedUser!.commentCount).toBe(1);
+      expect(updatedPost).not.toBeNull();
+      expect(updatedPost!.commentCount).toBe(1);
+      expect(updatedPost!.lastCommentedAt).toBe(comment.postedAt);
+    }
+  });
+  test("Admin comment deletion sends a private message", async () => {
+    const [post, user, admin] = await Promise.all([
+      createTestPost(),
+      createTestUser(),
+      createTestUser({ isAdmin: true, email: MOCK_ADMIN_EMAIL }),
+    ]);
+    const comment = await createTestComment({
+      userId: user._id,
+      postId: post._id,
+      contents: { html: "<div>Test comment</div>" } as DenormalizedRevision,
+    });
+    await deleteComment({
+      user: admin,
+      commentId: comment._id,
+      reason: "Test reason",
+    });
+    // Send the PM happens asynchronously - wait a bit for it to happen
+    await sleep(200);
+    const conversation = await db.query.conversations.findFirst({
+      where: {
+        RAW: (table) => sql`${table.participantIds} @> ARRAY[${user._id}::VARCHAR]`,
+      },
+    });
+    expect(conversation).toBeTruthy();
+    expect(conversation!.participantIds.toSorted()).toStrictEqual(
+      [user._id, admin._id].toSorted(),
+    );
   });
 });

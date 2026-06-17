@@ -1,5 +1,6 @@
 import "server-only";
 import type { CurrentUser } from "../users/currentUser";
+import { fetchCommentsListItem, type CommentListItem } from "./commentLists";
 import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
@@ -16,8 +17,16 @@ import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
 import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
-import { MINIMUM_APPROVAL_KARMA, userCanDo, userOwns } from "../users/userHelpers";
-import { userCanPinCommentOnProfile } from "./commentHelpers";
+import {
+  MINIMUM_APPROVAL_KARMA,
+  userCanDo,
+  userIsAdminOrMod,
+  userOwns,
+} from "../users/userHelpers";
+import {
+  userCanModerateComment,
+  userCanPinCommentOnProfile,
+} from "./commentHelpers";
 import { logFieldChanges } from "../fieldChanges";
 import {
   updateCommentForumEvent,
@@ -30,6 +39,7 @@ import {
   updateReadStatusAfterComment,
   newCommentNotifications,
   runPangramOnComment,
+  updateCommentDeleted,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -385,4 +395,102 @@ export const updateQuickTakeFrontpage = async (
     return shortformFrontpage;
   });
   return result;
+};
+
+export const deleteComment = async ({
+  user,
+  commentId,
+  withoutTrace,
+  reason,
+}: {
+  user: CurrentUser;
+  commentId: string;
+  withoutTrace?: boolean;
+  reason?: string;
+}): Promise<CommentListItem> => {
+  const comment = await fetchCommentsListItem({ currentUser: user, commentId });
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+  if (!userCanModerateComment(user, comment)) {
+    throw new Error("Permission denied");
+  }
+  if (comment.deleted) {
+    throw new Error("This comment is already deleted");
+  }
+  await db.transaction(async (txn) => {
+    await updateCommentDeleted({
+      txn,
+      comment,
+      currentUser: user,
+      deleted: true,
+      deletedPublic: !withoutTrace,
+      deletedReason: reason,
+      deletedDate: new Date().toISOString(),
+      deletedByUserId: user._id,
+    });
+  });
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
+};
+
+export const undeleteComment = async ({
+  user,
+  commentId,
+}: {
+  user: CurrentUser;
+  commentId: string;
+}): Promise<CommentListItem> => {
+  const comment = await fetchCommentsListItem({ currentUser: user, commentId });
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+  if (!userCanModerateComment(user, comment)) {
+    throw new Error("Permission denied");
+  }
+  if (!userIsAdminOrMod(user) && comment.deletedBy?._id !== user._id) {
+    throw new Error("You cannot undo deletion of a comment deleted by someone else");
+  }
+  await db.transaction(async (txn) => {
+    await updateCommentDeleted({
+      txn,
+      comment,
+      currentUser: user,
+      deleted: false,
+      deletedPublic: false,
+      deletedReason: null,
+      deletedDate: null,
+      deletedByUserId: null,
+    });
+  });
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
+};
+
+export const toggleCommentRetracted = async ({
+  user,
+  commentId,
+}: {
+  user: CurrentUser;
+  commentId: string;
+}): Promise<CommentListItem> => {
+  const comment = await db.query.comments.findFirst({
+    columns: {
+      userId: true,
+      retracted: true,
+    },
+    where: {
+      _id: commentId,
+    },
+  });
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+  if (comment.userId !== user._id) {
+    throw new Error("You don't have permission to retract this comment");
+  }
+  await db
+    .update(comments)
+    .set({ retracted: !comment.retracted })
+    .where(eq(comments._id, commentId));
+  void elasticSyncDocument("Comments", commentId);
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
 };

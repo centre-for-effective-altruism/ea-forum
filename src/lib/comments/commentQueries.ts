@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
-import type { CurrentUser } from "../users/currentUser";
 import type { EditorContents } from "../ckeditor/editorHelpers";
+import type { CurrentUser } from "../users/currentUser";
+import type { CommentListItem } from "./commentLists";
 import { userCanEditComment } from "./commentHelpers";
 
 type CommentWithAncestor = {
@@ -107,3 +108,29 @@ export const fetchCommentToEdit = async (
 };
 
 export type CommentToEdit = Awaited<ReturnType<typeof fetchCommentToEdit>>;
+
+export const fetchCommentContentTitle = async (comment: CommentListItem) => {
+  if (comment.post) {
+    const post = await db.query.posts.findFirst({
+      columns: {
+        title: true,
+      },
+      where: {
+        _id: comment.post._id,
+      },
+    });
+    return post?.title ?? null;
+  }
+  if (comment.tag) {
+    const tag = await db.query.tags.findFirst({
+      columns: {
+        name: true,
+      },
+      where: {
+        _id: comment.tag._id,
+      },
+    });
+    return tag?.name ?? null;
+  }
+  return null;
+};

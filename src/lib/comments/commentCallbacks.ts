@@ -5,17 +5,25 @@ import union from "lodash/union";
 import uniq from "lodash/uniq";
 import type { CurrentUser } from "../users/currentUser";
 import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
-import { fetchCommentAncestors, PostForCommentCreation } from "./commentQueries";
+import {
+  fetchCommentAncestors,
+  fetchCommentContentTitle,
+  PostForCommentCreation,
+} from "./commentQueries";
 import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
 import { createNotifications } from "../notifications/notificationMutations";
 import { fetchSubscribedUsers } from "../subscriptions/subscriptionQueries";
 import { upsertForumEventSticker } from "../forumEvents/forumEventQueries";
+import { commentListProjection, CommentListItem } from "./commentLists";
 import { subscriptionTypes } from "../subscriptions/subscriptionTypes";
+import { commentIsPublic, noDeletionPmReason } from "./commentHelpers";
 import { runPangramOnRevision } from "../revisions/pangramMutations";
 import { captureServerEvent } from "../analytics/captureServerEvent";
+import { elasticSyncDocument } from "../search/elastic/elasticSync";
+import { sendModerationPM } from "../messages/sendModerationPM";
+import { sanitizeHtml } from "../conversionUtils/sanitizeHtml";
 import { db, DbOrTransaction, Transaction } from "../db";
 import { postGetPageUrl } from "../posts/postsHelpers";
-import { commentIsPublic } from "./commentHelpers";
 import { akismetCheckComment } from "../akismet";
 import { isAnyTest } from "../environment";
 import {
@@ -582,4 +590,157 @@ export const runPangramOnComment = async (user: CurrentUser, revisionId: string)
   }
 
   await runPangramOnRevision(revisionId);
+};
+
+const sendCommentDeletionPrivateMessage = async (
+  currentUser: CurrentUser,
+  commentId: string,
+) => {
+  const comment = await db.query.comments.findFirst({
+    ...commentListProjection(currentUser),
+    where: {
+      _id: commentId,
+    },
+  });
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+  const commentDeletedByAnotherUser =
+    (!comment.deletedBy?._id || comment.deletedBy?._id !== comment.user?._id) &&
+    !!comment.deleted &&
+    !!comment.html;
+  const noPmDeletionReason = comment.deletedReason === noDeletionPmReason;
+  if (!commentDeletedByAnotherUser || noPmDeletionReason) {
+    return;
+  }
+
+  const contentTitle = await fetchCommentContentTitle(comment);
+  const moderatingUser = comment.deletedBy;
+  const reason = comment.deletedReason ? sanitizeHtml(comment.deletedReason) : null;
+  const messageContents = `
+    <div>
+      <p>
+        One of your comments on "${contentTitle}" has been removed by
+        ${moderatingUser?.displayName || "the Akismet spam integration"}.
+        We've sent you another PM with the content. If this deletion seems wrong
+        to you, please send us a message on Intercom (the icon in the bottom-right
+        of the page); we will not see replies to this conversation.
+      </p>
+      <p>The contents of your message are here:</p>
+      <blockquote>
+        ${comment.html}
+      </blockquote>
+      ${
+        reason && moderatingUser
+          ? `<div>They gave the following reason: "${comment.deletedReason}".</div>`
+          : ""
+      }
+    </div>
+  `;
+  await sendModerationPM({
+    action: "deleted",
+    comment,
+    messageContents,
+    noEmail: false,
+    contentTitle,
+  });
+};
+
+export const updateCommentDeleted = async ({
+  txn,
+  currentUser,
+  comment,
+  ...updates
+}: {
+  txn: DbOrTransaction;
+  currentUser: CurrentUser;
+  comment: CommentListItem;
+  deleted: boolean;
+  deletedPublic: boolean;
+  deletedReason?: string | null;
+  deletedDate: string | null;
+  deletedByUserId: string | null;
+}) => {
+  const countDelta = updates.deleted ? -1 : 1;
+  const ancestors = await fetchCommentAncestors(txn, comment._id);
+
+  await Promise.all([
+    txn.update(comments).set(updates).where(eq(comments._id, comment._id)),
+    ancestors.length > 0 &&
+      txn
+        .update(comments)
+        .set({
+          descendentCount: sql`GREATEST(0,${comments.descendentCount}+${countDelta})`,
+        })
+        .where(
+          inArray(
+            comments._id,
+            ancestors.map(({ _id }) => _id),
+          ),
+        ),
+    comment.user?._id &&
+      txn
+        .update(users)
+        .set({
+          commentCount: sql`GREATEST(0, ${users.commentCount} + ${countDelta})`,
+        })
+        .where(eq(users._id, comment.user._id)),
+    comment.post?._id &&
+      txn
+        .update(posts)
+        .set({
+          commentCount: sql`GREATEST(0, ${posts.commentCount} + ${countDelta})`,
+        })
+        .where(eq(posts._id, comment.post._id)),
+  ]);
+
+  if (comment.post) {
+    const lastComment = await txn.query.comments.findFirst({
+      columns: {
+        postedAt: true,
+        parentCommentId: true,
+      },
+      where: {
+        postId: comment.post._id,
+        deleted: false,
+        OR: [{ debateResponse: false }, { debateResponse: { isNull: true } }],
+      },
+      orderBy: {
+        postedAt: "desc",
+      },
+    });
+    await txn
+      .update(posts)
+      .set({
+        lastCommentedAt: lastComment?.postedAt ?? comment.post.postedAt,
+        lastCommentReplyAt: lastComment?.parentCommentId
+          ? lastComment.postedAt
+          : comment.post.postedAt,
+      })
+      .where(eq(posts._id, comment.post._id));
+  } else if (comment.tag) {
+    const lastComment = await txn.query.comments.findFirst({
+      columns: {
+        postedAt: true,
+        parentCommentId: true,
+      },
+      where: {
+        tagId: comment.tag._id,
+        deleted: false,
+        debateResponse: false,
+      },
+      orderBy: {
+        postedAt: "desc",
+      },
+    });
+    await txn
+      .update(tags)
+      .set({
+        lastCommentedAt: lastComment?.postedAt ?? null,
+      })
+      .where(eq(tags._id, comment.tag._id));
+  }
+
+  void sendCommentDeletionPrivateMessage(currentUser, comment._id);
+  void elasticSyncDocument("Comments", comment._id);
 };

@@ -92,6 +92,7 @@ const getCommentProjection = (currentUser: CurrentUser | null) => {
           userId: true,
           coauthorUserIds: true,
           frontpageDate: true,
+          postedAt: true,
         },
         with: {
           ...(currentUserId

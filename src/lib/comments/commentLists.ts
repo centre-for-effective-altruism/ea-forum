@@ -55,7 +55,10 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       parentCommentId: true,
       topLevelCommentId: true,
       descendentCount: true,
+      directChildrenCount: true,
       deleted: true,
+      deletedDate: true,
+      deletedReason: true,
       tagCommentType: true,
       isPinnedOnProfile: true,
       shortform: true,
@@ -63,6 +66,10 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       moderatorHat: true,
       promoted: true,
       forumEventMetadata: true,
+      authorIsUnreviewed: true,
+      repliesBlockedUntil: true,
+      retracted: true,
+      rejected: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -94,6 +101,12 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
           displayName: true,
         },
       },
+      deletedBy: {
+        columns: {
+          _id: true,
+          displayName: true,
+        },
+      },
       forumEvent: {
         columns: {
           _id: true,
@@ -116,6 +129,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
           userId: true,
           frontpageDate: true,
           coauthorUserIds: true,
+          postedAt: true,
         },
         with: {
           ...(currentUser
@@ -134,6 +148,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       },
       tag: {
         columns: {
+          _id: true,
           slug: true,
         },
       },
@@ -213,7 +228,7 @@ export const fetchCommentsListItem = async ({
 }: {
   currentUser: UserPermissions | null;
   commentId: string;
-}) => {
+}): Promise<CommentListItem | null> => {
   const result = await fetchCommentsList({
     currentUser,
     where: { _id: commentId },
