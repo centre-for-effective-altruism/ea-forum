@@ -58,6 +58,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       directChildrenCount: true,
       deleted: true,
       deletedDate: true,
+      deletedReason: true,
       tagCommentType: true,
       isPinnedOnProfile: true,
       shortform: true,
@@ -128,6 +129,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
           userId: true,
           frontpageDate: true,
           coauthorUserIds: true,
+          postedAt: true,
         },
         with: {
           ...(currentUser
@@ -146,6 +148,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       },
       tag: {
         columns: {
+          _id: true,
           slug: true,
         },
       },
@@ -225,7 +228,7 @@ export const fetchCommentsListItem = async ({
 }: {
   currentUser: UserPermissions | null;
   commentId: string;
-}) => {
+}): Promise<CommentListItem | null> => {
   const result = await fetchCommentsList({
     currentUser,
     where: { _id: commentId },

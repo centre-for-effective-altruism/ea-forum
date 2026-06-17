@@ -36,6 +36,7 @@ export const createModeratorAction = async (
   /** The user being moderated */
   userId: string,
   moderatorActionType: ModeratorActionType,
+  endedAt?: Date,
 ) => {
   const [action] = await db
     .insert(moderatorActions)
@@ -43,6 +44,7 @@ export const createModeratorAction = async (
       _id: randomId(),
       userId,
       type: moderatorActionType,
+      endedAt: endedAt?.toISOString(),
     })
     .returning();
   await triggerReviewAfterModeration(moderator, action);

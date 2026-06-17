@@ -39,6 +39,7 @@ import {
   updateReadStatusAfterComment,
   newCommentNotifications,
   runPangramOnComment,
+  updateCommentDeleted,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -417,20 +418,19 @@ export const deleteComment = async ({
   if (comment.deleted) {
     throw new Error("This comment is already deleted");
   }
-
-  await db
-    .update(comments)
-    .set({
+  await db.transaction(async (txn) => {
+    await updateCommentDeleted({
+      txn,
+      comment,
+      currentUser: user,
       deleted: true,
       deletedPublic: !withoutTrace,
       deletedReason: reason,
       deletedDate: new Date().toISOString(),
       deletedByUserId: user._id,
-    })
-    .where(eq(comments._id, commentId));
-
-  void elasticSyncDocument("Comments", commentId);
-  return await fetchCommentsListItem({ currentUser: user, commentId });
+    });
+  });
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
 };
 
 export const undeleteComment = async ({
@@ -450,18 +450,17 @@ export const undeleteComment = async ({
   if (!userIsAdminOrMod(user) && comment.deletedBy?._id !== user._id) {
     throw new Error("You cannot undo deletion of a comment deleted by someone else");
   }
-
-  await db
-    .update(comments)
-    .set({
+  await db.transaction(async (txn) => {
+    await updateCommentDeleted({
+      txn,
+      comment,
+      currentUser: user,
       deleted: false,
       deletedPublic: false,
       deletedReason: null,
       deletedDate: null,
       deletedByUserId: null,
-    })
-    .where(eq(comments._id, commentId));
-
-  void elasticSyncDocument("Comments", commentId);
-  return await fetchCommentsListItem({ currentUser: user, commentId });
+    });
+  });
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
 };

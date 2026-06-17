@@ -293,6 +293,7 @@ export const users = pgTable(
     auto_subscribe_to_my_posts: boolean().notNull().default(true),
     auto_subscribe_to_my_comments: boolean().notNull().default(true),
     autoSubscribeAsOrganizer: boolean().notNull().default(true),
+    blockedUserIds: varchar({ length: 27 }).array().notNull().default([]),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -316,7 +317,6 @@ export const users = pgTable(
   "collapseModerationGuidelines" BOOL,
   "bannedUserIds" VARCHAR(27) [],
   "bannedPersonalUserIds" VARCHAR(27) [],
-  "blockedUserIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
   "hiddenPostsMetadata" JSONB[] NOT NULL DEFAULT '{}',
   "legacyId" TEXT,
   "permanentDeletionRequestedAt" TIMESTAMPTZ,
@@ -1278,6 +1278,8 @@ export const conversations = pgTable(
   ],
 );
 
+export type Conversation = typeof conversations.$inferSelect;
+
 export const debouncerEvents = pgTable(
   "DebouncerEvents",
   {
@@ -1501,6 +1503,8 @@ export const messages = pgTable(
     ),
   ],
 );
+
+export type Message = typeof messages.$inferSelect;
 
 export const migrations = pgTable(
   "Migrations",
