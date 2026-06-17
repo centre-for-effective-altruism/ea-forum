@@ -14,6 +14,7 @@ import {
 import {
   createPostComment,
   deleteComment,
+  toggleCommentRetracted,
   undeleteComment,
   updateComment,
   updateCommentPinnedOnProfile,
@@ -224,5 +225,14 @@ export const commentsRouter = {
         throw new Error("Please login");
       }
       return await undeleteComment({ user, commentId });
+    }),
+  toggleRetracted: os
+    .input(z.object({ commentId: z.string() }))
+    .handler(async ({ input: { commentId } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await toggleCommentRetracted({ user, commentId });
     }),
 };

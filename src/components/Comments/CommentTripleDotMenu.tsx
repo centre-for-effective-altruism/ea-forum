@@ -5,6 +5,7 @@ import { captureException } from "@sentry/nextjs";
 import {
   usePinCommentOnProfile,
   useQuickTakeFrontpage,
+  useRetractComment,
 } from "@/lib/hooks/useCommentModerationActions";
 import {
   userCanEditComment,
@@ -53,6 +54,7 @@ export default function CommentTripleDotMenu({
     usePinCommentOnProfile(comment);
   const { isQuickTakeFrontpage, toggleQuickTakeFrontpage } =
     useQuickTakeFrontpage(comment);
+  const { isRetracted, toggleRetracted } = useRetractComment(comment);
 
   const canDelete = userCanModerateComment(currentUser, comment);
   const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
@@ -133,8 +135,13 @@ export default function CommentTripleDotMenu({
                 onClick: onClickDelete,
               }
             : null,
+          toggleRetracted
+            ? {
+                title: isRetracted ? "Unretract" : "Retract",
+                onClick: toggleRetracted,
+              }
+            : null,
           // TODO
-          // Retract
           // Lock thread
           // Ban user from post
           // Ban user from all posts

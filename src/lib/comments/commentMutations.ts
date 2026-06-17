@@ -464,3 +464,33 @@ export const undeleteComment = async ({
   });
   return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
 };
+
+export const toggleCommentRetracted = async ({
+  user,
+  commentId,
+}: {
+  user: CurrentUser;
+  commentId: string;
+}): Promise<CommentListItem> => {
+  const comment = await db.query.comments.findFirst({
+    columns: {
+      userId: true,
+      retracted: true,
+    },
+    where: {
+      _id: commentId,
+    },
+  });
+  if (!comment) {
+    throw new Error("Comment not found");
+  }
+  if (comment.userId !== user._id) {
+    throw new Error("You don't have permission to retract this comment");
+  }
+  await db
+    .update(comments)
+    .set({ retracted: !comment.retracted })
+    .where(eq(comments._id, commentId));
+  void elasticSyncDocument("Comments", commentId);
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
+};
