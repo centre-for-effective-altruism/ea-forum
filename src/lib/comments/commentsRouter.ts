@@ -13,6 +13,8 @@ import {
 } from "./commentLists";
 import {
   createPostComment,
+  deleteComment,
+  undeleteComment,
   updateComment,
   updateCommentPinnedOnProfile,
   updateQuickTakeFrontpage,
@@ -198,5 +200,29 @@ export const commentsRouter = {
         frontpage,
       );
       return { shortformFrontpage };
+    }),
+  delete: os
+    .input(
+      z.object({
+        commentId: z.string(),
+        withoutTrace: z.boolean().optional(),
+        reason: z.string().optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await deleteComment({ user, ...input });
+    }),
+  undelete: os
+    .input(z.object({ commentId: z.string() }))
+    .handler(async ({ input: { commentId } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await undeleteComment({ user, commentId });
     }),
 };

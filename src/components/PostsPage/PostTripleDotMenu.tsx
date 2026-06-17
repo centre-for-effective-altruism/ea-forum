@@ -90,6 +90,7 @@ export default function PostTripleDotMenu({
   return (
     <>
       <DropdownMenu
+        pageElementContext="tripleDotMenu"
         placement="bottom-end"
         className="text-gray-900"
         items={[

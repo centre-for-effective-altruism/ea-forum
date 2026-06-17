@@ -1,21 +1,29 @@
 import { useCallback, useRef, useState } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userCanModeratePost } from "@/lib/posts/postsHelpers";
+import { captureException } from "@sentry/nextjs";
 import {
   usePinCommentOnProfile,
   useQuickTakeFrontpage,
 } from "@/lib/hooks/useCommentModerationActions";
-import { userCanEditComment } from "@/lib/comments/commentHelpers";
+import {
+  userCanEditComment,
+  userCanModerateComment,
+} from "@/lib/comments/commentHelpers";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import { useOptionalCommentsList } from "./useCommentsList";
+import { rpc } from "@/lib/rpc";
+import toast from "react-hot-toast";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
-import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
-import PinIcon from "../Icons/PinIcon";
+import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import DeleteCommentPopover from "../Moderation/DeleteCommentPopover";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
+import PinIcon from "../Icons/PinIcon";
 import clsx from "clsx";
 
 export default function CommentTripleDotMenu({
@@ -30,6 +38,7 @@ export default function CommentTripleDotMenu({
   className?: string;
 }>) {
   const dismissRef = useRef<() => void>(null);
+  const commentsList = useOptionalCommentsList();
   const { currentUser } = useCurrentUser();
   const [reportOpen, setReportOpen] = useState(false);
   const openReport = useCallback(() => setReportOpen(true), []);
@@ -45,6 +54,27 @@ export default function CommentTripleDotMenu({
   const { isQuickTakeFrontpage, toggleQuickTakeFrontpage } =
     useQuickTakeFrontpage(comment);
 
+  const canDelete = userCanModerateComment(currentUser, comment);
+  const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
+  const closeDelete = useCallback(() => setDeletePopoverOpen(false), []);
+
+  const onClickDelete = useCallback(async () => {
+    if (comment.deleted) {
+      try {
+        const updatedComment = await rpc.comments.undelete({
+          commentId: comment._id,
+        });
+        commentsList?.updateComment(updatedComment);
+        toast.success("Undeleted comment");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Something went wrong");
+        captureException(e);
+      }
+    } else {
+      setDeletePopoverOpen(true);
+    }
+  }, [commentsList, comment]);
+
   const editComment = useCallback(() => {
     if (canEdit) {
       onEdit();
@@ -55,6 +85,7 @@ export default function CommentTripleDotMenu({
   return (
     <>
       <DropdownMenu
+        pageElementContext="tripleDotMenu"
         placement="bottom-end"
         className="text-gray-900"
         dismissRef={dismissRef}
@@ -87,6 +118,7 @@ export default function CommentTripleDotMenu({
             onClick: openReport,
           },
           userCanModeratePost(currentUser, comment.post) ? "divider" : null,
+          // TODO Move to answers
           toggleQuickTakeFrontpage
             ? {
                 title: isQuickTakeFrontpage
@@ -95,8 +127,13 @@ export default function CommentTripleDotMenu({
                 onClick: toggleQuickTakeFrontpage,
               }
             : null,
+          canDelete
+            ? {
+                title: comment.deleted ? "Undo delete" : "Delete",
+                onClick: onClickDelete,
+              }
+            : null,
           // TODO
-          // Delete
           // Retract
           // Lock thread
           // Ban user from post
@@ -121,6 +158,13 @@ export default function CommentTripleDotMenu({
         </button>
       </DropdownMenu>
       <ReportPopover comment={comment} open={reportOpen} onClose={closeReport} />
+      {canDelete && (
+        <DeleteCommentPopover
+          comment={comment}
+          open={deletePopoverOpen}
+          onClose={closeDelete}
+        />
+      )}
     </>
   );
 }
