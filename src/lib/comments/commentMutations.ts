@@ -10,10 +10,7 @@ import { createRevision } from "../revisions/revisionMutations";
 import { denormalizeRevision, getNextVersion } from "../revisions/revisionHelpers";
 import { htmlToPingbacks, notifyUsersOfPingbackMentions } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
-import {
-  fetchCommentDescendants,
-  fetchPostForCommentCreation,
-} from "./commentQueries";
+import { fetchPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
@@ -44,6 +41,7 @@ import {
   newCommentNotifications,
   runPangramOnComment,
   updateCommentDeleted,
+  updateCommentThreadLock,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -510,16 +508,18 @@ export const lockCommentThread = async ({
   if (!userIsAdminOrMod(user)) {
     throw new Error("Permission denied");
   }
-  const repliesBlockedUntil = (until ?? nYearsFromNow(1000)).toISOString();
-  const descendants = await fetchCommentDescendants(db, commentId);
-  await Promise.all([
-    updateWithFieldChanges(db, user, comments, commentId, {
-      repliesBlockedUntil,
-    }),
-    ...descendants.map(({ _id }) =>
-      updateWithFieldChanges(db, user, comments, _id, {
-        repliesBlockedUntil,
-      }),
-    ),
-  ]);
+  await updateCommentThreadLock(user, commentId, until ?? nYearsFromNow(1000));
+};
+
+export const unlockCommentThread = async ({
+  user,
+  commentId,
+}: {
+  user: CurrentUser;
+  commentId: string;
+}) => {
+  if (!userIsAdminOrMod(user)) {
+    throw new Error("Permission denied");
+  }
+  await updateCommentThreadLock(user, commentId, null);
 };

@@ -17,6 +17,7 @@ import {
   lockCommentThread,
   toggleCommentRetracted,
   undeleteComment,
+  unlockCommentThread,
   updateComment,
   updateCommentPinnedOnProfile,
   updateQuickTakeFrontpage,
@@ -244,5 +245,14 @@ export const commentsRouter = {
         throw new Error("Please login");
       }
       return await lockCommentThread({ user, commentId, until });
+    }),
+  unlockThread: os
+    .input(z.object({ commentId: z.string() }))
+    .handler(async ({ input: { commentId } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await unlockCommentThread({ user, commentId });
     }),
 };

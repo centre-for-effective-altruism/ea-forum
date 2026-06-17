@@ -85,7 +85,17 @@ export default function CommentTripleDotMenu({
 
   const onClickLockThread = useCallback(async () => {
     if (comment.repliesBlockedUntil) {
-      // TODO unlock comment threads
+      const toastId = toast.loading("Unlocking thread...");
+      try {
+        await rpc.comments.unlockThread({
+          commentId: comment._id,
+        });
+        window.location.reload();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Something went wrong");
+        captureException(e);
+      }
+      toast.remove(toastId);
     } else {
       setLockThreadPopoverOpen(true);
     }
