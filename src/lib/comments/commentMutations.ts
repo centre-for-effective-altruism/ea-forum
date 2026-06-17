@@ -25,6 +25,7 @@ import {
   userOwns,
 } from "../users/userHelpers";
 import {
+  commentRepliesBlockedUntil,
   userCanModerateComment,
   userCanPinCommentOnProfile,
 } from "./commentHelpers";
@@ -100,6 +101,7 @@ export const createPostComment = async ({
             parentAnswerId: true,
             tagId: true,
             tagCommentType: true,
+            repliesBlockedUntil: true,
           },
           where: {
             _id: parentCommentId,
@@ -107,6 +109,10 @@ export const createPostComment = async ({
         })
       : null,
   ]);
+
+  if (parentComment && commentRepliesBlockedUntil(parentComment)) {
+    throw new Error("This comment thread has been locked by a moderator");
+  }
 
   if (!post) {
     if (!shortform) {

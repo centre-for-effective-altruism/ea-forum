@@ -152,7 +152,9 @@ export const commentIsHiddenPendingReview = (comment: CommentListItem) => {
   return postedAfterGrandfatherDate && comment.authorIsUnreviewed;
 };
 
-export const commentRepliesBlockedUntil = (comment: CommentListItem) => {
+export const commentRepliesBlockedUntil = (
+  comment: Pick<Comment, "repliesBlockedUntil">,
+) => {
   if (!comment.repliesBlockedUntil) {
     return null;
   }
