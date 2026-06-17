@@ -26,6 +26,8 @@ import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import PinIcon from "../Icons/PinIcon";
 import clsx from "clsx";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
+import LockThreadPopover from "../Moderation/LockThreadPopover";
 
 export default function CommentTripleDotMenu({
   comment,
@@ -76,6 +78,28 @@ export default function CommentTripleDotMenu({
       setDeletePopoverOpen(true);
     }
   }, [commentsList, comment]);
+
+  const canLockThread = userIsAdminOrMod(currentUser);
+  const [lockThreadPopoverOpen, setLockThreadPopoverOpen] = useState(false);
+  const closeLockThread = useCallback(() => setLockThreadPopoverOpen(false), []);
+
+  const onClickLockThread = useCallback(async () => {
+    if (comment.repliesBlockedUntil) {
+      const toastId = toast.loading("Unlocking thread...");
+      try {
+        await rpc.comments.unlockThread({
+          commentId: comment._id,
+        });
+        window.location.reload();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Something went wrong");
+        captureException(e);
+      }
+      toast.remove(toastId);
+    } else {
+      setLockThreadPopoverOpen(true);
+    }
+  }, [comment]);
 
   const editComment = useCallback(() => {
     if (canEdit) {
@@ -141,8 +165,13 @@ export default function CommentTripleDotMenu({
                 onClick: toggleRetracted,
               }
             : null,
+          canLockThread
+            ? {
+                title: comment.repliesBlockedUntil ? "Unlock thread" : "Lock thread",
+                onClick: onClickLockThread,
+              }
+            : null,
           // TODO
-          // Lock thread
           // Ban user from post
           // Ban user from all posts
           // Ban user from all personal posts
@@ -170,6 +199,13 @@ export default function CommentTripleDotMenu({
           comment={comment}
           open={deletePopoverOpen}
           onClose={closeDelete}
+        />
+      )}
+      {canLockThread && (
+        <LockThreadPopover
+          comment={comment}
+          open={lockThreadPopoverOpen}
+          onClose={closeLockThread}
         />
       )}
     </>

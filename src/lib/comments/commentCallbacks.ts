@@ -8,6 +8,7 @@ import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers
 import {
   fetchCommentAncestors,
   fetchCommentContentTitle,
+  fetchCommentDescendants,
   PostForCommentCreation,
 } from "./commentQueries";
 import { rateLimitDateWhenUserNextAbleToComment } from "./commentRateLimits";
@@ -23,6 +24,7 @@ import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { sendModerationPM } from "../messages/sendModerationPM";
 import { sanitizeHtml } from "../conversionUtils/sanitizeHtml";
 import { db, DbOrTransaction, Transaction } from "../db";
+import { updateWithFieldChanges } from "../fieldChanges";
 import { postGetPageUrl } from "../posts/postsHelpers";
 import { akismetCheckComment } from "../akismet";
 import { isAnyTest } from "../environment";
@@ -743,4 +745,23 @@ export const updateCommentDeleted = async ({
 
   void sendCommentDeletionPrivateMessage(currentUser, comment._id);
   void elasticSyncDocument("Comments", comment._id);
+};
+
+export const updateCommentThreadLock = async (
+  user: CurrentUser,
+  commentId: string,
+  until: Date | null,
+) => {
+  const repliesBlockedUntil = until ? until.toISOString() : null;
+  const descendants = await fetchCommentDescendants(db, commentId);
+  await Promise.all([
+    updateWithFieldChanges(db, user, comments, commentId, {
+      repliesBlockedUntil,
+    }),
+    ...descendants.map(({ _id }) =>
+      updateWithFieldChanges(db, user, comments, _id, {
+        repliesBlockedUntil,
+      }),
+    ),
+  ]);
 };

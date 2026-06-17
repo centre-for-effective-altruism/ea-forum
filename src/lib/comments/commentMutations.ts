@@ -17,6 +17,7 @@ import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
 import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
+import { nYearsFromNow } from "../timeUtils";
 import {
   MINIMUM_APPROVAL_KARMA,
   userCanDo,
@@ -24,10 +25,11 @@ import {
   userOwns,
 } from "../users/userHelpers";
 import {
+  commentRepliesBlockedUntil,
   userCanModerateComment,
   userCanPinCommentOnProfile,
 } from "./commentHelpers";
-import { logFieldChanges } from "../fieldChanges";
+import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
 import {
   updateCommentForumEvent,
   checkCommentForSpam,
@@ -40,6 +42,7 @@ import {
   newCommentNotifications,
   runPangramOnComment,
   updateCommentDeleted,
+  updateCommentThreadLock,
 } from "./commentCallbacks";
 
 const validateEditorContents = (
@@ -98,6 +101,7 @@ export const createPostComment = async ({
             parentAnswerId: true,
             tagId: true,
             tagCommentType: true,
+            repliesBlockedUntil: true,
           },
           where: {
             _id: parentCommentId,
@@ -105,6 +109,10 @@ export const createPostComment = async ({
         })
       : null,
   ]);
+
+  if (parentComment && commentRepliesBlockedUntil(parentComment)) {
+    throw new Error("This comment thread has been locked by a moderator");
+  }
 
   if (!post) {
     if (!shortform) {
@@ -487,10 +495,37 @@ export const toggleCommentRetracted = async ({
   if (comment.userId !== user._id) {
     throw new Error("You don't have permission to retract this comment");
   }
-  await db
-    .update(comments)
-    .set({ retracted: !comment.retracted })
-    .where(eq(comments._id, commentId));
+  await updateWithFieldChanges(db, user, comments, commentId, {
+    retracted: !comment.retracted,
+  });
   void elasticSyncDocument("Comments", commentId);
   return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
+};
+
+export const lockCommentThread = async ({
+  user,
+  commentId,
+  until,
+}: {
+  user: CurrentUser;
+  commentId: string;
+  until: Date | null;
+}) => {
+  if (!userIsAdminOrMod(user)) {
+    throw new Error("Permission denied");
+  }
+  await updateCommentThreadLock(user, commentId, until ?? nYearsFromNow(1000));
+};
+
+export const unlockCommentThread = async ({
+  user,
+  commentId,
+}: {
+  user: CurrentUser;
+  commentId: string;
+}) => {
+  if (!userIsAdminOrMod(user)) {
+    throw new Error("Permission denied");
+  }
+  await updateCommentThreadLock(user, commentId, null);
 };
