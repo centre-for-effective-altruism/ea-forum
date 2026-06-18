@@ -1,5 +1,6 @@
 import { expect, suite, test } from "vitest";
 import { addOrUpvoteTag } from "@/lib/tags/tagMutations";
+import { fetchPostDisplay } from "@/lib/posts/postQueries";
 import { createTestUser, createTestPost, createTestTag } from "./testHelpers";
 
 suite("Tagging", () => {
@@ -172,5 +173,30 @@ suite("Tagging", () => {
     expect(postTags.length).toBe(1);
     expect(postTags[0]._id).toBe(tag._id);
     expect(postTags[0].tagRel.baseScore).toBe(1);
+  });
+  test("Post tags are visible to a viewer who hasn't voted on them", async () => {
+    const [voter, viewer, post, tag] = await Promise.all([
+      createTestUser(),
+      createTestUser(),
+      createTestPost(),
+      createTestTag(),
+    ]);
+    await addOrUpvoteTag({ currentUser: voter, postId: post._id, tagId: tag._id });
+
+    const display = await fetchPostDisplay(viewer, post._id);
+    const tagIds = display?.tags?.map(({ _id }) => _id) ?? [];
+    expect(tagIds).toContain(tag._id);
+  });
+  test("Post tags are visible to logged-out viewers", async () => {
+    const [voter, post, tag] = await Promise.all([
+      createTestUser(),
+      createTestPost(),
+      createTestTag(),
+    ]);
+    await addOrUpvoteTag({ currentUser: voter, postId: post._id, tagId: tag._id });
+
+    const display = await fetchPostDisplay(null, post._id);
+    const tagIds = display?.tags?.map(({ _id }) => _id) ?? [];
+    expect(tagIds).toContain(tag._id);
   });
 });
