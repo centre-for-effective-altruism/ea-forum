@@ -71,6 +71,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      ".claude/**",
       "ckEditor/**",
       "src/vendor/**",
       "*.mjs",
