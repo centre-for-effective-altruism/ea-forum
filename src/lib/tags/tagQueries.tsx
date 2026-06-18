@@ -107,7 +107,7 @@ export const postTagsProjection = (
       tagrel."postId" = post_for_tags."_id"
       AND tagrel."tagId" = post_tag."_id"
       AND tagrel."deleted" IS NOT TRUE
-    JOIN "Votes" vote ON
+    LEFT JOIN "Votes" vote ON
       ${currentUserId !== null}
       AND vote."collectionName" = 'TagRels'
       AND vote."documentId" = tagrel."_id"
