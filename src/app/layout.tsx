@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Charis_SIL } from "next/font/google";
+import { Spectral } from "next/font/google";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
@@ -28,9 +28,11 @@ const inter = localFont({
   preload: true,
 });
 
-const charis = Charis_SIL({
-  weight: ["400", "700"],
-  variable: "--font-charis",
+const spectral = Spectral({
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-spectral",
   display: "swap",
   preload: true,
 });
@@ -98,7 +100,7 @@ export default function RootLayout({
           "antialiased text-size-adjust-none w-full min-h-screen flex flex-col",
           "bg-background text-foreground font-sans",
           inter.variable,
-          charis.variable,
+          spectral.variable,
         )}
       >
         <Providers>
