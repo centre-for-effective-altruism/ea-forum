@@ -2,11 +2,10 @@ import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import Type from "../Type";
-import PostColumn from "./PostColumn";
 
 export default function PostDisplaySkeleton() {
   return (
-    <PostColumn>
+    <>
       {/* Title */}
       <div className="bg-gray-300 rounded mb-10 h-[52px] w-full" />
       <div className="flex gap-3 mb-6">
@@ -51,6 +50,6 @@ export default function PostDisplaySkeleton() {
         <div className="w-full h-50 bg-gray-100 rounded" />
         <div className="w-full h-50 bg-gray-100 rounded" />
       </div>
-    </PostColumn>
+    </>
   );
 }

@@ -14,7 +14,8 @@ import {
   type FilterSettings,
 } from "../filterSettings";
 import { userIsAdminOrMod } from "../users/userHelpers";
-import { CurrentUser } from "../users/currentUser";
+import { CurrentUser, getCurrentUser } from "../users/currentUser";
+import { htmlToTableOfContents } from "../revisions/htmlToTableOfContents";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -179,6 +180,18 @@ export const fetchPostDisplay = async (
 export type PostDisplay = NonNullable<Awaited<ReturnType<typeof fetchPostDisplay>>>;
 
 export const fetchPostDisplayCached = cache(fetchPostDisplay);
+
+/**
+ * Fetch a post for display along with its derived table of contents. Cached so
+ * that both the post body and the (separately rendered) table of contents
+ * sidebar reuse a single fetch and a single HTML parse per request.
+ */
+export const fetchPostDisplayWithTableOfContents = cache(async (postId: string) => {
+  const currentUser = await getCurrentUser();
+  const post = await fetchPostDisplayCached(currentUser, postId);
+  const tableOfContents = post ? htmlToTableOfContents(post.contents?.html) : null;
+  return { post, tableOfContents };
+});
 
 export const filterSettingsToSelector = (
   filterSettings: FilterSettings,

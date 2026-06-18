@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import CommentsSectionSkeleton from "../Comments/CommentsSectionSkeleton";
 import FooterRecommendations from "./FooterRecommendations";
 import CommentsSection from "../Comments/CommentsSection";
+import PostTableOfContentsAsync from "./PostTableOfContentsAsync";
 import PostDisplaySkeleton from "./PostDisplaySkeleton";
 import PostsDisplay from "./PostsDisplay";
 import PostColumn from "./PostColumn";
@@ -16,10 +17,19 @@ export default async function PostsPage({
   return (
     <div data-component="PostsPage">
       <div className="px-2 pt-28 pb-16 bg-post-body-bg">
-        <Suspense fallback={<PostDisplaySkeleton />}>
-          <PostsDisplay postId={postId} sequenceId={sequenceId} />
-        </Suspense>
-        <PostColumn>
+        <PostColumn
+          left={
+            <Suspense fallback={null}>
+              <PostTableOfContentsAsync
+                postId={postId}
+                className="sticky left-0 top-18 pl-8 pt-5"
+              />
+            </Suspense>
+          }
+        >
+          <Suspense fallback={<PostDisplaySkeleton />}>
+            <PostsDisplay postId={postId} sequenceId={sequenceId} />
+          </Suspense>
           <Suspense fallback={<CommentsSectionSkeleton />}>
             <CommentsSection postId={postId} />
           </Suspense>
