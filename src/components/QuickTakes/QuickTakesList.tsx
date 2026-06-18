@@ -11,14 +11,17 @@ import Type from "../Type";
 
 export default function QuickTakesList({
   quickTakes,
+  totalCount,
   className,
 }: Readonly<{
   quickTakes: CommentListItem[];
+  totalCount: number;
   className?: string;
 }>) {
   const { showCommunity, localQuickTakes } = useQuickTakesListContext();
   const withoutCommunityProps = useLoadMore({
     initialItems: quickTakes,
+    initialTotalCount: totalCount,
     fetchMore: (limit, offset) =>
       rpc.comments.listQuickTakes({
         limit,
@@ -37,9 +40,14 @@ export default function QuickTakesList({
       }),
   });
 
-  const { items, loading, limit, canLoadMore, onLoadMore } = showCommunity
-    ? withCommunityProps
-    : withoutCommunityProps;
+  const {
+    items,
+    loading,
+    limit,
+    canLoadMore,
+    onLoadMore,
+    totalCount: currentTotalCount,
+  } = showCommunity ? withCommunityProps : withoutCommunityProps;
 
   useEffect(() => {
     if (items.length === 0 && !loading && canLoadMore) {
@@ -48,6 +56,12 @@ export default function QuickTakesList({
   }, [items, loading, canLoadMore, onLoadMore]);
 
   const quickTakesToDisplay = [...localQuickTakes, ...items];
+
+  // Locally-posted quick takes aren't reflected in the server total yet, so add
+  // them to both the shown and total counts to keep the ratio consistent.
+  const shownCount = quickTakesToDisplay.length;
+  const knownTotal =
+    currentTotalCount != null ? currentTotalCount + localQuickTakes.length : null;
 
   return (
     <div data-component="QuickTakesList" className={className}>
@@ -60,9 +74,11 @@ export default function QuickTakesList({
           onClick={onLoadMore}
           As="button"
           style="loadMore"
-          className="cursor-pointer text-primary hover:opacity-70"
+          disabled={loading}
+          className="cursor-pointer text-primary hover:opacity-70 disabled:cursor-default disabled:opacity-50"
         >
           Load more
+          {knownTotal != null ? ` (${shownCount}/${knownTotal})` : ""}
         </Type>
       )}
     </div>

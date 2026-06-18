@@ -5,6 +5,7 @@ import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
 import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
+  countFrontpageQuickTakes,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
   fetchFrontpageQuickTakes,
@@ -178,12 +179,20 @@ export const commentsRouter = {
     )
     .handler(async ({ input: { includeCommunity, offset, limit } }) => {
       const currentUser = await getCurrentUser();
-      return await fetchFrontpageQuickTakes({
-        currentUser,
-        includeCommunity,
-        offset,
-        limit,
-      });
+      const [items, totalCount] = await Promise.all([
+        fetchFrontpageQuickTakes({
+          currentUser,
+          includeCommunity,
+          offset,
+          limit,
+        }),
+        // Only the first page needs the total; later pages reuse the count the
+        // client already has, avoiding a redundant COUNT(*) per "load more".
+        offset
+          ? Promise.resolve(undefined)
+          : countFrontpageQuickTakes({ currentUser, includeCommunity }),
+      ]);
+      return { items, totalCount };
     }),
   updateQuickTakeFrontpage: os
     .input(

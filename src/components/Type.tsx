@@ -39,6 +39,7 @@ export default function Type({
   As?: ElementType;
   id?: string;
   role?: string;
+  disabled?: boolean;
   onClick?: (ev: MouseEvent) => void;
   cssStyle?: CSSProperties;
   className?: string;
