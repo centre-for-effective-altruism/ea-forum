@@ -10,7 +10,7 @@ export const typeStyles = {
   bodyXXSmall: "font-sans text-[11px] font-[450]",
   bodySerif: "font-serif text-[17px] font-[400] tracking-tight",
   postTitle: "font-sans text-[16px] font-[600]",
-  reactScore: "font-sans text-[16px] font-[500]",
+  voteScore: "font-sans text-[16px] font-[500]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[24px]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
