@@ -22,6 +22,11 @@ export const isStaging = isEnv("staging");
 
 export const isDevelopment = isEnv("dev");
 
+export const isBotSite = process.env.NEXT_PUBLIC_IS_BOT_SITE === "true";
+
+export const isNoIndexSite =
+  isBotSite || process.env.NEXT_PUBLIC_NO_INDEX === "true";
+
 const userAgent = new (class {
   private bowser: Bowser.Parser.Parser | null = null;
 
