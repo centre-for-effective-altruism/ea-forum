@@ -32,11 +32,11 @@ export const viewableCommentFilter = (currentUserId: string | null) => ({
   OR: [
     ...(currentUserId ? [{ userId: currentUserId }] : []),
     {
-      rejected: isNotTrue,
-      deleted: isNotTrue,
+      rejected: false,
+      deleted: false,
       debateResponse: isNotTrue,
-      authorIsUnreviewed: isNotTrue,
-      draft: isNotTrue,
+      authorIsUnreviewed: false,
+      draft: false,
     },
   ],
 });
@@ -283,6 +283,7 @@ const frontpageQuickTakesWhere = ({
   return {
     shortform: true,
     shortformFrontpage: true,
+    deleted: false,
     parentCommentId: { isNull: true },
     createdAt: { gt: fiveDaysAgo },
     ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
