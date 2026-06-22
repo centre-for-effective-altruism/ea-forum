@@ -5,6 +5,7 @@ import { Charis_SIL } from "next/font/google";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
+import { isNoIndexSite } from "@/lib/environment";
 import {
   getSiteLogoUrl,
   getSiteOgImageUrl,
@@ -47,7 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
     applicationName: "Effective Altruism Forum",
-    robots: process.env.NEXT_PUBLIC_IS_BOT_SITE ? "noindex" : undefined,
+    robots: isNoIndexSite ? "noindex" : undefined,
     alternates: {
       types: {
         "application/rss+xml": "/feed.xml",

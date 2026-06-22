@@ -1,7 +1,8 @@
+import { isBotSite } from "@/lib/environment";
 import Type from "../Type";
 
 export default function BotSiteNotice() {
-  if (process.env.NEXT_PUBLIC_IS_BOT_SITE !== "true") {
+  if (!isBotSite) {
     return null;
   }
   return (
