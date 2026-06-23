@@ -13,9 +13,10 @@ import {
   userCanEditComment,
   userCanModerateComment,
 } from "@/lib/comments/commentHelpers";
+import { useCommentSubscriptions } from "@/lib/hooks/useSubscriptions";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
-import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useOptionalCommentsList } from "./useCommentsList";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { rpc } from "@/lib/rpc";
 import toast from "react-hot-toast";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
@@ -23,6 +24,7 @@ import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import DeleteCommentPopover from "../Moderation/DeleteCommentPopover";
 import LockThreadPopover from "../Moderation/LockThreadPopover";
 import ReportPopover from "../Moderation/ReportPopover";
@@ -59,6 +61,7 @@ export default function CommentTripleDotMenu({
     useQuickTakeFrontpage(comment);
   const { isRetracted, toggleRetracted } = useRetractComment(comment);
   const { isModerator, toggleModerator } = useModeratorComment(comment);
+  const { subscriptionMenuItems } = useCommentSubscriptions(comment);
 
   const canDelete = userCanModerateComment(currentUser, comment);
   const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
@@ -134,7 +137,13 @@ export default function CommentTripleDotMenu({
                 onClick: toggleIsPinnedOnProfile,
               }
             : null,
-          // TODO subscriptions
+          subscriptionMenuItems.length
+            ? {
+                title: "Get notified",
+                Icon: BellIcon,
+                submenu: subscriptionMenuItems,
+              }
+            : null,
           {
             title: isBookmarked ? "Saved" : "Save",
             Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,

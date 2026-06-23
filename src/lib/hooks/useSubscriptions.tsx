@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import stringify from "json-stringify-deterministic";
+import type { CommentListItem } from "../comments/commentLists";
 import type { PostListItem } from "../posts/postLists";
 import type { PostDisplay } from "../posts/postQueries";
 import type { CurrentUser } from "../users/currentUser";
@@ -175,7 +176,7 @@ export const useSubscription = (
   return { ...state, update: updateThis };
 };
 
-const getSubscriptionItems = (
+const getPostSubscriptionItems = (
   post: PostDisplay | PostListItem,
   currentUser: CurrentUser | null,
 ) => [
@@ -220,7 +221,7 @@ const getSubscriptionItems = (
 export const usePostSubscriptions = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
   const subscriptionMenuItems = useMemo(() => {
-    const allSubs = getSubscriptionItems(post, currentUser);
+    const allSubs = getPostSubscriptionItems(post, currentUser);
     return allSubs
       .filter(({ enabled }) => enabled)
       .map((sub) => (
@@ -233,6 +234,82 @@ export const usePostSubscriptions = (post: PostDisplay | PostListItem) => {
         />
       ));
   }, [post, currentUser]);
+  return {
+    subscriptionMenuItems,
+  };
+};
+
+const getCommentSubscriptionItems = (
+  comment: CommentListItem,
+  currentUser: CurrentUser | null,
+  enableSubscribeToCommentUser: boolean,
+) => [
+  {
+    collectionName: "Posts",
+    documentId: comment.post?._id ?? "",
+    enabled: Boolean(
+      comment.post &&
+      comment.shortform &&
+      !comment.topLevelCommentId &&
+      comment.user?._id &&
+      comment.user._id !== currentUser?._id,
+    ),
+    subscribeMessage: `Subscribe to ${comment.post?.title}`,
+    unsubscribeMessage: `Unsubscribe from ${comment.post?.title}`,
+    title: `New quick takes from ${userGetDisplayName(comment.user)}`,
+    subscriptionType: subscriptionTypes.newShortform,
+  },
+  {
+    collectionName: "Comments",
+    documentId: comment._id,
+    subscribeMessage: "Subscribe to this comment's replies",
+    unsubscribeMessage: "Unsubscribe from this comment's replies",
+    title: "New replies to this comment",
+    subscriptionType: subscriptionTypes.newReplies,
+  },
+  {
+    collectionName: "Users",
+    documentId: comment.user?._id ?? "",
+    enabled: enableSubscribeToCommentUser,
+    subscribeMessage: `Subscribe to posts by ${comment.user?.displayName}`,
+    unsubscribeMessage: `Unsubscribe from posts by ${comment.user?.displayName}`,
+    title: `New posts by ${comment.user?.displayName}`,
+    subscriptionType: subscriptionTypes.newPosts,
+  },
+  {
+    collectionName: "Users",
+    documentId: comment.user?._id ?? "",
+    enabled: enableSubscribeToCommentUser,
+    subscribeMessage: `Subscribe to all comments by ${comment.user?.displayName}`,
+    unsubscribeMessage: `Unsubscribe from all comments by ${comment.user?.displayName}`,
+    title: `New comments by ${comment.user?.displayName}`,
+    subscriptionType: subscriptionTypes.newUserComments,
+  },
+];
+
+export const useCommentSubscriptions = (comment: CommentListItem) => {
+  const { currentUser } = useCurrentUser();
+  const subscriptionMenuItems = useMemo(() => {
+    const enableSubscribeToCommentUser = Boolean(
+      comment.user?._id && comment.user._id !== currentUser?._id && !comment.deleted,
+    );
+    const allSubs = getCommentSubscriptionItems(
+      comment,
+      currentUser,
+      enableSubscribeToCommentUser,
+    );
+    return allSubs
+      .filter(({ enabled }) => enabled)
+      .map((sub) => (
+        <SubscriptionToggle
+          key={sub.title}
+          title={sub.title}
+          collectionName={sub.collectionName}
+          documentId={sub.documentId}
+          type={sub.subscriptionType}
+        />
+      ));
+  }, [comment, currentUser]);
   return {
     subscriptionMenuItems,
   };

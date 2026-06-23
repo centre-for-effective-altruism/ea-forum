@@ -115,11 +115,13 @@ export default function PostTripleDotMenu({
                 href: analyticsLink,
               }
             : null,
-          {
-            title: "Get notified",
-            Icon: BellIcon,
-            submenu: subscriptionMenuItems,
-          },
+          subscriptionMenuItems.length
+            ? {
+                title: "Get notified",
+                Icon: BellIcon,
+                submenu: subscriptionMenuItems,
+              }
+            : null,
           hideBookmark
             ? null
             : {
