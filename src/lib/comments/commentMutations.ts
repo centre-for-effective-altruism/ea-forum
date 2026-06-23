@@ -529,3 +529,19 @@ export const unlockCommentThread = async ({
   }
   await updateCommentThreadLock(user, commentId, null);
 };
+
+export const toggleModeratorComment = async ({
+  user,
+  commentId,
+}: {
+  user: CurrentUser;
+  commentId: string;
+}) => {
+  if (!userCanDo(user, "posts.moderate.all")) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, user, comments, commentId, (comment) => ({
+    moderatorHat: !comment.moderatorHat,
+  }));
+  return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
+};

@@ -17,6 +17,7 @@ import {
   deleteComment,
   lockCommentThread,
   toggleCommentRetracted,
+  toggleModeratorComment,
   undeleteComment,
   unlockCommentThread,
   updateComment,
@@ -263,5 +264,14 @@ export const commentsRouter = {
         throw new Error("Please login");
       }
       return await unlockCommentThread({ user, commentId });
+    }),
+  toggleModerator: os
+    .input(z.object({ commentId: z.string() }))
+    .handler(async ({ input: { commentId } }) => {
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error("Please login");
+      }
+      return await toggleModeratorComment({ user, commentId });
     }),
 };

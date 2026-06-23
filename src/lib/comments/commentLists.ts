@@ -126,6 +126,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
         columns: {
           _id: true,
           slug: true,
+          title: true,
           userId: true,
           frontpageDate: true,
           coauthorUserIds: true,
