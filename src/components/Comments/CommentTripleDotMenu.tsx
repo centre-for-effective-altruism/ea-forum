@@ -1,8 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userCanModeratePost } from "@/lib/posts/postsHelpers";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { captureException } from "@sentry/nextjs";
 import {
+  useModeratorComment,
   usePinCommentOnProfile,
   useQuickTakeFrontpage,
   useRetractComment,
@@ -22,12 +24,11 @@ import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import DeleteCommentPopover from "../Moderation/DeleteCommentPopover";
+import LockThreadPopover from "../Moderation/LockThreadPopover";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import PinIcon from "../Icons/PinIcon";
 import clsx from "clsx";
-import { userIsAdminOrMod } from "@/lib/users/userHelpers";
-import LockThreadPopover from "../Moderation/LockThreadPopover";
 
 export default function CommentTripleDotMenu({
   comment,
@@ -57,6 +58,7 @@ export default function CommentTripleDotMenu({
   const { isQuickTakeFrontpage, toggleQuickTakeFrontpage } =
     useQuickTakeFrontpage(comment);
   const { isRetracted, toggleRetracted } = useRetractComment(comment);
+  const { isModerator, toggleModerator } = useModeratorComment(comment);
 
   const canDelete = userCanModerateComment(currentUser, comment);
   const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
@@ -144,7 +146,8 @@ export default function CommentTripleDotMenu({
             onClick: openReport,
           },
           userCanModeratePost(currentUser, comment.post) ? "divider" : null,
-          // TODO Move to answers
+          // TODO: If we end up implementing question posts then there should be
+          // an option here "Move to answers"
           toggleQuickTakeFrontpage
             ? {
                 title: isQuickTakeFrontpage
@@ -171,11 +174,12 @@ export default function CommentTripleDotMenu({
                 onClick: onClickLockThread,
               }
             : null,
-          // TODO
-          // Ban user from post
-          // Ban user from all posts
-          // Ban user from all personal posts
-          // Toggle is moderator comment
+          toggleModerator
+            ? {
+                title: `${isModerator ? "Unmark" : "Mark"} as moderator comment`,
+                onClick: toggleModerator,
+              }
+            : null,
         ]}
       >
         <button

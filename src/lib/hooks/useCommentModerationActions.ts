@@ -79,3 +79,29 @@ export const useRetractComment = (comment: CommentListItem) => {
       currentUser && currentUser._id === comment.user?._id ? toggleRetracted : null,
   };
 };
+
+export const useModeratorComment = (comment: CommentListItem) => {
+  const { currentUser } = useCurrentUser();
+  const commentsList = useOptionalCommentsList();
+  const toggleModerator = useCallback(async () => {
+    const toastId = toast.loading(`Updating comment...`);
+    try {
+      const updatedComment = await rpc.comments.toggleModerator({
+        commentId: comment._id,
+      });
+      commentsList?.updateComment(updatedComment);
+      toast.success("Comment updated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+      captureException(e);
+    }
+    toast.remove(toastId);
+  }, [commentsList, comment]);
+  return {
+    isModerator: comment.moderatorHat,
+    toggleModerator:
+      currentUser && userCanDo(currentUser, "posts.moderate.all")
+        ? toggleModerator
+        : null,
+  };
+};
