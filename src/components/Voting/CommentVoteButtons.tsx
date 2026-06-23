@@ -30,7 +30,7 @@ export default function CommentVoteButtons({
         <VoteButton
           currentVoteStrength={getVoteDownStrength(voteType)}
           direction="Downvote"
-          orientation="left"
+          orientation="down"
           onVote={onVote}
           dimWhenNotVoted
           className="text-gray-400"
@@ -51,7 +51,7 @@ export default function CommentVoteButtons({
         <VoteButton
           currentVoteStrength={getVoteUpStrength(voteType)}
           direction="Upvote"
-          orientation="right"
+          orientation="up"
           onVote={onVote}
           dimWhenNotVoted
           className="text-gray-400"
