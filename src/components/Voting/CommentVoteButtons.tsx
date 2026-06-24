@@ -25,15 +25,12 @@ export default function CommentVoteButtons({
     <>
       <div
         data-component="CommentVoteButtons"
-        className="
-          inline-flex items-center h-[22px] px-[3px] rounded-sm
-          border-1 border-comment-border
-        "
+        className="inline-flex items-center -mr-[6px]"
       >
         <VoteButton
           currentVoteStrength={getVoteDownStrength(voteType)}
           direction="Downvote"
-          orientation="left"
+          orientation="down"
           onVote={onVote}
           dimWhenNotVoted
           className="text-gray-400"
@@ -45,14 +42,16 @@ export default function CommentVoteButtons({
               {voteCount === 1 ? "" : "s"})
             </Type>
           }
-          className="text-[14px] font-500 text-gray-600 cursor-default -mx-[2px]"
+          className="text-gray-600 cursor-default -mx-[1px]"
         >
-          {baseScore}
+          <Type style="voteScore" As="span">
+            {baseScore}
+          </Type>
         </Tooltip>
         <VoteButton
           currentVoteStrength={getVoteUpStrength(voteType)}
           direction="Upvote"
-          orientation="right"
+          orientation="up"
           onVote={onVote}
           dimWhenNotVoted
           className="text-gray-400"

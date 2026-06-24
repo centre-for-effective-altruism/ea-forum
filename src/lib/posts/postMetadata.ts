@@ -3,6 +3,7 @@ import type { CurrentUser } from "../users/currentUser";
 import { getSiteOgImageUrl } from "../cloudinary/cloudinaryHelpers";
 import { fetchPostDisplayCached } from "./postQueries";
 import { filterNonNull } from "../typeHelpers";
+import { isNoIndexSite } from "../environment";
 import {
   getPostDescription,
   getPostSocialImageUrl,
@@ -31,7 +32,7 @@ export const generatePostMetadata = async (
     title: post.title,
     description,
     authors: authors.map((name) => ({ name })),
-    robots: post.noIndex ? "noindex" : undefined,
+    robots: post.noIndex || isNoIndexSite ? "noindex" : undefined,
     openGraph: {
       type: "article",
       url: canonicalUrl,

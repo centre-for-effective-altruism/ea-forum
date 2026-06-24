@@ -64,7 +64,7 @@ export default function NewQuickTake({
       onSubmit={handleSubmit}
       onKeyDown={onKeyDown}
       className={clsx(
-        "bg-comment-odd border border-comment-border p-3 rounded",
+        "bg-comment-even border border-comment-border p-3 rounded",
         className,
       )}
     >

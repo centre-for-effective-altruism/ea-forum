@@ -121,7 +121,7 @@ export default function ReactButtons({
               isSelected={isSelected}
             >
               <reaction.Component className="w-4 text-primary" />
-              <Type style="reactScore">{score}</Type>
+              <Type style="voteScore">{score}</Type>
             </ReactionButton>
           </Tooltip>
         );
