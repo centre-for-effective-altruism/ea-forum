@@ -253,6 +253,8 @@ const buildRecentDiscussionsSubqueries = (
             ...viewableCommentFilter(currentUserId),
             baseScore: { gt: 0 },
             shortform: true,
+            deleted: false,
+            retracted: false,
             parentCommentId: { isNull: true },
             descendentCount: 0,
             ...(cutoff

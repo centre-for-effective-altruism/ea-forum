@@ -71,7 +71,7 @@ export default function PostTableOfContents({
           {contents.sections.map(({ title, anchor, level }) => (
             <Type
               key={anchor}
-              cssStyle={{ "--anchor-level": String(level - 1) } as CSSProperties}
+              cssStyle={{ "--anchor-level": level } as CSSProperties}
               className="pl-[calc(16px*var(--anchor-level))]"
             >
               <Link
