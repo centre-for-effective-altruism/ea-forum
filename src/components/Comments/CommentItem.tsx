@@ -39,6 +39,7 @@ import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
+import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 
 /**
  * Render a comment. While you can use this directly, it's often better to instead
@@ -83,11 +84,13 @@ export default function CommentItem({
     moderatorHat,
     retracted,
     rejected,
+    draft,
     deleted,
     deletedBy,
     deletedDate,
   } = comment;
   const isNew =
+    !draft &&
     !!post?.readStatus?.[0]?.lastUpdated &&
     new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
   const collapsedBecauseRepliedTo =
@@ -99,7 +102,7 @@ export default function CommentItem({
   const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(
-    !startCollapsed && !collapsedBecauseRepliedTo,
+    !draft && !startCollapsed && !collapsedBecauseRepliedTo,
   );
   const [isTruncated, setIsTruncated] = useState(
     commentsListContext?.collapsedIfRepliedTo && !collapsedBecauseRepliedTo,
@@ -142,7 +145,12 @@ export default function CommentItem({
   }, [comment]);
 
   const onEdit = useCallback(() => setIsEditing(true), []);
-  const onFinishEdit = useCallback(() => setIsEditing(false), []);
+  const onEditFinished = useCallback(() => {
+    setIsEditing(false);
+    if (draft) {
+      setIsExpanded(false);
+    }
+  }, [draft]);
 
   const isPostAuthor = userIsPostAuthor(user, post);
 
@@ -161,6 +169,13 @@ export default function CommentItem({
       })();
     }
   }, [canLoadParent, commentsListContext, parentCommentId]);
+
+  const onEditDraft = useCallback(() => {
+    if (draft) {
+      setIsExpanded(true);
+      setIsEditing(true);
+    }
+  }, [draft]);
 
   return (
     <div
@@ -185,7 +200,12 @@ export default function CommentItem({
         className={borderless ? undefined : "pr-3 mb-2"}
       >
         <div className="mb-2 flex items-start gap-2">
-          <div className="flex items-center gap-2 flex-wrap grow">
+          <div
+            className={clsx(
+              "max-w-full flex items-center gap-2 grow",
+              !draft && "flex-wrap",
+            )}
+          >
             {canLoadParent && (
               <Tooltip title={<Type style="bodySmall">Show parent comment</Type>}>
                 <ArrowTurnLeftUpIcon
@@ -196,10 +216,10 @@ export default function CommentItem({
               </Tooltip>
             )}
             {isLoadingParent && <Loading />}
-            {!borderless && (
+            {!draft && !borderless && (
               <ChevronDownIcon
                 className={clsx(
-                  "w-4 cursor-pointer text-gray-600 hover:opacity-70",
+                  "w-4 min-w-4 cursor-pointer text-gray-600 hover:opacity-70",
                   "transition-transform",
                   !isExpanded && "-rotate-90",
                 )}
@@ -208,58 +228,86 @@ export default function CommentItem({
               />
             )}
             <Type style="bodyHeavy">
+              {draft && (
+                <span
+                  role="button"
+                  onClick={onEditDraft}
+                  className="cursor-pointer text-gray-600 mr-2"
+                >
+                  [Draft]
+                </span>
+              )}
               {deleted ? (
                 <span className="text-gray-600">[comment deleted]</span>
               ) : (
-                <UsersName user={user} />
+                <UsersName user={user} className="whitespace-nowrap" />
               )}
             </Type>
-            {isPostAuthor && (
-              <Tooltip
-                title={<Type style="bodySmall">Post author</Type>}
-                placement="bottom"
-              >
-                <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
-              </Tooltip>
-            )}
-            {user && userIsNew(user) && (
-              <Tooltip
-                title={
-                  <Type style="bodySmall">
-                    {user?.displayName} is either new on the EA Forum or doesn&apos;t
-                    have much karma yet
+            {!draft && (
+              <>
+                {isPostAuthor && (
+                  <Tooltip
+                    title={<Type style="bodySmall">Post author</Type>}
+                    placement="bottom"
+                  >
+                    <AuthorIcon className="w-4 text-gray-600 translate-y-px" />
+                  </Tooltip>
+                )}
+                {user && userIsNew(user) && (
+                  <Tooltip
+                    title={
+                      <Type style="bodySmall">
+                        {user?.displayName} is either new on the EA Forum or
+                        doesn&apos;t have much karma yet
+                      </Type>
+                    }
+                    placement="bottom-start"
+                    tooltipClassName="max-w-[300px]"
+                  >
+                    <SproutIcon className="text-new-user-sprout" />
+                  </Tooltip>
+                )}
+                <CommentDate comment={comment} />
+                {comment.moderatorHat && (
+                  <Type className="text-gray-600 cursor-default">
+                    Moderator comment
                   </Type>
-                }
-                placement="bottom-start"
-                tooltipClassName="max-w-[300px]"
+                )}
+                <CommentVoteButtons comment={comment} />
+                <CommentPollVote comment={comment} />
+                {comment.contentsRevision && userIsAdminOrMod(currentUser) && (
+                  <PangramBadge revision={comment.contentsRevision} />
+                )}
+                <CommentTags comment={comment} className="grow" />
+              </>
+            )}
+            {draft && !isExpanded && (
+              <Type
+                role="button"
+                onClick={onEditDraft}
+                className="cursor-pointer grow min-w-0 truncate opacity-70"
               >
-                <SproutIcon className="text-new-user-sprout" />
-              </Tooltip>
+                {htmlToTextDefault(html)}
+              </Type>
             )}
-            <CommentDate comment={comment} />
-            {comment.moderatorHat && (
-              <Type className="text-gray-600 cursor-default">Moderator comment</Type>
-            )}
-            <CommentVoteButtons comment={comment} />
-            <CommentPollVote comment={comment} />
-            {comment.contentsRevision && userIsAdminOrMod(currentUser) && (
-              <PangramBadge revision={comment.contentsRevision} />
-            )}
-            <CommentTags comment={comment} className="grow" />
           </div>
-          <Link
-            href={commentGetPageUrl({ comment })}
-            onClick={copyLink}
-            className="text-gray-600 hover:text-gray-1000 mt-1"
-          >
-            <LinkIcon className="w-[16px]" />
-          </Link>
-          {currentUser && (
-            <CommentTripleDotMenu
-              comment={comment}
-              onEdit={isEditing ? undefined : onEdit}
-              className="mt-[2px]"
-            />
+          {!draft && (
+            <>
+              <Link
+                href={commentGetPageUrl({ comment })}
+                onClick={copyLink}
+                className="text-gray-600 hover:text-gray-1000 mt-1"
+              >
+                <LinkIcon className="w-[16px]" />
+              </Link>
+              {currentUser && (
+                <CommentTripleDotMenu
+                  comment={comment}
+                  onEdit={isEditing ? undefined : onEdit}
+                  className="mt-[2px]"
+                />
+              )}
+            </>
           )}
         </div>
         {!isExpanded && showPreviewWhenCollapsed && !deleted && (
@@ -272,8 +320,8 @@ export default function CommentItem({
           (isEditing ? (
             <EditComment
               commentId={comment._id}
-              onSuccess={onFinishEdit}
-              onCancel={onFinishEdit}
+              onSuccess={onEditFinished}
+              onCancel={onEditFinished}
             />
           ) : (
             <>
@@ -335,7 +383,7 @@ export default function CommentItem({
             {deletedDate && <span> on {formatLongDateWithTime(deletedDate)}</span>}
           </Type>
         )}
-        {isExpanded && post && !repliesBlockedUntil && (
+        {isExpanded && post && !draft && !repliesBlockedUntil && (
           <div>
             <Type
               onClick={onClickReply}

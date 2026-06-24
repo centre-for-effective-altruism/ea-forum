@@ -75,7 +75,7 @@ export default function CommentForm({
           </div>
           <DropdownMenu
             placement="bottom-end"
-            className="w-[140px]! min-w-[0]!"
+            className="w-[125px]! min-w-[0]!"
             items={[
               {
                 title: "Save as draft",
