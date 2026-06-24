@@ -176,33 +176,29 @@ export const createPostComment = async ({
       })
       .returning();
 
-    // TODO: A lot of these callbacks shouldn't be run on draft comments
-    await Promise.all([
-      updateCommentPost(txn, comment),
-      updateCommentTag(txn, comment),
-      updateCommentAuthor(txn, comment),
-      updateReadStatusAfterComment(txn, comment),
-      updateDescendentCommentCounts(txn, comment),
-      checkCommentRateLimits(txn, user, comment),
-      updateCommentForumEvent(txn, comment),
-      upsertPolls({ txn, user, revision, post, comment }),
-      performVote({
-        txn,
-        collectionName: "Comments",
-        document: comment,
-        user,
-        voteType: "smallUpvote",
-        skipRateLimits: true,
-      }),
-    ]);
+    if (!draft) {
+      await Promise.all([
+        updateCommentPost(txn, comment),
+        updateCommentTag(txn, comment),
+        updateCommentAuthor(txn, comment),
+        updateReadStatusAfterComment(txn, comment),
+        updateDescendentCommentCounts(txn, comment),
+        checkCommentRateLimits(txn, user, comment),
+        updateCommentForumEvent(txn, comment),
+        upsertPolls({ txn, user, revision, post, comment }),
+        performVote({
+          txn,
+          collectionName: "Comments",
+          document: comment,
+          user,
+          voteType: "smallUpvote",
+          skipRateLimits: true,
+        }),
+      ]);
+    }
+
     return [revision, comment];
   });
-
-  void checkCommentForSpam(db, user, commentId, revision, post);
-  void triggerReviewIfNeededById(user._id);
-  void newCommentNotifications(commentId);
-  void notifyUsersOfPingbackMentions(user, "Comments", comment);
-  void runPangramOnComment(user, revision._id);
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock
@@ -217,7 +213,14 @@ export const createPostComment = async ({
       .where(eq(comments._id, commentId));
   }
 
-  void elasticSyncDocument("Comments", commentId);
+  if (!draft) {
+    void checkCommentForSpam(db, user, commentId, revision, post);
+    void triggerReviewIfNeededById(user._id);
+    void newCommentNotifications(commentId);
+    void notifyUsersOfPingbackMentions(user, "Comments", comment);
+    void runPangramOnComment(user, revision._id);
+    void elasticSyncDocument("Comments", commentId);
+  }
 
   return commentId;
 };

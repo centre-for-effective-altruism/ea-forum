@@ -1,7 +1,9 @@
 import type { RefObject, KeyboardEvent } from "react";
 import type { EditorAPI, EditorContents } from "@/lib/ckeditor/editorHelpers";
 import clsx from "clsx";
+import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import Editor, { EditorAutosave, EditorOnChangeProps } from "../Editor/Editor";
+import DropdownMenu from "../Dropdown/DropdownMenu";
 import Button from "../Button";
 
 export default function CommentForm({
@@ -13,6 +15,7 @@ export default function CommentForm({
   cancelLabel = "Cancel",
   onCancel,
   onSubmit,
+  onSaveDraft,
   onKeyDown,
   onChange,
   autosave,
@@ -26,6 +29,7 @@ export default function CommentForm({
   cancelLabel?: string;
   onCancel?: () => void;
   onSubmit: () => void;
+  onSaveDraft: () => void;
   onKeyDown: (e: KeyboardEvent<HTMLFormElement>) => void;
   onChange: (props: EditorOnChangeProps) => void;
   autosave?: EditorAutosave;
@@ -62,9 +66,28 @@ export default function CommentForm({
             {cancelLabel}
           </Button>
         )}
-        <Button type="submit" loading={loading}>
-          Comment
-        </Button>
+        <div className="flex">
+          <Button type="submit" loading={loading} className="rounded-r-none!">
+            Comment
+          </Button>
+          <div aria-hidden className="w-[1px] min-w-[1px] bg-primary">
+            <div className="w-full mt-[6px] py-3 bg-always-white opacity-90" />
+          </div>
+          <DropdownMenu
+            placement="bottom-end"
+            className="w-[140px]! min-w-[0]!"
+            items={[
+              {
+                title: "Save as draft",
+                onClick: onSaveDraft,
+              },
+            ]}
+          >
+            <Button className="h-full rounded-l-none! px-1! py-0!">
+              <ChevronDownIcon className="w-6" />
+            </Button>
+          </DropdownMenu>
+        </div>
       </div>
     </form>
   );

@@ -270,7 +270,11 @@ export default function CommentItem({
         {isExpanded &&
           !deleted &&
           (isEditing ? (
-            <EditComment commentId={comment._id} onSuccess={onFinishEdit} />
+            <EditComment
+              commentId={comment._id}
+              onSuccess={onFinishEdit}
+              onCancel={onFinishEdit}
+            />
           ) : (
             <>
               {promotedBy?.displayName && (
