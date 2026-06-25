@@ -36,7 +36,7 @@ export default function CommentsList({
 
   return (
     <section
-      className={clsx("flex flex-col", !compact && "gap-4", className)}
+      className={clsx("flex flex-col", !compact && "gap-3", className)}
       data-component="CommentsList"
     >
       {comments.length === 0 && (

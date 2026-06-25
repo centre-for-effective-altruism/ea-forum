@@ -34,7 +34,7 @@ export default function PostPingbacksList({
               orientation="horizontal"
               className="w-[50px] min-w-[50px]"
             />
-            <Type style="bodyHeavy" className="truncate">
+            <Type style="postTitle" className="truncate">
               {post.title}
             </Type>
           </Link>

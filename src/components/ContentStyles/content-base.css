@@ -1,9 +1,18 @@
 .content-base {
   color: var(--color-foreground);
   font-family: var(--font-stack-serif);
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 19.6px;
+  font-weight: 430;
   word-break: break-word;
+}
+.content-base strong,
+.content-base b {
+  font-weight: 600;
+}
+/* Loosen italics in serif body text (excludes the sans comment/tag bodies) */
+.content-base:not(.comment-body):not(.tag-body) em,
+.content-base:not(.comment-body):not(.tag-body) i {
+  letter-spacing: 0.02em;
 }
 .content-base p:not(:first-child) {
   margin-top: 1em;
@@ -33,8 +42,6 @@
   padding: 16px;
   border-left: solid 3px var(--color-gray-300);
   margin: 0;
-  font-size: 17px;
-  line-height: 1.75em;
   font-family: var(--font-stack-serif);
   color: var(--color-gray-900);
 }
@@ -44,9 +51,15 @@
   padding-left: revert;
   margin: 0;
 }
+.content-base > ul:not(:first-child),
+.content-base > ol:not(:first-child) {
+  margin-top: 1em;
+}
+.content-base > ul:not(:last-child),
+.content-base > ol:not(:last-child) {
+  margin-bottom: 1em;
+}
 .content-base li {
-  font-size: 17px;
-  line-height: 1.75em;
   font-family: var(--font-stack-serif);
   color: var(--color-gray-900);
   margin-bottom: 6.5px;
@@ -59,6 +72,7 @@
 .content-base h6 {
   color: var(--color-gray-1000);
   font-family: var(--font-stack-sans);
+  font-weight: 650;
 }
 .content-base h1,
 .content-base h2,
@@ -67,7 +81,6 @@
 }
 .content-base h1 {
   font-size: 31.2px;
-  font-weight: 600;
   line-height: 1.25em;
   margin-left: -0.02em;
 }
@@ -75,37 +88,40 @@
   margin-top: 0;
   margin-block-start: -3px;
 }
-.content-base h1 strong {
-  font-weight: 600;
+/* Bold inside a heading shouldn't change its weight — inherit the heading's */
+.content-base h1 strong,
+.content-base h1 b,
+.content-base h2 strong,
+.content-base h2 b,
+.content-base h3 strong,
+.content-base h3 b,
+.content-base h4 strong,
+.content-base h4 b,
+.content-base h5 strong,
+.content-base h5 b,
+.content-base h6 strong,
+.content-base h6 b {
+  font-weight: inherit;
 }
 .content-base h2 {
   font-size: 26px;
-  font-weight: 650;
   line-height: 1.25em;
 }
 .content-base h2:first-child {
   margin-top: 0;
   margin-block-start: -2px;
 }
-.content-base h2 strong {
-  font-weight: 650;
-}
 .content-base h3 {
   font-size: 20.8px;
-  font-weight: 600;
   line-height: 1.25em;
 }
 .content-base h3:first-child {
   margin-top: 0;
   margin-block-start: 0px;
 }
-.content-base h3 strong {
-  font-weight: 600;
-}
 .content-base h4 {
   font-size: 15.6px;
-  font-weight: 600;
-  line-height: 1.75em;
+  line-height: 1.25em;
 }
 .content-base img {
   max-width: 100%;
@@ -197,7 +213,6 @@
 .content-base figcaption {
   font-size: 11.7px;
   font-family: var(--font-stack-serif);
-  line-height: 1.75em;
   color: var(--color-gray-900);
 }
 .content-base ol > li > ol {

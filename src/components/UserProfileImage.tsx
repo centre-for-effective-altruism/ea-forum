@@ -107,7 +107,7 @@ export default function UserProfileImage({
 }>) {
   const [loaded, setLoaded] = useState(false);
   const rootClassName = clsx(
-    "rounded-full",
+    "rounded-full bg-always-white",
     !loaded && "profile-image-loading",
     className,
   );

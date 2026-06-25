@@ -83,15 +83,18 @@ export default function ReactButtons({
   extendedScore,
   extendedVoteType,
   onReact,
+  compact,
 }: Readonly<{
   reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
+  /** Smaller icons/score and tighter spacing, for use in comments */
+  compact?: boolean;
 }>) {
   const { currentUser } = useCurrentUser();
   const reactions = countCurrentReactions(extendedScore);
-  return (
+  const buttons = (
     <>
       {reactions.map(({ reaction, score, anonymous }) => {
         const isSelected = isReactionSelected(extendedVoteType, reaction);
@@ -120,8 +123,10 @@ export default function ReactButtons({
               onClick={onReact.bind(null, reaction.name)}
               isSelected={isSelected}
             >
-              <reaction.Component className="w-4 text-primary" />
-              <Type style="reactScore">{score}</Type>
+              <reaction.Component
+                className={clsx(compact ? "w-[14px]" : "w-4", "text-primary")}
+              />
+              <Type style={compact ? "bodyMedium" : "bodyLarge"}>{score}</Type>
             </ReactionButton>
           </Tooltip>
         );
@@ -137,5 +142,10 @@ export default function ReactButtons({
         </Tooltip>
       </Dropdown>
     </>
+  );
+  return compact ? (
+    <div className="flex flex-wrap items-center gap-1.5">{buttons}</div>
+  ) : (
+    buttons
   );
 }

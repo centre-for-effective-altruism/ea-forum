@@ -9,7 +9,7 @@ export default function PostDisplaySkeleton() {
     <PostColumn>
       {/* Title */}
       <div className="bg-gray-300 rounded mb-10 h-[52px] w-full" />
-      <div className="flex gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6">
         {/* User profile image */}
         <div
           className={`
@@ -29,13 +29,13 @@ export default function PostDisplaySkeleton() {
           {/* Voting */}
           <div className="flex items-center gap-1">
             <ChevronDownIcon className="w-[20px]" />
-            <Type style="bodyMedium" className="text-[16px]">
+            <Type style="bodyLarge">
               <div className="h-3 w-6 rounded bg-gray-300" />
             </Type>
             <ChevronUpIcon className="w-[20px]" />
           </div>
           {/* Comment count */}
-          <Type style="bodyMedium" className="flex items-center gap-1">
+          <Type style="bodyLarge" className="flex items-center gap-1">
             <ChatBubbleLeftIcon className="w-[22px]" />
             <div className="h-3 w-6 rounded bg-gray-200" />
           </Type>
