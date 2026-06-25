@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
+import { POST_COMMENTS_ANCHOR } from "@/lib/posts/postAnchors";
 import { CommentsListProvider } from "./useCommentsList";
 import CommentsList from "./CommentsList";
 import CommentsSort from "./CommentsSort";
@@ -17,7 +18,7 @@ export default async function CommentsSection({
   });
   return (
     <CommentsListProvider comments={comments}>
-      <Type style="commentsHeader" className="mt-12 mb-6" id="comments">
+      <Type style="commentsHeader" className="mt-12 mb-6" id={POST_COMMENTS_ANCHOR}>
         Comments{" "}
         {comments.length > 0 && (
           <span className="text-gray-600">{comments.length}</span>

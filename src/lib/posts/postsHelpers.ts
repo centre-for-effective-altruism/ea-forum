@@ -5,6 +5,7 @@ import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
+import { POST_COMMENTS_ANCHOR } from "./postAnchors";
 import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
@@ -51,7 +52,7 @@ export const postGetPageUrl = ({
 };
 
 export const postGetCommentsUrl: typeof postGetPageUrl = (...args) =>
-  postGetPageUrl(...args) + "#comments";
+  postGetPageUrl(...args) + `#${POST_COMMENTS_ANCHOR}`;
 
 export const postGetEditUrl = (
   postId: string,

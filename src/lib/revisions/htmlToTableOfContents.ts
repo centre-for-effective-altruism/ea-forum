@@ -1,6 +1,7 @@
 import { load as cheerioLoad, CheerioAPI } from "cheerio";
 import type { Element } from "domhandler";
 import maxBy from "lodash/maxBy";
+import { POST_COMMENTS_ANCHOR, POST_TOP_ANCHOR } from "../posts/postAnchors";
 
 /** Number of headings below which a table of contents won't be generated. */
 const MIN_HEADINGS_FOR_TOC = 1;
@@ -24,7 +25,7 @@ const headingIfWholeParagraph = new Set<keyof typeof headingTags>(["strong", "b"
 
 const anchorChars =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789";
-const reservedAnchorNames = new Set(["top", "comments"]);
+const reservedAnchorNames = new Set([POST_TOP_ANCHOR, POST_COMMENTS_ANCHOR]);
 
 type TableOfContentsSection = {
   title: string;

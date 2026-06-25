@@ -2,6 +2,7 @@ import { Fragment, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplayWithTableOfContents } from "@/lib/posts/postQueries";
+import { POST_COMMENTS_ANCHOR, POST_TOP_ANCHOR } from "@/lib/posts/postAnchors";
 import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
@@ -68,7 +69,7 @@ export default async function PostDisplay({
       <StructuredData data={postGetStructuredData(post)} />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostSequenceNavigation post={post} sequence={sequence} className="mb-2" />
-        <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
+        <Type style="postsPageTitle" As="h1" className="mb-10" id={POST_TOP_ANCHOR}>
           {post.title}
         </Type>
         <div className="flex gap-3 mb-6">
@@ -96,7 +97,10 @@ export default async function PostDisplay({
           <div className="flex items-center gap-4 grow">
             <PostVoteButtons hideReacts />
             <Tooltip title={<Type style="bodySmall">Comments</Type>}>
-              <Link href="#comments" className="hover:text-gray-1000">
+              <Link
+                href={`#${POST_COMMENTS_ANCHOR}`}
+                className="hover:text-gray-1000"
+              >
                 <Type style="bodyMedium" className="flex items-center gap-1">
                   <ChatBubbleLeftIcon className="w-[22px]" />
                   {post.commentCount}
