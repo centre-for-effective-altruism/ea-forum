@@ -2,8 +2,20 @@ import type { CurrentUser } from "../users/currentUser";
 import type { CommentListItem } from "./commentLists";
 import type { Comment } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
+import { userCanModeratePost } from "../posts/postsHelpers";
 import { TagCommentType, tagGetCommentLink } from "../tags/tagHelpers";
-import { OwnableDocument, userCanDo, userOwns } from "../users/userHelpers";
+import {
+  OwnableDocument,
+  userCanDo,
+  userIsInGroup,
+  userOwns,
+} from "../users/userHelpers";
+
+/**
+ * Don't send a PM to users if their comments are deleted with this reason.
+ * Used for account deletion requests.
+ */
+export const noDeletionPmReason = "Requested account deletion";
 
 export const commentGetPageUrlFromIds = ({
   commentId,
@@ -100,4 +112,52 @@ export const commentIsPublic = (
     !comment.rejected &&
     !comment.authorIsUnreviewed
   );
+};
+
+export const userCanModerateComment = (
+  user: CurrentUser | null,
+  comment: CommentListItem,
+) => {
+  if (!user || !comment) {
+    return false;
+  }
+  if (comment.post) {
+    if (userCanModeratePost(user, comment.post)) {
+      return true;
+    }
+    if (userOwns(user, comment) && !comment.directChildrenCount) {
+      return true;
+    }
+    return false;
+  } else if (comment.tag) {
+    if (userIsInGroup(user, "sunshineRegiment")) {
+      return true;
+    } else if (userOwns(user, comment) && !comment.directChildrenCount) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+};
+
+const hideUnreviewCommentsSince = new Date("2023-02-08T17:00:00");
+
+export const commentIsHiddenPendingReview = (comment: CommentListItem) => {
+  const postedAfterGrandfatherDate =
+    hideUnreviewCommentsSince < new Date(comment.postedAt);
+  // Hide unreviewed comments which were posted after we implmemented a "all
+  // comments need to be reviewed" date
+  return postedAfterGrandfatherDate && comment.authorIsUnreviewed;
+};
+
+export const commentRepliesBlockedUntil = (
+  comment: Pick<Comment, "repliesBlockedUntil">,
+) => {
+  if (!comment.repliesBlockedUntil) {
+    return null;
+  }
+  const cutoffDate = new Date(comment.repliesBlockedUntil);
+  return cutoffDate > new Date() ? cutoffDate : null;
 };

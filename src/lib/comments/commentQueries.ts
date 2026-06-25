@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
-import type { CurrentUser } from "../users/currentUser";
 import type { EditorContents } from "../ckeditor/editorHelpers";
+import type { CurrentUser } from "../users/currentUser";
+import type { CommentListItem } from "./commentLists";
 import { userCanEditComment } from "./commentHelpers";
 
 type CommentWithAncestor = {
@@ -12,7 +13,7 @@ type CommentWithAncestor = {
 };
 
 /**
- * For a given comment, fetch the ids of all of its parents recursively
+ * For a given comment, fetch all of its parents recursively
  */
 export const fetchCommentAncestors = async (
   txn: DbOrTransaction,
@@ -31,6 +32,25 @@ export const fetchCommentAncestors = async (
     )
     SELECT * FROM "comment_ancestors" WHERE "_id" <> ${commentId}
     ORDER BY "depth" ASC
+  `);
+  return result.rows;
+};
+
+/**
+ * For a given comment, fetch all of its children recursively
+ */
+export const fetchCommentDescendants = async (
+  txn: DbOrTransaction,
+  commentId: string,
+) => {
+  const result = await txn.execute<{ _id: string }>(sql`
+    WITH RECURSIVE descendants AS (
+      SELECT "_id" FROM "Comments" WHERE "_id" = ${commentId}
+      UNION ALL
+      SELECT c."_id" FROM "Comments" c JOIN descendants d
+        ON c."parentCommentId" = d."_id"
+    )
+    SELECT "_id" FROM descendants WHERE "_id" <> ${commentId};
   `);
   return result.rows;
 };
@@ -107,3 +127,29 @@ export const fetchCommentToEdit = async (
 };
 
 export type CommentToEdit = Awaited<ReturnType<typeof fetchCommentToEdit>>;
+
+export const fetchCommentContentTitle = async (comment: CommentListItem) => {
+  if (comment.post) {
+    const post = await db.query.posts.findFirst({
+      columns: {
+        title: true,
+      },
+      where: {
+        _id: comment.post._id,
+      },
+    });
+    return post?.title ?? null;
+  }
+  if (comment.tag) {
+    const tag = await db.query.tags.findFirst({
+      columns: {
+        name: true,
+      },
+      where: {
+        _id: comment.tag._id,
+      },
+    });
+    return tag?.name ?? null;
+  }
+  return null;
+};

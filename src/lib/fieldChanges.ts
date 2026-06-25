@@ -6,7 +6,7 @@ import type {
 import type { CurrentUser } from "./users/currentUser";
 import type { DbOrTransaction } from "./db";
 import type { Json } from "./typeHelpers";
-import { eq } from "drizzle-orm";
+import { eq, InferSelectModel } from "drizzle-orm";
 import { fieldChanges } from "./schema";
 import { randomId } from "./utils/random";
 import isEqual from "lodash/isEqual";
@@ -49,8 +49,10 @@ export const updateWithFieldChanges = async <
   currentUser: CurrentUser,
   schema: TTable,
   documentId: string,
-  set: PgUpdateSetSource<TTable>,
-) => {
+  set:
+    | PgUpdateSetSource<TTable>
+    | ((before: InferSelectModel<TTable>) => PgUpdateSetSource<TTable>),
+): Promise<InferSelectModel<TTable>> => {
   const where = eq(schema._id, documentId);
   const [before] = await txn
     .select()
@@ -61,7 +63,7 @@ export const updateWithFieldChanges = async <
   }
   const [after] = (await txn
     .update(schema)
-    .set(set)
+    .set(typeof set === "function" ? set(before as InferSelectModel<TTable>) : set)
     .where(where)
     .returning()) as Record<string, Json>[];
   if (!after) {
@@ -77,4 +79,5 @@ export const updateWithFieldChanges = async <
     });
   }
   await logFieldChanges(txn, currentUser._id, changes);
+  return after as InferSelectModel<TTable>;
 };

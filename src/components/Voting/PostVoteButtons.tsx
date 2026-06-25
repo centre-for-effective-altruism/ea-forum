@@ -44,7 +44,7 @@ export default function PostVoteButtons({
         }
         className="text-[14px] font-500 text-gray-600"
       >
-        <Type style="bodyLarge" className="cursor-default">
+        <Type style="voteScore" className="cursor-default">
           {baseScore}
         </Type>
       </Tooltip>

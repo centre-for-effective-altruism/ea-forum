@@ -4,9 +4,13 @@ declare namespace NodeJS {
     LOG_DRIZZLE_QUERIES?: "true" | "false";
     ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
+    NEXT_PUBLIC_ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_IS_BOT_SITE?: "true" | "false";
+    NEXT_PUBLIC_NO_INDEX?: "true" | "false";
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
+    NEXT_PUBLIC_GOOGLE_TAG_MANAGER_KEY: string;
+    ADMIN_ACCOUNT_EMAIL: string;
 
     // Auth0 settings
     NEXT_PUBLIC_AUTH0_DOMAIN: string;

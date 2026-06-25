@@ -140,6 +140,9 @@
   top: 0.2em;
   padding-right: 0.07em;
 }
+.content-base a {
+  scroll-margin-top: 70px;
+}
 .content-base a,
 .content-base a:hover,
 .content-base a:active {

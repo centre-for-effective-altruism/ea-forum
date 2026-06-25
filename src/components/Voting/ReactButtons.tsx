@@ -126,7 +126,7 @@ export default function ReactButtons({
               <reaction.Component
                 className={clsx(compact ? "w-[14px]" : "w-4", "text-primary")}
               />
-              <Type style={compact ? "bodyMedium" : "bodyLarge"}>{score}</Type>
+              <Type style={compact ? "bodyMedium" : "voteScore"}>{score}</Type>
             </ReactionButton>
           </Tooltip>
         );

@@ -5,10 +5,15 @@ import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { CommentTreeNode } from "@/lib/comments/CommentTree";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useOptionalCommentsList } from "./useCommentsList";
-import { commentGetPageUrl } from "@/lib/comments/commentHelpers";
+import { formatLongDateWithTime } from "@/lib/timeUtils";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useIsClamped } from "@/lib/hooks/useIsClamped";
 import {
-  userGetProfileUrl,
+  commentGetPageUrl,
+  commentIsHiddenPendingReview,
+  commentRepliesBlockedUntil,
+} from "@/lib/comments/commentHelpers";
+import {
   userIsAdminOrMod,
   userIsNew,
   userIsPostAuthor,
@@ -25,11 +30,11 @@ import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
 import CommentPollVote from "./CommentPollVote";
 import CommentTags from "../Tags/CommentTags";
-import UsersTooltip from "../UsersTooltip";
 import PangramBadge from "../PangramBadge";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
 import NewComment from "./NewComment";
+import UsersName from "../UsersName";
 import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
@@ -65,13 +70,44 @@ export default function CommentItem({
   borderless?: boolean;
   className?: string;
 }>) {
+  const commentsListContext = useOptionalCommentsList();
+  const {
+    _id,
+    user,
+    html,
+    postedAt,
+    parentCommentId,
+    post,
+    promoted,
+    promotedBy,
+    moderatorHat,
+    retracted,
+    rejected,
+    deleted,
+    deletedBy,
+    deletedDate,
+  } = comment;
+  const isNew =
+    !!post?.readStatus?.[0]?.lastUpdated &&
+    new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
+  const collapsedBecauseRepliedTo =
+    commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew;
+  const repliesBlockedUntil = commentRepliesBlockedUntil(comment);
+
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
-  const commentsListContext = useOptionalCommentsList();
   const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(!startCollapsed);
+  const [isExpanded, setIsExpanded] = useState(
+    !startCollapsed && !collapsedBecauseRepliedTo,
+  );
+  const [isTruncated, setIsTruncated] = useState(
+    commentsListContext?.collapsedIfRepliedTo && !collapsedBecauseRepliedTo,
+  );
   const [isLoadingParent, setIsLoadingParent] = useState(false);
+  const { ref, isClamped } = useIsClamped();
+
+  const untruncate = useCallback(() => setIsTruncated(false), []);
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded((expanded) => {
@@ -108,21 +144,7 @@ export default function CommentItem({
   const onEdit = useCallback(() => setIsEditing(true), []);
   const onFinishEdit = useCallback(() => setIsEditing(false), []);
 
-  const {
-    _id,
-    user,
-    html,
-    postedAt,
-    parentCommentId,
-    post,
-    promoted,
-    promotedBy,
-    moderatorHat,
-  } = comment;
   const isPostAuthor = userIsPostAuthor(user, post);
-  const isNew =
-    !!post?.readStatus?.[0]?.lastUpdated &&
-    new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
 
   const canLoadParent =
     !!commentsListContext &&
@@ -185,13 +207,13 @@ export default function CommentItem({
                 onClick={toggleExpanded}
               />
             )}
-            <UsersTooltip user={user}>
-              <Type className="font-[600]">
-                {user && user.slug && (
-                  <Link href={userGetProfileUrl({ user })}>{user.displayName}</Link>
-                )}
-              </Type>
-            </UsersTooltip>
+            <Type style="bodyHeavy">
+              {deleted ? (
+                <span className="text-gray-600">[comment deleted]</span>
+              ) : (
+                <UsersName user={user} />
+              )}
+            </Type>
             {isPostAuthor && (
               <Tooltip
                 title={<Type style="bodySmall">Post author</Type>}
@@ -240,12 +262,13 @@ export default function CommentItem({
             />
           )}
         </div>
-        {!isExpanded && showPreviewWhenCollapsed && (
+        {!isExpanded && showPreviewWhenCollapsed && !deleted && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
             <CommentBody html={html} />
           </div>
         )}
         {isExpanded &&
+          !deleted &&
           (isEditing ? (
             <EditComment commentId={comment._id} onSuccess={onFinishEdit} />
           ) : (
@@ -258,15 +281,63 @@ export default function CommentItem({
                   Promoted by {promotedBy.displayName}
                 </Type>
               )}
-              <CommentBody html={html} className="cursor-default" />
+              <CommentBody
+                html={html}
+                innerRef={ref}
+                className={clsx(
+                  "cursor-default",
+                  isTruncated && "line-clamp-12",
+                  retracted && "line-through",
+                )}
+              />
+              {isTruncated && isClamped && (
+                <Type
+                  onClick={untruncate}
+                  As="button"
+                  style="bodyHeavy"
+                  className="cursor-pointer text-gray-500 hover:text-gray-900 mt-1"
+                >
+                  Read more
+                </Type>
+              )}
+              {repliesBlockedUntil && (
+                <Type style="bodySmall" className="text-gray-600 mt-2">
+                  A moderator has deactivated replies on this comment until{" "}
+                  {formatLongDateWithTime(repliesBlockedUntil)}
+                </Type>
+              )}
+              {retracted && (
+                <Type style="bodySmall" className="text-gray-600 mt-2">
+                  [This comment is no longer endorsed by its author]
+                </Type>
+              )}
+              {commentIsHiddenPendingReview(comment) && !rejected && (
+                <Type style="bodySmall" className="text-gray-600 mt-2">
+                  [This comment will not be visible to other users until the
+                  moderation team has reviewed it.]
+                </Type>
+              )}
             </>
           ))}
-        {isExpanded && post && (
+        {isExpanded && deleted && (
+          <Type style="bodySmall" className="text-gray-600 italic">
+            Deleted
+            {deletedBy && (
+              <span>
+                {" "}
+                by <UsersName user={user} />
+              </span>
+            )}
+            {deletedDate && <span> on {formatLongDateWithTime(deletedDate)}</span>}
+          </Type>
+        )}
+        {isExpanded && post && !repliesBlockedUntil && (
           <div>
             <Type
               onClick={onClickReply}
               As="button"
-              className="text-gray-500 font-[600]! cursor-pointer mt-[2px]"
+              style="bodyHeavy"
+              className="cursor-pointer text-gray-500 hover:text-gray-900 mt-1"
             >
               Reply
             </Type>
@@ -282,7 +353,7 @@ export default function CommentItem({
           </div>
         )}
       </article>
-      {isExpanded && children.length > 0 && (
+      {children.length > 0 && (
         <div>
           {children.map((node) => (
             <CommentItem node={node} key={node.comment._id} />

@@ -27,15 +27,18 @@ type CommentsListContext = {
   commentSorting: CommentSorting;
   setCommentSorting: (sorting: CommentSorting) => void;
   commentIsLoaded: (commentId: string) => boolean;
+  collapsedIfRepliedTo: boolean;
 };
 
 const commentsListContext = createContext<CommentsListContext | null>(null);
 
 export const CommentsListProvider = ({
   comments,
+  collapsedIfRepliedTo = false,
   children,
 }: Readonly<{
   comments: CommentListItem[];
+  collapsedIfRepliedTo?: boolean;
   children: ReactNode;
 }>) => {
   const [commentSorting, setCommentSorting] = useState(defaultCommentSorting);
@@ -96,6 +99,7 @@ export const CommentsListProvider = ({
         commentSorting,
         setCommentSorting,
         commentIsLoaded,
+        collapsedIfRepliedTo,
       }}
     >
       {children}

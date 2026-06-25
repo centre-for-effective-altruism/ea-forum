@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCookies } from "react-cookie";
 import stringify from "json-stringify-deterministic";
-import { useTracking } from "../analyticsEvents";
 import { nYearsFromNow, secondsAgo } from "../timeUtils";
 import { cookiePreferencesChanged } from "./cookieCallbacks";
 import {
@@ -41,7 +40,6 @@ export function useCookiePreferences(): {
   explicitConsentGiven: boolean;
   explicitConsentRequired: boolean | "unknown";
 } {
-  const { captureEvent } = useTracking();
   const [explicitConsentRequired, setExplicitConsentRequired] = useState<
     boolean | "unknown"
   >(getExplicitConsentRequiredSync());
@@ -119,9 +117,6 @@ export function useCookiePreferences(): {
 
   const updateCookiePreferences = useCallback(
     (newPreferences: CookieType[]) => {
-      captureEvent("cookiePreferencesUpdated", {
-        cookiePreferences: newPreferences,
-      });
       setCookie("cookie_consent_timestamp", new Date(), {
         path: "/",
         expires: nYearsFromNow(PREFERENCES_COOKIE_DURATION_YEARS),
@@ -135,7 +130,7 @@ export function useCookiePreferences(): {
         explicitlyChanged: true,
       });
     },
-    [captureEvent, setCookie],
+    [setCookie],
   );
 
   return {

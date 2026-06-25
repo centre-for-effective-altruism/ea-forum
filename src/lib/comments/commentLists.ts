@@ -32,11 +32,11 @@ export const viewableCommentFilter = (currentUserId: string | null) => ({
   OR: [
     ...(currentUserId ? [{ userId: currentUserId }] : []),
     {
-      rejected: isNotTrue,
-      deleted: isNotTrue,
+      rejected: false,
+      deleted: false,
       debateResponse: isNotTrue,
-      authorIsUnreviewed: isNotTrue,
-      draft: isNotTrue,
+      authorIsUnreviewed: false,
+      draft: false,
     },
   ],
 });
@@ -55,7 +55,10 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       parentCommentId: true,
       topLevelCommentId: true,
       descendentCount: true,
+      directChildrenCount: true,
       deleted: true,
+      deletedDate: true,
+      deletedReason: true,
       tagCommentType: true,
       isPinnedOnProfile: true,
       shortform: true,
@@ -63,6 +66,10 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       moderatorHat: true,
       promoted: true,
       forumEventMetadata: true,
+      authorIsUnreviewed: true,
+      repliesBlockedUntil: true,
+      retracted: true,
+      rejected: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -94,6 +101,12 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
           displayName: true,
         },
       },
+      deletedBy: {
+        columns: {
+          _id: true,
+          displayName: true,
+        },
+      },
       forumEvent: {
         columns: {
           _id: true,
@@ -113,9 +126,11 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
         columns: {
           _id: true,
           slug: true,
+          title: true,
           userId: true,
           frontpageDate: true,
           coauthorUserIds: true,
+          postedAt: true,
         },
         with: {
           ...(currentUser
@@ -134,6 +149,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       },
       tag: {
         columns: {
+          _id: true,
           slug: true,
         },
       },
@@ -166,6 +182,35 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
     },
   }) as const satisfies CommentRelationalProjection;
 
+// Merges the base comment filters (viewability + the moderator-aware post
+// filter) with a caller-supplied `where`. Shared between the list query and
+// count queries so they always filter on exactly the same set of comments.
+const commentsListWhere = (
+  currentUser: UserPermissions | null,
+  where?: CommentsFilter,
+): CommentsFilter => {
+  const currentUserId = currentUser?._id ?? null;
+  const currentUserIsModerator =
+    currentUser?.isAdmin ||
+    currentUser?.groups?.includes("sunshineRegiment") ||
+    false;
+  return {
+    ...viewableCommentFilter(currentUserId),
+    post: currentUserIsModerator
+      ? undefined
+      : {
+          OR: [
+            ...(currentUserId ? [{ userId: currentUserId }] : []),
+            {
+              draft: isNotTrue,
+              deletedDraft: isNotTrue,
+            },
+          ],
+        },
+    ...where,
+  };
+};
+
 const fetchCommentsList = ({
   currentUser,
   where,
@@ -179,28 +224,9 @@ const fetchCommentsList = ({
   offset?: number;
   limit?: number;
 }) => {
-  const currentUserId = currentUser?._id ?? null;
-  const currentUserIsModerator =
-    currentUser?.isAdmin ||
-    currentUser?.groups?.includes("sunshineRegiment") ||
-    false;
   return db.query.comments.findMany({
     ...commentListProjection(currentUser),
-    where: {
-      ...viewableCommentFilter(currentUserId),
-      post: currentUserIsModerator
-        ? undefined
-        : {
-            OR: [
-              ...(currentUserId ? [{ userId: currentUserId }] : []),
-              {
-                draft: isNotTrue,
-                deletedDraft: isNotTrue,
-              },
-            ],
-          },
-      ...where,
-    },
+    where: commentsListWhere(currentUser, where),
     orderBy,
     offset,
     limit,
@@ -213,7 +239,7 @@ export const fetchCommentsListItem = async ({
 }: {
   currentUser: UserPermissions | null;
   commentId: string;
-}) => {
+}): Promise<CommentListItem | null> => {
   const result = await fetchCommentsList({
     currentUser,
     where: { _id: commentId },
@@ -246,6 +272,55 @@ export const fetchCommentsForForumEvent = ({
     where: { forumEventId },
   });
 
+const frontpageQuickTakesWhere = ({
+  currentUser,
+  includeCommunity,
+}: {
+  currentUser: UserPermissions | null;
+  includeCommunity?: boolean;
+}): CommentsFilter => {
+  const fiveDaysAgo = nDaysAgo(5).toISOString();
+  const twoHoursAgo = nHoursAgo(2).toISOString();
+  return {
+    shortform: true,
+    shortformFrontpage: true,
+    deleted: false,
+    parentCommentId: { isNull: true },
+    createdAt: { gt: fiveDaysAgo },
+    ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
+      ? {
+          NOT: {
+            relevantTagIds: {
+              arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
+            },
+          },
+        }
+      : null),
+    AND: [
+      {
+        OR: [
+          { authorIsUnreviewed: isNotTrue },
+          { userId: currentUser?._id ? { eq: currentUser?._id } : undefined },
+        ],
+      },
+      // Quick takes older than 2 hours must have at least 1 karma, quick
+      // takes younger than 2 hours must have at least -5 karma
+      {
+        OR: [
+          {
+            baseScore: { gte: 1 },
+            createdAt: { lt: twoHoursAgo },
+          },
+          {
+            baseScore: { gte: -5 },
+            createdAt: { gte: twoHoursAgo },
+          },
+        ],
+      },
+    ],
+  };
+};
+
 export const fetchFrontpageQuickTakes = ({
   currentUser,
   includeCommunity,
@@ -257,47 +332,9 @@ export const fetchFrontpageQuickTakes = ({
   offset?: number;
   limit?: number;
 }) => {
-  const fiveDaysAgo = nDaysAgo(5).toISOString();
-  const twoHoursAgo = nHoursAgo(2).toISOString();
   return fetchCommentsList({
     currentUser,
-    where: {
-      shortform: true,
-      shortformFrontpage: true,
-      parentCommentId: { isNull: true },
-      createdAt: { gt: fiveDaysAgo },
-      ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
-        ? {
-            NOT: {
-              relevantTagIds: {
-                arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
-              },
-            },
-          }
-        : null),
-      AND: [
-        {
-          OR: [
-            { authorIsUnreviewed: isNotTrue },
-            { userId: currentUser?._id ? { eq: currentUser?._id } : undefined },
-          ],
-        },
-        // Quick takes older than 2 hours must have at least 1 karma, quick
-        // takes younger than 2 hours must have at least -5 karma
-        {
-          OR: [
-            {
-              baseScore: { gte: 1 },
-              createdAt: { lt: twoHoursAgo },
-            },
-            {
-              baseScore: { gte: -5 },
-              createdAt: { gte: twoHoursAgo },
-            },
-          ],
-        },
-      ],
-    },
+    where: frontpageQuickTakesWhere({ currentUser, includeCommunity }),
     orderBy: {
       score: "desc",
       lastSubthreadActivity: "desc",
@@ -307,6 +344,24 @@ export const fetchFrontpageQuickTakes = ({
     offset,
     limit,
   });
+};
+
+export const countFrontpageQuickTakes = async ({
+  currentUser,
+  includeCommunity,
+}: {
+  currentUser: UserPermissions | null;
+  includeCommunity?: boolean;
+}): Promise<number> => {
+  const result = await db.query.comments.findFirst({
+    columns: {},
+    extras: { count: sql<number>`COUNT(*)` },
+    where: commentsListWhere(
+      currentUser,
+      frontpageQuickTakesWhere({ currentUser, includeCommunity }),
+    ),
+  });
+  return Number(result?.count ?? 0);
 };
 
 export const fetchNewComments = async (

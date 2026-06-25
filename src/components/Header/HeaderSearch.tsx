@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { getSearchClient } from "@/lib/search/searchClient";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
@@ -35,12 +36,17 @@ export default function HeaderSearch({
 }: Readonly<{
   onClose: () => void;
 }>) {
+  const pathname = usePathname();
   const client = getSearchClient();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Partial<HeaderSearchResults>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const responseRef = useRef(0);
+
+  useEffect(() => {
+    setQuery("");
+  }, [pathname]);
 
   const onChange = useCallback(
     (ev: ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +123,7 @@ export default function HeaderSearch({
           {hasResults && !loading && (
             <div
               className="
-                flex flex-col gap-[1px] bg-gray-300 overflow-auto
+                flex flex-col gap-[1px] bg-gray-300 overflow-auto overscroll-contain
                 max-h-[calc(100vh-66px)] [&>*]:bg-surface-floating [&>*]:p-2
               "
             >

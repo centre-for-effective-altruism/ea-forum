@@ -12,6 +12,7 @@ export const typeStyles = {
   bodySerif:
     "font-serif text-[19px] font-[430] tracking-tight [&_em]:tracking-[0.02em] [&_i]:tracking-[0.02em]",
   postTitle: "font-sans text-[16px] font-[600]",
+  voteScore: "font-sans text-[16px] font-[500]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[24px]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
@@ -40,6 +41,7 @@ export default function Type({
   As?: ElementType;
   id?: string;
   role?: string;
+  disabled?: boolean;
   onClick?: (ev: MouseEvent) => void;
   cssStyle?: CSSProperties;
   className?: string;

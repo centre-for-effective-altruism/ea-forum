@@ -13,7 +13,7 @@ import CommentItem from "@/components/Comments/CommentItem";
  * one quick take from a single user.
  *
  * This `Inner` component assumes that:
- *  1) `comments` is a non-empty array, ]
+ *  1) `comments` is a non-empty array,
  *  2) all of the comments have the same top level comment (which is the
  *     quick take being responded to)
  *  3) `comments[i].topLevelComment` is not null
@@ -38,7 +38,7 @@ const QuickTakeCommentedInner: FC<{
       })}
       timestamp={comments[0].postedAt}
     >
-      <CommentsListProvider comments={comments}>
+      <CommentsListProvider comments={comments} collapsedIfRepliedTo>
         <CommentItem
           node={{ comment: quickTake, depth: 0, children: [], isLocal: false }}
           borderless

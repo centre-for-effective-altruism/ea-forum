@@ -1,21 +1,35 @@
 import { useCallback, useRef, useState } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import { userCanModeratePost } from "@/lib/posts/postsHelpers";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
+import { captureException } from "@sentry/nextjs";
 import {
+  useModeratorComment,
   usePinCommentOnProfile,
   useQuickTakeFrontpage,
+  useRetractComment,
 } from "@/lib/hooks/useCommentModerationActions";
-import { userCanEditComment } from "@/lib/comments/commentHelpers";
+import {
+  userCanEditComment,
+  userCanModerateComment,
+} from "@/lib/comments/commentHelpers";
+import { useCommentSubscriptions } from "@/lib/hooks/useSubscriptions";
 import { useUpdateBookmark } from "@/lib/hooks/useUpdateBookmark";
+import { useOptionalCommentsList } from "./useCommentsList";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import { rpc } from "@/lib/rpc";
+import toast from "react-hot-toast";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/solid/EllipsisVerticalIcon";
-import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
-import PinIcon from "../Icons/PinIcon";
+import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import BellIcon from "@heroicons/react/24/outline/BellIcon";
+import DeleteCommentPopover from "../Moderation/DeleteCommentPopover";
+import LockThreadPopover from "../Moderation/LockThreadPopover";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
+import PinIcon from "../Icons/PinIcon";
 import clsx from "clsx";
 
 export default function CommentTripleDotMenu({
@@ -30,6 +44,7 @@ export default function CommentTripleDotMenu({
   className?: string;
 }>) {
   const dismissRef = useRef<() => void>(null);
+  const commentsList = useOptionalCommentsList();
   const { currentUser } = useCurrentUser();
   const [reportOpen, setReportOpen] = useState(false);
   const openReport = useCallback(() => setReportOpen(true), []);
@@ -44,6 +59,52 @@ export default function CommentTripleDotMenu({
     usePinCommentOnProfile(comment);
   const { isQuickTakeFrontpage, toggleQuickTakeFrontpage } =
     useQuickTakeFrontpage(comment);
+  const { isRetracted, toggleRetracted } = useRetractComment(comment);
+  const { isModerator, toggleModerator } = useModeratorComment(comment);
+  const { subscriptionMenuItems } = useCommentSubscriptions(comment);
+
+  const canDelete = userCanModerateComment(currentUser, comment);
+  const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
+  const closeDelete = useCallback(() => setDeletePopoverOpen(false), []);
+
+  const onClickDelete = useCallback(async () => {
+    if (comment.deleted) {
+      try {
+        const updatedComment = await rpc.comments.undelete({
+          commentId: comment._id,
+        });
+        commentsList?.updateComment(updatedComment);
+        toast.success("Undeleted comment");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Something went wrong");
+        captureException(e);
+      }
+    } else {
+      setDeletePopoverOpen(true);
+    }
+  }, [commentsList, comment]);
+
+  const canLockThread = userIsAdminOrMod(currentUser);
+  const [lockThreadPopoverOpen, setLockThreadPopoverOpen] = useState(false);
+  const closeLockThread = useCallback(() => setLockThreadPopoverOpen(false), []);
+
+  const onClickLockThread = useCallback(async () => {
+    if (comment.repliesBlockedUntil) {
+      const toastId = toast.loading("Unlocking thread...");
+      try {
+        await rpc.comments.unlockThread({
+          commentId: comment._id,
+        });
+        window.location.reload();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Something went wrong");
+        captureException(e);
+      }
+      toast.remove(toastId);
+    } else {
+      setLockThreadPopoverOpen(true);
+    }
+  }, [comment]);
 
   const editComment = useCallback(() => {
     if (canEdit) {
@@ -55,6 +116,7 @@ export default function CommentTripleDotMenu({
   return (
     <>
       <DropdownMenu
+        pageElementContext="tripleDotMenu"
         placement="bottom-end"
         className="text-gray-900"
         dismissRef={dismissRef}
@@ -75,7 +137,13 @@ export default function CommentTripleDotMenu({
                 onClick: toggleIsPinnedOnProfile,
               }
             : null,
-          // TODO subscriptions
+          subscriptionMenuItems.length
+            ? {
+                title: "Get notified",
+                Icon: BellIcon,
+                submenu: subscriptionMenuItems,
+              }
+            : null,
           {
             title: isBookmarked ? "Saved" : "Save",
             Icon: isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon,
@@ -87,6 +155,8 @@ export default function CommentTripleDotMenu({
             onClick: openReport,
           },
           userCanModeratePost(currentUser, comment.post) ? "divider" : null,
+          // TODO: If we end up implementing question posts then there should be
+          // an option here "Move to answers"
           toggleQuickTakeFrontpage
             ? {
                 title: isQuickTakeFrontpage
@@ -95,14 +165,30 @@ export default function CommentTripleDotMenu({
                 onClick: toggleQuickTakeFrontpage,
               }
             : null,
-          // TODO
-          // Delete
-          // Retract
-          // Lock thread
-          // Ban user from post
-          // Ban user from all posts
-          // Ban user from all personal posts
-          // Toggle is moderator comment
+          canDelete
+            ? {
+                title: comment.deleted ? "Undo delete" : "Delete",
+                onClick: onClickDelete,
+              }
+            : null,
+          toggleRetracted
+            ? {
+                title: isRetracted ? "Unretract" : "Retract",
+                onClick: toggleRetracted,
+              }
+            : null,
+          canLockThread
+            ? {
+                title: comment.repliesBlockedUntil ? "Unlock thread" : "Lock thread",
+                onClick: onClickLockThread,
+              }
+            : null,
+          toggleModerator
+            ? {
+                title: `${isModerator ? "Unmark" : "Mark"} as moderator comment`,
+                onClick: toggleModerator,
+              }
+            : null,
         ]}
       >
         <button
@@ -121,6 +207,20 @@ export default function CommentTripleDotMenu({
         </button>
       </DropdownMenu>
       <ReportPopover comment={comment} open={reportOpen} onClose={closeReport} />
+      {canDelete && (
+        <DeleteCommentPopover
+          comment={comment}
+          open={deletePopoverOpen}
+          onClose={closeDelete}
+        />
+      )}
+      {canLockThread && (
+        <LockThreadPopover
+          comment={comment}
+          open={lockThreadPopoverOpen}
+          onClose={closeLockThread}
+        />
+      )}
     </>
   );
 }

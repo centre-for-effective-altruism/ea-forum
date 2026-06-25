@@ -97,7 +97,7 @@ suite("Reactions", () => {
       commentId: comment1._id,
     });
     expect(fetchedComment1).not.toBeNull();
-    const { reactors: reactors1 } = fetchedComment1;
+    const { reactors: reactors1 } = fetchedComment1!;
     expect(Object.keys(reactors1!).sort()).toEqual(["helpful", "laugh"].sort());
     expect(reactors1?.helpful).toEqual(["publicReactor1"]);
     expect(reactors1?.laugh).toEqual(["publicReactor1"]);
@@ -106,7 +106,7 @@ suite("Reactions", () => {
       commentId: comment2._id,
     });
     expect(fetchedComment2).not.toBeNull();
-    const { reactors: reactors2 } = fetchedComment2;
+    const { reactors: reactors2 } = fetchedComment2!;
     expect(Object.keys(reactors2!).sort()).toEqual(["helpful", "love"].sort());
     expect(reactors2?.helpful).toEqual(["publicReactor2"]);
     expect(reactors2?.helpful).toEqual(["publicReactor2"]);

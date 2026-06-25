@@ -3,8 +3,8 @@
 import { ElementType, FC, ReactNode, RefObject, useMemo, useRef } from "react";
 import { parseDocument, ElementType as HtmlElementType } from "htmlparser2";
 import type { ChildNode, Document } from "domhandler";
-import { captureEvent } from "@/lib/analyticsEvents";
 import { translateAttribs, validateUrl } from "@/lib/utils/contentHelpers";
+import { useTracking } from "@/lib/analyticsEvents";
 import PostPagePollSection from "../Polls/PostPagePollSection";
 import MaybeHorizScrollBlock from "../MaybeHorizScrollBlock";
 import CollapsedFootnotes from "./CollapsedFootnotes";
@@ -21,6 +21,7 @@ const HtmlNode: FC<{
   /** Whether or not this is a top level root node */
   root?: boolean;
 }> = ({ node, document, bodyRef, root }) => {
+  const { captureEvent } = useTracking();
   switch (node.type) {
     case HtmlElementType.Tag: {
       let As = node.tagName.toLowerCase() as ElementType & string;
@@ -155,13 +156,16 @@ type EnhancedContent =
 export default function ContentProgressiveEnhancements({
   html,
   document: document_,
+  innerRef,
   className,
 }: Readonly<
   EnhancedContent & {
+    innerRef?: RefObject<HTMLDivElement | null>;
     className?: string;
   }
 >) {
-  const bodyRef = useRef<HTMLDivElement>(null);
+  const backupRef = useRef<HTMLDivElement>(null);
+  const bodyRef = innerRef ?? backupRef;
   const document = useMemo(() => {
     return document_ ?? parseDocument(html);
   }, [html, document_]);

@@ -29,7 +29,7 @@ export default function PostDisplaySkeleton() {
           {/* Voting */}
           <div className="flex items-center gap-1">
             <ChevronDownIcon className="w-[20px]" />
-            <Type style="bodyLarge">
+            <Type style="voteScore">
               <div className="h-3 w-6 rounded bg-gray-300" />
             </Type>
             <ChevronUpIcon className="w-[20px]" />

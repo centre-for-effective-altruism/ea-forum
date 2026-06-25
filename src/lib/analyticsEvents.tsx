@@ -1,8 +1,16 @@
 "use client";
 
 import { createContext, ReactNode, useCallback, useEffect, useMemo } from "react";
+import type { Json, JsonRecord } from "./typeHelpers";
+import { AnalyticsEvent } from "./analytics/analyticsHelpers";
+import { formatConsoleDate } from "./timeUtils";
+import { useCurrentUser } from "./hooks/useCurrentUser";
 import { useIsInView } from "./hooks/useIsInView";
-import type { Json } from "./typeHelpers";
+import { useClientId } from "./hooks/useClientId";
+import {
+  throttledFlushClientEvents,
+  throttledStoreEvent,
+} from "./analytics/storeEvent";
 
 type PostsViewTerms = Record<string, unknown>;
 
@@ -58,15 +66,32 @@ export type AnalyticsProps = {
 
 export type EventProps = AnalyticsProps | Record<string, Json | undefined>;
 
-export const captureEvent = (
-  eventType: string,
-  eventProps?: EventProps,
-  suppressConsoleLog = false,
+const stringToColor = (s: string) =>
+  `hsl(${[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 70% 50%)`;
+
+const browserConsoleLogAnalyticsEvent = (
+  event: AnalyticsEvent,
+  rateLimitExceeded: boolean,
 ) => {
-  // TODO: Implement tracking
-  void eventType;
-  void eventProps;
-  void suppressConsoleLog;
+  if (rateLimitExceeded) {
+    // eslint-disable-next-line no-console
+    console.groupCollapsed(`%cRate limit exceeded: ${event.type}`, "color:#c00000");
+  } else {
+    const color = stringToColor(event.type);
+    // eslint-disable-next-line no-console
+    console.groupCollapsed(`Analytics: %c${event.type}`, `color:${color}`);
+  }
+  for (const fieldName of Object.keys(event.props)) {
+    // eslint-disable-next-line no-console
+    console.log(`${fieldName}:`, event.props[fieldName]);
+  }
+  // Timestamp recorded on the server will differ. Obviously in part because of
+  // the latency of the network, but also because we have a queue that we only
+  // flush max once/second.
+  // eslint-disable-next-line no-console
+  console.log("[[time of day]]", formatConsoleDate(new Date()));
+  // eslint-disable-next-line no-console
+  console.groupEnd();
 };
 
 // An empty object, used as an argument default value. If the argument default
@@ -82,16 +107,27 @@ export const useTracking = ({
   eventType?: string;
   eventProps?: EventProps;
 } = {}) => {
+  const { currentUser } = useCurrentUser();
+  const { clientId } = useClientId();
   const trackingContext = useMemo(() => ({}), []); // TODO Add tracking context
   const track = useCallback(
     (type?: string | undefined, trackingData?: Record<string, Json>) => {
-      captureEvent(type || eventType, {
-        ...trackingContext,
-        ...eventProps,
-        ...trackingData,
-      });
+      const event = {
+        type: type || eventType,
+        timestamp: new Date(),
+        props: {
+          userId: currentUser?._id,
+          clientId,
+          tabId: window.tabId,
+          ...trackingContext,
+          ...eventProps,
+          ...trackingData,
+        } as JsonRecord,
+      };
+      throttledStoreEvent(event, browserConsoleLogAnalyticsEvent);
+      throttledFlushClientEvents();
     },
-    [trackingContext, eventProps, eventType],
+    [currentUser, clientId, trackingContext, eventProps, eventType],
   );
   return { captureEvent: track };
 };

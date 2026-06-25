@@ -1,5 +1,6 @@
 import type { ComponentType, FC } from "react";
 import type { PostDisplay } from "@/lib/posts/postQueries";
+import type { SequenceBase } from "@/lib/sequences/sequenceQueries";
 import {
   getPreviousAndNextPostIds,
   sequenceGetPageUrl,
@@ -13,10 +14,18 @@ import Link from "../Link";
 
 const Button: FC<{
   postId: string | null;
+  requestedSequenceId?: string;
   Icon: ComponentType<{ className?: string }>;
-}> = ({ postId, Icon }) =>
+}> = ({ postId, requestedSequenceId, Icon }) =>
   postId ? (
-    <Link href={`/posts/${postId}`} className="hover:text-gray-1000">
+    <Link
+      href={
+        requestedSequenceId
+          ? `/s/${requestedSequenceId}/p/${postId}`
+          : `/posts/${postId}`
+      }
+      className="hover:text-gray-1000"
+    >
       <Icon className="w-6" />
     </Link>
   ) : (
@@ -25,17 +34,20 @@ const Button: FC<{
 
 export default function PostSequenceNavigation({
   post,
+  sequence: requestedSequence,
   className,
 }: Readonly<{
   post: PostDisplay;
+  sequence?: SequenceBase | null;
   className?: string;
 }>) {
   const { _id, canonicalSequence } = post;
-  if (!canonicalSequence) {
+  const sequence = requestedSequence ?? canonicalSequence;
+  if (!sequence) {
     return null;
   }
 
-  const [prev, next] = getPreviousAndNextPostIds(canonicalSequence, _id);
+  const [prev, next] = getPreviousAndNextPostIds(sequence, _id);
   if (!prev && !next) {
     return null;
   }
@@ -45,15 +57,23 @@ export default function PostSequenceNavigation({
       data-component="PostSequenceNavigation"
       className={clsx("flex items-center gap-1 text-gray-600", className)}
     >
-      <Button postId={prev} Icon={ChevronLeftIcon} />
-      <SequenceTooltip sequence={canonicalSequence}>
-        <Link href={sequenceGetPageUrl({ sequence: canonicalSequence })}>
+      <Button
+        postId={prev}
+        requestedSequenceId={requestedSequence?._id}
+        Icon={ChevronLeftIcon}
+      />
+      <SequenceTooltip sequence={sequence}>
+        <Link href={sequenceGetPageUrl({ sequence })}>
           <Type style="postTitle" className="uppercase">
-            {canonicalSequence.title}
+            {sequence.title}
           </Type>
         </Link>
       </SequenceTooltip>
-      <Button postId={next} Icon={ChevronRightIcon} />
+      <Button
+        postId={next}
+        requestedSequenceId={requestedSequence?._id}
+        Icon={ChevronRightIcon}
+      />
     </nav>
   );
 }

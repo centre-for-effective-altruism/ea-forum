@@ -90,6 +90,7 @@ export default function PostTripleDotMenu({
   return (
     <>
       <DropdownMenu
+        pageElementContext="tripleDotMenu"
         placement="bottom-end"
         className="text-gray-900"
         items={[
@@ -114,11 +115,13 @@ export default function PostTripleDotMenu({
                 href: analyticsLink,
               }
             : null,
-          {
-            title: "Get notified",
-            Icon: BellIcon,
-            submenu: subscriptionMenuItems,
-          },
+          subscriptionMenuItems.length
+            ? {
+                title: "Get notified",
+                Icon: BellIcon,
+                submenu: subscriptionMenuItems,
+              }
+            : null,
           hideBookmark
             ? null
             : {

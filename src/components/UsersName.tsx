@@ -17,7 +17,7 @@ export default function UsersName({
   tooltipPlacement?: Placement;
   className?: string;
 }>) {
-  if (!user || user.deleted) {
+  if (!user || user.deleted || !user.displayName) {
     return (
       <Tooltip As="span" title={<Type>This user account has been deleted</Type>}>
         [anonymous]
@@ -33,7 +33,7 @@ export default function UsersName({
   return (
     <UsersTooltip user={user} As="span" placement={tooltipPlacement}>
       <Link href={profileUrl} className={className}>
-        {user?.displayName}
+        {user.displayName.trim()}
       </Link>
     </UsersTooltip>
   );
