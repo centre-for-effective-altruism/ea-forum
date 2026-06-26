@@ -257,7 +257,7 @@ export default function LoginPopover() {
           >
             <Image
               src="/googleLogo.png"
-              alt="Containue with google"
+              alt="Continue with google"
               width={20}
               height={20}
               className="w-5 h-5"
