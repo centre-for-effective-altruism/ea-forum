@@ -8,6 +8,7 @@ import { useOptionalCommentsList } from "./useCommentsList";
 import { formatLongDateWithTime } from "@/lib/timeUtils";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { htmlToTextDefault } from "@/lib/utils/htmlToText";
+import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { useIsClamped } from "@/lib/hooks/useIsClamped";
 import {
   commentGetPageUrl,
@@ -29,6 +30,7 @@ import AuthorIcon from "../Icons/AuthorIcon";
 import CommentTripleDotMenu from "./CommentTripleDotMenu";
 import CommentVoteButtons from "../Voting/CommentVoteButtons";
 import CommentBody from "../ContentStyles/CommentBody";
+import LazyPostsTooltip from "../LazyPostsTooltip";
 import CommentPollVote from "./CommentPollVote";
 import CommentTags from "../Tags/CommentTags";
 import PangramBadge from "../PangramBadge";
@@ -205,6 +207,26 @@ export default function CommentItem({
         data-depth={depth}
         className={borderless ? undefined : "pr-3 mb-2"}
       >
+        {commentsListContext?.showPostTitle && comment.post && (
+          <div className="flex items-center mb-2">
+            <LazyPostsTooltip
+              postId={comment.post._id}
+              className="overflow-hidden truncate mr-2 text-gray-600"
+            >
+              <Type style="bodyHeavy" className="truncate">
+                <Link href={postGetPageUrl({ post: comment.post })}>
+                  {comment.post.title}
+                </Link>
+              </Type>
+            </LazyPostsTooltip>
+            <Type
+              style="bodyHeavy"
+              className="text-primary-dark whitespace-nowrap max-sm:hidden"
+            >
+              <Link href={commentGetPageUrl({ comment })}>View in thread</Link>
+            </Type>
+          </div>
+        )}
         <div className="mb-2 flex items-start gap-2">
           <div
             className={clsx(
