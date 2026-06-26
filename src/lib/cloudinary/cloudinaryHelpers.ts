@@ -1,14 +1,15 @@
-// see their documentation:
+// See their documentation:
 // https://cloudinary.com/documentation/transformation_reference
 export type CloudinaryPropsType = {
-  dpr?: string; // device pixel ratio
-  ar?: string; // aspect ratio
-  w?: string; // width
-  h?: string; // height
-  c?: string; // crop
-  g?: string; // gravity
-  q?: string; // quality
-  f?: string; // format
+  dpr?: string; // Device pixel ratio
+  ar?: string; // Aspect ratio
+  w?: string; // Width
+  h?: string; // Height
+  c?: string; // Crop
+  g?: string; // Gravity
+  q?: string; // Quality
+  f?: string; // Format
+  b?: string; // Background
 };
 
 const cloudinaryPropsToString = (props: Record<string, string>) => {

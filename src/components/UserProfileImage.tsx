@@ -107,7 +107,7 @@ export default function UserProfileImage({
 }>) {
   const [loaded, setLoaded] = useState(false);
   const rootClassName = clsx(
-    "rounded-full bg-always-white",
+    "rounded-full",
     !loaded && "profile-image-loading",
     className,
   );
@@ -126,7 +126,7 @@ export default function UserProfileImage({
       <CloudinaryImage
         width={size}
         height={size}
-        imgProps={{ q: "100", dpr: "2" }}
+        imgProps={{ q: "100", dpr: "2", b: "white" }}
         publicId={user.profileImageId}
         alt={user.displayName}
         onLoaded={() => setLoaded(true)}
