@@ -69,6 +69,7 @@ export default function PollResultIcon({
             // The actual size gets overridden by the className. This is still
             // needed to get the right resolution from Cloudinary.
             size={34}
+            responsive
             className="
               w-full! h-[unset]!
               [outline:2px_solid_color-mix(in_oklab,_var(--forum-event-foreground)_50%,_var(--forum-event-background)_50%)]

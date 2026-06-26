@@ -99,10 +99,12 @@ const InitialFallback = memo(function InitialFallback({
 export default function UserProfileImage({
   user,
   size,
+  responsive,
   className = "",
 }: Readonly<{
   user?: UserWithProfileImage | null;
   size: number;
+  responsive?: boolean;
   className?: string;
 }>) {
   const [loaded, setLoaded] = useState(false);
@@ -112,11 +114,14 @@ export default function UserProfileImage({
     className,
   );
   const wrapperClassName = "flex items-center";
+  const style = responsive
+    ? {}
+    : { width: size, height: size, minWidth: size, minHeight: size };
 
   if (!user?.displayName) {
     return (
       <picture className={wrapperClassName} data-component="UserProfileImage">
-        <div className={rootClassName} style={{ width: size, height: size }} />
+        <div className={rootClassName} style={style} />
       </picture>
     );
   }
@@ -130,7 +135,7 @@ export default function UserProfileImage({
         publicId={user.profileImageId}
         alt={user.displayName}
         onLoaded={() => setLoaded(true)}
-        style={{ width: size, height: size, minWidth: size, minHeight: size }}
+        style={style}
         className={clsx(rootClassName, "text-[0px]")}
         wrapperClassName={wrapperClassName}
         data-component="UserProfileImage"
