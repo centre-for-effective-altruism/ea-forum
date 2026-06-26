@@ -111,7 +111,9 @@ export default async function PostDisplay({
               {post.contents &&
                 "pangramAiScore" in post.contents &&
                 userIsAdminOrMod(currentUser) && (
-                  <PangramBadge revision={post.contents} />
+                  <div className="max-sm:hidden">
+                    <PangramBadge revision={post.contents} />
+                  </div>
                 )}
             </div>
             <div className="flex items-center gap-5">

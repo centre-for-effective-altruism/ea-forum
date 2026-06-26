@@ -67,9 +67,8 @@ export default function SequenceTooltip({
       As={As}
       interactable
       className={className}
-      tooltipClassName="
-        bg-surface-floating! text-gray-900! p-0! shadow-lg w-[360px] max-w-full
-      "
+      popover
+      tooltipClassName="p-0! w-[360px]"
       title={
         <div data-component="SequenceTooltip" className="px-4 py-3">
           <Type style="postTitle" className="font-[700] mb-1">

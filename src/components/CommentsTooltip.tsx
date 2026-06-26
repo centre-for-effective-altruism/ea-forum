@@ -26,9 +26,8 @@ export default function CommentsTooltip({
       placement={placement}
       As={As}
       className={className}
-      tooltipClassName="
-        bg-surface-floating! text-gray-900! px-3! py-2! shadow-lg w-[360px] max-w-full
-      "
+      popover
+      tooltipClassName="px-3! py-2! w-[360px]"
       title={
         <div data-component="CommentsTooltip">
           <CommentsListProvider comments={[comment]}>

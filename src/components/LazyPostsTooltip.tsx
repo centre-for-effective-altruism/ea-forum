@@ -67,9 +67,8 @@ export default function LazyPostsTooltip({
       As={As}
       placement={placement}
       className={className}
-      tooltipClassName="
-        bg-surface-floating! text-gray-900! p-0! shadow-lg w-[360px] max-w-full
-      "
+      popover
+      tooltipClassName="p-0! w-[360px]"
       title={<Loading />}
     >
       <As onMouseEnter={onMouseEnter}>{children}</As>

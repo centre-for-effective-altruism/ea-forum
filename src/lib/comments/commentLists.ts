@@ -56,6 +56,7 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
       topLevelCommentId: true,
       descendentCount: true,
       directChildrenCount: true,
+      draft: true,
       deleted: true,
       deletedDate: true,
       deletedReason: true,
