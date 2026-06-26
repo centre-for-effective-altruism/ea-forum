@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Charis_SIL } from "next/font/google";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
@@ -23,15 +22,26 @@ import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
 const inter = localFont({
-  src: "../../public/InterVariable.woff2",
+  src: "../fonts/InterVariable.woff2",
   variable: "--font-inter",
   display: "swap",
   preload: true,
 });
 
-const charis = Charis_SIL({
-  weight: ["400", "700"],
-  variable: "--font-charis",
+const newsreader = localFont({
+  src: [
+    {
+      path: "../fonts/Newsreader[opsz,wght].woff2",
+      style: "normal",
+      weight: "100 900",
+    },
+    {
+      path: "../fonts/Newsreader-Italic[opsz,wght].woff2",
+      style: "italic",
+      weight: "100 900",
+    },
+  ],
+  variable: "--font-newsreader",
   display: "swap",
   preload: true,
 });
@@ -99,7 +109,7 @@ export default function RootLayout({
           "antialiased text-size-adjust-none w-full min-h-screen flex flex-col",
           "bg-background text-foreground font-sans",
           inter.variable,
-          charis.variable,
+          newsreader.variable,
         )}
       >
         <Providers>

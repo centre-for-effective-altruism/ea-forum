@@ -62,6 +62,7 @@ export default function CommentVoteButtons({
         extendedScore={extendedScore}
         extendedVoteType={extendedVoteType}
         onReact={onReact}
+        reactClassName="-mr-0.5"
       />
     </>
   );

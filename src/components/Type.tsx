@@ -8,7 +8,9 @@ export const typeStyles = {
   bodySmall: "font-sans text-[13px] font-[450]",
   bodyXSmall: "font-sans text-[12px] font-[500]",
   bodyXXSmall: "font-sans text-[11px] font-[450]",
-  bodySerif: "font-serif text-[17px] font-[400] tracking-tight",
+  bodyLarge: "font-sans text-[16px] font-[500]",
+  bodySerif:
+    "font-serif text-[19px] font-[430] tracking-tight [&_em]:tracking-[0.02em] [&_i]:tracking-[0.02em]",
   postTitle: "font-sans text-[16px] font-[600]",
   voteScore: "font-sans text-[16px] font-[500]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[28px]",
@@ -17,7 +19,7 @@ export const typeStyles = {
   sectionTitleSmall:
     "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
   logo: "font-sans text-[19px] font-[400]",
-  postsPageTitle: "font-serif text-[42px] font-[400] leading-[125%]",
+  postsPageTitle: "font-sans text-[40px] font-[700] leading-[125%]",
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
   postDescription: "font-sans text-[13px] font-[500]",
   loadMore: "font-sans text-[14px] font-[600]",

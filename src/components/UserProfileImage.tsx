@@ -131,7 +131,7 @@ export default function UserProfileImage({
       <CloudinaryImage
         width={size}
         height={size}
-        imgProps={{ q: "100", dpr: "2" }}
+        imgProps={{ q: "100", dpr: "2", b: "white" }}
         publicId={user.profileImageId}
         alt={user.displayName}
         onLoaded={() => setLoaded(true)}

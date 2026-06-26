@@ -76,13 +76,13 @@ export default async function PostDisplay({
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
             {post.title}
           </Type>
-          <div className="flex gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6">
             <StackedUserAvatars
               users={[post.user, ...(post.coauthors ?? [])]}
               size={36}
             />
-            <div>
-              <Type style="bodyMedium">
+            <div className="leading-snug">
+              <Type style="bodyLarge">
                 <UsersName user={post.user} pageSectionContext="post_header" />
                 {post.coauthors?.map((coauthor) => (
                   <Fragment key={coauthor._id}>
@@ -102,7 +102,7 @@ export default async function PostDisplay({
               <PostVoteButtons hideReacts />
               <Tooltip title={<Type style="bodySmall">Comments</Type>}>
                 <Link href="#comments" className="hover:text-gray-1000">
-                  <Type style="bodyMedium" className="flex items-center gap-1">
+                  <Type style="bodyLarge" className="flex items-center gap-1">
                     <ChatBubbleLeftIcon className="w-[22px]" />
                     {post.commentCount}
                   </Type>

@@ -83,11 +83,13 @@ export default function ReactButtons({
   extendedScore,
   extendedVoteType,
   onReact,
+  reactClassName,
 }: Readonly<{
   reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
+  reactClassName?: string;
 }>) {
   const { currentUser } = useCurrentUser();
   const reactions = countCurrentReactions(extendedScore);
@@ -99,6 +101,7 @@ export default function ReactButtons({
           <Tooltip
             key={reaction.name}
             placement="top"
+            className={reactClassName}
             tooltipClassName={clsx(
               "max-w-full text-center",
               score > 10 ? "w-[400px]" : "w-[190px]",
