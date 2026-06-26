@@ -72,6 +72,7 @@ export type UseCommentEditorProps = UseCommentEditorDocument & {
 type SubmitExtraProps = {
   shortformFrontpage?: boolean;
   relevantTagIds?: string[];
+  draft?: boolean;
 };
 
 const choosePlaceholder = (shortform?: boolean, comment?: CommentToEdit | null) => {
@@ -248,6 +249,7 @@ export const useCommentEditor = ({
             ? await rpc.comments.edit({
                 commentId: comment._id,
                 editorData: data,
+                draft: extraProps?.draft ?? false,
               })
             : await rpc.comments.create({
                 postId,
@@ -283,6 +285,13 @@ export const useCommentEditor = ({
     ],
   );
 
+  const onSaveDraft = useCallback(
+    async (ev?: SubmitEvent<HTMLFormElement>, extraProps?: SubmitExtraProps) => {
+      return await onSubmit(ev, { ...extraProps, draft: true });
+    },
+    [onSubmit],
+  );
+
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLFormElement>) => {
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -309,6 +318,7 @@ export const useCommentEditor = ({
     loading,
     onChange,
     onSubmit,
+    onSaveDraft,
     onKeyDown,
     autosave: restorableDocument?.data?.length
       ? {

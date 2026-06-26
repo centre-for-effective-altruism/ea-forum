@@ -1,23 +1,27 @@
 import "server-only";
 import type { CurrentUser } from "../users/currentUser";
-import { fetchCommentsListItem, type CommentListItem } from "./commentLists";
 import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db, Transaction } from "../db";
 import { randomId } from "../utils/random";
-import { comments } from "../schema";
+import { comments, Comment, Revision } from "../schema";
 import { createRevision } from "../revisions/revisionMutations";
+import { fetchCommentsListItem, CommentListItem } from "./commentLists";
 import { denormalizeRevision, getNextVersion } from "../revisions/revisionHelpers";
 import { htmlToPingbacks, notifyUsersOfPingbackMentions } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
-import { fetchPostForCommentCreation } from "./commentQueries";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
 import { upsertPolls } from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
 import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
+import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
 import { nYearsFromNow } from "../timeUtils";
+import {
+  fetchPostForCommentCreation,
+  PostForCommentCreation,
+} from "./commentQueries";
 import {
   MINIMUM_APPROVAL_KARMA,
   userCanDo,
@@ -29,7 +33,6 @@ import {
   userCanModerateComment,
   userCanPinCommentOnProfile,
 } from "./commentHelpers";
-import { logFieldChanges, updateWithFieldChanges } from "../fieldChanges";
 import {
   updateCommentForumEvent,
   checkCommentForSpam,
@@ -56,6 +59,74 @@ const validateEditorContents = (
   if (!originalContents.data) {
     throw new Error(shortform ? "Quick take is empty" : "Comment is empty");
   }
+};
+
+const commentSyncCallbacks = async ({
+  txn,
+  isFirstPublish,
+  comment,
+  user,
+  revision,
+  post,
+}: {
+  txn: Transaction;
+  isFirstPublish: boolean;
+  comment: Comment;
+  user: CurrentUser;
+  revision: Revision;
+  post: PostForCommentCreation;
+}) => {
+  if (comment.draft) {
+    return;
+  }
+  await Promise.all([
+    updateCommentForumEvent(txn, comment),
+    upsertPolls({ txn, user, revision, post, comment }),
+    ...(isFirstPublish
+      ? [
+          updateCommentPost(txn, comment),
+          updateCommentTag(txn, comment),
+          updateCommentAuthor(txn, comment),
+          updateReadStatusAfterComment(txn, comment),
+          updateDescendentCommentCounts(txn, comment),
+          checkCommentRateLimits(txn, user, comment),
+          performVote({
+            txn,
+            collectionName: "Comments",
+            document: comment,
+            user,
+            voteType: "smallUpvote",
+            skipRateLimits: true,
+          }),
+        ]
+      : []),
+  ]);
+};
+
+const commentAsyncCallbacks = ({
+  isFirstPublish,
+  user,
+  comment,
+  revision,
+  post,
+}: {
+  isFirstPublish: boolean;
+  user: CurrentUser;
+  comment: Comment;
+  revision: Revision;
+  post: PostForCommentCreation;
+}) => {
+  if (comment.draft) {
+    return;
+  }
+  if (isFirstPublish) {
+    void triggerReviewIfNeededById(user._id);
+    void newCommentNotifications(comment._id);
+  }
+  void checkCommentForSpam(db, user, comment._id, revision, post);
+  void notifyUsersOfPingbackMentions(user, "Comments", comment);
+  void runPangramOnComment(user, revision._id);
+  void elasticSyncDocument("Comments", comment._id);
 };
 
 export const createPostComment = async ({
@@ -176,33 +247,17 @@ export const createPostComment = async ({
       })
       .returning();
 
-    // TODO: A lot of these callbacks shouldn't be run on draft comments
-    await Promise.all([
-      updateCommentPost(txn, comment),
-      updateCommentTag(txn, comment),
-      updateCommentAuthor(txn, comment),
-      updateReadStatusAfterComment(txn, comment),
-      updateDescendentCommentCounts(txn, comment),
-      checkCommentRateLimits(txn, user, comment),
-      updateCommentForumEvent(txn, comment),
-      upsertPolls({ txn, user, revision, post, comment }),
-      performVote({
-        txn,
-        collectionName: "Comments",
-        document: comment,
-        user,
-        voteType: "smallUpvote",
-        skipRateLimits: true,
-      }),
-    ]);
+    await commentSyncCallbacks({
+      txn,
+      isFirstPublish: true,
+      comment,
+      user,
+      revision,
+      post,
+    });
+
     return [revision, comment];
   });
-
-  void checkCommentForSpam(db, user, commentId, revision, post);
-  void triggerReviewIfNeededById(user._id);
-  void newCommentNotifications(commentId);
-  void notifyUsersOfPingbackMentions(user, "Comments", comment);
-  void runPangramOnComment(user, revision._id);
 
   // This is potentially slow - do it outside of the transaction to avoid
   // keeping a lock
@@ -217,7 +272,13 @@ export const createPostComment = async ({
       .where(eq(comments._id, commentId));
   }
 
-  void elasticSyncDocument("Comments", commentId);
+  commentAsyncCallbacks({
+    isFirstPublish: true,
+    user,
+    comment,
+    revision,
+    post,
+  });
 
   return commentId;
 };
@@ -226,10 +287,12 @@ export const updateComment = async ({
   user,
   commentId,
   editorData,
+  draft,
 }: {
   user: CurrentUser;
   commentId: string;
   editorData: EditorData;
+  draft?: boolean;
 }) => {
   if (user.banned) {
     throw new Error("Banned");
@@ -265,42 +328,46 @@ export const updateComment = async ({
     throw new Error("Post not found");
   }
 
+  const newDraft = draft ?? oldComment.draft;
+  const isUndraft = oldComment.draft && !newDraft;
+
   const [revision, updatedComment] = await db.transaction(async (txn) => {
     const revision = await createRevision(txn, user, editorData, {
       documentId: commentId,
       collectionName: "Comments",
       fieldName: "contents",
-      draft: oldComment.draft,
-      version: getNextVersion(
-        oldComment.contents,
-        editorData.updateType,
-        oldComment.draft,
-      ),
+      draft: newDraft,
+      version: getNextVersion(oldComment.contents, editorData.updateType, newDraft),
     });
     const pingbacks = revision.html ? await htmlToPingbacks(revision.html) : null;
 
+    const now = new Date().toISOString();
     const [updatedComment] = await txn
       .update(comments)
       .set({
         contents: denormalizeRevision(revision),
         contentsLatest: revision._id,
         pingbacks,
-        lastEditedAt: new Date().toISOString(),
+        lastEditedAt: now,
+        ...(isUndraft && {
+          postedAt: now,
+          draft: false,
+        }),
       })
       .where(eq(comments._id, commentId))
       .returning();
 
-    await Promise.all([
-      updateCommentForumEvent(txn, updatedComment),
-      upsertPolls({ txn, user, revision, post, comment: updatedComment }),
-    ]);
+    await commentSyncCallbacks({
+      txn,
+      isFirstPublish: isUndraft,
+      comment: updatedComment,
+      user,
+      revision,
+      post,
+    });
 
     return [revision, updatedComment];
   });
-
-  void checkCommentForSpam(db, user, commentId, revision, post);
-  void notifyUsersOfPingbackMentions(user, "Comments", updatedComment, oldComment);
-  void runPangramOnComment(user, revision._id);
 
   const { newRevision } = await convertImagesInObject(db, revision);
   if (newRevision) {
@@ -313,7 +380,13 @@ export const updateComment = async ({
       .where(eq(comments._id, commentId));
   }
 
-  void elasticSyncDocument("Comments", commentId);
+  commentAsyncCallbacks({
+    isFirstPublish: isUndraft,
+    user,
+    comment: updatedComment,
+    revision,
+    post,
+  });
 };
 
 export const updateCommentPinnedOnProfile = async (

@@ -99,9 +99,10 @@ export const commentsRouter = {
       z.object({
         commentId: z.string(),
         editorData: editorDataSchema,
+        draft: z.boolean().optional(),
       }),
     )
-    .handler(async ({ input: { commentId, editorData } }) => {
+    .handler(async ({ input: { commentId, editorData, draft } }) => {
       const user = await getCurrentUser();
       if (!user) {
         throw new Error("You must be logged in to comment");
@@ -110,6 +111,7 @@ export const commentsRouter = {
         user,
         commentId,
         editorData,
+        draft,
       });
       return await fetchCommentsListItem({
         currentUser: user,
