@@ -7,6 +7,7 @@ import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useOptionalCommentsList } from "./useCommentsList";
 import { formatLongDateWithTime } from "@/lib/timeUtils";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import { useIsClamped } from "@/lib/hooks/useIsClamped";
 import {
   commentGetPageUrl,
@@ -39,7 +40,6 @@ import Loading from "../Loading";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
-import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 
 /**
  * Render a comment. While you can use this directly, it's often better to instead
@@ -145,7 +145,13 @@ export default function CommentItem({
   }, [comment]);
 
   const onEdit = useCallback(() => setIsEditing(true), []);
-  const onEditFinished = useCallback(() => {
+  const onEditSuccess = useCallback((comment: CommentListItem) => {
+    setIsEditing(false);
+    if (comment.draft) {
+      setIsExpanded(false);
+    }
+  }, []);
+  const onEditCancel = useCallback(() => {
     setIsEditing(false);
     if (draft) {
       setIsExpanded(false);
@@ -320,8 +326,9 @@ export default function CommentItem({
           (isEditing ? (
             <EditComment
               commentId={comment._id}
-              onSuccess={onEditFinished}
-              onCancel={onEditFinished}
+              onSuccess={onEditSuccess}
+              onCancel={onEditCancel}
+              borderless
             />
           ) : (
             <>

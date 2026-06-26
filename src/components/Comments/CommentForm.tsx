@@ -19,6 +19,7 @@ export default function CommentForm({
   onKeyDown,
   onChange,
   autosave,
+  borderless,
   className,
 }: Readonly<{
   formType: "edit" | "new";
@@ -33,6 +34,7 @@ export default function CommentForm({
   onKeyDown: (e: KeyboardEvent<HTMLFormElement>) => void;
   onChange: (props: EditorOnChangeProps) => void;
   autosave?: EditorAutosave;
+  borderless?: boolean;
   className?: string;
 }>) {
   return (
@@ -41,8 +43,8 @@ export default function CommentForm({
       onSubmit={onSubmit}
       onKeyDown={onKeyDown}
       className={clsx(
-        "border border-comment-border rounded p-2 [&_.ck.ck-content]:min-h-[100px]",
-        "flex flex-col items-end gap-1",
+        "flex flex-col items-end gap-1 [&_.ck.ck-content]:min-h-[100px]",
+        !borderless && "border border-comment-border rounded p-2",
         className,
       )}
     >

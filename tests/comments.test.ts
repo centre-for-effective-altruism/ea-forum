@@ -160,7 +160,7 @@ suite("Comments", () => {
       expect(author!.maxCommentCount).toBe(1);
       expect(author!.karma).toBe(0);
     });
-    test("Can create draft comments", async () => {
+    test("Can create draft comments and then publish them", async () => {
       const post = await createTestPost();
       const commenter = await createTestUser();
       const editorData = {
@@ -178,41 +178,93 @@ suite("Comments", () => {
         editorData,
         draft: true,
       });
-      const [comment, updatedPost, vote, author] = await Promise.all([
-        db.query.comments.findFirst({
-          where: {
-            _id: commentId,
-          },
-        }),
-        db.query.posts.findFirst({
-          where: {
-            _id: post._id,
-          },
-        }),
-        db.query.votes.findFirst({
-          where: {
-            documentId: commentId,
-            userId: commenter._id,
-          },
-        }),
-        db.query.users.findFirst({
-          where: {
-            _id: commenter._id,
-          },
-        }),
-      ]);
-      expect(comment!.parentCommentId).toBe(null);
-      expect(comment!.descendentCount).toBe(0);
-      expect(comment!.baseScore).toBe(0);
-      expect(comment!.draft).toBe(true);
-      expect(updatedPost!.commentCount).toBe(0);
-      expect(updatedPost!.topLevelCommentCount).toBe(0);
-      expect(updatedPost!.lastCommentedAt).toBeNull();
-      expect(updatedPost!.lastCommentReplyAt).toBeNull();
-      expect(vote).toBeUndefined();
-      expect(author!.commentCount).toBe(0);
-      expect(author!.maxCommentCount).toBe(0);
-      expect(author!.karma).toBe(0);
+
+      {
+        const [comment, updatedPost, vote, author] = await Promise.all([
+          db.query.comments.findFirst({
+            where: {
+              _id: commentId,
+            },
+          }),
+          db.query.posts.findFirst({
+            where: {
+              _id: post._id,
+            },
+          }),
+          db.query.votes.findFirst({
+            where: {
+              documentId: commentId,
+              userId: commenter._id,
+            },
+          }),
+          db.query.users.findFirst({
+            where: {
+              _id: commenter._id,
+            },
+          }),
+        ]);
+        expect(comment!.parentCommentId).toBe(null);
+        expect(comment!.descendentCount).toBe(0);
+        expect(comment!.baseScore).toBe(0);
+        expect(comment!.draft).toBe(true);
+        expect(updatedPost!.commentCount).toBe(0);
+        expect(updatedPost!.topLevelCommentCount).toBe(0);
+        expect(updatedPost!.lastCommentedAt).toBeNull();
+        expect(updatedPost!.lastCommentReplyAt).toBeNull();
+        expect(vote).toBeUndefined();
+        expect(author!.commentCount).toBe(0);
+        expect(author!.maxCommentCount).toBe(0);
+        expect(author!.karma).toBe(0);
+      }
+
+      await updateComment({
+        user: commenter,
+        commentId,
+        editorData,
+        draft: false,
+      });
+
+      {
+        const power = userSmallVotePower(commenter.karma, 1);
+        expect(power).toBeGreaterThan(0);
+
+        const [comment, updatedPost, vote, author] = await Promise.all([
+          db.query.comments.findFirst({
+            where: {
+              _id: commentId,
+            },
+          }),
+          db.query.posts.findFirst({
+            where: {
+              _id: post._id,
+            },
+          }),
+          db.query.votes.findFirst({
+            where: {
+              documentId: commentId,
+              userId: commenter._id,
+            },
+          }),
+          db.query.users.findFirst({
+            where: {
+              _id: commenter._id,
+            },
+          }),
+        ]);
+        expect(comment!.parentCommentId).toBe(null);
+        expect(comment!.descendentCount).toBe(0);
+        expect(comment!.baseScore).toBe(power);
+        expect(comment!.draft).toBe(false);
+        expect(updatedPost!.commentCount).toBe(1);
+        expect(updatedPost!.topLevelCommentCount).toBe(1);
+        expect(updatedPost!.lastCommentedAt).toBeTruthy();
+        expect(updatedPost!.lastCommentReplyAt).toBe(null);
+        expect(vote!.power).toBe(power);
+        expect(vote!.voteType).toBe("smallUpvote");
+        expect(author!.commentCount).toBe(1);
+        expect(author!.maxCommentCount).toBe(1);
+        expect(author!.karma).toBe(0);
+      }
     });
     test("Spam comments are deleted", async () => {
       mockAkismetCheckComment.mockResolvedValue(true);

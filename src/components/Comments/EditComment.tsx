@@ -15,7 +15,8 @@ const EditCommentInner: FC<{
   comment: CommentToEdit;
   cancelLabel?: string;
   beforeSubmit?: (data: EditorData) => void;
-  onSuccess?: () => void;
+  onSuccess?: (comment: CommentListItem) => void;
+  borderless?: boolean;
 }> = ({
   comment,
   beforeSubmit,
@@ -26,7 +27,7 @@ const EditCommentInner: FC<{
   const onSuccess = useCallback(
     (updatedComment: CommentListItem) => {
       updateComment(updatedComment);
-      onSuccessCallback?.();
+      onSuccessCallback?.(updatedComment);
     },
     [updateComment, onSuccessCallback],
   );
@@ -48,7 +49,8 @@ export default function EditComment({
   cancelLabel?: string;
   onCancel?: () => void;
   beforeSubmit?: (data: EditorData) => void;
-  onSuccess?: () => void;
+  onSuccess?: (comment: CommentListItem) => void;
+  borderless?: boolean;
   className?: string;
 }>) {
   const [comment, setComment] = useState<CommentToEdit | null>(null);

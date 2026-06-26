@@ -249,6 +249,7 @@ export const useCommentEditor = ({
             ? await rpc.comments.edit({
                 commentId: comment._id,
                 editorData: data,
+                draft: extraProps?.draft ?? false,
               })
             : await rpc.comments.create({
                 postId,
