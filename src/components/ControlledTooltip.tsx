@@ -27,6 +27,7 @@ export default function ControlledTooltip({
   tooltipClassName,
   title,
   interactable,
+  popover,
   noHover,
   disabled,
   As = "div",
@@ -39,6 +40,12 @@ export default function ControlledTooltip({
   tooltipClassName?: string;
   title: ReactNode;
   interactable?: boolean;
+  /**
+   * The `popover` flag changes the default style to make this more of a styled
+   * "popover" with important information, rather than a simple tooltip with
+   * non-essential details
+   */
+  popover?: boolean;
   noHover?: boolean;
   disabled?: boolean;
   As?: ElementType;
@@ -90,8 +97,11 @@ export default function ControlledTooltip({
             style={floatingStyles}
             {...getFloatingProps()}
             className={clsx(
-              "absolute bg-tooltip-background text-tooltip-text rounded",
-              "z-(--zindex-tooltip) px-2 py-1 overflow-hidden max-w-full",
+              "absolute rounded overflow-hidden max-w-full z-(--zindex-tooltip)",
+              "px-2 py-1",
+              popover
+                ? "bg-surface-floating text-gray-900 shadow-lg border-1 border-gray-100"
+                : "bg-tooltip-background text-tooltip-text",
               tooltipClassName,
             )}
             data-component="ControlledTooltip"

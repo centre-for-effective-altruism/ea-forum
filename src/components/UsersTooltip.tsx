@@ -51,7 +51,8 @@ export default function UsersTooltip({
       placement={placement}
       As={As}
       className={className}
-      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
+      popover
+      tooltipClassName="p-0! w-[270px]"
       title={
         <div
           data-component="UsersTooltip"

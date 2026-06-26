@@ -72,9 +72,8 @@ export default function LazyCommentsTooltip({
       As={As}
       placement={placement}
       className={className}
-      tooltipClassName="
-        bg-surface-floating! text-gray-900! p-0! shadow-lg w-[360px] max-w-full
-      "
+      popover
+      tooltipClassName="px-3! py-2! w-[360px] "
       title={<Loading />}
     >
       <As onMouseEnter={onMouseEnter}>{children}</As>

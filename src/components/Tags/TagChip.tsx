@@ -1,7 +1,7 @@
 import type { CommentTag, PostTag } from "@/lib/tags/tagQueries";
 import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import TagChipDisplay, { TagChipVariant } from "./TagChipDisplay";
-import TagTooltip from "./TagTooltip";
+import TagTooltip from "../TagTooltip";
 
 export default function TagChip({
   tag,
