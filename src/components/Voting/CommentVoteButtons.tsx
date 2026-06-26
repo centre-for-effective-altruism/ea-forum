@@ -62,7 +62,7 @@ export default function CommentVoteButtons({
         extendedScore={extendedScore}
         extendedVoteType={extendedVoteType}
         onReact={onReact}
-        compact
+        reactClassName="-mr-0.5"
       />
     </>
   );
