@@ -90,7 +90,8 @@ export default function ForumEventCommentForm({
       noHover
       placement="bottom"
       className={className}
-      tooltipClassName="bg-surface-floating! w-[350px] px-3 pt-3"
+      popover
+      tooltipClassName="w-[350px] px-3! py-2!"
       title={
         <div data-component="ForumEventCommentForm" className="relative">
           <XMarkIcon

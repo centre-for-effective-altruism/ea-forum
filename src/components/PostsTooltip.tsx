@@ -39,9 +39,8 @@ export default function PostsTooltip({
       placement={placement}
       As={As}
       className={className}
-      tooltipClassName="
-        bg-surface-floating! text-gray-900! p-0! shadow-lg w-[360px] max-w-full
-      "
+      popover
+      tooltipClassName="p-0! w-[360px]"
       title={
         <div data-component="PostsTooltip">
           <div className="px-4 py-3 flex flex-col gap-4">

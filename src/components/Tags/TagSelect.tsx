@@ -17,7 +17,7 @@ import clsx from "clsx";
 import MagnifyingGlassIcon from "@heroicons/react/16/solid/MagnifyingGlassIcon";
 import Type, { typeStyles } from "../Type";
 import Dropdown, { DropdownDismissRef } from "../Dropdown/Dropdown";
-import TagTooltip from "./TagTooltip";
+import TagTooltip from "../TagTooltip";
 import Loading from "../Loading";
 import Link from "../Link";
 
