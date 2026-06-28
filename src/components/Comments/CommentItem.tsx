@@ -290,7 +290,7 @@ export default function CommentItem({
                       </Type>
                     }
                     placement="bottom-start"
-                    tooltipClassName="max-w-[300px]"
+                    tooltipClassName="max-w-[200px]!"
                   >
                     <SproutIcon className="text-new-user-sprout" />
                   </Tooltip>

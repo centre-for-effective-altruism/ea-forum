@@ -180,7 +180,7 @@ export default function PostsItem({
                 />
               </InteractionWrapper>
             </Type>
-            <Type style="bodySmall" className="min-w-0 flex">
+            <Type style="bodySmallMedium" className="min-w-0 flex">
               <InteractionWrapper className="grow min-w-0">
                 <TruncationContainer
                   items={[
@@ -195,14 +195,14 @@ export default function PostsItem({
                   tooltipClassName="[&_.coauthor-comma]:hidden"
                   gap={0}
                   hiddenItemsTooltip
-                  afterNodeTextStyle="bodySmall"
+                  afterNodeTextStyle="bodySmallMedium"
                   afterNodeFormat={formatPostItemHiddenAuthors}
                   finalNode={
                     <>
                       <span className="px-1">·</span>
                       <TimeAgo
                         As="span"
-                        textStyle="bodySmall"
+                        textStyle="bodySmallMedium"
                         time={post.postedAt}
                         tooltipPrefix="Posted on "
                         includeAgo
@@ -213,7 +213,7 @@ export default function PostsItem({
                           <span>Curated </span>
                           <TimeAgo
                             As="span"
-                            textStyle="bodySmall"
+                            textStyle="bodySmallMedium"
                             time={post.curatedDate}
                             tooltipPrefix="Curated on "
                             includeAgo

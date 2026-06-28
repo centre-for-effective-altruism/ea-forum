@@ -6,6 +6,7 @@ export const typeStyles = {
   bodyHeavy: "font-sans text-[14px] font-[600]",
   bodyXHeavy: "font-sans text-[14px] font-[700]",
   bodySmall: "font-sans text-[13px] font-[450]",
+  bodySmallMedium: "font-sans text-[13px] font-[500]",
   bodyXSmall: "font-sans text-[12px] font-[500]",
   bodyXXSmall: "font-sans text-[11px] font-[450]",
   bodyLarge: "font-sans text-[16px] font-[500]",

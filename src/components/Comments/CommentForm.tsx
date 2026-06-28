@@ -73,7 +73,7 @@ export default function CommentForm({
             Comment
           </Button>
           <div aria-hidden className="w-[1px] min-w-[1px] bg-primary">
-            <div className="w-full mt-[6px] py-3 bg-always-white opacity-90" />
+            <div className="w-full mt-[6px] py-3 bg-always-white opacity-50" />
           </div>
           <DropdownMenu
             placement="bottom-end"
@@ -86,7 +86,7 @@ export default function CommentForm({
             ]}
           >
             <Button className="h-full rounded-l-none! px-1! py-0!">
-              <ChevronDownIcon className="w-6" />
+              <ChevronDownIcon className="w-5" />
             </Button>
           </DropdownMenu>
         </div>
