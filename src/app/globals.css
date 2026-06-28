@@ -36,6 +36,10 @@
   --color-postitem: #ffffff;
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
+  /* Hover bg for interactive elements sitting on the page background (nav,
+     icon buttons, sidebar links). For items inside a floating surface
+     (dropdowns, the reaction palette) use surface-floating-hover instead, which
+     is lifted relative to the floating surface rather than the page. */
   --color-item-hover: #eeeeee;
   --color-login-input: #efefef;
   --color-login-input-hover: #e4e4e4;

@@ -1,11 +1,31 @@
 "use client";
 
+import type { FC } from "react";
 import clsx from "clsx";
 import type { UserBase } from "@/lib/users/userQueries";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import UserProfileImage from "./UserProfileImage";
 import UsersTooltip from "./UsersTooltip";
 import Link from "./Link";
+
+const AvatarLink: FC<{
+  user: UserBase;
+  size: number;
+  className?: string;
+}> = ({ user, size, className }) => (
+  <UsersTooltip user={user} As="span" className={className}>
+    <Link
+      href={userGetProfileUrl({ user })}
+      aria-label={user.displayName ?? undefined}
+    >
+      <UserProfileImage
+        user={user}
+        size={size}
+        className="transition hover:opacity-80"
+      />
+    </Link>
+  </UsersTooltip>
+);
 
 export default function StackedUserAvatars({
   users,
@@ -21,21 +41,7 @@ export default function StackedUserAvatars({
     return null;
   }
   if (present.length === 1) {
-    const user = present[0];
-    return (
-      <UsersTooltip user={user} As="span" className={className}>
-        <Link
-          href={userGetProfileUrl({ user })}
-          aria-label={user.displayName ?? undefined}
-        >
-          <UserProfileImage
-            user={user}
-            size={size}
-            className="transition hover:opacity-80"
-          />
-        </Link>
-      </UsersTooltip>
-    );
+    return <AvatarLink user={present[0]} size={size} className={className} />;
   }
 
   const overlap = Math.round(size / 3);
@@ -54,18 +60,7 @@ export default function StackedUserAvatars({
             zIndex: present.length - i,
           }}
         >
-          <UsersTooltip user={user} As="span">
-            <Link
-              href={userGetProfileUrl({ user })}
-              aria-label={user.displayName ?? undefined}
-            >
-              <UserProfileImage
-                user={user}
-                size={size}
-                className="transition hover:opacity-80"
-              />
-            </Link>
-          </UsersTooltip>
+          <AvatarLink user={user} size={size} />
         </div>
       ))}
     </div>
