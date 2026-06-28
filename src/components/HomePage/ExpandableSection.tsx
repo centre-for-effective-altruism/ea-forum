@@ -28,7 +28,7 @@ export default function ExpandableSection({
           <Type style="sectionTitleLarge">{title}</Type>
           <Tooltip
             title={<Type style="bodySmall">{expanded ? "Collapse" : "Expand"}</Type>}
-            placement="bottom-start"
+            placement="bottom"
             className="flex items-center translate-y-px"
           >
             <button
