@@ -105,8 +105,8 @@ export default function ReactButtons({
             placement="bottom"
             className={reactClassName}
             tooltipClassName={clsx(
-              "max-w-full text-center",
-              score > 10 ? "w-[400px]" : "w-[190px]",
+              "text-center",
+              score > 10 ? "max-w-[400px]!" : "max-w-[190px]!",
             )}
             title={
               anonymous ? (
