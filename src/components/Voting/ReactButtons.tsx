@@ -102,7 +102,7 @@ export default function ReactButtons({
         return (
           <Tooltip
             key={reaction.name}
-            placement="top"
+            placement="bottom"
             className={reactClassName}
             tooltipClassName={clsx(
               "max-w-full text-center",
@@ -135,7 +135,10 @@ export default function ReactButtons({
         menu={<ReactionPalette onReact={onReact} />}
         placement="bottom-start"
       >
-        <Tooltip placement="top" title={<Type style="bodySmall">Add reaction</Type>}>
+        <Tooltip
+          placement="bottom"
+          title={<Type style="bodySmall">Add reaction</Type>}
+        >
           <ReactionButton>
             <AddReactionIcon className="w-[18px]" />
           </ReactionButton>
