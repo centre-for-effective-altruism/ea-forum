@@ -69,7 +69,7 @@ export default function ControlledTooltip({
   const hover = useHover(context, {
     enabled: !noHover,
     move: false,
-    delay: { open: 500, close: 0 },
+    delay: { open: 300, close: 0 },
     handleClose: interactable ? safePolygon() : undefined,
   });
   const focus = useFocus(context);
@@ -101,6 +101,7 @@ export default function ControlledTooltip({
             {...getFloatingProps()}
             className={clsx(
               "absolute rounded overflow-hidden max-w-full z-(--zindex-tooltip)",
+              "animate-fade-in [animation-duration:150ms]",
               "px-2 py-1",
               popover
                 ? "bg-surface-floating text-gray-900 shadow-lg border-1 border-gray-100"
