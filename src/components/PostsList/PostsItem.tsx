@@ -125,7 +125,7 @@ export default function PostsItem({
       <article
         data-component="PostsItem"
         className={clsx(
-          "w-full max-w-full rounded bg-gray-50",
+          "w-full max-w-full rounded bg-postitem",
           "flex flex-col hover:bg-postitemhover",
           cardView ? "justify-between" : "justify-center",
           className,

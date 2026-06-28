@@ -33,6 +33,7 @@
   --color-warning: #832013;
   --color-warning-light: #ff9800;
   --color-warning-translucent: "rgba(255,152,0,0.1)";
+  --color-postitem: #ffffff;
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
   --color-item-hover: #eeeeee;
@@ -190,7 +191,10 @@
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #2a2a2a;
+  /* Post-item resting surface, lifted clearly above the #141414 page bg so
+     cards read in dark mode; hover bumped in step to keep the hover delta. */
+  --color-postitem: #262626;
+  --color-postitemhover: #323232;
   --color-postitemhover-border: #363636;
   --color-item-hover: #2a2a2a;
   --color-login-input: #2e2e2e;
