@@ -75,7 +75,7 @@ export default function QuickTakesList({
           As="button"
           style="loadMore"
           disabled={loading}
-          className="cursor-pointer text-primary hover:opacity-70 disabled:cursor-default disabled:opacity-50"
+          className="inline-block cursor-pointer text-primary hover:bg-primary/10 rounded px-2 py-1 -mx-2 -my-1 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
         >
           Load more
           {knownTotal != null ? ` (${shownCount}/${knownTotal})` : ""}

@@ -40,7 +40,10 @@ export default async function FrontpagePostsList() {
           view={view}
           bottomRightNode={
             <Type style="loadMore">
-              <Link href="/allPosts" className="text-primary hover:opacity-70">
+              <Link
+                href="/allPosts"
+                className="inline-block text-primary hover:bg-primary/10 rounded px-2 py-1 -mx-2 -my-1"
+              >
                 Advanced sorting & filtering
               </Link>
             </Type>

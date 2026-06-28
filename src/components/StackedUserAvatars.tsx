@@ -1,12 +1,15 @@
 "use client";
 
 import clsx from "clsx";
+import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import UserProfileImage from "./UserProfileImage";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
+import Link from "./Link";
 
 type StackedUser = {
   _id: string;
+  slug: string | null;
   displayName: string | null;
   profileImageId?: string | null;
 };
@@ -25,7 +28,16 @@ export default function StackedUserAvatars({
     return null;
   }
   if (present.length === 1) {
-    return <UserProfileImage user={present[0]} size={size} className={className} />;
+    const user = present[0];
+    return (
+      <Link
+        href={userGetProfileUrl({ user })}
+        className={className}
+        aria-label={user.displayName ?? undefined}
+      >
+        <UserProfileImage user={user} size={size} />
+      </Link>
+    );
   }
 
   const overlap = Math.round(size / 3);
@@ -45,11 +57,13 @@ export default function StackedUserAvatars({
           }}
         >
           <Tooltip title={<Type style="bodySmall">{user.displayName ?? ""}</Type>}>
-            <UserProfileImage
-              user={user}
-              size={size}
-              className="ring-2 ring-background"
-            />
+            <Link href={userGetProfileUrl({ user })}>
+              <UserProfileImage
+                user={user}
+                size={size}
+                className="ring-2 ring-background"
+              />
+            </Link>
           </Tooltip>
         </div>
       ))}

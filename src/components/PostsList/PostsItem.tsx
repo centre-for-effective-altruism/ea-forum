@@ -137,7 +137,7 @@ export default function PostsItem({
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
             "sm:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start py-1" : "items-center py-[6px]",
+            cardView ? "items-start py-1" : "items-center py-[7px]",
           )}
         >
           <Score
@@ -150,7 +150,7 @@ export default function PostsItem({
             <Type
               style="postTitle"
               className={clsx(
-                "mb-[2px] min-w-0",
+                "mb-0 min-w-0",
                 isRead ? "text-gray-700" : "text-gray-900",
                 cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
               )}
@@ -243,7 +243,7 @@ export default function PostsItem({
           </InteractionWrapper>
           <InteractionWrapper
             className={clsx(
-              "flex items-center max-sm:hidden",
+              "flex items-center max-sm:hidden -ml-1",
               cardView && "mt-[6px]",
             )}
           >

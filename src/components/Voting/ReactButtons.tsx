@@ -12,7 +12,7 @@ import AddReactionIcon from "../Icons/Reactions/AddReactionIcon";
 import ReactionPalette from "./ReactionPalette";
 import Dropdown from "../Dropdown/Dropdown";
 import Tooltip from "../Tooltip";
-import Type from "../Type";
+import Type, { TextStyle } from "../Type";
 
 const AnonymousTooltipContent: FC<{
   reaction: ReactionOption;
@@ -84,12 +84,14 @@ export default function ReactButtons({
   extendedVoteType,
   onReact,
   reactClassName,
+  scoreStyle = "voteScore",
 }: Readonly<{
   reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
   reactClassName?: string;
+  scoreStyle?: TextStyle;
 }>) {
   const { currentUser } = useCurrentUser();
   const reactions = countCurrentReactions(extendedScore);
@@ -124,7 +126,7 @@ export default function ReactButtons({
               isSelected={isSelected}
             >
               <reaction.Component className="w-4 text-primary" />
-              <Type style="voteScore">{score}</Type>
+              <Type style={scoreStyle}>{score}</Type>
             </ReactionButton>
           </Tooltip>
         );

@@ -70,7 +70,7 @@ export default function NewQuickTake({
     >
       <div
         className={clsx(
-          "flex flex-col gap-1 bg-surface-floating rounded p-2",
+          "flex flex-col gap-1 bg-gray-100 rounded p-2",
           open ? "[&_.ck.ck-content]:min-h-[100px]" : "[&_p]:mb-0!",
         )}
       >

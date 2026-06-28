@@ -8,13 +8,7 @@ export default function FilterSettingsToggle() {
   const { toggleShowFilterSettings } = useFilterSettings();
   return (
     <Tooltip
-      title={
-        <Type style="bodySmall">
-          Use these buttons to increase or decrease the visibility of posts based on
-          topic. Use the &quot;+&quot; button at the end to add additional topics to
-          boost or reduce them.
-        </Type>
-      }
+      title={<Type style="bodySmall">Boost or hide topics to shape your feed</Type>}
       tooltipClassName="w-[280px] max-w-full"
       placement="bottom-end"
     >
@@ -22,7 +16,7 @@ export default function FilterSettingsToggle() {
         onClick={toggleShowFilterSettings}
         style="loadMore"
         As="button"
-        className="cursor-pointer text-gray-600 hover:text-gray-1000"
+        className="inline-block cursor-pointer text-gray-600 hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1"
       >
         Customize <span className="max-[370px]:hidden">feed</span>
       </Type>

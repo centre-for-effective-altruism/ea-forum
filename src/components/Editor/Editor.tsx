@@ -284,7 +284,9 @@ const Editor = forwardRef<
         {loading || !CkEditor ? (
           <Loading />
         ) : (
-          <div className="forum-editor">
+          <div
+            className={commentEditor ? "forum-editor" : "forum-editor post-editor"}
+          >
             {editorWarning && <WarningBanner messageHtml={editorWarning} />}
             {value.type === "ckEditorMarkup" ? (
               <CkEditor

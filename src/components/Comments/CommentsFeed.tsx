@@ -77,7 +77,7 @@ export default function CommentsFeed({
           onClick={onLoadMore}
           As="button"
           style="loadMore"
-          className="cursor-pointer text-primary hover:opacity-70"
+          className="inline-block cursor-pointer text-primary hover:bg-primary/10 rounded px-2 py-1 -mx-2 -my-1"
         >
           Load more
         </Type>

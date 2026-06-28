@@ -36,7 +36,7 @@ export default function HomePageQuickTakesSection({
             <Type style="loadMore">
               <Link
                 href="/quicktakes"
-                className="text-gray-600 hover:text-gray-1000"
+                className="inline-block text-gray-600 hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1"
               >
                 View more
               </Link>

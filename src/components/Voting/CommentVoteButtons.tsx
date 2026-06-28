@@ -44,7 +44,7 @@ export default function CommentVoteButtons({
           }
           className="text-gray-600 cursor-default -mx-[1px]"
         >
-          <Type style="voteScore" As="span">
+          <Type style="bodyMedium" As="span">
             {baseScore}
           </Type>
         </Tooltip>
@@ -63,6 +63,7 @@ export default function CommentVoteButtons({
         extendedVoteType={extendedVoteType}
         onReact={onReact}
         reactClassName="-mr-0.5"
+        scoreStyle="bodyMedium"
       />
     </>
   );
