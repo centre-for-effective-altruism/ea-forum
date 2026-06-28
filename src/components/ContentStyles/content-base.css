@@ -214,9 +214,9 @@
   text-align: center;
 }
 .content-base figcaption {
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--font-stack-serif);
-  color: var(--color-gray-900);
+  color: var(--color-gray-600);
   margin-top: 8px;
 }
 .content-base ol > li > ol {
