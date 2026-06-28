@@ -248,7 +248,7 @@ export default function CommentItem({
               <ChevronDownIcon
                 className={clsx(
                   "w-4 min-w-4 box-content p-1 rounded cursor-pointer",
-                  "text-gray-700 hover:bg-gray-200 hover:text-gray-900",
+                  "text-gray-700 hover:bg-item-hover hover:text-gray-900",
                   "transition-transform",
                   !isExpanded && "-rotate-90",
                 )}
@@ -325,7 +325,7 @@ export default function CommentItem({
               <Link
                 href={commentGetPageUrl({ comment })}
                 onClick={copyLink}
-                className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-gray-200"
+                className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-item-hover"
               >
                 <LinkIcon className="w-[16px]" />
               </Link>

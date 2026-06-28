@@ -33,7 +33,7 @@ export default function ExpandableSection({
           >
             <button
               onClick={toggleExpanded}
-              className="cursor-pointer rounded p-1 text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+              className="cursor-pointer rounded p-1 text-gray-700 hover:bg-item-hover hover:text-gray-900"
             >
               <ChevronRightIcon
                 className={clsx(

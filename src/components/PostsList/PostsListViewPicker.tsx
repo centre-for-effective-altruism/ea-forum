@@ -50,7 +50,7 @@ export default function PostsListViewPicker() {
         data-component="PostsListViewPicker"
         className="
           text-gray-600 flex items-center p-2 rounded-sm
-          hover:bg-gray-200 cursor-pointer
+          hover:bg-item-hover cursor-pointer
         "
       >
         <CurrentIcon className="w-6" />

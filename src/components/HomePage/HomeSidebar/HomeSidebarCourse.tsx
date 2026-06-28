@@ -17,7 +17,7 @@ export default function HomeSidebarCourse({
   return (
     <Link
       href={href}
-      className="block px-2 py-1 -mx-2 rounded hover:bg-gray-200"
+      className="block px-2 py-1 -mx-2 rounded hover:bg-item-hover"
       data-component="HomeSidebarPost"
     >
       <Type style="bodySmall" className="font-[600] truncate flex flex-row gap-1">

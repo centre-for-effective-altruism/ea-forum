@@ -71,7 +71,7 @@ const ReactionButton: FC<{
       "cursor-pointer flex items-center gap-1 select-none h-6 px-1 rounded",
       isSelected
         ? "text-primary bg-primary/5 hover:bg-primary/20 border-1 border-primary/50"
-        : "text-gray-600 hover:bg-gray-200",
+        : "text-gray-600 hover:bg-item-hover",
     )}
   >
     {children}

@@ -63,7 +63,7 @@ export default function Header({
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
               className={clsx(
-                "cursor-pointer hover:bg-gray-200 p-1.5 rounded",
+                "cursor-pointer hover:bg-item-hover p-1.5 rounded",
                 !showMobileNavOnDesktop && "mobile-nav:hidden",
               )}
             >
@@ -104,7 +104,7 @@ export default function Header({
                   <UserDropdownMenu>
                     <button
                       className="
-                        cursor-pointer hover:bg-gray-200 rounded h-9 px-1.5
+                        cursor-pointer hover:bg-item-hover rounded h-9 px-1.5
                         flex items-center gap-1
                       "
                     >

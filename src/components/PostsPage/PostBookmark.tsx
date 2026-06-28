@@ -25,7 +25,7 @@ export default function PostBookmark() {
         aria-label={label}
         className="
           flex items-center cursor-pointer text-gray-600
-          rounded p-1.5 hover:bg-gray-200 hover:text-gray-800
+          rounded p-1.5 hover:bg-item-hover hover:text-gray-800
         "
         onClick={toggleIsBookmarked}
       >

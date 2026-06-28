@@ -20,7 +20,7 @@ export default function PostAudioToggle() {
         onClick={toggleShowAudio}
         className={clsx(
           "flex items-center justify-center cursor-pointer text-gray-600",
-          "rounded p-1.5 hover:bg-gray-200 hover:text-gray-800",
+          "rounded p-1.5 hover:bg-item-hover hover:text-gray-800",
           showAudio && "bg-gray-200",
         )}
       >
