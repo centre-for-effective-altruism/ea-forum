@@ -101,7 +101,7 @@ export default function ControlledTooltip({
             {...getFloatingProps()}
             className={clsx(
               "absolute rounded overflow-hidden max-w-full z-(--zindex-tooltip)",
-              "animate-fade-in [animation-duration:150ms]",
+              "animate-fade-in [animation-duration:100ms] [animation-timing-function:ease-out]",
               "px-2 py-1",
               popover
                 ? "bg-surface-floating text-gray-900 shadow-lg border-1 border-gray-100"
