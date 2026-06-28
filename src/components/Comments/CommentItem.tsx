@@ -247,7 +247,8 @@ export default function CommentItem({
             {!draft && !borderless && (
               <ChevronDownIcon
                 className={clsx(
-                  "w-4 min-w-4 cursor-pointer text-gray-600 hover:opacity-70",
+                  "w-4 min-w-4 box-content p-1 rounded cursor-pointer",
+                  "text-gray-700 hover:bg-gray-200 hover:text-gray-900",
                   "transition-transform",
                   !isExpanded && "-rotate-90",
                 )}

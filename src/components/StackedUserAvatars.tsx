@@ -31,7 +31,7 @@ export default function StackedUserAvatars({
           <UserProfileImage
             user={user}
             size={size}
-            className="transition hover:brightness-90"
+            className="transition hover:opacity-80"
           />
         </Link>
       </UsersTooltip>
@@ -62,7 +62,7 @@ export default function StackedUserAvatars({
               <UserProfileImage
                 user={user}
                 size={size}
-                className="transition hover:brightness-90"
+                className="transition hover:opacity-80"
               />
             </Link>
           </UsersTooltip>

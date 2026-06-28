@@ -31,7 +31,10 @@ export default function ExpandableSection({
             placement="bottom-start"
             className="flex items-center translate-y-px"
           >
-            <button onClick={toggleExpanded} className="cursor-pointer">
+            <button
+              onClick={toggleExpanded}
+              className="cursor-pointer rounded p-1 text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+            >
               <ChevronRightIcon
                 className={clsx(
                   "w-4 transition-transform duration-200",

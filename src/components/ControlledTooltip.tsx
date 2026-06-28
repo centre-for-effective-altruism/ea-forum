@@ -69,6 +69,7 @@ export default function ControlledTooltip({
   const hover = useHover(context, {
     enabled: !noHover,
     move: false,
+    delay: { open: 500, close: 0 },
     handleClose: interactable ? safePolygon() : undefined,
   });
   const focus = useFocus(context);

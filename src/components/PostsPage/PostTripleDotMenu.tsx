@@ -203,7 +203,7 @@ export default function PostTripleDotMenu({
             className={clsx(
               "cursor-pointer flex items-center text-gray-600",
               withBackground
-                ? "rounded p-1.5 hover:bg-gray-200 hover:text-gray-800"
+                ? "rounded p-1 hover:bg-gray-200 hover:text-gray-800"
                 : "hover:text-gray-1000",
             )}
           >
