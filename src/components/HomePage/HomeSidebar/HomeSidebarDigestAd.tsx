@@ -26,7 +26,7 @@ const Input: FC<{
     name="EMAIL"
     placeholder="Email address"
     className={clsx(
-      "grow bg-surface-floating p-2 outline-none placeholder:text-gray-600 min-w-0",
+      "grow bg-surface-floating p-2 h-10 outline-none placeholder:text-gray-600 min-w-0",
       "rounded border-1 border-gray-300 focus:border-primary text-[13px]",
       disabled ? "text-gray-400" : "text-always-black",
     )}

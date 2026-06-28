@@ -27,7 +27,7 @@ export default function HomePageCommunitySection({
         <Type style="loadMore" className="max-md:hidden">
           <Link
             href="/topics/community"
-            className="inline-block text-gray-600 hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1"
+            className="text-gray-600 hover:text-gray-1000"
           >
             View more
           </Link>
@@ -42,7 +42,7 @@ export default function HomePageCommunitySection({
         <Type style="loadMore">
           <Link
             href="/topics/community"
-            className="inline-block text-gray-600 hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1"
+            className="text-gray-600 hover:text-gray-1000"
           >
             View more
           </Link>

@@ -1,42 +1,40 @@
 "use client";
 
 import clsx from "clsx";
+import type { UserBase } from "@/lib/users/userQueries";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import UserProfileImage from "./UserProfileImage";
-import Tooltip from "./Tooltip";
-import Type from "./Type";
+import UsersTooltip from "./UsersTooltip";
 import Link from "./Link";
-
-type StackedUser = {
-  _id: string;
-  slug: string | null;
-  displayName: string | null;
-  profileImageId?: string | null;
-};
 
 export default function StackedUserAvatars({
   users,
   size,
   className,
 }: Readonly<{
-  users: ReadonlyArray<StackedUser | null | undefined>;
+  users: ReadonlyArray<UserBase | null | undefined>;
   size: number;
   className?: string;
 }>) {
-  const present = users.filter((u): u is StackedUser => !!u);
+  const present = users.filter((u): u is UserBase => !!u);
   if (present.length === 0) {
     return null;
   }
   if (present.length === 1) {
     const user = present[0];
     return (
-      <Link
-        href={userGetProfileUrl({ user })}
-        className={className}
-        aria-label={user.displayName ?? undefined}
-      >
-        <UserProfileImage user={user} size={size} />
-      </Link>
+      <UsersTooltip user={user} As="span" className={className}>
+        <Link
+          href={userGetProfileUrl({ user })}
+          aria-label={user.displayName ?? undefined}
+        >
+          <UserProfileImage
+            user={user}
+            size={size}
+            className="transition hover:brightness-90"
+          />
+        </Link>
+      </UsersTooltip>
     );
   }
 
@@ -56,15 +54,18 @@ export default function StackedUserAvatars({
             zIndex: present.length - i,
           }}
         >
-          <Tooltip title={<Type style="bodySmall">{user.displayName ?? ""}</Type>}>
-            <Link href={userGetProfileUrl({ user })}>
+          <UsersTooltip user={user} As="span">
+            <Link
+              href={userGetProfileUrl({ user })}
+              aria-label={user.displayName ?? undefined}
+            >
               <UserProfileImage
                 user={user}
                 size={size}
-                className="ring-2 ring-background"
+                className="ring-2 ring-background transition hover:brightness-90"
               />
             </Link>
-          </Tooltip>
+          </UsersTooltip>
         </div>
       ))}
     </div>

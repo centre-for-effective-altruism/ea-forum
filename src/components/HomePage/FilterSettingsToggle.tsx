@@ -16,7 +16,7 @@ export default function FilterSettingsToggle() {
         onClick={toggleShowFilterSettings}
         style="loadMore"
         As="button"
-        className="inline-block cursor-pointer text-gray-600 hover:bg-gray-100 rounded px-2 py-1 -mx-2 -my-1"
+        className="inline-block cursor-pointer text-gray-600 hover:bg-gray-200 rounded-sm px-2 py-1 -mx-2 -my-1"
       >
         Customize <span className="max-[370px]:hidden">feed</span>
       </Type>

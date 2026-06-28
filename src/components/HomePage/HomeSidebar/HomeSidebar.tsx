@@ -21,7 +21,10 @@ export default function HomeSidebar({
 
         <AnalyticsContext pageSubSectionContext="opportunities">
           <Type style="sectionTitleSmall" className="mb-2">
-            <Link href="/topics/opportunities-to-take-action?sortedBy=magic">
+            <Link
+              href="/topics/opportunities-to-take-action?sortedBy=magic"
+              className="hover:text-gray-1000"
+            >
               Opportunities
             </Link>
           </Type>
@@ -34,7 +37,9 @@ export default function HomeSidebar({
 
         <AnalyticsContext pageSubSectionContext="upcomingEvents">
           <Type style="sectionTitleSmall" className="mb-2">
-            <Link href="/events">Upcoming events</Link>
+            <Link href="/events" className="hover:text-gray-1000">
+              Upcoming events
+            </Link>
           </Type>
           <div className="mb-6">
             <Suspense fallback={<HomeSidebarPostsListSkeleton count={3} />}>
@@ -45,7 +50,10 @@ export default function HomeSidebar({
 
         <AnalyticsContext pageSubSectionContext="courses">
           <Type style="sectionTitleSmall" className="mb-2">
-            <Link href="/virtual-programs?utm_source=ea_forum&utm_medium=rhs&utm_campaign=home_page">
+            <Link
+              href="/virtual-programs?utm_source=ea_forum&utm_medium=rhs&utm_campaign=home_page"
+              className="hover:text-gray-1000"
+            >
               Online courses
             </Link>
           </Type>
