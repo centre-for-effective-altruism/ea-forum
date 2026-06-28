@@ -17,11 +17,14 @@ const AvatarLink: FC<{
     <Link
       href={userGetProfileUrl({ user })}
       aria-label={user.displayName ?? undefined}
+      className="relative inline-flex rounded-full"
     >
-      <UserProfileImage
-        user={user}
-        size={size}
-        className="transition hover:opacity-80"
+      <UserProfileImage user={user} size={size} />
+      {/* White veil on hover rather than lowering opacity, which would let
+          stacked avatars show through one another. */}
+      <span
+        aria-hidden
+        className="absolute inset-0 rounded-full bg-always-white/0 transition-colors hover:bg-always-white/30"
       />
     </Link>
   </UsersTooltip>
