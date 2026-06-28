@@ -49,7 +49,9 @@ export default function PostsListViewPicker() {
       ]}
     >
       <Tooltip title={<Type style="bodySmall">Change post view</Type>} offsetPx={8}>
-        <div
+        <button
+          type="button"
+          aria-label="Change post view"
           data-component="PostsListViewPicker"
           className="
             text-gray-600 flex items-center p-2 rounded-sm
@@ -58,7 +60,7 @@ export default function PostsListViewPicker() {
         >
           <CurrentIcon className="w-6" />
           <ChevronDownIcon className="w-4" />
-        </div>
+        </button>
       </Tooltip>
     </DropdownMenu>
   );
