@@ -6,6 +6,7 @@ declare namespace NodeJS {
     ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_ENVIRONMENT: "dev" | "staging" | "prod";
     NEXT_PUBLIC_IS_BOT_SITE?: "true" | "false";
+    BOT_SITE_REDIRECT_HOST?: string;
     NEXT_PUBLIC_NO_INDEX?: "true" | "false";
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
