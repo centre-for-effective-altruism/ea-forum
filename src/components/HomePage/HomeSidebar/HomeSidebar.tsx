@@ -9,6 +9,7 @@ import HomeSidebarDigestAd from "./HomeSidebarDigestAd";
 import HomeSidebarCourse from "./HomeSidebarCourse";
 import Type from "../../Type";
 import Link from "../../Link";
+import TextLinkButton from "../../TextLinkButton";
 
 export default function HomeSidebar({
   className,
@@ -67,9 +68,9 @@ export default function HomeSidebar({
           </div>
         </AnalyticsContext>
 
-        <Type style="body" className="font-[600] text-gray-600">
-          <Link href="mailto:forum@effectivealtruism.org">Send feedback</Link>
-        </Type>
+        <TextLinkButton href="mailto:forum@effectivealtruism.org">
+          Send feedback
+        </TextLinkButton>
       </section>
     </AnalyticsContext>
   );

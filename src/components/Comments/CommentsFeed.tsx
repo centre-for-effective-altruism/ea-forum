@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import range from "lodash/range";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import CommentItem from "./CommentItem";
-import Type from "../Type";
+import TextLinkButton from "../TextLinkButton";
 
 /**
  * Unlike `CommentsList` which shows a tree of comments (for instance, underneath
@@ -73,14 +73,9 @@ export default function CommentsFeed({
           <div key={i} className="w-full h-[80px] bg-gray-200 rounded mb-1" />
         ))}
       {canLoadMore && (
-        <Type
-          onClick={onLoadMore}
-          As="button"
-          style="loadMore"
-          className="cursor-pointer text-primary hover:opacity-70"
-        >
+        <TextLinkButton variant="primary" onClick={onLoadMore}>
           Load more
-        </Type>
+        </TextLinkButton>
       )}
     </section>
   );

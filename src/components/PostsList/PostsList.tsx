@@ -11,7 +11,7 @@ import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListVi
 import clsx from "clsx";
 import PostsListSkeleton from "./PostsListSkeleton";
 import PostsItem from "./PostsItem";
-import Type from "../Type";
+import TextLinkButton from "../TextLinkButton";
 
 export default function PostsList({
   posts,
@@ -101,14 +101,9 @@ export default function PostsList({
           )}
           <div className="mt-2 flex justify-between items-center">
             {canLoadMore ? (
-              <Type
-                onClick={onLoadMore}
-                As="button"
-                style="loadMore"
-                className="cursor-pointer text-primary hover:opacity-70"
-              >
+              <TextLinkButton variant="primary" onClick={onLoadMore}>
                 Load more
-              </Type>
+              </TextLinkButton>
             ) : (
               <div />
             )}

@@ -7,8 +7,7 @@ import { QuickTakesListProvider } from "../QuickTakes/QuickTakesListContext";
 import QuickTakesCommunityToggle from "../QuickTakes/QuickTakesCommunityToggle";
 import NewQuickTake from "../QuickTakes/NewQuickTake";
 import ExpandableSection from "./ExpandableSection";
-import Type from "../Type";
-import Link from "../Link";
+import TextLinkButton from "../TextLinkButton";
 
 export default function HomePageQuickTakesSection({
   coreTags,
@@ -33,14 +32,7 @@ export default function HomePageQuickTakesSection({
         rightNode={
           <div className="flex items-center gap-3">
             <QuickTakesCommunityToggle className="hidden sm:block" />
-            <Type style="loadMore">
-              <Link
-                href="/quicktakes"
-                className="text-gray-600 hover:text-gray-1000"
-              >
-                View more
-              </Link>
-            </Type>
+            <TextLinkButton href="/quicktakes">View more</TextLinkButton>
           </div>
         }
         expanded={expanded}

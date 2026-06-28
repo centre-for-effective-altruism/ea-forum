@@ -3,23 +3,19 @@
 import { useFilterSettings } from "@/lib/hooks/useFilterSettings";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
+import TextLinkButton from "../TextLinkButton";
 
 export default function FilterSettingsToggle() {
   const { toggleShowFilterSettings } = useFilterSettings();
   return (
     <Tooltip
       title={<Type style="bodySmall">Boost or hide topics to shape your feed</Type>}
-      tooltipClassName="w-[280px] max-w-full"
+      tooltipClassName="max-w-[280px]"
       placement="bottom-end"
     >
-      <Type
-        onClick={toggleShowFilterSettings}
-        style="loadMore"
-        As="button"
-        className="inline-block cursor-pointer text-gray-600 hover:bg-gray-200 rounded-sm px-2 py-1 -mx-2 -my-1"
-      >
+      <TextLinkButton onClick={toggleShowFilterSettings}>
         Customize <span className="max-[370px]:hidden">feed</span>
-      </Type>
+      </TextLinkButton>
     </Tooltip>
   );
 }
