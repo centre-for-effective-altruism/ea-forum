@@ -17,7 +17,7 @@ const AvatarLink: FC<{
     <Link
       href={userGetProfileUrl({ user })}
       aria-label={user.displayName ?? undefined}
-      className="relative inline-flex rounded-full"
+      className="relative block rounded-full"
     >
       <UserProfileImage user={user} size={size} />
       {/* White veil on hover rather than lowering opacity, which would let
