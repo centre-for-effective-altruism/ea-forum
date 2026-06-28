@@ -60,13 +60,13 @@ export default function PostsTooltip({
               <PostBody
                 html={htmlHighlight}
                 className="
-                  [&_p]:text-[14px]! [&_li]:text-[14px]!
-                  [&_h1]:text-[14px]! [&_h1]:font-[700]!
-                  [&_h2]:text-[14px]! [&_h2]:font-[700]!
-                  [&_h3]:text-[14px]! [&_h3]:font-[700]!
-                  [&_h4]:text-[14px]! [&_h4]:font-[700]!
-                  [&_h5]:text-[14px]! [&_h5]:font-[700]!
-                  [&_h6]:text-[14px]! [&_h6]:font-[700]!
+                  [&_p]:text-[15px]! [&_li]:text-[15px]!
+                  [&_h1]:text-[15px]! [&_h1]:font-[700]!
+                  [&_h2]:text-[15px]! [&_h2]:font-[700]!
+                  [&_h3]:text-[15px]! [&_h3]:font-[700]!
+                  [&_h4]:text-[15px]! [&_h4]:font-[700]!
+                  [&_h5]:text-[15px]! [&_h5]:font-[700]!
+                  [&_h6]:text-[15px]! [&_h6]:font-[700]!
                   [&_iframe]:hidden! [&_img]:hidden! [&_video]:hidden!
                   [&_hr]:hidden! [&_table]:hidden!
                   line-clamp-6
