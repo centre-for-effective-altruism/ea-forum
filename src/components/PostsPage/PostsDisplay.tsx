@@ -6,7 +6,7 @@ import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
-import { formatShortDate } from "@/lib/timeUtils";
+import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
 import {
   getPostReadTimeMinutes,
   postGetStructuredData,
@@ -55,9 +55,10 @@ export default async function PostDisplay({
 
   const tableOfContents = htmlToTableOfContents(post.contents?.html);
   const bodyHtml = tableOfContents?.html || post.contents?.html || "";
+  const wordCount = post.contents?.wordCount ?? null;
   const readTimeMinutes = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
-    post.contents?.wordCount ?? null,
+    wordCount,
   );
 
   const showRecommendations =
@@ -65,7 +66,7 @@ export default async function PostDisplay({
     !post.shortform &&
     !post.draft &&
     !post.isEvent &&
-    (post.contents?.wordCount ?? 0) >= 500;
+    (wordCount ?? 0) >= 500;
 
   return (
     <PostDisplayProvider post={post}>
@@ -91,9 +92,32 @@ export default async function PostDisplay({
                 ))}
               </Type>
               <Type style="bodyMedium" className="text-gray-600">
-                {readTimeMinutes} min read
+                {wordCount ? (
+                  <Tooltip
+                    As="span"
+                    title={<Type style="bodySmall">{wordCount} words</Type>}
+                  >
+                    {readTimeMinutes} min read
+                  </Tooltip>
+                ) : (
+                  <>{readTimeMinutes} min read</>
+                )}
                 {" · "}
-                {formatShortDate(post.postedAt)}
+                <Tooltip
+                  As="span"
+                  title={
+                    <Type style="bodySmall">
+                      <div>Posted on {formatLongDateWithTime(post.postedAt)}</div>
+                      {post.curatedDate && (
+                        <div>
+                          Curated on {formatLongDateWithTime(post.curatedDate)}
+                        </div>
+                      )}
+                    </Type>
+                  }
+                >
+                  {formatShortDate(post.postedAt)}
+                </Tooltip>
               </Type>
             </div>
           </div>
