@@ -24,7 +24,8 @@ export default function PostBookmark() {
         data-component="PostBookmark"
         aria-label={label}
         className="
-          flex items-center cursor-pointer text-gray-600 hover:text-gray-1000
+          flex items-center cursor-pointer text-gray-600
+          rounded p-1.5 -m-1.5 hover:bg-gray-200
         "
         onClick={toggleIsBookmarked}
       >

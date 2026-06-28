@@ -30,8 +30,7 @@ const items = [
   {
     title: "Home",
     href: "/",
-    description:
-      "See recent posts on strategies for doing the most good, plus recent activity from all across the Forum",
+    description: "The latest posts and activity across the Forum",
     UnselectedIcon: HomeIcon,
     SelectedIcon: HomeSelectedIcon,
   },

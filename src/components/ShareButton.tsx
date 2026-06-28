@@ -117,7 +117,7 @@ export default function ShareButton({
       <Tooltip title={<Type style="bodySmall">Share</Type>}>
         <button
           onClick={onClick}
-          className="cursor-pointer text-gray-600 hover:text-gray-900 flex items-center"
+          className="cursor-pointer text-gray-600 flex items-center rounded p-1.5 -m-1.5 hover:bg-gray-200"
         >
           <ArrowUpTrayIcon className="w-5" />
         </button>

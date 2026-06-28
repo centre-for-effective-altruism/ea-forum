@@ -85,7 +85,7 @@ export default function CommentForm({
               },
             ]}
           >
-            <Button className="h-full rounded-l-none! px-1! py-0!">
+            <Button className="h-full rounded-l-none! px-1! py-0! min-w-0!">
               <ChevronDownIcon className="w-4" />
             </Button>
           </DropdownMenu>

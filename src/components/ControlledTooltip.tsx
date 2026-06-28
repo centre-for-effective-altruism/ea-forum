@@ -23,6 +23,7 @@ export default function ControlledTooltip({
   isOpen,
   setIsOpen,
   placement,
+  offsetPx = 4,
   className,
   tooltipClassName,
   title,
@@ -36,6 +37,7 @@ export default function ControlledTooltip({
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   placement?: Placement;
+  offsetPx?: number;
   className?: string;
   tooltipClassName?: string;
   title: ReactNode;
@@ -61,7 +63,7 @@ export default function ControlledTooltip({
     placement,
     open: isOpen,
     onOpenChange: setIsOpen,
-    middleware: [offset(4), flip(), shift()],
+    middleware: [offset(offsetPx), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
   const hover = useHover(context, {

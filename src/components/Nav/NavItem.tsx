@@ -36,7 +36,8 @@ export default function NavItem({
           {description}
         </Type>
       }
-      placement="right"
+      placement="bottom-start"
+      offsetPx={8}
       className="whitespace-nowrap"
     >
       <Type style="body" data-component="NavItem">

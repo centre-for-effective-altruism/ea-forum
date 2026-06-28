@@ -324,7 +324,7 @@ export default function CommentItem({
               <Link
                 href={commentGetPageUrl({ comment })}
                 onClick={copyLink}
-                className="text-gray-600 hover:text-gray-1000 mt-1"
+                className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-gray-200"
               >
                 <LinkIcon className="w-[16px]" />
               </Link>
