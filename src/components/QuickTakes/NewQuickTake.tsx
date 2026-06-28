@@ -63,10 +63,7 @@ export default function NewQuickTake({
       data-component="NewQuickTake"
       onSubmit={handleSubmit}
       onKeyDown={onKeyDown}
-      className={clsx(
-        "bg-comment-even border border-comment-border p-3 rounded",
-        className,
-      )}
+      className={clsx("bg-gray-0 border border-gray-200 p-3 rounded", className)}
     >
       <div
         className={clsx(
