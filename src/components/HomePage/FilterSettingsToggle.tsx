@@ -9,8 +9,7 @@ export default function FilterSettingsToggle() {
   const { toggleShowFilterSettings } = useFilterSettings();
   return (
     <Tooltip
-      title={<Type style="bodySmall">Boost or hide topics to shape your feed</Type>}
-      tooltipClassName="max-w-[280px]!"
+      title={<Type style="bodySmall">Boost or hide topics</Type>}
       placement="bottom-end"
     >
       <TextLinkButton onClick={toggleShowFilterSettings}>
