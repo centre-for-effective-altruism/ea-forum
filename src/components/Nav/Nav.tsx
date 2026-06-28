@@ -52,8 +52,7 @@ const items = [
   {
     title: "Topics",
     href: "/topics",
-    description:
-      "A sorted list of pages — “Topics” — in the EA Forum Wiki, which explains topics in EA and collects posts tagged with those topics",
+    description: "Wiki for EA topics, and the posts tagged with them",
     UnselectedIcon: TagIcon,
     SelectedIcon: TagSelectedIcon,
   },

@@ -43,7 +43,7 @@ export default function NavItem({
         <Link
           href={href}
           className={clsx(
-            "flex items-center gap-3 hover:bg-gray-200 rounded px-2 -mx-2 py-2.5",
+            "flex items-center gap-3 hover:bg-gray-200 hover:text-gray-800 rounded px-2 -mx-2 py-2.5",
             className,
           )}
         >

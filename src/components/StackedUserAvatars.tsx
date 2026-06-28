@@ -48,7 +48,7 @@ export default function StackedUserAvatars({
       {present.map((user, i) => (
         <div
           key={user._id}
-          className="relative"
+          className="relative flex rounded-full ring-2 ring-background"
           style={{
             marginLeft: i > 0 ? -overlap : undefined,
             zIndex: present.length - i,
@@ -62,7 +62,7 @@ export default function StackedUserAvatars({
               <UserProfileImage
                 user={user}
                 size={size}
-                className="ring-2 ring-background transition hover:brightness-90"
+                className="transition hover:brightness-90"
               />
             </Link>
           </UsersTooltip>
