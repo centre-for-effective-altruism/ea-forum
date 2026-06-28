@@ -32,12 +32,12 @@ export default function NavItem({
   return (
     <Tooltip
       title={
-        <Type style="bodySmall" className="max-w-[300px]">
+        <Type style="bodySmall" className="max-w-[200px]">
           {description}
         </Type>
       }
-      placement="bottom-start"
-      offsetPx={8}
+      placement="right"
+      offsetPx={16}
       className="whitespace-nowrap"
     >
       <Type style="body" data-component="NavItem">

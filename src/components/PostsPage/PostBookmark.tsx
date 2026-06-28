@@ -19,13 +19,13 @@ export default function PostBookmark() {
   const label = isBookmarked ? "Remove from saved items" : "Save for later";
   const Icon = isBookmarked ? BookmarkSolidIcon : BookmarkOutlineIcon;
   return (
-    <Tooltip title={<Type style="bodySmall">{label}</Type>}>
+    <Tooltip title={<Type style="bodySmall">{label}</Type>} offsetPx={8}>
       <button
         data-component="PostBookmark"
         aria-label={label}
         className="
           flex items-center cursor-pointer text-gray-600
-          rounded p-1.5 -m-1.5 hover:bg-gray-200
+          rounded p-1.5 hover:bg-gray-200 hover:text-gray-800
         "
         onClick={toggleIsBookmarked}
       >

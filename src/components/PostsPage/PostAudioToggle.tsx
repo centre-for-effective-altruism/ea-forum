@@ -13,14 +13,14 @@ export default function PostAudioToggle() {
     return null;
   }
   return (
-    <Tooltip title={<Type style="bodySmall">Listen to this post</Type>}>
+    <Tooltip title={<Type style="bodySmall">Listen to this post</Type>} offsetPx={8}>
       <button
         data-component="PostAudioToggle"
         aria-label="Listen to this post"
         onClick={toggleShowAudio}
         className={clsx(
           "flex items-center justify-center cursor-pointer text-gray-600",
-          "rounded p-1.5 -m-1.5 hover:bg-gray-200",
+          "rounded p-1.5 hover:bg-gray-200 hover:text-gray-800",
           showAudio && "bg-gray-200",
         )}
       >
