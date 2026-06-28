@@ -19,6 +19,9 @@ import {
 } from "@floating-ui/react";
 import clsx from "clsx";
 
+// Short delay before showing on hover; hide immediately on leave.
+const HOVER_DELAY = { open: 300, close: 0 };
+
 export default function ControlledTooltip({
   isOpen,
   setIsOpen,
@@ -69,7 +72,7 @@ export default function ControlledTooltip({
   const hover = useHover(context, {
     enabled: !noHover,
     move: false,
-    delay: { open: 300, close: 0 },
+    delay: HOVER_DELAY,
     handleClose: interactable ? safePolygon() : undefined,
   });
   const focus = useFocus(context);

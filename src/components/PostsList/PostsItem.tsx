@@ -232,7 +232,7 @@ export default function PostsItem({
                 {commentsNode}
               </InteractionWrapper>
               <InteractionWrapper className="flex items-center sm:hidden">
-                <PostTripleDotMenu post={post} orientation="vertical" />
+                <PostTripleDotMenu post={post} />
               </InteractionWrapper>
             </Type>
           </div>
@@ -247,7 +247,7 @@ export default function PostsItem({
               cardView && "mt-[6px]",
             )}
           >
-            <PostTripleDotMenu post={post} orientation="vertical" />
+            <PostTripleDotMenu post={post} />
           </InteractionWrapper>
         </div>
         {cardView && (

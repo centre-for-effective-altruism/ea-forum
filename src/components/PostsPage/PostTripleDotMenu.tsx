@@ -26,7 +26,6 @@ import CalendarIcon from "@heroicons/react/24/outline/CalendarIcon";
 import ChartBarIcon from "@heroicons/react/24/outline/ChartBarIcon";
 import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
-import EllipsisHorizontalIcon from "@heroicons/react/24/outline/EllipsisHorizontalIcon";
 import ArchiveBoxArrowDownIcon from "@heroicons/react/24/outline/ArchiveBoxArrowDownIcon";
 import ArchiveBoxXMarkIcon from "@heroicons/react/24/outline/ArchiveBoxXMarkIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
@@ -47,13 +46,11 @@ import Type from "../Type";
 
 export default function PostTripleDotMenu({
   post,
-  orientation,
   hideBookmark,
   withBackground,
   className,
 }: Readonly<{
   post: PostDisplay | PostListItem;
-  orientation: "vertical" | "horizontal";
   hideBookmark?: boolean;
   withBackground?: boolean;
   className?: string;
@@ -89,8 +86,6 @@ export default function PostTripleDotMenu({
   //  - hide from frontpage
   //  - edit tags
 
-  const TripleDotIcon =
-    orientation === "horizontal" ? EllipsisHorizontalIcon : EllipsisVerticalIcon;
   return (
     <>
       <DropdownMenu
@@ -207,7 +202,7 @@ export default function PostTripleDotMenu({
                 : "hover:text-gray-1000",
             )}
           >
-            <TripleDotIcon
+            <EllipsisVerticalIcon
               className={clsx(withBackground ? "w-6" : "w-5", className)}
             />
           </button>

@@ -72,7 +72,7 @@ export default function PostRecommendationItem({
         )}
       </div>
       <InteractionWrapper>
-        <PostTripleDotMenu post={post} orientation="vertical" />
+        <PostTripleDotMenu post={post} />
       </InteractionWrapper>
     </article>
   );

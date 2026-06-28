@@ -144,12 +144,7 @@ export default async function PostDisplay({
               <PostAudioToggle />
               <PostBookmark />
               <PostShareButton post={post} />
-              <PostTripleDotMenu
-                post={post}
-                orientation="vertical"
-                hideBookmark
-                withBackground
-              />
+              <PostTripleDotMenu post={post} hideBookmark withBackground />
             </div>
           </div>
         </PostColumn>
@@ -174,12 +169,7 @@ export default async function PostDisplay({
               </div>
               <div className="flex items-center gap-2">
                 <PostShareButton post={post} />
-                <PostTripleDotMenu
-                  post={post}
-                  orientation="vertical"
-                  hideBookmark
-                  withBackground
-                />
+                <PostTripleDotMenu post={post} hideBookmark withBackground />
               </div>
             </div>
           )}
