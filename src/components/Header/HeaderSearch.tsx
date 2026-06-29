@@ -3,6 +3,7 @@
 import {
   ChangeEvent,
   KeyboardEvent,
+  MouseEvent,
   useCallback,
   useEffect,
   useRef,
@@ -54,6 +55,7 @@ export default function HeaderSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const responseRef = useRef(0);
+  const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setQuery("");
@@ -162,6 +164,18 @@ export default function HeaderSearch({
     [query, hasResults, selectedIndex, seeAllIndex, router, onClose, resultAnchorAt],
   );
 
+  // Hand control back to the mouse: a real pointer move over the results clears
+  // the keyboard highlight so hover takes over. Scrolling the selection into
+  // view fires a mousemove with unchanged coordinates, which we ignore here.
+  const onResultsMouseMove = useCallback((ev: MouseEvent<HTMLDivElement>) => {
+    const last = lastPointerRef.current;
+    const moved = !last || last.x !== ev.clientX || last.y !== ev.clientY;
+    lastPointerRef.current = { x: ev.clientX, y: ev.clientY };
+    if (moved) {
+      setSelectedIndex((i) => (i === -1 ? i : -1));
+    }
+  }, []);
+
   return (
     <div data-component="HeaderSearch" className="flex gap-2 items-center">
       <MagnifyingGlassIcon className="w-[24px] text-gray-600" />
@@ -195,6 +209,7 @@ export default function HeaderSearch({
           {hasResults && !loading && (
             <div
               ref={resultsRef}
+              onMouseMove={onResultsMouseMove}
               className="
                 flex flex-col gap-[1px] bg-gray-300 overflow-auto overscroll-contain
                 max-h-[calc(100vh-66px)] [&>*]:bg-surface-floating [&>*]:p-2
