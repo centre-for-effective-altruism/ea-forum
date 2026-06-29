@@ -1,6 +1,6 @@
-import type { HTMLAttributes } from "react";
+import type { SVGProps } from "react";
 
-export default function SoftArrowUpIcon(props: HTMLAttributes<SVGElement>) {
+export default function SoftArrowUpIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       width="9"

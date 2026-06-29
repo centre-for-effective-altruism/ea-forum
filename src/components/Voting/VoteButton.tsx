@@ -6,11 +6,19 @@ import {
   type VoteStrength,
   type VoteType,
 } from "@/lib/votes/voteHelpers";
-import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
 import Transition from "react-transition-group/Transition";
 import clsx from "clsx";
+import SoftArrowUpIcon from "../Icons/SoftArrowUpIcon";
+import VoteStrongHatIcon from "../Icons/VoteStrongHatIcon";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
+
+// The filled triangle (matching the postitem score arrow), kept in a 3:2 ratio.
+const ARROW_WIDTH = 13;
+const ARROW_HEIGHT = 9;
+// The strong-vote "hat" chevron that sits above the base triangle.
+const HAT_WIDTH = 15;
+const HAT_HEIGHT = 10;
 
 const orientations = {
   up: null,
@@ -45,11 +53,20 @@ export default function VoteButton({
   );
   const [bigVotingTransition, setBigVotingTransition] = useState(false);
   const [bigVoteCompleted, setBigVoteCompleted] = useState(false);
-  const ref = useRef<SVGSVGElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
 
   const voted = currentVoteStrength !== "neutral";
   const bigVoted = currentVoteStrength === "big";
   const upvote = direction === "Upvote";
+
+  // The darker vote colour (a small vote, and the strong-vote "hat"); the base
+  // triangle lightens to the *-light variant once strong-voted.
+  const strongColor = upvote ? "text-primary" : "text-error";
+  const baseColor = bigVoted
+    ? upvote
+      ? "text-primary-light"
+      : "text-error-light"
+    : strongColor;
 
   const wrappedVote = useCallback(
     (voteStrength: VoteStrength) => {
@@ -109,18 +126,18 @@ export default function VoteButton({
           <Type>You do not have permission</Type>
         ) : (
           <Type>
-            <strong>Overall karma: {direction}</strong>
+            <strong>{direction}</strong>
             <br />
             Is this a valuable contribution?
             <br />
             <em>
-              For strong {direction.toLowerCase()}, click-and-hold
-              <br />
-              (Press twice on mobile)
+              Click and hold for a strong {direction.toLowerCase()} (tap twice on
+              mobile)
             </em>
           </Type>
         )
       }
+      tooltipClassName="max-w-[250px]!"
       className={clsx(
         "flex items-center",
         disabled && "pointer-events-none cursor-not-allowed",
@@ -133,34 +150,37 @@ export default function VoteButton({
         onMouseUp={onMouseUp}
         onClick={onPress}
         className={clsx(
-          "relative cursor-pointer",
+          "relative cursor-pointer flex items-center justify-center p-0.5",
           orientations[orientation],
           className,
         )}
       >
-        <ChevronUpIcon
-          width={22}
-          height={22}
+        {/* Base triangle. When strong-voted it lightens, and a darker "hat"
+            chevron stacks on top of it (see the strong-vote overlay below). */}
+        <SoftArrowUpIcon
+          width={ARROW_WIDTH}
+          height={ARROW_HEIGHT}
           className={clsx(
-            voted && (upvote ? "text-primary" : "text-error"),
+            voted && baseColor,
             !voted && dimWhenNotVoted && "opacity-70",
-            !voted && "hover:text-gray-900",
+            !voted && "hover:text-gray-600",
           )}
         />
+        {/* Strong-vote "hat": an upward chevron above the base triangle, darker
+            so the darker arrow sits on top. */}
         <Transition
           in={!!(bigVotingTransition || bigVoted)}
           timeout={strongVoteDelayMs}
           nodeRef={ref as unknown as RefObject<HTMLElement>}
         >
           {(state) => (
-            <ChevronUpIcon
+            <span
               ref={ref}
-              width={32}
-              height={32}
               className={clsx(
-                "pointer-events-none absolute -top-[10px] -left-[5px]",
-                (bigVoteCompleted || bigVoted) &&
-                  (upvote ? "text-primary-light" : "text-error-light"),
+                // Geometrically centered, but a hair left of -translate-x-1/2
+                // reads as better optically aligned over the triangle.
+                "pointer-events-none absolute left-1/2 -translate-x-[calc(50%+0.5px)] -top-[4px]",
+                (bigVoteCompleted || bigVoted) && strongColor,
                 state === "entering" || state === "entered"
                   ? "opacity-100"
                   : "opacity-0",
@@ -168,7 +188,9 @@ export default function VoteButton({
                   ? "[transition:opacity_150ms_cubic-bezier(0.74,-0.01,1,1)_0ms]"
                   : "[transition:opacity_1000ms_cubic-bezier(0.74,-0.01,1,1)_0ms]",
               )}
-            />
+            >
+              <VoteStrongHatIcon width={HAT_WIDTH} height={HAT_HEIGHT} />
+            </span>
           )}
         </Transition>
       </button>
