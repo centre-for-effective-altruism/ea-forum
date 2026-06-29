@@ -64,22 +64,17 @@ export default function QuickTakesList({
     currentTotalCount != null ? currentTotalCount + localQuickTakes.length : null;
 
   return (
-    <div data-component="QuickTakesList" className={className}>
+    <section data-component="QuickTakesList" className={className}>
       {quickTakesToDisplay.map((quickTake) => (
         <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
       ))}
       {loading && <QuickTakesListSkeleton count={limit} />}
       {canLoadMore && (
-        <TextLinkButton
-          variant="primary"
-          onClick={onLoadMore}
-          disabled={loading}
-          className="mt-1.5"
-        >
+        <TextLinkButton variant="primary" onClick={onLoadMore} disabled={loading}>
           Load more
           {knownTotal != null ? ` (${shownCount}/${knownTotal})` : ""}
         </TextLinkButton>
       )}
-    </div>
+    </section>
   );
 }

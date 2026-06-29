@@ -43,7 +43,7 @@ export default function QuickTakeItem({
       onClick={onClick}
       className="
         max-w-full rounded bg-comment-even border border-comment-border px-4 py-3
-        cursor-pointer
+        cursor-pointer mb-1
       "
     >
       <div className="flex flex-row gap-2 items-center mb-2 text-gray-600">

@@ -4,7 +4,7 @@ export default function QuickTakeItemSkeleton() {
   return (
     <article
       aria-hidden
-      className="max-w-full rounded bg-gray-50 border border-gray-100 px-4 py-3"
+      className="max-w-full rounded bg-gray-50 border border-gray-100 px-4 py-3 mb-1"
       data-component="QuickTakeItemSkeleton"
     >
       <div className="flex flex-row w-full gap-2 items-center mb-2">
