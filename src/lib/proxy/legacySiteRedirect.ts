@@ -21,6 +21,7 @@ const newSitePatterns = [
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
   /^\/rpc\//, // All /rpc/* routes
+  /^\/ingest\//, // Posthog ingestion routes
   /^\/about$/, // About page
   /^\/intro$/, // Intro page
   /^\/contact$/, // Contact page
