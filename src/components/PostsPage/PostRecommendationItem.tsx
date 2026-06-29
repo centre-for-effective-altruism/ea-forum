@@ -31,7 +31,7 @@ export default function PostRecommendationItem({
       data-component="PostRecommendationItem"
       className="
         flex items-center gap-3 p-2 rounded max-w-full
-        cursor-pointer hover:bg-gray-200
+        cursor-pointer hover:bg-item-hover
       "
       onClick={onClick}
       ref={ref}
@@ -72,7 +72,7 @@ export default function PostRecommendationItem({
         )}
       </div>
       <InteractionWrapper>
-        <PostTripleDotMenu post={post} orientation="vertical" />
+        <PostTripleDotMenu post={post} />
       </InteractionWrapper>
     </article>
   );

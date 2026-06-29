@@ -8,8 +8,7 @@ import { getDefaultFilterSettings } from "@/lib/filterSettings";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import ClientFrontpagePostsList from "./ClientFrontpagePostsList";
 import PostsList from "./PostsList";
-import Type from "../Type";
-import Link from "../Link";
+import TextLinkButton from "../TextLinkButton";
 
 export default async function FrontpagePostsList() {
   const currentUser = await getCurrentUser();
@@ -39,11 +38,9 @@ export default async function FrontpagePostsList() {
           posts={posts}
           view={view}
           bottomRightNode={
-            <Type style="loadMore">
-              <Link href="/allPosts" className="text-primary hover:opacity-70">
-                Advanced sorting & filtering
-              </Link>
-            </Type>
+            <TextLinkButton variant="primary" href="/allPosts">
+              Advanced sorting & filtering
+            </TextLinkButton>
           }
         />
       </AnalyticsContext>

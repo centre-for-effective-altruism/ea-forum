@@ -16,7 +16,7 @@ export default function HomeSidebarPost({
     <PostsTooltip post={post} placement="left-start">
       <Link
         href={pageUrl}
-        className="block py-1 hover:opacity-70"
+        className="block px-2 py-1 -mx-2 rounded hover:bg-item-hover"
         data-component="HomeSidebarPost"
       >
         <Type style="bodySmall" className="font-[600] truncate">

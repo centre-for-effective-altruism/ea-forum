@@ -30,8 +30,7 @@ const items = [
   {
     title: "Home",
     href: "/",
-    description:
-      "See recent posts on strategies for doing the most good, plus recent activity from all across the Forum",
+    description: "The latest posts and activity across the Forum",
     UnselectedIcon: HomeIcon,
     SelectedIcon: HomeSelectedIcon,
   },
@@ -52,8 +51,7 @@ const items = [
   {
     title: "Topics",
     href: "/topics",
-    description:
-      "A sorted list of pages — “Topics” — in the EA Forum Wiki, which explains topics in EA and collects posts tagged with those topics",
+    description: "Wiki for EA topics, and the posts tagged with them",
     UnselectedIcon: TagIcon,
     SelectedIcon: TagSelectedIcon,
   },

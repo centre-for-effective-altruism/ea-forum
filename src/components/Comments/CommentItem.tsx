@@ -247,7 +247,8 @@ export default function CommentItem({
             {!draft && !borderless && (
               <ChevronDownIcon
                 className={clsx(
-                  "w-4 min-w-4 cursor-pointer text-gray-600 hover:opacity-70",
+                  "w-4 min-w-4 box-content p-1 rounded cursor-pointer",
+                  "text-gray-700 hover:bg-item-hover hover:text-gray-900",
                   "transition-transform",
                   !isExpanded && "-rotate-90",
                 )}
@@ -289,8 +290,8 @@ export default function CommentItem({
                         doesn&apos;t have much karma yet
                       </Type>
                     }
-                    placement="bottom-start"
-                    tooltipClassName="max-w-[300px]"
+                    placement="bottom"
+                    tooltipClassName="max-w-[200px]! text-center"
                   >
                     <SproutIcon className="text-new-user-sprout" />
                   </Tooltip>
@@ -324,7 +325,7 @@ export default function CommentItem({
               <Link
                 href={commentGetPageUrl({ comment })}
                 onClick={copyLink}
-                className="text-gray-600 hover:text-gray-1000 mt-1"
+                className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-item-hover"
               >
                 <LinkIcon className="w-[16px]" />
               </Link>

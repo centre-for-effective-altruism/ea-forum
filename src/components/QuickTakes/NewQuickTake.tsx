@@ -63,14 +63,11 @@ export default function NewQuickTake({
       data-component="NewQuickTake"
       onSubmit={handleSubmit}
       onKeyDown={onKeyDown}
-      className={clsx(
-        "bg-comment-even border border-comment-border p-3 rounded",
-        className,
-      )}
+      className={clsx("bg-gray-0 border border-gray-200 p-3 rounded", className)}
     >
       <div
         className={clsx(
-          "flex flex-col gap-1 bg-surface-floating rounded p-2",
+          "flex flex-col gap-1 bg-gray-100 rounded p-2",
           open ? "[&_.ck.ck-content]:min-h-[100px]" : "[&_p]:mb-0!",
         )}
       >

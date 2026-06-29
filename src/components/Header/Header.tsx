@@ -63,7 +63,7 @@ export default function Header({
               aria-label="Toggle navigation menu"
               onClick={openMobileNav}
               className={clsx(
-                "cursor-pointer hover:bg-gray-200 p-2 rounded-full",
+                "cursor-pointer hover:bg-item-hover p-1.5 rounded",
                 !showMobileNavOnDesktop && "mobile-nav:hidden",
               )}
             >
@@ -103,10 +103,10 @@ export default function Header({
                   </Link>
                   <UserDropdownMenu>
                     <button
-                      className={`
-                        cursor-pointer hover:bg-gray-200 rounded p-2
-                        flex item-center gap-1
-                      `}
+                      className="
+                        cursor-pointer hover:bg-item-hover rounded h-9 px-1.5
+                        flex items-center gap-1
+                      "
                     >
                       <UserProfileImage user={currentUser} size={32} />
                       <ChevronDownIcon className="w-[16px] text-gray-600" />

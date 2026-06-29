@@ -28,10 +28,13 @@ export default function ExpandableSection({
           <Type style="sectionTitleLarge">{title}</Type>
           <Tooltip
             title={<Type style="bodySmall">{expanded ? "Collapse" : "Expand"}</Type>}
-            placement="bottom-start"
+            placement="bottom"
             className="flex items-center translate-y-px"
           >
-            <button onClick={toggleExpanded} className="cursor-pointer">
+            <button
+              onClick={toggleExpanded}
+              className="cursor-pointer rounded p-1 text-gray-700 hover:bg-item-hover hover:text-gray-900"
+            >
               <ChevronRightIcon
                 className={clsx(
                   "w-4 transition-transform duration-200",

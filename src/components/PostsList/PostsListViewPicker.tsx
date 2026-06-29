@@ -9,6 +9,8 @@ import CheckIcon from "@heroicons/react/24/solid/CheckIcon";
 import CardViewIcon from "../Icons/CardView";
 import ListViewIcon from "../Icons/ListViewIcon";
 import DropdownMenu from "../Dropdown/DropdownMenu";
+import Tooltip from "../Tooltip";
+import Type from "../Type";
 
 const Check = () => <CheckIcon className="w-4 text-primary" />;
 
@@ -46,16 +48,20 @@ export default function PostsListViewPicker() {
         },
       ]}
     >
-      <div
-        data-component="PostsListViewPicker"
-        className="
-          text-gray-600 flex items-center p-2 rounded-sm
-          hover:bg-gray-200 cursor-pointer
-        "
-      >
-        <CurrentIcon className="w-6" />
-        <ChevronDownIcon className="w-4" />
-      </div>
+      <Tooltip title={<Type style="bodySmall">Change post view</Type>} offsetPx={8}>
+        <button
+          type="button"
+          aria-label="Change post view"
+          data-component="PostsListViewPicker"
+          className="
+            text-gray-600 flex items-center p-2 rounded-sm
+            hover:bg-item-hover cursor-pointer
+          "
+        >
+          <CurrentIcon className="w-6" />
+          <ChevronDownIcon className="w-4" />
+        </button>
+      </Tooltip>
     </DropdownMenu>
   );
 }

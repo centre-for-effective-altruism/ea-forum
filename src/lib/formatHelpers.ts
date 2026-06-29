@@ -13,6 +13,9 @@ export const formatRole = (
     ? `${jobTitle} @ ${organization}`
     : ((jobTitle || organization) ?? "");
 
+export const formatThousands = (amount: number) =>
+  new Intl.NumberFormat("en-US").format(amount);
+
 export const formatPostItemHiddenAuthors = (count: number, totalShown: number) =>
   totalShown === 0 ? `${count} authors` : `+ ${count} more`;
 

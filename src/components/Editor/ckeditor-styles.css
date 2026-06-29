@@ -43,6 +43,12 @@
   --ck-focus-outer-shadow: none;
   --ck-inner-shadow: none;
 }
+/* Match the serif reading treatment (content-base) when drafting a post */
+.forum-editor.post-editor .ck.ck-content {
+  font-family: var(--font-stack-serif);
+  font-size: 19.6px;
+  font-weight: 430;
+}
 .forum-editor .ck.ck-content p {
   margin: 1em 0;
 }

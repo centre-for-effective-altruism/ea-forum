@@ -19,10 +19,14 @@ import {
 } from "@floating-ui/react";
 import clsx from "clsx";
 
+// Short delay before showing on hover; hide immediately on leave.
+const HOVER_DELAY = { open: 200, close: 0 };
+
 export default function ControlledTooltip({
   isOpen,
   setIsOpen,
   placement,
+  offsetPx = 4,
   className,
   tooltipClassName,
   title,
@@ -36,6 +40,7 @@ export default function ControlledTooltip({
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   placement?: Placement;
+  offsetPx?: number;
   className?: string;
   tooltipClassName?: string;
   title: ReactNode;
@@ -61,12 +66,13 @@ export default function ControlledTooltip({
     placement,
     open: isOpen,
     onOpenChange: setIsOpen,
-    middleware: [offset(4), flip(), shift()],
+    middleware: [offset(offsetPx), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
   const hover = useHover(context, {
     enabled: !noHover,
     move: false,
+    delay: HOVER_DELAY,
     handleClose: interactable ? safePolygon() : undefined,
   });
   const focus = useFocus(context);
@@ -98,6 +104,7 @@ export default function ControlledTooltip({
             {...getFloatingProps()}
             className={clsx(
               "absolute rounded overflow-hidden max-w-full z-(--zindex-tooltip)",
+              "animate-fade-in [animation-duration:100ms] [animation-timing-function:ease-out]",
               "px-2 py-1",
               popover
                 ? "bg-surface-floating text-gray-900 shadow-lg border-1 border-gray-100"

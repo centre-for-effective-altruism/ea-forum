@@ -19,7 +19,7 @@ import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
 import HomePageCommunitySection from "./HomePageCommunitySection";
 import Type from "../Type";
-import Link from "../Link";
+import TextLinkButton from "../TextLinkButton";
 
 export default async function HomePageFeed({
   search,
@@ -43,14 +43,9 @@ export default async function HomePageFeed({
           <div className="mb-2 flex items-center justify-between">
             <Type style="sectionTitleLarge">New &amp; upvoted</Type>
             <div className="flex items-center gap-1">
-              <Type style="loadMore">
-                <Link
-                  href={`/topics/${search.tab}`}
-                  className="text-gray-600 hover:text-gray-1000"
-                >
-                  View more
-                </Link>
-              </Type>
+              <TextLinkButton href={`/topics/${search.tab}`}>
+                View more
+              </TextLinkButton>
               <PostsListViewPicker />
             </div>
           </div>

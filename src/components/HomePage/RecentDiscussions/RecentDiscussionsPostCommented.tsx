@@ -14,7 +14,6 @@ import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkPostMessage from "@/components/PostsPage/LinkPostMessage";
 import CommentsList from "@/components/Comments/CommentsList";
 import PostBody from "@/components/ContentStyles/PostBody";
-import PostsTooltip from "@/components/PostsTooltip";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Score from "@/components/Score";
@@ -82,14 +81,12 @@ export default function RecentDiscussionsPostCommented({
           />
           <div className="truncate grow">
             <Type style="postTitle" className="text-gray-1000 truncate">
-              <PostsTooltip As="span" post={post}>
-                <Link
-                  href={postLink}
-                  className="visited:text-gray-600 hover:opacity-60"
-                >
-                  {title}
-                </Link>
-              </PostsTooltip>
+              <Link
+                href={postLink}
+                className="visited:text-gray-600 hover:opacity-60"
+              >
+                {title}
+              </Link>
             </Type>
             <Type style="bodySmall">
               <UsersName user={user} />

@@ -125,7 +125,7 @@ export default function PostsItem({
       <article
         data-component="PostsItem"
         className={clsx(
-          "w-full max-w-full rounded bg-gray-50",
+          "w-full max-w-full rounded bg-postitem",
           "flex flex-col hover:bg-postitemhover",
           cardView ? "justify-between" : "justify-center",
           className,
@@ -137,7 +137,7 @@ export default function PostsItem({
             "cursor-pointer w-full max-w-full px-3 text-gray-600",
             "grid gap-3 grid-cols-[min-content_1fr]",
             "sm:grid-cols-[min-content_1fr_min-content_min-content]",
-            cardView ? "items-start py-1" : "items-center py-[6px]",
+            cardView ? "items-start py-1" : "items-center py-[7px]",
           )}
         >
           <Score
@@ -150,7 +150,7 @@ export default function PostsItem({
             <Type
               style="postTitle"
               className={clsx(
-                "mb-[2px] min-w-0",
+                "mb-0 min-w-0",
                 isRead ? "text-gray-700" : "text-gray-900",
                 cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
               )}
@@ -180,7 +180,7 @@ export default function PostsItem({
                 />
               </InteractionWrapper>
             </Type>
-            <Type style="bodySmall" className="min-w-0 flex">
+            <Type style="bodySmallMedium" className="min-w-0 flex">
               <InteractionWrapper className="grow min-w-0">
                 <TruncationContainer
                   items={[
@@ -195,14 +195,14 @@ export default function PostsItem({
                   tooltipClassName="[&_.coauthor-comma]:hidden"
                   gap={0}
                   hiddenItemsTooltip
-                  afterNodeTextStyle="bodySmall"
+                  afterNodeTextStyle="bodySmallMedium"
                   afterNodeFormat={formatPostItemHiddenAuthors}
                   finalNode={
                     <>
                       <span className="px-1">·</span>
                       <TimeAgo
                         As="span"
-                        textStyle="bodySmall"
+                        textStyle="bodySmallMedium"
                         time={post.postedAt}
                         tooltipPrefix="Posted on "
                         includeAgo
@@ -213,7 +213,7 @@ export default function PostsItem({
                           <span>Curated </span>
                           <TimeAgo
                             As="span"
-                            textStyle="bodySmall"
+                            textStyle="bodySmallMedium"
                             time={post.curatedDate}
                             tooltipPrefix="Curated on "
                             includeAgo
@@ -232,7 +232,7 @@ export default function PostsItem({
                 {commentsNode}
               </InteractionWrapper>
               <InteractionWrapper className="flex items-center sm:hidden">
-                <PostTripleDotMenu post={post} orientation="vertical" />
+                <PostTripleDotMenu post={post} />
               </InteractionWrapper>
             </Type>
           </div>
@@ -243,11 +243,11 @@ export default function PostsItem({
           </InteractionWrapper>
           <InteractionWrapper
             className={clsx(
-              "flex items-center max-sm:hidden",
+              "flex items-center max-sm:hidden -ml-1",
               cardView && "mt-[6px]",
             )}
           >
-            <PostTripleDotMenu post={post} orientation="vertical" />
+            <PostTripleDotMenu post={post} />
           </InteractionWrapper>
         </div>
         {cardView && (

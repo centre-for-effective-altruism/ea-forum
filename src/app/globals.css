@@ -23,6 +23,9 @@
   --color-primary: #0c869b;
   --color-primary-light: #00b2be;
   --color-primary-dark: #085d6c;
+  /* Filled-button teal. Not overridden in dark mode, so buttons keep this darker
+     teal (vs the brighter #009da8 primary) for readable white text on dark. */
+  --color-primary-button: #0c869b;
 
   --color-panel-background: #fff;
   --color-error: #e04e4b;
@@ -30,8 +33,14 @@
   --color-warning: #832013;
   --color-warning-light: #ff9800;
   --color-warning-translucent: "rgba(255,152,0,0.1)";
+  --color-postitem: #ffffff;
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
+  /* Hover bg for interactive elements sitting on the page background (nav,
+     icon buttons, sidebar links). For items inside a floating surface
+     (dropdowns, the reaction palette) use surface-floating-hover instead, which
+     is lifted relative to the floating surface rather than the page. */
+  --color-item-hover: #eeeeee;
   --color-login-input: #efefef;
   --color-login-input-hover: #e4e4e4;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
@@ -186,12 +195,16 @@
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #2a2a2a;
+  /* Post-item resting surface, lifted clearly above the #141414 page bg so
+     cards read in dark mode; hover bumped in step to keep the hover delta. */
+  --color-postitem: #262626;
+  --color-postitemhover: #323232;
   --color-postitemhover-border: #363636;
+  --color-item-hover: #2a2a2a;
   --color-login-input: #2e2e2e;
   --color-login-input-hover: #363636;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
-  --color-tooltip-background: rgba(95, 95, 95, 0.96);
+  --color-tooltip-background: rgba(70, 70, 70, 0.96);
   --color-tooltip-text: #ffffff;
   --color-posts-page-hr: #454545;
   --color-visited-link: #9b71be;

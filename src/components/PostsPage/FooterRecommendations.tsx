@@ -34,11 +34,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
           <Type style="sectionTitleLarge" className="mb-3">
             More from the author
           </Type>
-          <PostsList
-            posts={moreFromAuthor}
-            className="mb-12"
-            postItemClassName="bg-post-body-bg!"
-          />
+          <PostsList posts={moreFromAuthor} className="mb-12" />
         </AnalyticsContext>
       )}
       {curatedAndPopular.length > 0 && (
@@ -46,12 +42,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
           <Type style="sectionTitleLarge" className="mb-3">
             Curated and popular this week
           </Type>
-          <PostsList
-            posts={curatedAndPopular}
-            viewType="card"
-            className="mb-12"
-            postItemClassName="bg-post-body-bg!"
-          />
+          <PostsList posts={curatedAndPopular} viewType="card" className="mb-12" />
         </AnalyticsContext>
       )}
       {recentOpportunities.length > 0 && (
@@ -59,10 +50,7 @@ export default async function FooterRecommendations({ postId }: { postId: string
           <Type style="sectionTitleLarge" className="mb-3">
             Recent opportunities to take action
           </Type>
-          <PostsList
-            posts={recentOpportunities}
-            postItemClassName="bg-post-body-bg!"
-          />
+          <PostsList posts={recentOpportunities} />
         </AnalyticsContext>
       )}
     </>

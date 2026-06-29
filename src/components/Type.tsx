@@ -6,6 +6,7 @@ export const typeStyles = {
   bodyHeavy: "font-sans text-[14px] font-[600]",
   bodyXHeavy: "font-sans text-[14px] font-[700]",
   bodySmall: "font-sans text-[13px] font-[450]",
+  bodySmallMedium: "font-sans text-[13px] font-[500]",
   bodyXSmall: "font-sans text-[12px] font-[500]",
   bodyXXSmall: "font-sans text-[11px] font-[450]",
   bodyLarge: "font-sans text-[16px] font-[500]",
@@ -18,11 +19,11 @@ export const typeStyles = {
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
   sectionTitleSmall:
     "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
-  logo: "font-sans text-[19px] font-[400]",
+  logo: "font-sans text-[19px] font-[400] tracking-[-0.015em]",
   postsPageTitle: "font-sans text-[40px] font-[700] leading-[125%]",
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
   postDescription: "font-sans text-[13px] font-[500]",
-  loadMore: "font-sans text-[14px] font-[600]",
+  loadMore: "font-sans text-[14px] font-[550]",
   onboardingTitle: "font-sans text-[30px] font-[600] tracking-[-0.6px]",
   onboardingTag: "font-sans text-[13px] font-[700] leading-[16px]",
 } as const satisfies Record<string, string>;

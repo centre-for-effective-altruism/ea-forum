@@ -32,18 +32,19 @@ export default function NavItem({
   return (
     <Tooltip
       title={
-        <Type style="bodySmall" className="max-w-[300px]">
+        <Type style="bodySmall" className="max-w-[200px]">
           {description}
         </Type>
       }
       placement="right"
+      offsetPx={16}
       className="whitespace-nowrap"
     >
       <Type style="body" data-component="NavItem">
         <Link
           href={href}
           className={clsx(
-            "flex items-center gap-2 hover:text-gray-1000 py-2",
+            "flex items-center gap-3 hover:bg-item-hover hover:text-gray-800 rounded pl-3 pr-5 -mx-3 py-2.5",
             className,
           )}
         >

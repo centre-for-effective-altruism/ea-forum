@@ -7,7 +7,7 @@ import { rpc } from "@/lib/rpc";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import QuickTakesListSkeleton from "./QuickTakesListSkeleton";
 import QuickTakeItem from "./QuickTakeItem";
-import Type from "../Type";
+import TextLinkButton from "../TextLinkButton";
 
 export default function QuickTakesList({
   quickTakes,
@@ -70,16 +70,15 @@ export default function QuickTakesList({
       ))}
       {loading && <QuickTakesListSkeleton count={limit} />}
       {canLoadMore && (
-        <Type
+        <TextLinkButton
+          variant="primary"
           onClick={onLoadMore}
-          As="button"
-          style="loadMore"
           disabled={loading}
-          className="cursor-pointer text-primary hover:opacity-70 disabled:cursor-default disabled:opacity-50"
+          className="mt-1.5"
         >
           Load more
           {knownTotal != null ? ` (${shownCount}/${knownTotal})` : ""}
-        </Type>
+        </TextLinkButton>
       )}
     </div>
   );

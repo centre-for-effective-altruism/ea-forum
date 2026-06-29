@@ -2,6 +2,7 @@
 
 import { usePostDisplay } from "./usePostDisplay";
 import { postHasAudio } from "@/lib/posts/postAudio";
+import clsx from "clsx";
 import SpeakerWaveIcon from "@heroicons/react/24/outline/SpeakerWaveIcon";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
@@ -12,24 +13,18 @@ export default function PostAudioToggle() {
     return null;
   }
   return (
-    <Tooltip title={<Type style="bodySmall">Listen to this post</Type>}>
+    <Tooltip title={<Type style="bodySmall">Listen to this post</Type>} offsetPx={8}>
       <button
         data-component="PostAudioToggle"
         aria-label="Listen to this post"
         onClick={toggleShowAudio}
-        className="
-          flex items-center justify-center cursor-pointer relative
-          text-gray-600 hover:text-gray-1000
-        "
-      >
-        {showAudio && (
-          <div
-            className="
-              absolute -top-1 -left-1 w-[28px] h-[28px] bg-gray-200 z-1 rounded-[2px]
-            "
-          />
+        className={clsx(
+          "flex items-center justify-center cursor-pointer text-gray-600",
+          "rounded p-1.5 hover:bg-item-hover hover:text-gray-800",
+          showAudio && "bg-gray-200",
         )}
-        <SpeakerWaveIcon className="w-5 z-2 relative" />
+      >
+        <SpeakerWaveIcon className="w-5" />
       </button>
     </Tooltip>
   );

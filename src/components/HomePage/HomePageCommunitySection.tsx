@@ -3,8 +3,7 @@
 import type { ReactNode } from "react";
 import { useExpandedFrontpageSection } from "@/lib/hooks/useExpandedFrontpageSection";
 import ExpandableSection from "./ExpandableSection";
-import Type from "../Type";
-import Link from "../Link";
+import TextLinkButton from "../TextLinkButton";
 
 export default function HomePageCommunitySection({
   className,
@@ -24,14 +23,9 @@ export default function HomePageCommunitySection({
     <ExpandableSection
       title="Posts tagged community"
       rightNode={
-        <Type style="loadMore" className="max-md:hidden">
-          <Link
-            href="/topics/community"
-            className="text-gray-600 hover:text-gray-1000"
-          >
-            View more
-          </Link>
-        </Type>
+        <TextLinkButton href="/topics/community" className="max-md:hidden">
+          View more
+        </TextLinkButton>
       }
       expanded={expanded}
       toggleExpanded={toggleExpanded}
@@ -39,14 +33,7 @@ export default function HomePageCommunitySection({
     >
       {children}
       <div className="md:hidden mt-1 flex flex-row-reverse">
-        <Type style="loadMore">
-          <Link
-            href="/topics/community"
-            className="text-gray-600 hover:text-gray-1000"
-          >
-            View more
-          </Link>
-        </Type>
+        <TextLinkButton href="/topics/community">View more</TextLinkButton>
       </div>
     </ExpandableSection>
   );

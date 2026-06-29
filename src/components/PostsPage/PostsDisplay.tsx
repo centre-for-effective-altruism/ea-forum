@@ -5,8 +5,9 @@ import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
+import { formatThousands } from "@/lib/formatHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
-import { formatShortDate } from "@/lib/timeUtils";
+import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
 import {
   getPostReadTimeMinutes,
   postGetStructuredData,
@@ -55,9 +56,10 @@ export default async function PostDisplay({
 
   const tableOfContents = htmlToTableOfContents(post.contents?.html);
   const bodyHtml = tableOfContents?.html || post.contents?.html || "";
+  const wordCount = post.contents?.wordCount ?? null;
   const readTimeMinutes = getPostReadTimeMinutes(
     post.readTimeMinutesOverride,
-    post.contents?.wordCount ?? null,
+    wordCount,
   );
 
   const showRecommendations =
@@ -65,7 +67,7 @@ export default async function PostDisplay({
     !post.shortform &&
     !post.draft &&
     !post.isEvent &&
-    (post.contents?.wordCount ?? 0) >= 500;
+    (wordCount ?? 0) >= 500;
 
   return (
     <PostDisplayProvider post={post}>
@@ -91,9 +93,36 @@ export default async function PostDisplay({
                 ))}
               </Type>
               <Type style="bodyMedium" className="text-gray-600">
-                {readTimeMinutes} min read
+                {wordCount ? (
+                  <Tooltip
+                    As="span"
+                    title={
+                      <Type style="bodySmall">
+                        {formatThousands(wordCount)} words
+                      </Type>
+                    }
+                  >
+                    {readTimeMinutes} min read
+                  </Tooltip>
+                ) : (
+                  <>{readTimeMinutes} min read</>
+                )}
                 {" · "}
-                {formatShortDate(post.postedAt)}
+                <Tooltip
+                  As="span"
+                  title={
+                    <Type style="bodySmall">
+                      <div>Posted on {formatLongDateWithTime(post.postedAt)}</div>
+                      {post.curatedDate && (
+                        <div>
+                          Curated on {formatLongDateWithTime(post.curatedDate)}
+                        </div>
+                      )}
+                    </Type>
+                  }
+                >
+                  {formatShortDate(post.postedAt)}
+                </Tooltip>
               </Type>
             </div>
           </div>
@@ -116,11 +145,11 @@ export default async function PostDisplay({
                   </div>
                 )}
             </div>
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2">
               <PostAudioToggle />
               <PostBookmark />
               <PostShareButton post={post} />
-              <PostTripleDotMenu post={post} orientation="horizontal" hideBookmark />
+              <PostTripleDotMenu post={post} hideBookmark withBackground />
             </div>
           </div>
         </PostColumn>
@@ -143,13 +172,9 @@ export default async function PostDisplay({
               <div className="grow">
                 <PostVoteButtons divider />
               </div>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-2">
                 <PostShareButton post={post} />
-                <PostTripleDotMenu
-                  post={post}
-                  orientation="horizontal"
-                  hideBookmark
-                />
+                <PostTripleDotMenu post={post} hideBookmark withBackground />
               </div>
             </div>
           )}
