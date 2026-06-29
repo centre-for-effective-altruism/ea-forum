@@ -395,3 +395,23 @@
 #intercom-container {
   z-index: var(--zindex-intercom);
 }
+
+/**
+ * Dark mode color overrides
+ */
+.theme-dark .content-base td[style*="background-color:"] {
+  background-color: black !important;
+}
+.theme-dark .content-base th[style*="background-color:"] {
+  background-color: var(--color-table-header-bg) !important;
+}
+.theme-dark .content-base table[style*="background-color:"] {
+  background-color: black !important;
+}
+.theme-dark .content-base td[style*="border:"],
+.content th[style*="border:"] {
+  border: var(--color-table-cell-border) !important;
+}
+.theme-dark .content-base table[style*="border:"] {
+  border-color: #333 !important;
+}
