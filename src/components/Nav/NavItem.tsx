@@ -14,7 +14,6 @@ export default function NavItem({
 }: Readonly<{
   title: string;
   href: string;
-  description: string;
   UnselectedIcon: ComponentType<{ className: string }>;
   SelectedIcon: ComponentType<{ className: string }>;
   isSelected: boolean;
@@ -24,7 +23,6 @@ export default function NavItem({
   if (loggedOutOnly && currentUser) {
     return null;
   }
-
   const Icon = isSelected ? SelectedIcon : UnselectedIcon;
   const className = isSelected ? "text-gray-1000 font-[600]" : "text-gray-600";
   return (
@@ -32,7 +30,8 @@ export default function NavItem({
       <Link
         href={href}
         className={clsx(
-          "flex items-center gap-3 whitespace-nowrap hover:bg-item-hover hover:text-gray-800 rounded pl-3 pr-5 -mx-3 py-2.5",
+          "flex items-center gap-3 whitespace-nowrap rounded pl-3 pr-5 -mx-3 py-2.5",
+          "hover:bg-item-hover hover:text-gray-800",
           className,
         )}
       >
