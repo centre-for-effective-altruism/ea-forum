@@ -112,7 +112,15 @@ export default function RecentDiscussionsPostCommented({
           )}
         </div>
         <LinkPostMessage post={post} />
-        <PostBody html={post.contents?.htmlHighlight ?? ""} />
+        <PostBody
+          html={post.contents?.htmlHighlight ?? ""}
+          className="
+            text-[17px] [&_p]:text-[17px] [&_li]:text-[17px]
+            [&_blockquote]:text-[17px]
+            [&_h1]:text-[18px]! [&_h2]:text-[17px]! [&_h3]:text-[16px]!
+            [&_h4]:text-[16px]! [&_h5]:text-[16px]! [&_h6]:text-[16px]!
+          "
+        />
         <Type style="bodyMedium">
           <Link href={postLink} className="text-primary hover:opacity-70">
             Continue reading

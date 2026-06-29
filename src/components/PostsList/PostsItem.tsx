@@ -151,6 +151,10 @@ export default function PostsItem({
               style="postTitle"
               className={clsx(
                 "mb-0 min-w-0",
+                // On mobile the default 1.5 line-height looked loose / clipped
+                // descenders inside the line-clamp, so tighten it (keeping the
+                // postitem font size unchanged).
+                "max-sm:leading-[1.3]",
                 isRead ? "text-gray-700" : "text-gray-900",
                 cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
               )}
@@ -251,20 +255,20 @@ export default function PostsItem({
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-2 sm:gap-8 items-end pl-[56px] pr-5 pb-4 -mt-1">
+          <div className="flex gap-2 sm:gap-8 items-end pl-[48px] sm:pl-[57px] pr-5 pb-4 -mt-1">
             <Type
               style="postDescription"
               className="text-gray-600 line-clamp-3 overflow-hidden grow leading-[165%]"
             >
               {description}
             </Type>
-            <div
-              className="
-                w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]
-                overflow-hidden rounded relative h-[80px] min-h-[80px]
-              "
-            >
-              {imageUrl && (
+            {imageUrl && (
+              <div
+                className="
+                  w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]
+                  overflow-hidden rounded relative h-[80px] min-h-[80px]
+                "
+              >
                 <Image
                   src={imageUrl}
                   onError={onImageError}
@@ -272,8 +276,8 @@ export default function PostsItem({
                   fill
                   className="object-cover"
                 />
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
         {showNewComments && (
