@@ -30,6 +30,7 @@ import {
 } from "../users/userHelpers";
 import {
   commentRepliesBlockedUntil,
+  userCanEditComment,
   userCanModerateComment,
   userCanPinCommentOnProfile,
 } from "./commentHelpers";
@@ -314,6 +315,9 @@ export const updateComment = async ({
   });
   if (!oldComment) {
     throw new Error("Comment not found");
+  }
+  if (!userCanEditComment(user, oldComment)) {
+    throw new Error("Permission denied");
   }
 
   validateEditorContents(editorData, oldComment.shortform);
