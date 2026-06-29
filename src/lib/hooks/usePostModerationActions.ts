@@ -4,7 +4,6 @@ import { useCurrentUser } from "./useCurrentUser";
 import { userCanDo } from "../users/userHelpers";
 import { rpc } from "../rpc";
 import {
-  userCanArchivePost,
   userCanEditPostMetadata,
   userCanSuggestPostForCurated,
 } from "../posts/postsHelpers";
@@ -112,21 +111,4 @@ export const useMoveToDraft = (post: PostDisplay | PostListItem) => {
   return !draft && currentUser && userCanEditPostMetadata(currentUser, post)
     ? moveToDraft
     : null;
-};
-
-export const useArchiveDraft = (post: PostDisplay | PostListItem) => {
-  const { currentUser } = useCurrentUser();
-  const [archived, setArchived] = useState(false);
-  const archivePost = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    toast.promise(rpc.posts.archiveDraft({ postId: post._id }), {
-      loading: "Loading...",
-      success: () => {
-        setArchived(true);
-        return "Archived draft";
-      },
-      error: "Something went wrong",
-    });
-  }, [post._id]);
-  return !archived && userCanArchivePost(currentUser, post) ? archivePost : null;
 };
