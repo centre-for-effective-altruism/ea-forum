@@ -56,13 +56,20 @@ export default withSentryConfig(nextConfig, {
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
   org: "centre-for-effective-altruism",
-  project: "ea-forum",
+  project: "eaforum3",
   silent: !process.env.CI,
+  // Upload source maps for readable stack traces
+  authToken: process.env.SENTRY_AUTH_TOKEN,
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
   // Route browser requests to Sentry through a Next.js rewrite to circumvent
   // ad-blockers.
   tunnelRoute: "/monitoring",
+  telemetry: false,
+  sourcemaps: {
+    disable: false,
+    deleteSourcemapsAfterUpload: true,
+  },
   webpack: {
     automaticVercelMonitors: true,
     treeshake: {
