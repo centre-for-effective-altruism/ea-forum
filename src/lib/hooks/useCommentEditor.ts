@@ -26,6 +26,7 @@ import type { CurrentUser } from "../users/currentUser";
 import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { useDebouncedCallback } from "./useDebouncedCallback";
 import { useCurrentUser } from "./useCurrentUser";
+import { useTracking } from "../analyticsEvents";
 import { rpc } from "../rpc";
 import {
   getLSHandlers,
@@ -137,6 +138,7 @@ export const useCommentEditor = ({
 }: UseCommentEditorProps) => {
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
+  const { captureEvent } = useTracking();
   const [loading, setLoading] = useState(false);
   const hasUnsavedDataRef = useRef({ hasUnsavedData: false });
   const editorRef = useRef<EditorAPI>(null);
@@ -262,6 +264,14 @@ export const useCommentEditor = ({
           if (!newComment) {
             throw new Error("Something went wrong");
           }
+          if (!comment) {
+            captureEvent("commentSubmitted", {
+              postId: postId ?? null,
+              shortform: shortform ?? false,
+              isReply: !!parentCommentId,
+              isDraft: extraProps?.draft ?? false,
+            });
+          }
           onSuccess?.(newComment);
           editorRef.current?.clear();
         } catch (e) {
@@ -275,6 +285,7 @@ export const useCommentEditor = ({
     [
       currentUser,
       onSignup,
+      captureEvent,
       postId,
       parentCommentId,
       shortform,

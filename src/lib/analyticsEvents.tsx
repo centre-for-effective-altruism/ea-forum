@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useEffect, useMemo } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
+import posthog from "posthog-js";
 import type { Json, JsonRecord } from "./typeHelpers";
 import { AnalyticsEvent } from "./analytics/analyticsHelpers";
 import { formatConsoleDate } from "./timeUtils";
@@ -94,6 +102,10 @@ const browserConsoleLogAnalyticsEvent = (
   console.groupEnd();
 };
 
+type TrackingContext = Record<string, unknown>;
+
+const trackingContext = createContext<TrackingContext>({});
+
 // An empty object, used as an argument default value. If the argument default
 // value were set to {} in the usual way, it would be a new instance of {} each
 // time; this way, it's the same {}, which in turn matters for making
@@ -109,30 +121,31 @@ export const useTracking = ({
 } = {}) => {
   const { currentUser } = useCurrentUser();
   const { clientId } = useClientId();
-  const trackingContext = useMemo(() => ({}), []); // TODO Add tracking context
+  const localTrackingContext = useContext(trackingContext);
   const track = useCallback(
     (type?: string | undefined, trackingData?: Record<string, Json>) => {
+      const eventName = type || eventType;
+      const props = {
+        userId: currentUser?._id,
+        clientId,
+        tabId: window.tabId,
+        ...localTrackingContext,
+        ...eventProps,
+        ...trackingData,
+      } as JsonRecord;
       const event = {
-        type: type || eventType,
+        type: eventName,
         timestamp: new Date(),
-        props: {
-          userId: currentUser?._id,
-          clientId,
-          tabId: window.tabId,
-          ...trackingContext,
-          ...eventProps,
-          ...trackingData,
-        } as JsonRecord,
+        props,
       };
       throttledStoreEvent(event, browserConsoleLogAnalyticsEvent);
       throttledFlushClientEvents();
+      posthog.capture(eventName, props);
     },
-    [currentUser, clientId, trackingContext, eventProps, eventType],
+    [currentUser, clientId, localTrackingContext, eventProps, eventType],
   );
   return { captureEvent: track };
 };
-
-const analyticsContext = createContext(null);
 
 export function AnalyticsContext({
   children,
@@ -142,9 +155,59 @@ export function AnalyticsContext({
     children: ReactNode;
   }
 >) {
-  void props; // TODO
+  const existingContextData = useContext(trackingContext);
+
+  // Create a child context, which is the parent context plus the provided props
+  // merged on top of it. But create it in a referentially stable way: reuse
+  // the same object, so that changes never cause child components to rerender.
+  // (As long as they captured the context in the obvious way, they'll still get
+  // the newest values of these props when they actually log an event.)
+  const newContextData = useRef<TrackingContext>({ ...existingContextData });
+
+  for (const key of Object.keys(props)) {
+    // If the key is nestedPageElementContext, we need to not clobber it when
+    // handling nested contexts
+    if (key === "nestedPageElementContext" && props.nestedPageElementContext) {
+      // If nestedPageElementContext already exists and isn't just us triggering
+      // the same event on the same element, append to it
+      const previousNestedPageElementContext = newContextData.current
+        .nestedPageElementContext as string[] | undefined;
+      // eslint-disable-next-line react-hooks/refs
+      if (previousNestedPageElementContext) {
+        if (
+          // eslint-disable-next-line react-hooks/refs
+          previousNestedPageElementContext.slice(-1)[0] !==
+          props.nestedPageElementContext
+        ) {
+          // eslint-disable-next-line react-hooks/refs
+          newContextData.current.nestedPageElementContext = [
+            // eslint-disable-next-line react-hooks/refs
+            ...(previousNestedPageElementContext as string[]),
+            props.nestedPageElementContext,
+          ];
+        } else {
+          // If nestedPageElementContext already exists and is just us triggering
+          // the same event on the same element, do nothing
+          continue;
+        }
+      } else {
+        // If nestedPageElementContext doesn't exist yet, create it
+        // eslint-disable-next-line react-hooks/refs
+        newContextData.current.nestedPageElementContext = [
+          props.nestedPageElementContext,
+        ];
+      }
+    } else {
+      // Otherwise, just set the key to the value
+      // eslint-disable-next-line react-hooks/refs
+      newContextData.current[key] = props[key as keyof typeof props];
+    }
+  }
   return (
-    <analyticsContext.Provider value={null}>{children}</analyticsContext.Provider>
+    // eslint-disable-next-line react-hooks/refs
+    <trackingContext.Provider value={newContextData.current}>
+      {children}
+    </trackingContext.Provider>
   );
 }
 
