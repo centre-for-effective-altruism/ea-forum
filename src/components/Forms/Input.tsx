@@ -11,6 +11,7 @@ export default function Input({
   multiline,
   disabled,
   onClick,
+  variant = "underline",
   className,
   inputClassName,
 }: Readonly<{
@@ -22,6 +23,7 @@ export default function Input({
   multiline?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  variant?: "underline" | "filled";
   className?: string;
   inputClassName?: string;
 }>) {
@@ -45,10 +47,12 @@ export default function Input({
         disabled={disabled}
         onClick={onClick}
         className={clsx(
-          "clock w-full px-1 py-2 text-sm bg-gray-0 text-gray-900 outline-none",
-          "border-b-2 border-gray-400 focus:border-primary cursor-text transition-all",
+          "w-full text-sm text-gray-900 outline-none cursor-text transition-all",
           "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
           "font-sans font-[400]",
+          variant === "filled"
+            ? "h-9 px-3 bg-gray-100 rounded border border-gray-300 focus:border-primary"
+            : "px-1 py-2 bg-gray-0 border-b-2 border-gray-400 focus:border-primary",
           inputClassName,
         )}
       />

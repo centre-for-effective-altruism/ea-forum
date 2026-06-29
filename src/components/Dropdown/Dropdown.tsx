@@ -59,7 +59,7 @@ export default function Dropdown({
     nodeId,
     open: isOpen,
     onOpenChange,
-    middleware: [flip(), shift()],
+    middleware: [flip(), shift({ padding: 12 })],
     whileElementsMounted: autoUpdate,
     placement,
   });
