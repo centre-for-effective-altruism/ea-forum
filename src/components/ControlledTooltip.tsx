@@ -2,6 +2,7 @@
 
 import type { ElementType, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 import {
   autoUpdate,
   flip,
@@ -56,6 +57,15 @@ export default function ControlledTooltip({
   As?: ElementType;
   children: ReactNode;
 }>) {
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    setIsMobileScreen(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobileScreen(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   const nodeId = useFloatingNodeId();
   const {
     refs: { setReference, setFloating },
@@ -96,6 +106,7 @@ export default function ControlledTooltip({
       </As>
       {isOpen &&
         !disabled &&
+        !isMobileScreen &&
         title &&
         createPortal(
           <div
