@@ -49,7 +49,7 @@ export const captureServerEvent = (
   const id =
     distinctId ??
     (typeof eventProps.userId === "string" ? eventProps.userId : "anonymous");
-  posthog.capture({
+  posthog?.capture({
     distinctId: id,
     event: eventType,
     properties: eventProps,
