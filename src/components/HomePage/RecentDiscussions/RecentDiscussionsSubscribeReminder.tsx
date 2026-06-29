@@ -94,7 +94,7 @@ export default function RecentDiscussionsSubscribeReminder() {
                 style="sectionTitleLarge"
                 className="flex items-center gap-2 pr-8"
               >
-                <EnvelopeIcon className="w-6 text-primary" />
+                <EnvelopeIcon className="w-6 text-primary max-sm:hidden" />
                 Sign up for the weekly Forum Digest
               </Type>
               <Type style="body">

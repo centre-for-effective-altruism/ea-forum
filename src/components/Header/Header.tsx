@@ -79,7 +79,7 @@ export default function Header({
                 />
                 <span className="translate-y-px">
                   <span className="hidden md:inline">Effective Altruism Forum</span>
-                  <span className="max-[400px]:hidden md:hidden inline">
+                  <span className="max-[330px]:hidden md:hidden inline">
                     EA Forum
                   </span>
                 </span>
