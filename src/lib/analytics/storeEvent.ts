@@ -84,7 +84,7 @@ export const throttledStoreEvent = (
  * Available only on the client and when the react tree is mounted.
  */
 const clientWriteEvents = async (events: AnalyticsEvent[]) => {
-  if (isAnyTest()) {
+  if (isAnyTest() || !events.length) {
     return;
   }
   await fetch(combineUrls(getSiteUrl(), "/analyticsEvent"), {
@@ -107,7 +107,7 @@ export const flushClientEvents = (force: boolean = false) => {
   if (isClient && !force && !window.tabId) {
     return;
   }
-  const eventsToWrite = pendingAnalyticsEvents;
+  const eventsToWrite = [...pendingAnalyticsEvents];
   pendingAnalyticsEvents.length = 0;
   void clientWriteEvents(eventsToWrite);
 };
