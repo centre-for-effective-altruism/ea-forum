@@ -298,6 +298,12 @@
   -webkit-text-size-adjust: none;
 }
 
+/* Stop browsers (notably iOS Safari) from synthesising bold weights on top of
+   the variable Inter face, which made bold text render extra-bolded. */
+body {
+  font-synthesis-weight: none;
+}
+
 @keyframes profile-image-loader {
   0% {
     background-position: right;
