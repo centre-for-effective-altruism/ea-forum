@@ -1,6 +1,9 @@
 import type { NotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { formatNotificationType } from "@/lib/notifications/notificationHelpers";
+import {
+  formatNotificationType,
+  getNotificationLink,
+} from "@/lib/notifications/notificationHelpers";
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/16/solid/ChatBubbleLeftIcon";
 import DocumentIcon from "@heroicons/react/16/solid/DocumentIcon";
@@ -30,14 +33,14 @@ export default function NotificationDisplay({
 }: Readonly<{
   notification: NotificationDisplay;
 }>) {
-  const { message, link, type, post, comment, viewed, createdAt } = notification;
+  const { message, type, post, comment, viewed, createdAt } = notification;
   const icon = icons[type === "wrapped" ? "wrapped" : comment ? "comment" : "post"];
   return (
     <AnalyticsContext pageSubSectionContext="notificationsPageItem">
       <PostsTooltip post={post ?? comment?.post} placement="left-start">
         <Link
           data-component="NotificationDisplay"
-          href={link ?? "#"}
+          href={getNotificationLink(notification)}
           className="
             flex gap-2 text-gray-600 p-[6px_8px] rounded
             cursor-pointer hover:bg-gray-100
