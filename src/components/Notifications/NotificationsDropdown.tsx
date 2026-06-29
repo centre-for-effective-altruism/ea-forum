@@ -123,7 +123,7 @@ export default function NotificationsDropdown({
           <div
             data-component="NotificationsDropdown"
             className="
-              bg-surface-floating rounded shadow-lg px-1 py-2 border border-gray-100
+              bg-surface-floating rounded shadow-lg px-2 py-3 border border-gray-100
               w-[400px] max-w-full max-h-[90vh] overflow-y-auto
             "
           >
@@ -149,7 +149,7 @@ export default function NotificationsDropdown({
                     },
                   ]}
                 >
-                  <button className="cursor-pointer mt-1">
+                  <button className="cursor-pointer hover:bg-item-hover rounded p-1">
                     <EllipsisVerticalIcon className="w-6" />
                   </button>
                 </DropdownMenu>

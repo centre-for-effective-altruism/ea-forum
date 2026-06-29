@@ -1,17 +1,19 @@
 import type { SearchComment } from "@/lib/search/searchDocuments";
 import { commentGetPageUrlFromIds } from "@/lib/comments/commentHelpers";
-import ChatBubbleLeftIcon from "@heroicons/react/24/solid/ChatBubbleLeftIcon";
+import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import HeaderSearchResult from "./HeaderSearchResult";
 import TimeAgo from "../TimeAgo";
 
 export default function HeaderSearchComment({
   comment,
+  selected,
 }: Readonly<{
   comment: SearchComment;
+  selected?: boolean;
 }>) {
   return (
     <HeaderSearchResult
-      tooltipTitle="Comment"
+      selected={selected}
       href={commentGetPageUrlFromIds({
         commentId: comment._id,
         postId: comment.postId,

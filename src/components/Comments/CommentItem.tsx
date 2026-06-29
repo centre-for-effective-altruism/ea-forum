@@ -322,13 +322,18 @@ export default function CommentItem({
           </div>
           {!draft && (
             <>
-              <Link
-                href={commentGetPageUrl({ comment })}
-                onClick={copyLink}
-                className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-item-hover"
+              <Tooltip
+                title={<Type style="bodySmall">Copy link</Type>}
+                placement="bottom"
               >
-                <LinkIcon className="w-[16px]" />
-              </Link>
+                <Link
+                  href={commentGetPageUrl({ comment })}
+                  onClick={copyLink}
+                  className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-item-hover"
+                >
+                  <LinkIcon className="w-[16px]" />
+                </Link>
+              </Tooltip>
               {currentUser && (
                 <CommentTripleDotMenu
                   comment={comment}
