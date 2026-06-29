@@ -198,7 +198,7 @@ export default function HeaderSearch({
       {query && (
         <div
           className="
-            absolute top-[66px] right-0 w-[440px] max-w-full bg-surface-floating shadow
+            absolute top-[70px] right-0 w-[440px] max-w-full bg-surface-floating shadow
           "
         >
           {loading && (
@@ -212,7 +212,7 @@ export default function HeaderSearch({
               onMouseMove={onResultsMouseMove}
               className="
                 flex flex-col gap-[1px] bg-gray-300 overflow-auto overscroll-contain
-                max-h-[calc(100vh-66px)] [&>*]:bg-surface-floating [&>*]:p-2
+                max-h-[calc(100vh-70px)] [&>*]:bg-surface-floating [&>*]:p-2
               "
             >
               {results.users && results.users.length > 0 && (
