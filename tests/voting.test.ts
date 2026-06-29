@@ -7,7 +7,9 @@ import {
   createTestUser,
 } from "./testHelpers";
 import { nDaysAgo } from "@/lib/timeUtils";
+import { fetchVoteableDocumentAuthors } from "@/lib/votes/voteableDocument";
 import { userSmallVotePower } from "@/lib/votes/voteHelpers";
+import { updateUserKarma } from "@/lib/votes/voteCallbacks";
 import { performVote } from "@/lib/votes/voteMutations";
 import { tags } from "@/lib/schema";
 import { db } from "@/lib/db";
@@ -799,5 +801,24 @@ suite("Voting", () => {
         expect(voteResult.baseScore).toBe(-power);
       }
     });
+  });
+  test("updateUserKarma update user groups", async () => {
+    const [author, voter] = await Promise.all([
+      createTestUser({ karma: 0, groups: [] }),
+      createTestUser(),
+    ]);
+    expect(author.karma).toBe(0);
+    expect(author.groups).toStrictEqual([]);
+    const post = await createTestPost({ userId: author._id });
+    const authors = await fetchVoteableDocumentAuthors(db, post);
+    expect(authors[0]._id).toBe(author._id);
+    await updateUserKarma(db, "Posts", authors, voter._id, 1000);
+    const updatedAuthor = await db.query.users.findFirst({
+      where: {
+        _id: author._id,
+      },
+    });
+    expect(updatedAuthor!.karma).toBe(1000);
+    expect(updatedAuthor!.groups).toStrictEqual(["canModeratePersonal"]);
   });
 });

@@ -101,10 +101,12 @@ export const updateUserKarma = async (
           }
         }
         if (newGroups.length) {
+          const separatedGroups = newGroups.map((g) => `'${g}'`).join(",");
+          const arrayLiteral = `ARRAY[${separatedGroups}]::TEXT[]`;
           await db
             .update(users)
             .set({
-              groups: sql`${users.groups} || ${newGroups}`,
+              groups: sql`${users.groups} || ${sql.raw(arrayLiteral)}`,
             })
             .where(eq(users._id, author._id));
         }
