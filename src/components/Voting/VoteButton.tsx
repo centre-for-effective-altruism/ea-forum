@@ -8,17 +8,19 @@ import {
 } from "@/lib/votes/voteHelpers";
 import Transition from "react-transition-group/Transition";
 import clsx from "clsx";
-import SoftArrowUpIcon from "../Icons/SoftArrowUpIcon";
-import VoteStrongHatIcon from "../Icons/VoteStrongHatIcon";
+import { SOFT_ARROW_PATH } from "../Icons/SoftArrowUpIcon";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 
-// The filled triangle (matching the postitem score arrow), kept in a 3:2 ratio.
+// Rendered size of the filled triangle (matching the postitem score arrow),
+// drawn in SoftArrowUpIcon's "0 0 9 6" viewBox.
 const ARROW_WIDTH = 13;
 const ARROW_HEIGHT = 9;
-// The strong-vote "hat" chevron that sits above the base triangle.
-const HAT_WIDTH = 15;
-const HAT_HEIGHT = 10;
+// The strong-vote "hat" traces the triangle's two upper edges, lifted above it
+// (in viewBox units) — drawn in the SAME svg so it can't drift relative to the
+// triangle when rasterized at fractional pixel positions.
+const HAT_PATH = "M0.844665 4.93186 L4.5 0.85 L8.15534 4.93186";
+const HAT_LIFT = 3.4;
 
 const orientations = {
   up: null,
@@ -53,7 +55,7 @@ export default function VoteButton({
   );
   const [bigVotingTransition, setBigVotingTransition] = useState(false);
   const [bigVoteCompleted, setBigVoteCompleted] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
+  const ref = useRef<SVGSVGElement>(null);
 
   const voted = currentVoteStrength !== "neutral";
   const bigVoted = currentVoteStrength === "big";
@@ -155,42 +157,56 @@ export default function VoteButton({
           className,
         )}
       >
-        {/* Base triangle. When strong-voted it lightens, and a darker "hat"
-            chevron stacks on top of it (see the strong-vote overlay below). */}
-        <SoftArrowUpIcon
-          width={ARROW_WIDTH}
-          height={ARROW_HEIGHT}
-          className={clsx(
-            voted && baseColor,
-            !voted && dimWhenNotVoted && "opacity-70",
-            !voted && "hover:text-gray-600",
-          )}
-        />
-        {/* Strong-vote "hat": an upward chevron above the base triangle, darker
-            so the darker arrow sits on top. */}
+        {/* Triangle (always shown) and the strong-vote "hat" in ONE svg, so the
+            hat can't drift from the triangle when rasterized at fractional pixel
+            positions. The base triangle lightens when strong-voted; the darker
+            hat chevron — the triangle's own upper edges, lifted above it — fades
+            in on top. */}
         <Transition
           in={!!(bigVotingTransition || bigVoted)}
           timeout={strongVoteDelayMs}
           nodeRef={ref as unknown as RefObject<HTMLElement>}
         >
           {(state) => (
-            <span
+            <svg
               ref={ref}
+              width={ARROW_WIDTH}
+              height={ARROW_HEIGHT}
+              viewBox="0 0 9 6"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
               className={clsx(
-                // Geometrically centered, but a hair left of -translate-x-1/2
-                // reads as better optically aligned over the triangle.
-                "pointer-events-none absolute left-1/2 -translate-x-[calc(50%+0.5px)] -top-[4px]",
-                (bigVoteCompleted || bigVoted) && strongColor,
-                state === "entering" || state === "entered"
-                  ? "opacity-100"
-                  : "opacity-0",
-                state === "exiting"
-                  ? "[transition:opacity_150ms_cubic-bezier(0.74,-0.01,1,1)_0ms]"
-                  : "[transition:opacity_1000ms_cubic-bezier(0.74,-0.01,1,1)_0ms]",
+                "overflow-visible",
+                !voted && dimWhenNotVoted && "opacity-70",
+                !voted && "hover:text-gray-600",
               )}
             >
-              <VoteStrongHatIcon width={HAT_WIDTH} height={HAT_HEIGHT} />
-            </span>
+              <path
+                d={SOFT_ARROW_PATH}
+                fill="currentColor"
+                className={clsx(voted && baseColor)}
+              />
+              <g
+                transform={`translate(0 -${HAT_LIFT})`}
+                className={clsx(
+                  (bigVoteCompleted || bigVoted) && strongColor,
+                  state === "entering" || state === "entered"
+                    ? "opacity-100"
+                    : "opacity-0",
+                  state === "exiting"
+                    ? "[transition:opacity_150ms_cubic-bezier(0.74,-0.01,1,1)_0ms]"
+                    : "[transition:opacity_1000ms_cubic-bezier(0.74,-0.01,1,1)_0ms]",
+                )}
+              >
+                <path
+                  d={HAT_PATH}
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            </svg>
           )}
         </Transition>
       </button>
