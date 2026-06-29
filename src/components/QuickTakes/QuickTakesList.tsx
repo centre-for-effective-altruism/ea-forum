@@ -70,7 +70,12 @@ export default function QuickTakesList({
       ))}
       {loading && <QuickTakesListSkeleton count={limit} />}
       {canLoadMore && (
-        <TextLinkButton variant="primary" onClick={onLoadMore} disabled={loading}>
+        <TextLinkButton
+          variant="primary"
+          onClick={onLoadMore}
+          disabled={loading}
+          className="mt-1.5"
+        >
           Load more
           {knownTotal != null ? ` (${shownCount}/${knownTotal})` : ""}
         </TextLinkButton>

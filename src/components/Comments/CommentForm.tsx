@@ -72,7 +72,7 @@ export default function CommentForm({
           <Button type="submit" loading={loading} className="rounded-r-none!">
             Comment
           </Button>
-          <div aria-hidden className="w-[1px] min-w-[1px] bg-primary">
+          <div aria-hidden className="w-[1px] min-w-[1px] bg-primary-button">
             <div className="w-full mt-[6px] py-3 bg-always-white opacity-30" />
           </div>
           <DropdownMenu

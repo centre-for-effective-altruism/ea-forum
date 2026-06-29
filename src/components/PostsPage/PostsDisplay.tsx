@@ -5,6 +5,7 @@ import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
+import { formatThousands } from "@/lib/formatHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
 import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
 import {
@@ -95,7 +96,11 @@ export default async function PostDisplay({
                 {wordCount ? (
                   <Tooltip
                     As="span"
-                    title={<Type style="bodySmall">{wordCount} words</Type>}
+                    title={
+                      <Type style="bodySmall">
+                        {formatThousands(wordCount)} words
+                      </Type>
+                    }
                   >
                     {readTimeMinutes} min read
                   </Tooltip>

@@ -20,7 +20,7 @@ import {
 import clsx from "clsx";
 
 // Short delay before showing on hover; hide immediately on leave.
-const HOVER_DELAY = { open: 300, close: 0 };
+const HOVER_DELAY = { open: 200, close: 0 };
 
 export default function ControlledTooltip({
   isOpen,

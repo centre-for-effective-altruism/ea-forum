@@ -13,6 +13,7 @@ import type { EventInfo } from "@ckeditor/ckeditor5-utils";
 import type { EditorCollectionName } from "@/lib/ckeditor/editorSettings";
 import type { CollaborativeEditingAccessLevel } from "@/lib/ckeditor/collabEditingPermissions";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import {
   autosaveIntervalMs,
   checkEditorValid,
@@ -24,6 +25,7 @@ import {
   FormProps,
   validationIntervalMs,
 } from "@/lib/ckeditor/editorHelpers";
+import clsx from "clsx";
 import debounce from "lodash/debounce";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import PlaintextEditor from "./PlaintextEditor";
@@ -36,7 +38,6 @@ import FormLabel from "../Forms/FormLabel";
 import WarningBanner from "../WarningBanner";
 import Type from "../Type";
 import "./ckeditor-styles.css";
-import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 
 export type EditorOnChangeProps = {
   contents: EditorContents;
@@ -285,7 +286,9 @@ const Editor = forwardRef<
           <Loading />
         ) : (
           <div
-            className={commentEditor ? "forum-editor" : "forum-editor post-editor"}
+            // TODO: Do we need finer grained control here for editing collections
+            // other than comments and posts?
+            className={clsx("forum-editor", !commentEditor && "post-editor")}
           >
             {editorWarning && <WarningBanner messageHtml={editorWarning} />}
             {value.type === "ckEditorMarkup" ? (

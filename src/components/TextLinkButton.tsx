@@ -40,6 +40,7 @@ export default function TextLinkButton({
   }
   return (
     <button
+      data-component="TextLinkButton"
       type="button"
       onClick={onClick}
       disabled={disabled}
