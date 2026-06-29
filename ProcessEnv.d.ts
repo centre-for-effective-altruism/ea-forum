@@ -57,6 +57,7 @@ declare namespace NodeJS {
     NEXT_PUBLIC_RECAPTCHA_KEY: string;
     RECAPTCHA_PRIVATE_KEY: string;
     NEXT_PUBLIC_SENTRY_DSN: string;
+    SENTRY_AUTH_TOKEN?: string;
     INTERCOM_TOKEN: string;
     PANGRAM_API_KEY: string;
 
