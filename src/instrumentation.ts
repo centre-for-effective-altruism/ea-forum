@@ -14,7 +14,7 @@ const initOpenTelemetry = () => {
   }
   const sdk = new NodeSDK({
     traceExporter: new OTLPTraceExporter({
-      url: `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/v1/traces`,
+      url: `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/i/v1/traces`,
       headers: {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}`,
       },
