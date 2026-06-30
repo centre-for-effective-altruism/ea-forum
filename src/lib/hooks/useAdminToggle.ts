@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { userIsInGroup } from "../users/userHelpers";
+import { userIsRealAdmin } from "../users/userHelpers";
 import { useCurrentUser } from "./useCurrentUser";
 import { rpc } from "../rpc";
 import toast from "react-hot-toast";
@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 export const useAdminToggle = () => {
   const { currentUser } = useCurrentUser();
   const [isAdmin, setIsAdmin] = useState(!!currentUser?.isAdmin);
-  const showAdminToggle = userIsInGroup(currentUser, "realAdmins");
+  const showAdminToggle = userIsRealAdmin(currentUser);
   const setAdmin = useCallback(async () => {
     const toastId = toast.loading("Toggling admin powers...");
     try {
