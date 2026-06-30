@@ -12,6 +12,7 @@ declare namespace NodeJS {
     CONTACT_EMAIL: string;
     NEXT_PUBLIC_GOOGLE_TAG_MANAGER_KEY: string;
     ADMIN_ACCOUNT_EMAIL: string;
+    NEXT_PUBLIC_ANALYTICS_EVENTS_DISABLED?: "true" | "false";
 
     // Auth0 settings
     NEXT_PUBLIC_AUTH0_DOMAIN: string;
@@ -60,6 +61,8 @@ declare namespace NodeJS {
     SENTRY_AUTH_TOKEN?: string;
     INTERCOM_TOKEN: string;
     PANGRAM_API_KEY: string;
+    NEXT_PUBLIC_POSTHOG_HOST: string;
+    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: string;
 
     // Site config
     START_HERE_POST_ID: string;

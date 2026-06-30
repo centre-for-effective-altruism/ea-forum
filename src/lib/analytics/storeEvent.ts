@@ -79,12 +79,15 @@ export const throttledStoreEvent = (
   }
 };
 
+const analyticsEventsDisabled =
+  isAnyTest() || process.env.NEXT_PUBLIC_ANALYTICS_EVENTS_DISABLED === "true";
+
 /**
  * Send a request from the client to the server with an array of events.
  * Available only on the client and when the react tree is mounted.
  */
 const clientWriteEvents = async (events: AnalyticsEvent[]) => {
-  if (isAnyTest()) {
+  if (analyticsEventsDisabled || !events.length) {
     return;
   }
   await fetch(combineUrls(getSiteUrl(), "/analyticsEvent"), {
@@ -107,7 +110,7 @@ export const flushClientEvents = (force: boolean = false) => {
   if (isClient && !force && !window.tabId) {
     return;
   }
-  const eventsToWrite = pendingAnalyticsEvents;
+  const eventsToWrite = [...pendingAnalyticsEvents];
   pendingAnalyticsEvents.length = 0;
   void clientWriteEvents(eventsToWrite);
 };

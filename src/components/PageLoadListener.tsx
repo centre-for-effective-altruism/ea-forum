@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { devicePrefersDarkMode } from "@/lib/hooks/usePrefersDarkMode";
 import { CLIENT_ID_COOKIE } from "@/lib/clientIds/clientIdHelpers";
 import { initGoogleTagManager } from "@/lib/googleTagManager";
@@ -9,13 +10,18 @@ import { useTracking } from "@/lib/analyticsEvents";
 import { initRecaptcha } from "@/lib/recaptcha";
 import { randomId } from "@/lib/utils/random";
 
-/**
- * This component handles effects that should trigger exactly once after the
- * initial page load, and not again on client-side navigations.
- */
+let lastUrl: string | null = null;
+
 export default function PageLoadListener() {
   const { captureEvent } = useTracking();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const url = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
 
+  /**
+   * Effects that should trigger exactly once after the initial page load, and
+   * not again on client-side navigations.
+   */
   useEffect(() => {
     if (
       !document.cookie.split("; ").find((row) => row.startsWith(CLIENT_ID_COOKIE))
@@ -52,6 +58,25 @@ export default function PageLoadListener() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /**
+   * Effects that should trigger on each page load, including client-side
+   * navigations
+   */
+  useEffect(() => {
+    if (url !== lastUrl) {
+      // Don't send the callback on the initial pageload, only on post-load
+      // navigations
+      if (lastUrl) {
+        captureEvent("navigate", {
+          from: lastUrl,
+          to: url,
+        });
+      }
+      lastUrl = url;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
 
   return null;
 }

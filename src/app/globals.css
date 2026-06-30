@@ -401,3 +401,42 @@ body {
 #intercom-container {
   z-index: var(--zindex-intercom);
 }
+
+/**
+ * Dark mode color overrides
+ * TODO: Tidy this up so we don't have to copy and paste...
+ */
+.theme-dark .content-base td[style*="background-color:"] {
+  background-color: black !important;
+}
+.theme-dark .content-base th[style*="background-color:"] {
+  background-color: var(--color-table-header-bg) !important;
+}
+.theme-dark .content-base table[style*="background-color:"] {
+  background-color: black !important;
+}
+.theme-dark .content-base td[style*="border:"],
+.theme-dark .content-base th[style*="border:"] {
+  border: var(--color-table-cell-border) !important;
+}
+.theme-dark .content-base table[style*="border:"] {
+  border-color: #333 !important;
+}
+@media (prefers-color-scheme: dark) {
+  .theme-auto .content-base td[style*="background-color:"] {
+    background-color: black !important;
+  }
+  .theme-auto .content-base th[style*="background-color:"] {
+    background-color: var(--color-table-header-bg) !important;
+  }
+  .theme-auto .content-base table[style*="background-color:"] {
+    background-color: black !important;
+  }
+  .theme-auto .content-base td[style*="border:"],
+  .theme-auto .content-base th[style*="border:"] {
+    border: var(--color-table-cell-border) !important;
+  }
+  .theme-auto .content-base table[style*="border:"] {
+    border-color: #333 !important;
+  }
+}

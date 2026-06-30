@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const LEGACY_SITE_URL = process.env.LEGACY_SITE_URL || "http://localhost:4000";
-const legacySiteUrl = new URL(LEGACY_SITE_URL);
+const legacySiteUrl = process.env.LEGACY_SITE_URL
+  ? new URL(process.env.LEGACY_SITE_URL)
+  : null;
 
 // Highest precedence: Always route these to the old site
 const oldSitePatterns = [
@@ -21,6 +22,8 @@ const newSitePatterns = [
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
   /^\/rpc\//, // All /rpc/* routes
+  /^\/ingest\//, // Posthog ingestion routes
+  /^\/monitoring$/, // Sentry ingestion
   /^\/about$/, // About page
   /^\/intro$/, // Intro page
   /^\/contact$/, // Contact page
@@ -95,8 +98,9 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   const prefersNewSite = getUserPrefersNewSite(request);
   const hasPreferenceCookie = request.cookies.has("prefer_ea_forum_v3");
 
-  // Only route to new site if user prefers it AND the route matches new site patterns
-  if (prefersNewSite && isNewSiteAllowed(pathname)) {
+  // Only route to new site if user prefers it AND the route matches new site
+  // patterns, or if the proxy is not configured
+  if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
     return NextResponse.next();
   }
 

@@ -424,6 +424,40 @@ suite("Comments", () => {
     expect(updatedComment?.contents?.html).not.toContain("Original comment");
     expect(updatedComment?.contents?.version).toBe("1.1.0");
   });
+  test("Cannot edit someone elses comment", async () => {
+    const [post, commenter, editor] = await Promise.all([
+      createTestPost(),
+      createTestUser(),
+      createTestUser(),
+    ]);
+    const commentId = await createPostComment({
+      user: commenter,
+      postId: post._id,
+      parentCommentId: null,
+      editorData: {
+        originalContents: {
+          type: "ckEditorMarkup",
+          data: "<p>Original comment</p>",
+        },
+        updateType: "initial",
+        commitMessage: "",
+      },
+    });
+    await expect(async () => {
+      await updateComment({
+        user: editor,
+        commentId,
+        editorData: {
+          originalContents: {
+            type: "ckEditorMarkup",
+            data: "<p>Updated comment</p>",
+          },
+          updateType: "minor",
+          commitMessage: "",
+        },
+      });
+    }).rejects.toThrowError("Permission denied");
+  });
   test("Delete and undelete comments", async () => {
     const post = await createTestPost({ commentCount: 1 });
     expect(post.commentCount).toBe(1);

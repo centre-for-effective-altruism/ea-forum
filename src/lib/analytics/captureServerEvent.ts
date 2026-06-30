@@ -2,6 +2,7 @@ import "server-only";
 import { throttledFlushClientEvents, throttledStoreEvent } from "./storeEvent";
 import { AnalyticsEvent, showAnalyticsDebug } from "./analyticsHelpers";
 import { formatConsoleDate } from "../timeUtils";
+import { getPostHogClient } from "../posthog-server";
 import type { JsonRecord } from "../typeHelpers";
 
 const stringToColor = (s: string) => {
@@ -26,7 +27,11 @@ const serverConsoleLogAnalyticsEvent = (event: AnalyticsEvent) => {
   );
 };
 
-export const captureServerEvent = (eventType: string, eventProps: JsonRecord) => {
+export const captureServerEvent = (
+  eventType: string,
+  eventProps: JsonRecord,
+  distinctId?: string,
+) => {
   const event = {
     type: eventType,
     timestamp: new Date(),
@@ -37,9 +42,16 @@ export const captureServerEvent = (eventType: string, eventProps: JsonRecord) =>
     serverConsoleLogAnalyticsEvent(event);
   }
 
-  // TODO: This is currently calling the client-side endpoint instead of directly
-  // writing to Postgres as ForumMagnum does. This is a temporary solution until
-  // we implement a better analytics system (probably using Posthog).
   throttledStoreEvent(event, serverConsoleLogAnalyticsEvent);
   throttledFlushClientEvents();
+
+  const posthog = getPostHogClient();
+  const id =
+    distinctId ??
+    (typeof eventProps.userId === "string" ? eventProps.userId : "anonymous");
+  posthog?.capture({
+    distinctId: id,
+    event: eventType,
+    properties: eventProps,
+  });
 };

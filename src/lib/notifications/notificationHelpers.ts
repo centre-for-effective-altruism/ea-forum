@@ -1,3 +1,9 @@
+import type { NotificationDisplay } from "./notificationDisplayTypes";
+import { localgroupGetPageUrl } from "../localgroups/localgroupHelpers";
+import { sequenceGetPageUrl } from "../sequences/sequenceHelpers";
+import { commentGetPageUrl } from "../comments/commentHelpers";
+import { userGetProfileUrl } from "../users/userHelpers";
+import { postGetPageUrl } from "../posts/postsHelpers";
 import { TupleSet, UnionOf } from "../typeHelpers";
 
 export type NotificationChannel = "onsite" | "email";
@@ -175,4 +181,38 @@ export const legacyToNewNotificationTypeSettings = (
       dayOfWeekGMT,
     },
   };
+};
+
+export const getNotificationLink = ({
+  link,
+  type,
+  post,
+  comment,
+  user,
+  localgroup,
+  sequence,
+}: NotificationDisplay) => {
+  if (link) {
+    return link;
+  }
+  if (type === "emailVerificationRequired") {
+    return "/resendVerificationEmail";
+  }
+  if (comment) {
+    return commentGetPageUrl({ comment });
+  }
+  if (post) {
+    return postGetPageUrl({ post });
+  }
+  if (sequence) {
+    return sequenceGetPageUrl({ sequence });
+  }
+  if (localgroup) {
+    return localgroupGetPageUrl({ localgroup });
+  }
+  if (user) {
+    return userGetProfileUrl({ user });
+  }
+  console.error("Invalid notification type");
+  return "#";
 };

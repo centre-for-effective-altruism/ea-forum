@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import * as Sentry from "@sentry/browser";
+import posthog from "posthog-js";
 import { rpc } from "../rpc";
 import type { CurrentUser } from "../users/currentUser";
 
@@ -61,6 +62,14 @@ export function CurrentUserProvider({
           }
         : null,
     );
+    if (currentUser) {
+      posthog.identify(currentUser._id, {
+        email: currentUser.email ?? undefined,
+        username: currentUser.username ?? currentUser.displayName ?? undefined,
+      });
+    } else {
+      posthog.reset();
+    }
   }, [currentUser]);
 
   return (
