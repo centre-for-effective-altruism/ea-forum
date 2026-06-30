@@ -76,6 +76,7 @@ export default async function PostDisplay({
         <PostColumn>
           <PostSequenceNavigation post={post} sequence={sequence} className="mb-2" />
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
+            {post.draft && <span className="text-gray-600">[Draft] </span>}
             {post.title}
           </Type>
           <div className="flex items-center gap-3 mb-6">
