@@ -12,6 +12,7 @@ declare namespace NodeJS {
     CONTACT_EMAIL: string;
     NEXT_PUBLIC_GOOGLE_TAG_MANAGER_KEY: string;
     ADMIN_ACCOUNT_EMAIL: string;
+    NEXT_PUBLIC_ANALYTICS_EVENTS_DISABLED?: "true" | "false";
 
     // Auth0 settings
     NEXT_PUBLIC_AUTH0_DOMAIN: string;
