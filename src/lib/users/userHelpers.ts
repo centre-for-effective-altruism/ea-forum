@@ -197,6 +197,13 @@ export const userIsAdmin = <T extends Partial<User>>(
   user: T | null,
 ): user is T & { isAdmin: true } => user?.isAdmin ?? false;
 
+/**
+ * Check if user is real admin - this means that the user _is_ an admin, but they
+ * may or may not have toggled to "is admin" switch
+ */
+export const userIsRealAdmin = (user: CurrentUser | null) =>
+  userIsInGroup(user, "realAdmins");
+
 export type UserPermissions = Pick<User, "_id" | "groups" | "banned" | "isAdmin">;
 
 /**
