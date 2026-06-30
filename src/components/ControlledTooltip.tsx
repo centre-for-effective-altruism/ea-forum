@@ -57,10 +57,6 @@ export default function ControlledTooltip({
   As?: ElementType;
   children: ReactNode;
 }>) {
-  // Hover/focus-driven tooltips are awkward on touch devices, so suppress them
-  // on mobile (see issue: "remove all tooltips from mobile"). Click-driven
-  // popovers (which pass `noHover` and control `isOpen` externally, e.g. the
-  // forum-event emoji picker) must keep working, so they're left untouched.
   const suppressOnTouch = useIsTouchDevice() && !noHover;
   const nodeId = useFloatingNodeId();
   const {
