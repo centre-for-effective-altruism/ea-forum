@@ -19,7 +19,15 @@ const initOpenTelemetry = () => {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}`,
       },
     }),
-    instrumentations: [getNodeAutoInstrumentations()],
+    instrumentations: [
+      getNodeAutoInstrumentations({
+        // Both OpenTelemetry and Sentry try to patch undici with traceparent
+        // headers. Having two of these headers causes Elasticsearch to crash...
+        "@opentelemetry/instrumentation-undici": {
+          enabled: false,
+        },
+      }),
+    ],
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: `eaforum-${process.env.NEXT_PUBLIC_ENVIRONMENT}`,
     }),
