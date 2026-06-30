@@ -43,6 +43,9 @@ export default function Link({
       onClick={onClick}
       className={className ?? "hover:opacity-70"}
       {...props}
+      // This is really important to avoid hammering the old ForumMagnum servers
+      // with preemtive fetches - maybe we can remove it in the future though?
+      prefetch={false}
     >
       {children}
     </NextLink>
