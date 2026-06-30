@@ -27,36 +27,41 @@ export default function PostVoteButtons({
     },
   } = usePostDisplay();
   return (
-    <div data-component="PostVoteButtons" className="flex items-center gap-1">
-      <VoteButton
-        currentVoteStrength={getVoteDownStrength(voteType)}
-        direction="Downvote"
-        orientation="down"
-        onVote={onVote}
-        className="text-gray-600"
-      />
-      <Tooltip
-        title={
-          <Type>
-            This post has {baseScore} karma ({voteCount} vote
-            {voteCount === 1 ? "" : "s"})
+    <div
+      data-component="PostVoteButtons"
+      className="flex flex-wrap items-center gap-x-1 gap-y-2"
+    >
+      {/* Keep the vote arrows + score together; only the reactions wrap. */}
+      <div className="flex items-center gap-1 shrink-0">
+        <VoteButton
+          currentVoteStrength={getVoteDownStrength(voteType)}
+          direction="Downvote"
+          orientation="down"
+          onVote={onVote}
+          className="text-gray-400"
+        />
+        <Tooltip
+          title={
+            <Type>
+              {baseScore} karma ({voteCount} {voteCount === 1 ? "vote" : "votes"})
+            </Type>
+          }
+          className="text-[14px] font-500 text-gray-600"
+        >
+          <Type style="voteScore" className="cursor-default">
+            {baseScore}
           </Type>
-        }
-        className="text-[14px] font-500 text-gray-600"
-      >
-        <Type style="voteScore" className="cursor-default">
-          {baseScore}
-        </Type>
-      </Tooltip>
-      <VoteButton
-        currentVoteStrength={getVoteUpStrength(voteType)}
-        direction="Upvote"
-        orientation="up"
-        onVote={onVote}
-        className="text-gray-600 mr-3"
-      />
+        </Tooltip>
+        <VoteButton
+          currentVoteStrength={getVoteUpStrength(voteType)}
+          direction="Upvote"
+          orientation="up"
+          onVote={onVote}
+          className="text-gray-400 mr-3"
+        />
+      </div>
       {!hideReacts && (
-        <>
+        <div className="flex flex-wrap items-center gap-1">
           {divider && (
             <div
               aria-hidden
@@ -71,7 +76,7 @@ export default function PostVoteButtons({
             extendedVoteType={extendedVoteType}
             onReact={onReact}
           />
-        </>
+        </div>
       )}
     </div>
   );

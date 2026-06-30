@@ -38,11 +38,10 @@ export default function CommentVoteButtons({
         <Tooltip
           title={
             <Type>
-              This comment has {baseScore} karma ({voteCount} vote
-              {voteCount === 1 ? "" : "s"})
+              {baseScore} karma ({voteCount} {voteCount === 1 ? "vote" : "votes"})
             </Type>
           }
-          className="text-gray-600 cursor-default -mx-[1px]"
+          className="text-gray-600 cursor-default mx-[2px]"
         >
           <Type style="bodyMedium" As="span">
             {baseScore}

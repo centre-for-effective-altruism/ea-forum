@@ -18,6 +18,7 @@ import {
   useRole,
 } from "@floating-ui/react";
 import clsx from "clsx";
+import { useIsTouchDevice } from "@/lib/hooks/useIsTouchDevice";
 
 // Short delay before showing on hover; hide immediately on leave.
 const HOVER_DELAY = { open: 200, close: 0 };
@@ -56,6 +57,7 @@ export default function ControlledTooltip({
   As?: ElementType;
   children: ReactNode;
 }>) {
+  const suppressOnTouch = useIsTouchDevice() && !noHover;
   const nodeId = useFloatingNodeId();
   const {
     refs: { setReference, setFloating },
@@ -70,12 +72,12 @@ export default function ControlledTooltip({
     whileElementsMounted: autoUpdate,
   });
   const hover = useHover(context, {
-    enabled: !noHover,
+    enabled: !noHover && !suppressOnTouch,
     move: false,
     delay: HOVER_DELAY,
     handleClose: interactable ? safePolygon() : undefined,
   });
-  const focus = useFocus(context);
+  const focus = useFocus(context, { enabled: !suppressOnTouch });
   const dismiss = useDismiss(context, { outsidePress: true });
   const role = useRole(context, { role: "tooltip" });
   const { getReferenceProps, getFloatingProps } = useInteractions([
@@ -96,6 +98,7 @@ export default function ControlledTooltip({
       </As>
       {isOpen &&
         !disabled &&
+        !suppressOnTouch &&
         title &&
         createPortal(
           <div

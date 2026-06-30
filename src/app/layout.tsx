@@ -23,6 +23,11 @@ import "./globals.css";
 
 const inter = localFont({
   src: "../fonts/InterVariable.woff2",
+  // Declare the full variable weight range so browsers (notably iOS Safari) use
+  // the font's own weight axis instead of synthesising bold, which made 600/700
+  // text look extra-bolded.
+  weight: "100 900",
+  style: "normal",
   variable: "--font-inter",
   display: "swap",
   preload: true,

@@ -5,6 +5,13 @@
   font-weight: 430;
   word-break: break-word;
 }
+/* The serif body reads a touch large on small screens; nudge it down (comment
+   and tag bodies set their own sizes, so leave those alone). */
+@media (max-width: 640px) {
+  .content-base:not(.comment-body):not(.tag-body) {
+    font-size: 18px;
+  }
+}
 .content-base strong,
 .content-base b {
   font-weight: 600;

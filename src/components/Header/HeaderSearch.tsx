@@ -211,7 +211,8 @@ export default function HeaderSearch({
               ref={resultsRef}
               onMouseMove={onResultsMouseMove}
               className="
-                flex flex-col gap-[1px] bg-gray-300 overflow-auto overscroll-contain
+                flex flex-col gap-[1px] bg-gray-300 overflow-y-auto overflow-x-hidden
+                overscroll-contain
                 max-h-[calc(100vh-70px)] [&>*]:bg-surface-floating [&>*]:p-2
               "
             >

@@ -29,7 +29,7 @@ export default function HeaderSearchResult({
         (Icon ? (
           <Icon className="w-5 shrink-0 self-start ml-1 mr-3 mt-0.5" />
         ) : null)}
-      <Link href={href} className="block grow">
+      <Link href={href} className="block grow min-w-0 break-words">
         {children}
       </Link>
     </Type>
