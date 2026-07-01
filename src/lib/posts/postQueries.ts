@@ -205,7 +205,7 @@ export const filterSettingsToSelector = (
   }
 
   const addClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [
-    (posts) => sql`${posts}."score"`,
+    (posts) => sql`${posts}."baseScore"`,
   ];
   const multClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [];
   for (const tag of tagsSoftFiltered) {
