@@ -186,10 +186,14 @@
   padding-left: 1.5em;
 }
 .content-base figure.table {
+  /* CKEditor emits <figure class="table">, and `class="table"` collides with
+     Tailwind's `.table { display: table }` utility. overflow has no effect on
+     table-display boxes, so force block layout for the scroll container. */
+  display: block;
   width: fit-content;
-  height: fit-content;
-}
-.content-base figure.table:has(> table > tbody > tr > td + td + td + td) {
+  max-width: 100%;
+  /* Scroll a too-wide table within its figure instead of overflowing the page
+     horizontally on narrow (mobile) viewports. */
   overflow-x: auto;
 }
 .content-base figure.table:has(> table > tbody > tr > td + td + td + td) table {

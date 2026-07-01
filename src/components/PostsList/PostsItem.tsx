@@ -151,10 +151,11 @@ export default function PostsItem({
               style="postTitle"
               className={clsx(
                 "mb-0 min-w-0",
-                // On mobile the default 1.5 line-height looked loose / clipped
-                // descenders inside the line-clamp, so tighten it (keeping the
-                // postitem font size unchanged).
-                "max-sm:leading-[1.3]",
+                // On mobile the title is line-clamped. leading-[1.3] was too
+                // tight: the last visible line's descenders (g/p/q/y, parens)
+                // got clipped by the clamp's overflow box. 1.4 gives descenders
+                // room without the loose feel of the default 1.5.
+                "max-sm:leading-[1.4]",
                 isRead ? "text-gray-700" : "text-gray-900",
                 cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
               )}
@@ -266,7 +267,8 @@ export default function PostsItem({
               <div
                 className="
                   w-[100px] min-w-[100px] sm:w-[160px] sm:min-w-[160px]
-                  overflow-hidden rounded relative h-[80px] min-h-[80px]
+                  overflow-hidden rounded relative
+                  h-[64px] min-h-[64px] sm:h-[80px] sm:min-h-[80px]
                 "
               >
                 <Image
