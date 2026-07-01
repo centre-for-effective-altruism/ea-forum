@@ -50,7 +50,7 @@ const PublicTooltipContent: FC<{
       {displayNames.length > 0 && (
         <div>
           {formatReactorNames(displayNames)}{" "}
-          <span className="text-gray-400">reacted with</span>
+          <span className="text-tooltip-text-dim">reacted with</span>
         </div>
       )}
       <div className="flex items-center justify-center gap-1">
