@@ -79,10 +79,8 @@ export default function FootnotePreview({
         interactable
         As="span"
         title={footnoteNode}
-        tooltipClassName={clsx(
-          baseClasses,
-          "w-[400px] px-3! py-2! bg-surface-floating!",
-        )}
+        popover
+        tooltipClassName={clsx(baseClasses, "w-[400px] px-3! py-2!")}
       >
         {linkNode}
       </Tooltip>
