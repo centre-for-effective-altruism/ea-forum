@@ -14,12 +14,12 @@ suite("Filter settings", () => {
     const [post1, post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 1,
+        baseScore: 1,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -36,12 +36,12 @@ suite("Filter settings", () => {
     const [post1, post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 1,
+        baseScore: 1,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -61,12 +61,12 @@ suite("Filter settings", () => {
     const [_post1, post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 1,
+        baseScore: 1,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -85,12 +85,12 @@ suite("Filter settings", () => {
     const [post1, _post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 1,
+        baseScore: 1,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -109,12 +109,12 @@ suite("Filter settings", () => {
     const [post1, post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 1,
+        baseScore: 1,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -134,12 +134,12 @@ suite("Filter settings", () => {
     const [post1, post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 1,
+        baseScore: 1,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -159,12 +159,12 @@ suite("Filter settings", () => {
     const [post1, post2] = await Promise.all([
       createTestPost({
         frontpageDate: now,
-        score: 10,
+        baseScore: 10,
         tagRelevance: { [tag._id]: 2 },
       }),
       createTestPost({
         frontpageDate: now,
-        score: 6,
+        baseScore: 6,
       }),
     ]);
     const list = await fetchFrontpagePostsList({
@@ -194,8 +194,8 @@ suite("Filter settings", () => {
   });
   test("Can include personal blog with filter settings", async () => {
     const [post1, post2] = await Promise.all([
-      createTestPost({ score: 1 }),
-      createTestPost({ frontpageDate: now, score: 2 }),
+      createTestPost({ baseScore: 1 }),
+      createTestPost({ frontpageDate: now, baseScore: 2 }),
     ]);
     const list = await fetchFrontpagePostsList({
       currentUserId: null,
@@ -208,8 +208,8 @@ suite("Filter settings", () => {
   });
   test("Can boost personal blog with filter settings", async () => {
     const [post1, post2] = await Promise.all([
-      createTestPost({ score: 1 }),
-      createTestPost({ frontpageDate: now, score: 2 }),
+      createTestPost({ baseScore: 1 }),
+      createTestPost({ frontpageDate: now, baseScore: 2 }),
     ]);
     const list = await fetchFrontpagePostsList({
       currentUserId: null,
@@ -222,8 +222,8 @@ suite("Filter settings", () => {
   });
   test("Can reduce (additive) personal blog with filter settings", async () => {
     const [post1, post2] = await Promise.all([
-      createTestPost({ score: 5 }),
-      createTestPost({ frontpageDate: now, score: 2 }),
+      createTestPost({ baseScore: 5 }),
+      createTestPost({ frontpageDate: now, baseScore: 2 }),
     ]);
     const list = await fetchFrontpagePostsList({
       currentUserId: null,
@@ -236,8 +236,8 @@ suite("Filter settings", () => {
   });
   test("Can reduce (multiplicative) personal blog with filter settings", async () => {
     const [post1, post2] = await Promise.all([
-      createTestPost({ score: 5 }),
-      createTestPost({ frontpageDate: now, score: 4 }),
+      createTestPost({ baseScore: 5 }),
+      createTestPost({ frontpageDate: now, baseScore: 4 }),
     ]);
     const list = await fetchFrontpagePostsList({
       currentUserId: null,
