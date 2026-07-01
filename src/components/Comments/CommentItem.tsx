@@ -49,15 +49,19 @@ import Link from "../Link";
  * this will enable more dynamic features such as loading parent comments.
  */
 export default function CommentItem({
-  node: { comment, depth, children },
+  node,
   onToggleExpanded,
   startCollapsed,
   showPreviewWhenCollapsed,
+  loadingReplies,
   borderless,
   className,
 }: Readonly<{
   node: CommentTreeNode<CommentListItem>;
-  onToggleExpanded?: (expanded: boolean) => void;
+  onToggleExpanded?: (
+    expanded: boolean,
+    node: CommentTreeNode<CommentListItem>,
+  ) => void;
   /** If true, the comment initially renders collapsed */
   startCollapsed?: boolean;
   /**
@@ -66,6 +70,7 @@ export default function CommentItem({
    * clicking the preview expands the comment.
    */
   showPreviewWhenCollapsed?: boolean;
+  loadingReplies?: boolean;
   /**
    * Don't render a border or outside padding - used for embedding in another
    * component.
@@ -74,6 +79,7 @@ export default function CommentItem({
   className?: string;
 }>) {
   const commentsListContext = useOptionalCommentsList();
+  const { comment, depth, children } = node;
   const {
     _id,
     user,
@@ -117,10 +123,10 @@ export default function CommentItem({
   const toggleExpanded = useCallback(() => {
     setIsExpanded((expanded) => {
       const newExpanded = !expanded;
-      onToggleExpanded?.(newExpanded);
+      onToggleExpanded?.(newExpanded, node);
       return newExpanded;
     });
-  }, [onToggleExpanded]);
+  }, [node, onToggleExpanded]);
 
   const onClickReply = useCallback(() => {
     if (currentUser) {
@@ -440,6 +446,7 @@ export default function CommentItem({
           </div>
         )}
       </article>
+      {loadingReplies && <Loading />}
       {children.length > 0 && (
         <div>
           {children.map((node) => (

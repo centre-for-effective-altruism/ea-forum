@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCommentsList } from "./useCommentsList";
+import type { CommentTreeNode } from "@/lib/comments/CommentTree";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import clsx from "clsx";
 import Type from "../Type";
 import CommentItem from "./CommentItem";
@@ -10,11 +12,18 @@ import CommentItem from "./CommentItem";
 export default function CommentsList({
   borderless,
   compact,
+  loadingReplies,
+  onToggleExpanded,
   className,
   commentItemClassName,
 }: Readonly<{
   borderless?: boolean;
   compact?: boolean;
+  loadingReplies?: boolean;
+  onToggleExpanded?: (
+    expanded: boolean,
+    node: CommentTreeNode<CommentListItem>,
+  ) => void;
   className?: string;
   commentItemClassName?: string;
 }>) {
@@ -49,6 +58,8 @@ export default function CommentsList({
         <CommentItem
           node={node}
           borderless={borderless}
+          loadingReplies={loadingReplies}
+          onToggleExpanded={onToggleExpanded}
           key={node.comment._id}
           className={commentItemClassName}
         />

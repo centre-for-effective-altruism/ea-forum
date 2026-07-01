@@ -21,6 +21,7 @@ import { rpc } from "@/lib/rpc";
 type CommentsListContext = {
   comments: CommentTreeNode<CommentListItem>[];
   addTopLevelComment: (comment: CommentListItem) => void;
+  addComments: (comments: CommentListItem[]) => void;
   loadParentComment: (parentCommentId: string) => Promise<void>;
   updateComment: (comment: CommentListItem) => void;
   containsCommentWithId: (commentId: string) => boolean;
@@ -52,6 +53,9 @@ export const CommentsListProvider = ({
   );
   const addTopLevelComment = useCallback((comment: CommentListItem) => {
     setLocalComments((comments) => [...comments, comment]);
+  }, []);
+  const addComments = useCallback((newComments: CommentListItem[]) => {
+    setLocalComments((comments) => [...comments, ...newComments]);
   }, []);
   const loadParentComment = useCallback(async (parentCommentId: string) => {
     try {
@@ -96,6 +100,7 @@ export const CommentsListProvider = ({
       value={{
         comments: tree,
         addTopLevelComment,
+        addComments,
         loadParentComment,
         updateComment,
         containsCommentWithId,

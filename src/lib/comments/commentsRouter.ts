@@ -6,6 +6,7 @@ import { fetchCommentToEdit } from "./commentQueries";
 import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
   countFrontpageQuickTakes,
+  fetchCommentReplies,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
   fetchFrontpageQuickTakes,
@@ -42,6 +43,15 @@ export const commentsRouter = {
       return await fetchCommentsForForumEvent({
         currentUser,
         forumEventId,
+      });
+    }),
+  listReplies: os
+    .input(z.object({ commentId: z.string().nonempty() }))
+    .handler(async ({ input: { commentId } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchCommentReplies({
+        currentUser,
+        commentId,
       });
     }),
   create: os

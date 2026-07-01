@@ -8,6 +8,7 @@ import { commentTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
+import { fetchCommentDescendants } from "./commentQueries";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
 
@@ -450,4 +451,20 @@ export const fetchPopularComments = async ({
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
   return sortBy(result, (c) => order[c._id] ?? Number.MAX_SAFE_INTEGER);
+};
+
+export const fetchCommentReplies = async ({
+  currentUser,
+  commentId,
+}: {
+  currentUser: UserPermissions | null;
+  commentId: string;
+}) => {
+  const descendants = await fetchCommentDescendants(db, commentId);
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      _id: { in: descendants.map(({ _id }) => _id) },
+    },
+  });
 };
