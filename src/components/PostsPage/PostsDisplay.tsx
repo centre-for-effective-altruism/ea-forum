@@ -13,6 +13,7 @@ import {
   postGetStructuredData,
 } from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
 import PostSequenceNavigation from "./PostSequenceNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
@@ -78,6 +79,11 @@ export default async function PostDisplay({
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
             {post.draft && <span className="text-gray-600">[Draft] </span>}
             {post.title}
+            {post.url && (
+              <Tooltip As="span" title={<Type style="bodySmall">Link post</Type>}>
+                <LinkIcon className="inline text-gray-600 w-6 ml-2" />
+              </Tooltip>
+            )}
           </Type>
           <div className="flex items-center gap-3 mb-6">
             <StackedUserAvatars
