@@ -6,7 +6,10 @@ import NextLink from "next/link";
 import { useTracking } from "@/lib/analyticsEvents";
 
 export default function Link({
-  href,
+  // This default value is important even though this component is typed as
+  // requiring a string - user generated content can be missing a value for
+  // various reasons, and next/link throws an exception without one.
+  href = "#",
   id,
   rel,
   onClick: onClick_,
