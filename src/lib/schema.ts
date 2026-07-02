@@ -3137,42 +3137,30 @@ export const spotlights = pgTable(
   {
     ...universalFields,
     documentId: text().notNull(),
-    documentType: text().default("Sequence").notNull(),
-    position: doublePrecision().notNull(),
-    duration: doublePrecision().default(3).notNull(),
-    customTitle: text(),
-    customSubtitle: text(),
-    lastPromotedAt: timestamp().default("'1970-01-01T00:00:00.000Z'").notNull(),
-    draft: boolean().default(true).notNull(),
-    spotlightImageId: text(),
+    documentType: text().default("Post").notNull().$type<"Post" | "Sequence">(),
+    title: text().notNull(),
+    /** Latest revision id for the rich text description */
     descriptionLatest: text("description_latest"),
-    description: jsonb(),
-    showAuthor: boolean().default(false).notNull(),
-    spotlightDarkImageId: text(),
-    imageFade: boolean().default(true).notNull(),
-    headerTitle: text(),
-    headerTitleLeftColor: text(),
-    headerTitleRightColor: text(),
-    imageFadeColor: text(),
-    deletedDraft: boolean().default(false).notNull(),
-    spotlightSplashImageUrl: text(),
-    subtitleUrl: text(),
+    /** Cloudinary publicId for the (required) background image */
+    imageId: text().notNull(),
+    /** Hex color for the block behind the text, fading into the image */
+    blockColor: text(),
+    showBlockColor: boolean().default(true).notNull(),
+    startAt: timestamp().notNull(),
+    endAt: timestamp().notNull(),
   },
   (table) => [
-    index("idx_Spotlights_lastPromotedAt").using(
-      "btree",
-      table.lastPromotedAt.asc().nullsLast(),
-    ),
-    index("idx_Spotlights_position").using(
-      "btree",
-      table.position.asc().nullsLast(),
-    ),
+    index("idx_Spotlights_startAt").using("btree", table.startAt.asc().nullsLast()),
+    index("idx_Spotlights_endAt").using("btree", table.endAt.asc().nullsLast()),
     index("idx_Spotlights_schemaVersion").using(
       "btree",
       table.schemaVersion.asc().nullsLast(),
     ),
   ],
 );
+
+export type Spotlight = typeof spotlights.$inferSelect;
+export type InsertSpotlight = typeof spotlights.$inferInsert;
 
 export const userEagDetails = pgTable(
   "UserEAGDetails",

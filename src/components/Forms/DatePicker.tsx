@@ -24,11 +24,14 @@ export default function DatePicker({
   clearable,
   label,
   disabled,
+  showTimeSelect,
   className,
 }: Readonly<
   {
     label?: string;
     disabled?: boolean;
+    /** Also allow picking a time of day (in 15 minute increments) */
+    showTimeSelect?: boolean;
     className?: string;
   } & DatePickerValue
 >) {
@@ -58,6 +61,9 @@ export default function DatePicker({
         onChange={onChange}
         isClearable={clearable}
         disabled={disabled}
+        showTimeSelect={showTimeSelect}
+        timeIntervals={15}
+        dateFormat={showTimeSelect ? "MMM d, yyyy h:mm aa" : undefined}
         className="
           px-1 py-2 outline-none bg-gray-0 border-b-2 border-gray-400 w-full
           disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed

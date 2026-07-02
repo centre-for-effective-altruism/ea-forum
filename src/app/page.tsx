@@ -8,6 +8,7 @@ import HomePageFeedSkeleton from "@/components/HomePage/HomePageFeedSkeleton";
 import HomePageFeed from "@/components/HomePage/HomePageFeed";
 import HomePageTabBarSkeleton from "@/components/HomePage/HomePageTagBarSkeleton";
 import HomePageTagBar from "@/components/HomePage/HomePageTagBar";
+import SpotlightBox from "@/components/Spotlights/SpotlightBox";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -44,6 +45,9 @@ export default async function HomePage({
       <BotSiteNotice />
       <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
         <HomePageTagBar className="mb-4" />
+      </Suspense>
+      <Suspense>
+        <SpotlightBox className="mb-4" />
       </Suspense>
       <Suspense
         // This key forces react to render the fallback when navigating on the

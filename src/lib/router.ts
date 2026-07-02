@@ -13,6 +13,7 @@ import { reportsRouter } from "./reports/reportsRouter";
 import { revisionsRouter } from "./revisions/revisionsRouter";
 import { searchRouter } from "./search/searchRouter";
 import { sequencesRouter } from "./sequences/sequencesRouter";
+import { spotlightsRouter } from "./spotlights/spotlightsRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
 import { tagsRouter } from "./tags/tagsRouter";
 import { usersRouter } from "./users/usersRouter";
@@ -32,6 +33,7 @@ export const router = {
   revisions: revisionsRouter,
   search: searchRouter,
   sequences: sequencesRouter,
+  spotlights: spotlightsRouter,
   subscriptions: subscriptionsRouter,
   tags: tagsRouter,
   users: usersRouter,

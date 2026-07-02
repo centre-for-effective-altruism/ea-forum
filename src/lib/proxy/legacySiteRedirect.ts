@@ -36,6 +36,7 @@ const newSitePatterns = [
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
   /^\/admin\/featured$/, // Admin featured page experiment
+  /^\/admin\/spotlights$/, // Admin spotlights page
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match

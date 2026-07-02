@@ -20,7 +20,7 @@ type CloudinaryCredentials = {
 /**
  * Credentials that can be spread into `cloudinary.v2` functions
  */
-const getCloudinaryCredentials = (): CloudinaryCredentials | null => {
+export const getCloudinaryCredentials = (): CloudinaryCredentials | null => {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
