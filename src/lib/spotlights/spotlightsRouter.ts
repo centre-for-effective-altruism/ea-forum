@@ -16,10 +16,7 @@ const MAX_IMAGE_DATA_URI_LENGTH = 15_000_000;
 export const spotlightsRouter = {
   listAll: os.handler(async () => {
     const currentUser = await getCurrentUser();
-    if (!currentUser?.isAdmin) {
-      throw new Error("Permission denied");
-    }
-    return fetchAllSpotlightsForAdmin();
+    return fetchAllSpotlightsForAdmin(currentUser);
   }),
   create: os.input(spotlightInputSchema).handler(async ({ input }) => {
     const currentUser = await getCurrentUser();

@@ -46,6 +46,8 @@ export default async function HomePage({
       <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
         <HomePageTagBar className="mb-4" />
       </Suspense>
+      {/* Intentionally no fallback: this usually renders nothing (no active
+          spotlight), so a skeleton would reserve space that often stays empty */}
       <Suspense>
         <SpotlightBox className="mb-4" />
       </Suspense>

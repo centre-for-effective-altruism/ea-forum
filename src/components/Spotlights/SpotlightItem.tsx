@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import clsx from "clsx";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { nYearsFromNow } from "@/lib/timeUtils";
 import { CookieName, HIDE_SPOTLIGHT_ITEM_PREFIX } from "@/lib/cookies/cookies";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
@@ -84,9 +85,7 @@ export default function SpotlightItem({
   const [, setCookie] = useCookiesWithConsent([cookieName]);
 
   const onDismiss = useCallback(() => {
-    const expires = new Date();
-    expires.setFullYear(expires.getFullYear() + 1);
-    setCookie(cookieName, "true", { path: "/", expires });
+    setCookie(cookieName, "true", { path: "/", expires: nYearsFromNow(1) });
     setHidden(true);
   }, [cookieName, setCookie]);
 

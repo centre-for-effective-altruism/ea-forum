@@ -59,13 +59,13 @@ export default function SpotlightForm({
   const [contents, setContents] = useState<EditorContents>(
     spotlight?.descriptionContents ?? getBlankEditorContents("ckEditorMarkup"),
   );
-  const [imageId, setImageId] = useState(spotlight?.display?.imageId ?? "");
+  const [imageId, setImageId] = useState(spotlight?.imageId ?? "");
   const [imageUploading, setImageUploading] = useState(false);
   const [blockColor, setBlockColor] = useState(
-    spotlight?.display?.blockColor ?? DEFAULT_BLOCK_COLOR,
+    spotlight?.blockColor ?? DEFAULT_BLOCK_COLOR,
   );
   const [showBlockColor, setShowBlockColor] = useState(
-    spotlight?.display?.showBlockColor ?? true,
+    spotlight?.showBlockColor ?? true,
   );
   const [startAt, setStartAt] = useState<Date | null>(
     spotlight ? new Date(spotlight.startAt) : null,
@@ -78,10 +78,6 @@ export default function SpotlightForm({
 
   const onEditorChange = useCallback(({ contents }: EditorOnChangeProps) => {
     setContents(contents);
-  }, []);
-
-  const onSelectDocument = useCallback((selected: SelectedDocument) => {
-    setDocument(selected);
   }, []);
 
   const onChangeDocumentType = useCallback((newType: SpotlightDocumentType) => {
@@ -198,7 +194,7 @@ export default function SpotlightForm({
           <FormLabel className="mb-1 block text-[12px]!">Document</FormLabel>
           <DocumentSelect
             documentType={documentType}
-            onSelect={onSelectDocument}
+            onSelect={setDocument}
             placement="bottom-start"
           >
             <Button variant="greyOutlined">

@@ -7,14 +7,7 @@ import type { CurrentUser } from "../users/currentUser";
 import { createRevisionForNormalizedEditableField } from "../revisions/revisionMutations";
 import { getCloudinaryCredentials } from "../cloudinary/convertImagesToCloudinary";
 import { randomId } from "../utils/random";
-import type { SpotlightInput } from "./spotlightHelpers";
-
-const assertCanEditSpotlights = (user: CurrentUser | null): CurrentUser => {
-  if (!user?.isAdmin) {
-    throw new Error("Permission denied");
-  }
-  return user;
-};
+import { assertCanEditSpotlights, SpotlightInput } from "./spotlightHelpers";
 
 export const createSpotlight = async (
   currentUser: CurrentUser | null,

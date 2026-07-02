@@ -86,9 +86,25 @@ export const fetchSequencePosts = async ({
       isDeleted: false,
     },
   });
-  const postIds = sortBy(sequence?.chapters, "number").flatMap(
-    ({ postIds }) => postIds,
-  );
+  return fetchPostsForChapters({
+    currentUser,
+    chapters: sequence?.chapters ?? [],
+  });
+};
+
+/**
+ * The posts belonging to the given chapters, in chapter/post order, with the
+ * current user's read statuses. Split out from `fetchSequencePosts` for
+ * callers that have already loaded the sequence's chapters.
+ */
+export const fetchPostsForChapters = async ({
+  currentUser,
+  chapters,
+}: {
+  currentUser: CurrentUser | null;
+  chapters: { number: number | null; postIds: string[] }[];
+}) => {
+  const postIds = sortBy(chapters, "number").flatMap(({ postIds }) => postIds);
   if (!postIds.length) {
     return [];
   }

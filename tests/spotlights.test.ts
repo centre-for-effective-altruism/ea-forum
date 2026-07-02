@@ -3,6 +3,7 @@ import { createTestPost, createTestUser } from "./testHelpers";
 import { db } from "@/lib/db";
 import { chapters, sequences, spotlights, User } from "@/lib/schema";
 import { randomId } from "@/lib/utils/random";
+import { nHoursAgo } from "@/lib/timeUtils";
 import {
   selectActiveSpotlight,
   spotlightInputSchema,
@@ -19,8 +20,7 @@ import {
 } from "@/lib/spotlights/spotlightQueries";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 
-const hoursFromNow = (hours: number) =>
-  new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+const hoursFromNow = (hours: number) => nHoursAgo(-hours).toISOString();
 
 const makeInput = (
   documentId: string,
@@ -275,6 +275,16 @@ suite("Spotlights", () => {
       await db.delete(spotlights);
     });
 
+    test("is admin-only", async () => {
+      const user = await createTestUser();
+      await expect(fetchAllSpotlightsForAdmin(user)).rejects.toThrow(
+        "Permission denied",
+      );
+      await expect(fetchAllSpotlightsForAdmin(null)).rejects.toThrow(
+        "Permission denied",
+      );
+    });
+
     test("resolves linked documents and sorts by most recent schedule", async () => {
       const admin = await createTestUser({ isAdmin: true });
       const post = await createTestPost();
@@ -286,18 +296,18 @@ suite("Spotlights", () => {
         admin,
         makeInput(post._id, { startAt: hoursFromNow(1), endAt: hoursFromNow(2) }),
       );
-      const all = await fetchAllSpotlightsForAdmin();
+      const all = await fetchAllSpotlightsForAdmin(admin);
       expect(all.map(({ _id }) => _id)).toEqual([laterId, earlierId]);
       expect(all[0].documentTitle).toBe(post.title);
-      expect(all[0].display?.url).toBe(postGetPageUrl({ post }));
+      expect(all[0].url).toBe(postGetPageUrl({ post }));
     });
 
     test("flags spotlights whose document is missing", async () => {
       const admin = await createTestUser({ isAdmin: true });
       await createSpotlight(admin, makeInput(randomId()));
-      const all = await fetchAllSpotlightsForAdmin();
+      const all = await fetchAllSpotlightsForAdmin(admin);
       expect(all[0].documentTitle).toBe(null);
-      expect(all[0].display).toBe(null);
+      expect(all[0].url).toBe(null);
     });
   });
 });

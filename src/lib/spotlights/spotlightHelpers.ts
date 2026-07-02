@@ -53,6 +53,16 @@ export const selectActiveSpotlight = <T extends { startAt: string; endAt: string
   return winner;
 };
 
+/** Spotlights are managed by admins only; used by both queries and mutations */
+export const assertCanEditSpotlights = <T extends { isAdmin: boolean | null }>(
+  user: T | null,
+): T => {
+  if (!user?.isAdmin) {
+    throw new Error("Permission denied");
+  }
+  return user;
+};
+
 /** Minimal data needed to render the sequence read-progress boxes */
 export type SpotlightSequencePost = {
   _id: string;

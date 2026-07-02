@@ -1,58 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import { rpc } from "@/lib/rpc";
-import {
-  selectActiveSpotlight,
-  SpotlightSequencePost,
-} from "@/lib/spotlights/spotlightHelpers";
+import { formatLongDateWithTime } from "@/lib/timeUtils";
+import { selectActiveSpotlight } from "@/lib/spotlights/spotlightHelpers";
 import type { AdminSpotlight } from "@/lib/spotlights/spotlightQueries";
 import SpotlightItem from "@/components/Spotlights/SpotlightItem";
 import Button from "@/components/Button";
 import Type from "@/components/Type";
 import SpotlightForm from "./SpotlightForm";
 
-/**
- * Renders a spotlight exactly as it will appear on the front page. For
- * sequence spotlights this also loads the sequence's posts so the
- * read-progress boxes show up in the preview.
- */
+/** Renders a spotlight exactly as it will appear on the front page */
 function SpotlightPreview({
   spotlight,
 }: Readonly<{
   spotlight: AdminSpotlight;
 }>) {
-  const [sequencePosts, setSequencePosts] = useState<
-    SpotlightSequencePost[] | undefined
-  >();
-
-  const isSequence = spotlight.documentType === "Sequence";
-  const { documentId } = spotlight;
-  useEffect(() => {
-    if (!isSequence) {
-      setSequencePosts(undefined);
-      return;
-    }
-    void (async () => {
-      try {
-        const posts = await rpc.sequences.listPosts({ sequenceId: documentId });
-        setSequencePosts(
-          posts.map((post) => ({
-            _id: post._id,
-            slug: post.slug,
-            title: post.title,
-            isRead: !!post.readStatus?.[0]?.isRead,
-          })),
-        );
-      } catch (e) {
-        captureException(e);
-      }
-    })();
-  }, [isSequence, documentId]);
-
-  if (!spotlight.display) {
+  if (!spotlight.url) {
     return (
       <Type style="bodySmall" className="text-warning">
         The linked {spotlight.documentType.toLowerCase()} could not be found, so this
@@ -60,14 +26,8 @@ function SpotlightPreview({
       </Type>
     );
   }
-  return <SpotlightItem spotlight={{ ...spotlight.display, sequencePosts }} />;
+  return <SpotlightItem spotlight={{ ...spotlight, url: spotlight.url }} />;
 }
-
-const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 
 function SpotlightListEntry({
   spotlight,
@@ -89,7 +49,8 @@ function SpotlightListEntry({
             {spotlight.documentType}
             {spotlight.documentTitle ? `: ${spotlight.documentTitle}` : ""}
             {" · "}
-            {formatDateTime(spotlight.startAt)} → {formatDateTime(spotlight.endAt)}
+            {formatLongDateWithTime(spotlight.startAt)} →{" "}
+            {formatLongDateWithTime(spotlight.endAt)}
           </Type>
         </div>
         <div className="flex gap-2">
@@ -160,21 +121,9 @@ export default function SpotlightsAdmin({
 
   const nowIso = new Date().toISOString();
   const active = selectActiveSpotlight(spotlights);
-  const upcoming = spotlights
-    .filter(
-      (spotlight) =>
-        spotlight !== active &&
-        spotlight.endAt > nowIso &&
-        spotlight.startAt > nowIso,
-    )
+  const scheduled = spotlights
+    .filter((spotlight) => spotlight !== active && spotlight.endAt > nowIso)
     .sort((a, b) => a.startAt.localeCompare(b.startAt));
-  // Started but currently overridden by a more recently-started spotlight
-  const overridden = spotlights.filter(
-    (spotlight) =>
-      spotlight !== active &&
-      spotlight.endAt > nowIso &&
-      spotlight.startAt <= nowIso,
-  );
   const past = spotlights.filter((spotlight) => spotlight.endAt <= nowIso);
 
   const formOpen = creating || !!editing;
@@ -212,15 +161,17 @@ export default function SpotlightsAdmin({
       <section className="flex flex-col gap-2">
         <Type style="sectionTitleLarge">Upcoming</Type>
         <Type style="bodySmall" className="text-gray-600">
-          Scheduled spotlights that haven&apos;t started yet. Each preview shows
-          exactly how the spotlight will look on the front page.
+          Scheduled spotlights that haven&apos;t started yet (a not-yet-started
+          spotlight is a draft). If schedules overlap, the most recently started
+          spotlight wins. Each preview shows exactly how the spotlight will look on
+          the front page.
         </Type>
-        {upcoming.length === 0 && (
+        {scheduled.length === 0 && (
           <Type style="bodySmall" className="text-gray-600">
             Nothing scheduled.
           </Type>
         )}
-        {upcoming.map((spotlight) => (
+        {scheduled.map((spotlight) => (
           <SpotlightListEntry
             key={spotlight._id}
             spotlight={spotlight}
@@ -230,23 +181,6 @@ export default function SpotlightsAdmin({
           />
         ))}
       </section>
-      {overridden.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <Type style="sectionTitleLarge">Overridden</Type>
-          <Type style="bodySmall" className="text-gray-600">
-            These are within their scheduled window but hidden because a more
-            recently-started spotlight takes precedence.
-          </Type>
-          {overridden.map((spotlight) => (
-            <SpotlightListEntry
-              key={spotlight._id}
-              spotlight={spotlight}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </section>
-      )}
       {past.length > 0 && (
         <section className="flex flex-col gap-2">
           <Type style="sectionTitleLarge">Past</Type>
