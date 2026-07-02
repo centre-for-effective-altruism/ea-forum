@@ -64,13 +64,35 @@ const commentSortings = {
 
 export type CommentSorting = keyof typeof commentSortings;
 
-export const defaultCommentSorting: CommentSorting = "newAndUpvoted";
+const defaultCommentSorting: CommentSorting = "newAndUpvoted";
+
+const commentSortingSettings: Record<string, CommentSorting> = {
+  postCommentsMagic: "newAndUpvoted",
+  postCommentsTop: "top",
+  postCommentsNew: "new",
+  postCommentsOld: "old",
+  postCommentsRecentReplies: "latestReply",
+  postCommentsDeleted: "deleted",
+};
 
 export const getCommentSortings = (currentUser: CurrentUser | null) => {
   const sortings = Object.keys(commentSortings) as CommentSorting[];
   return userIsAdmin(currentUser)
     ? sortings
     : sortings.filter((sorting) => !commentSortings[sorting].adminOnly);
+};
+
+export const getDefaultCommentSortingForUser = (
+  currentUser: CurrentUser | null,
+): CommentSorting => {
+  const setting = currentUser?.commentSorting
+    ? commentSortingSettings[currentUser.commentSorting]
+    : null;
+  if (!setting) {
+    return defaultCommentSorting;
+  }
+  const validSortings = getCommentSortings(currentUser);
+  return validSortings.indexOf(setting) >= 0 ? setting : defaultCommentSorting;
 };
 
 export const getCommentSortingLabel = (sorting: CommentSorting) =>
