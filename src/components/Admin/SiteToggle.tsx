@@ -29,18 +29,18 @@ export default function SiteToggle() {
         max-sm:hidden print:hidden
       "
     >
-      {showNewSiteToggle && (
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-medium text-gray-900">Prefer new site</span>
-          <ToggleSwitch value={preferNewSite} setValue={setPreferNewSite} />
-        </div>
-      )}
       {showAdminToggle && (
         <div className="flex items-center justify-between gap-2">
           <span className="font-medium text-gray-900">
             Admin {isAdmin ? "on" : "off"}
           </span>
           <ToggleSwitch value={isAdmin} setValue={setAdmin} />
+        </div>
+      )}
+      {showNewSiteToggle && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium text-gray-900">Prefer new site</span>
+          <ToggleSwitch value={preferNewSite} setValue={setPreferNewSite} />
         </div>
       )}
     </div>,
