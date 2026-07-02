@@ -4,7 +4,6 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchPostDisplayCached } from "@/lib/posts/postQueries";
 import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
-import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { formatThousands } from "@/lib/formatHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
 import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
@@ -14,6 +13,7 @@ import {
 } from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
+import PangramStatus, { classifyPangramScore } from "../PangramStatus";
 import PostSequenceNavigation from "./PostSequenceNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
@@ -29,7 +29,6 @@ import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
 import StructuredData from "../StructuredData";
 import PostPingbacks from "./PostPingbacks";
-import PangramBadge from "../PangramBadge";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
 import PostTags from "../Tags/PostTags";
@@ -62,6 +61,10 @@ export default async function PostDisplay({
     post.readTimeMinutesOverride,
     wordCount,
   );
+  const pangramClassification =
+    typeof post.contents?.pangramAiScore === "number"
+      ? classifyPangramScore(post.contents.pangramAiScore)
+      : null;
 
   const showRecommendations =
     !sequence &&
@@ -114,7 +117,9 @@ export default async function PostDisplay({
                 ) : (
                   <>{readTimeMinutes} min read</>
                 )}
-                {" · "}
+                <span aria-hidden className="mx-1.5">
+                  ·
+                </span>
                 <Tooltip
                   As="span"
                   title={
@@ -130,6 +135,14 @@ export default async function PostDisplay({
                 >
                   {formatShortDate(post.postedAt)}
                 </Tooltip>
+                {pangramClassification && (
+                  <>
+                    <span aria-hidden className="mx-1.5">
+                      ·
+                    </span>
+                    <PangramStatus classification={pangramClassification} />
+                  </>
+                )}
               </Type>
             </div>
           </div>
@@ -144,13 +157,6 @@ export default async function PostDisplay({
                   </Type>
                 </Link>
               </Tooltip>
-              {post.contents &&
-                "pangramAiScore" in post.contents &&
-                userIsAdminOrMod(currentUser) && (
-                  <div className="max-sm:hidden">
-                    <PangramBadge revision={post.contents} />
-                  </div>
-                )}
             </div>
             <div className="flex items-center gap-2">
               <PostAudioToggle />
