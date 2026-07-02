@@ -9,10 +9,11 @@ import {
   useState,
 } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { commentsToCommentTree, CommentTreeNode } from "@/lib/comments/CommentTree";
 import {
   CommentSorting,
-  defaultCommentSorting,
+  getDefaultCommentSortingForUser,
 } from "@/lib/comments/commentSortings";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
@@ -45,7 +46,10 @@ export const CommentsListProvider = ({
   showPostTitle?: boolean;
   children: ReactNode;
 }>) => {
-  const [commentSorting, setCommentSorting] = useState(defaultCommentSorting);
+  const { currentUser } = useCurrentUser();
+  const [commentSorting, setCommentSorting] = useState(() =>
+    getDefaultCommentSortingForUser(currentUser),
+  );
   const [localComments, setLocalComments] = useState<CommentListItem[]>([]);
   const tree = useMemo(
     () => commentsToCommentTree(commentSorting, comments, localComments),

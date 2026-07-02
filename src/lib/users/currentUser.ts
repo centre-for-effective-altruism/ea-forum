@@ -41,6 +41,7 @@ export const currentUserProjection = {
     karmaChangeLastOpened: true,
     karmaChangeBatchStart: true,
     reviewedAt: true,
+    commentSorting: true,
   },
 } as const satisfies UserRelationalProjection;
 
