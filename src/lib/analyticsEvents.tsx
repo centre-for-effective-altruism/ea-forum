@@ -10,6 +10,7 @@ import {
 } from "react";
 import posthog from "posthog-js";
 import type { Json, JsonRecord } from "./typeHelpers";
+import { usePathname } from "next/navigation";
 import { AnalyticsEvent } from "./analytics/analyticsHelpers";
 import { formatConsoleDate } from "./timeUtils";
 import { useCurrentUser } from "./hooks/useCurrentUser";
@@ -121,6 +122,7 @@ export const useTracking = ({
 } = {}) => {
   const { currentUser } = useCurrentUser();
   const { clientId } = useClientId();
+  const path = usePathname();
   const localTrackingContext = useContext(trackingContext);
   const track = useCallback(
     (type?: string | undefined, trackingData?: Record<string, Json>) => {
@@ -128,6 +130,7 @@ export const useTracking = ({
       const props = {
         userId: currentUser?._id,
         clientId,
+        path,
         tabId: window.tabId,
         ...localTrackingContext,
         ...eventProps,
@@ -142,7 +145,7 @@ export const useTracking = ({
       throttledFlushClientEvents();
       posthog.capture(eventName, props);
     },
-    [currentUser, clientId, localTrackingContext, eventProps, eventType],
+    [currentUser, clientId, localTrackingContext, eventProps, eventType, path],
   );
   return { captureEvent: track };
 };
