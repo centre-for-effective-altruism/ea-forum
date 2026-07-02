@@ -65,14 +65,8 @@ export const processMathjax = (html: string): Promise<string> => {
       // Create mathjax document with input and output processors
       const tex = new TeX({
         packages: AllPackages,
-        inlineMath: [
-          ["$", "$"],
-          ["\\(", "\\)"],
-        ],
-        displayMath: [
-          ["$$", "$$"],
-          ["\\[", "\\]"],
-        ],
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]],
       });
       const chtml = new CHTML({
         fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts",
