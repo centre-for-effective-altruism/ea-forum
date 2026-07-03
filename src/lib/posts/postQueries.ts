@@ -15,6 +15,8 @@ import {
 } from "../filterSettings";
 import { userIsAdminOrMod } from "../users/userHelpers";
 import { CurrentUser } from "../users/currentUser";
+import { filterNonNull } from "../typeHelpers";
+import keyBy from "lodash/keyBy";
 
 export const currentUserIsSharedSelector =
   (currentUserId: string) => (postsTable: typeof posts) =>
@@ -277,3 +279,32 @@ export const filterSettingsToSelector = (
 
   return { filter, score };
 };
+
+export const fetchSequenceNavigationPosts = async (
+  prevPostId: string | null,
+  nextPostId: string | null,
+) => {
+  const idsToFetch = filterNonNull([prevPostId, nextPostId]);
+  if (!idsToFetch.length) {
+    return [null, null];
+  }
+  const posts = await db.query.posts.findMany({
+    columns: {
+      _id: true,
+      title: true,
+      baseScore: true,
+      commentCount: true,
+    },
+    where: {
+      _id: { in: idsToFetch },
+      draft: false,
+      deletedDraft: false,
+    },
+  });
+  const postsById = keyBy(posts, "_id");
+  return [postsById[prevPostId!] ?? null, postsById[nextPostId!] ?? null];
+};
+
+export type SequenceNavigationPost = NonNullable<
+  Awaited<ReturnType<typeof fetchSequenceNavigationPosts>>[0]
+>;

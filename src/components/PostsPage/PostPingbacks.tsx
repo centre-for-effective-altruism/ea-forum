@@ -19,15 +19,15 @@ export default async function PostPingbacks({
   }
   return (
     <section data-component="PostPingbacks" id="mentioned-in" className={className}>
-      <Tooltip
-        title={<Type style="bodySmall">Posts that linked to this post</Type>}
-        placement="top-start"
-        className="mb-2"
-      >
-        <Type style="bodyMedium" className="cursor-default">
+      <Type style="bodyMedium" className="cursor-default">
+        <Tooltip
+          title={<Type style="bodySmall">Posts that linked to this post</Type>}
+          placement="top"
+          className="inline-block mb-2"
+        >
           Mentioned in
-        </Type>
-      </Tooltip>
+        </Tooltip>
+      </Type>
       <PostPingbacksList pingbacks={pingbacks} />
     </section>
   );
