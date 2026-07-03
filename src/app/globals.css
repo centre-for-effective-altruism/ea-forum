@@ -76,14 +76,27 @@
   --color-mentions-selected-hover: #0e7fe1;
   --color-mentions-border: #c4c4c4;
   --color-strawpoll: rgb(251, 191, 36);
+  --color-post-body-bg: var(--color-gray-0);
+  --color-post-footer-bg: var(--color-background);
+
+  /* Admin Pangram badge */
   --color-pangram-mid-bg: #fff8e1;
   --color-pangram-high-bg: #ffebee;
   --color-pangram-error-bg: #ffebee;
   --color-pangram-ai-fraction: #b71c1c;
   --color-pangram-assisted-fraction: #ef6c00;
   --color-pangram-human-fraction: #2e7d32;
-  --color-post-body-bg: var(--color-gray-0);
-  --color-post-footer-bg: var(--color-background);
+
+  /* Post page Pangram status */
+  --color-pangram-low-bg: #f3f0ec;
+  --color-pangram-low-fg: #5a4f3f;
+  --color-pangram-low-hl: #d8cfc0;
+  --color-pangram-med-bg: #f5e8d7;
+  --color-pangram-med-fg: #8a5a1f;
+  --color-pangram-med-hl: #ecd9b6;
+  --color-pangram-high-bg: #e9c89a;
+  --color-pangram-high-fg: #774719;
+  --color-pangram-high-hl: #d9ad6f;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -228,14 +241,27 @@
   --color-mentions-selected: #0c70c7;
   --color-mentions-selected-hover: #0b62ae;
   --color-mentions-border: #212121;
+  --color-post-body-bg: var(--color-background);
+  --color-post-footer-bg: var(--color-gray-0);
+
+  /* Admin Pangram badge */
   --color-pangram-mid-bg: #3e2f10;
   --color-pangram-high-bg: #4a1f23;
   --color-pangram-error-bg: #4a1f23;
   --color-pangram-ai-fraction: #ff8a80;
   --color-pangram-assisted-fraction: #ffb74d;
   --color-pangram-human-fraction: #81c784;
-  --color-post-body-bg: var(--color-background);
-  --color-post-footer-bg: var(--color-gray-0);
+
+  /* Post page Pangram status */
+  --color-pangram-low-bg: #504f4d;
+  --color-pangram-low-fg: #ffffff;
+  --color-pangram-low-hl: #d8cfc0;
+  --color-pangram-med-bg: #59472f;
+  --color-pangram-med-fg: #ffffff;
+  --color-pangram-med-hl: #ecd9b6;
+  --color-pangram-high-bg: #906c39;
+  --color-pangram-high-fg: #ffffff;
+  --color-pangram-high-hl: #d9ad6f;
 
   --color-editor-bg: #2a2a2a;
   --color-editor-comment-bg: #333333;

@@ -99,20 +99,11 @@ export const fetchPostDisplay = async (
     with: {
       user: userBaseProjection,
       contents: {
-        columns: userIsAdminOrMod(currentUser)
-          ? {
-              _id: true,
-              html: true,
-              wordCount: true,
-              pangramAiScore: true,
-              pangramCheckedAt: true,
-              pangramStatus: true,
-              pangramRawResponse: true,
-            }
-          : {
-              html: true,
-              wordCount: true,
-            },
+        columns: {
+          html: true,
+          wordCount: true,
+          pangramAiScore: true,
+        },
       },
       group: {
         columns: {

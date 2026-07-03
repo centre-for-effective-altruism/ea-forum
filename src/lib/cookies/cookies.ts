@@ -142,6 +142,11 @@ const allCookies = [
     description: "Don't show the how-to guide on the new post page",
   },
   {
+    name: "hide_ai_disclosure",
+    type: "necessary",
+    description: "Don't show the AI disclosure warning on the new post page",
+  },
+  {
     name: "last_visited_frontpage",
     type: "functional",
     description: "Stores the date of the user's last visit to the frontpage",
