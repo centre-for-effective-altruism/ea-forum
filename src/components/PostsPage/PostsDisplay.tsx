@@ -76,6 +76,11 @@ export default async function PostDisplay({
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
           <PostSequenceNavigation post={post} sequence={sequence} className="mb-2" />
+          {post.question && (
+            <Type style="bodyLarge" className="text-gray-600">
+              [Question]
+            </Type>
+          )}
           <Type style="postsPageTitle" As="h1" className="mb-10" id="top">
             {post.draft && <span className="text-gray-600">[Draft] </span>}
             {post.title}
