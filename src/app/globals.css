@@ -241,14 +241,27 @@
   --color-mentions-selected: #0c70c7;
   --color-mentions-selected-hover: #0b62ae;
   --color-mentions-border: #212121;
+  --color-post-body-bg: var(--color-background);
+  --color-post-footer-bg: var(--color-gray-0);
+
+  /* Admin Pangram badge */
   --color-pangram-mid-bg: #3e2f10;
   --color-pangram-high-bg: #4a1f23;
   --color-pangram-error-bg: #4a1f23;
   --color-pangram-ai-fraction: #ff8a80;
   --color-pangram-assisted-fraction: #ffb74d;
   --color-pangram-human-fraction: #81c784;
-  --color-post-body-bg: var(--color-background);
-  --color-post-footer-bg: var(--color-gray-0);
+
+  /* Post page Pangram status */
+  --color-pangram-low-bg: #504f4d;
+  --color-pangram-low-fg: #ffffff;
+  --color-pangram-low-hl: #d8cfc0;
+  --color-pangram-med-bg: #59472f;
+  --color-pangram-med-fg: #ffffff;
+  --color-pangram-med-hl: #ecd9b6;
+  --color-pangram-high-bg: #906c39;
+  --color-pangram-high-fg: #ffffff;
+  --color-pangram-high-hl: #d9ad6f;
 
   --color-editor-bg: #2a2a2a;
   --color-editor-comment-bg: #333333;
