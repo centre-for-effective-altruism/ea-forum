@@ -50,7 +50,7 @@ export default function PangramStatus({
     <Tooltip
       title={
         <Type style="bodySmall" className="text-center">
-          <div>Generated based on a Pangram score</div>
+          <div>Assigned via Pangram</div>
           <div>Click for more details</div>
         </Type>
       }
