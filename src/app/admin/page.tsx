@@ -31,7 +31,7 @@ export default async function AdminPage() {
           },
           { title: "Digests", href: "/admin/digests" },
           { title: "Twitter tools", href: "/admin/twitter" },
-          { title: "Spotlights", href: "/spotlights" },
+          { title: "Spotlights", href: "/admin/spotlights" },
           { title: "Forum events", href: "/adminForumEvents" },
           { title: "Merge topics", href: "/admin/tagMerge" },
         ]}
