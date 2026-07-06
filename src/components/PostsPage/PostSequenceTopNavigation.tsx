@@ -32,7 +32,7 @@ const Button: FC<{
     <Icon className="w-6 opacity-50" />
   );
 
-export default function PostSequenceNavigation({
+export default function PostSequenceTopNavigation({
   post,
   sequence: requestedSequence,
   className,
@@ -54,7 +54,7 @@ export default function PostSequenceNavigation({
 
   return (
     <nav
-      data-component="PostSequenceNavigation"
+      data-component="PostSequenceTopNavigation"
       className={clsx("flex items-center gap-1 text-gray-600", className)}
     >
       <Button

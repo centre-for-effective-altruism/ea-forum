@@ -14,7 +14,8 @@ import {
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
 import PangramStatus, { classifyPangramScore } from "../PangramStatus";
-import PostSequenceNavigation from "./PostSequenceNavigation";
+import PostSequenceBottomNavigation from "./PostSequenceBottomNavigation";
+import PostSequenceTopNavigation from "./PostSequenceTopNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
 import PostTableOfContents from "./PostTableOfContents";
 import StackedUserAvatars from "../StackedUserAvatars";
@@ -78,7 +79,11 @@ export default async function PostDisplay({
       <StructuredData data={postGetStructuredData(post)} />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>
-          <PostSequenceNavigation post={post} sequence={sequence} className="mb-2" />
+          <PostSequenceTopNavigation
+            post={post}
+            sequence={sequence}
+            className="mb-2"
+          />
           {post.question && (
             <Type style="bodyLarge" className="text-gray-600">
               [Question]
@@ -196,6 +201,13 @@ export default async function PostDisplay({
               </div>
             </div>
           )}
+          <Suspense>
+            <PostSequenceBottomNavigation
+              post={post}
+              sequence={sequence}
+              className="mb-12"
+            />
+          </Suspense>
           <Suspense>
             <PostPingbacks
               postId={postId}
