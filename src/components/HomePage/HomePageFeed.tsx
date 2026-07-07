@@ -4,6 +4,7 @@ import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
+import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
@@ -18,15 +19,20 @@ import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
 import HomePageCommunitySection from "./HomePageCommunitySection";
-import Type from "../Type";
+import Spotlight from "../Spotlights/Spotlight";
 import TextLinkButton from "../TextLinkButton";
+import Type from "../Type";
 
 export default async function HomePageFeed({
   search,
 }: {
   search: NextSearchParams;
 }) {
-  const [cookieStore, coreTags] = await Promise.all([cookies(), fetchCoreTags()]);
+  const [cookieStore, coreTags, spotlight] = await Promise.all([
+    cookies(),
+    fetchCoreTags(),
+    fetchCurrentSpotlight(),
+  ]);
   const postViewCookie = cookieStore.get("posts_list_view_type")?.value ?? "";
   const ssrPostView = isPostsListViewType(postViewCookie)
     ? postViewCookie
@@ -64,6 +70,7 @@ export default async function HomePageFeed({
         </>
       ) : (
         <>
+          {spotlight && <Spotlight spotlight={spotlight} className="mt-6 mb-4" />}
           <FilterSettingsProvider>
             <div className="mb-2 flex items-center justify-between">
               <Type style="sectionTitleLarge">New &amp; upvoted</Type>

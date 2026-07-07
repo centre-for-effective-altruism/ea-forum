@@ -57,6 +57,22 @@ export const fetchAllSpotlights = async () => {
   });
 };
 
+export const fetchCurrentSpotlight = async (): Promise<SpotlightBase | null> => {
+  const now = new Date().toISOString();
+  const result = await db.query.spotlights.findFirst({
+    ...spotlightBaseProjection,
+    where: {
+      startAt: { lte: now },
+      endAt: { gt: now },
+    },
+    orderBy: {
+      startAt: "desc",
+      _id: "desc",
+    },
+  });
+  return result ?? null;
+};
+
 export const fetchSpotlightToEdit = async (_id: string) => {
   return await db.query.spotlights.findFirst({
     where: {

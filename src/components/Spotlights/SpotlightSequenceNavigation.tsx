@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import orderBy from "lodash/orderBy";

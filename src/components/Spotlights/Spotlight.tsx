@@ -3,16 +3,18 @@ import { makeCloudinaryImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { sequenceGetPageUrl } from "@/lib/sequences/sequenceHelpers";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
+import SpotlightSequenceNavigation from "./SpotlightSequenceNavigation";
 import CommentBody from "../ContentStyles/CommentBody";
 import Type from "../Type";
 import Link from "../Link";
 import clsx from "clsx";
-import SpotlightSequenceNavigation from "./SpotlightSequenceNavigation";
 
 export default function Spotlight({
   spotlight: { title, descriptionHtml, post, sequence, imageId, imageFadeColor },
+  className,
 }: Readonly<{
   spotlight: SpotlightBase;
+  className?: string;
 }>) {
   const imageUrl = makeCloudinaryImageUrl(imageId ?? "", {
     w: "716",
@@ -32,10 +34,11 @@ export default function Spotlight({
     <AnalyticsContext pageElementContext="spotlightItem">
       <article
         data-component="Spotlight"
-        className="
-          relative w-full min-h-[130px] rounded text-always-white flex
-          overflow-hidden
-        "
+        className={clsx(
+          "relative w-full min-h-[130px] rounded text-always-white flex",
+          "overflow-hidden",
+          className,
+        )}
         style={{ background: imageFadeColor ?? undefined }}
       >
         <div
@@ -46,11 +49,7 @@ export default function Spotlight({
           )}
           style={{ backgroundImage: `url(${imageUrl})` }}
         />
-        <div
-          className="
-            relative z-10 w-full self-stretch flex-1 flex flex-col px-4 py-3
-          "
-        >
+        <div className="relative z-10 w-full self-stretch flex-1 flex flex-col px-4 py-3">
           <Type style="spotlightTitle">
             <Link href={link} className="hover:underline">
               {title || post?.title || sequence?.title}
