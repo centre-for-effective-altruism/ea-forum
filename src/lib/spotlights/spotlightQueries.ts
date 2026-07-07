@@ -43,3 +43,26 @@ export const fetchAllSpotlights = async () => {
     ...spotlightBaseProjection,
   });
 };
+
+export const fetchSpotlightToEdit = async (_id: string) => {
+  return await db.query.spotlights.findFirst({
+    where: {
+      _id,
+    },
+    columns: {
+      _id: true,
+      documentId: true,
+      documentType: true,
+      title: true,
+      imageId: true,
+      description: true,
+      imageFadeColor: true,
+      startAt: true,
+      endAt: true,
+    },
+  });
+};
+
+export type SpotlightEdit = NonNullable<
+  Awaited<ReturnType<typeof fetchSpotlightToEdit>>
+>;

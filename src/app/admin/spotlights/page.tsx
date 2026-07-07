@@ -3,6 +3,7 @@ import {
   fetchAllSpotlights,
   SpotlightBase,
 } from "@/lib/spotlights/spotlightQueries";
+import NewSpotlightButton from "@/components/Spotlights/NewSpotlightButton";
 import EditableSpotlight from "@/components/Spotlights/EditableSpotlight";
 import Type from "@/components/Type";
 
@@ -34,6 +35,7 @@ export default async function AdminSpotlightsPage() {
       data-component="AdminSpotlightsPage"
       className="w-[716px] max-w-full mx-auto my-10 flex flex-col gap-10"
     >
+      <NewSpotlightButton />
       <section className="flex flex-col gap-3">
         <Type style="sectionTitleLarge">Active spotlights</Type>
         {active.map((spotlight) => (

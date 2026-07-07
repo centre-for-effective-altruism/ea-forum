@@ -24,11 +24,15 @@ export default function DatePicker({
   clearable,
   label,
   disabled,
+  dateFormat,
+  showTimeInput,
   className,
 }: Readonly<
   {
     label?: string;
     disabled?: boolean;
+    dateFormat?: string;
+    showTimeInput?: boolean;
     className?: string;
   } & DatePickerValue
 >) {
@@ -58,6 +62,8 @@ export default function DatePicker({
         onChange={onChange}
         isClearable={clearable}
         disabled={disabled}
+        dateFormat={dateFormat}
+        showTimeInput={showTimeInput}
         className="
           px-1 py-2 outline-none bg-gray-0 border-b-2 border-gray-400 w-full
           disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed

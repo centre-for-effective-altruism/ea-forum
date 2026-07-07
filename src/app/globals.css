@@ -429,6 +429,14 @@ body {
 }
 
 /**
+ * There's a bug in Tailwind where iframes can't have transparent backgrounds
+ * in dark mode. Force the Cloudinary upload widget to use light-mode instead.
+ */
+iframe[data-test="uw-iframe"] {
+  color-scheme: light;
+}
+
+/**
  * Dark mode color overrides
  * TODO: Tidy this up so we don't have to copy and paste...
  */

@@ -66,7 +66,6 @@ const SubmenuItemWrapper: FC<{
       {open && (
         <FloatingFocusManager context={context} modal={false}>
           <div
-            // eslint-disable-next-line react-hooks/refs
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}

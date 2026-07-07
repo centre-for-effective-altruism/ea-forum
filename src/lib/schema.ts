@@ -3141,7 +3141,7 @@ export const spotlights = pgTable(
     title: text(),
     imageId: text(),
     descriptionLatest: text("description_latest"),
-    description: jsonb(),
+    description: denormalizedRevision(),
     imageFadeColor: text(),
     startAt: timestamp(),
     endAt: timestamp(),
