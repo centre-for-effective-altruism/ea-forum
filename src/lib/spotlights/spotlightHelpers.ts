@@ -1,5 +1,5 @@
-import z from "zod/v4";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
+import z from "zod/v4";
 
 export const spotlightEditDataSchema = z
   .object({

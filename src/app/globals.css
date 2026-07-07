@@ -324,6 +324,23 @@
   -webkit-text-size-adjust: none;
 }
 
+.spotlight-image-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    transparent 30%,
+    #fff 90%,
+    #fff 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    transparent 30%,
+    #fff 90%,
+    #fff 100%
+  );
+}
+
 /* Stop browsers (notably iOS Safari) from synthesising bold weights on top of
    the variable Inter face, which made bold text render extra-bolded. */
 body {

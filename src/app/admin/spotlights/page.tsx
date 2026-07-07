@@ -36,21 +36,21 @@ export default async function AdminSpotlightsPage() {
       className="w-[716px] max-w-full mx-auto my-10 flex flex-col gap-10"
     >
       <NewSpotlightButton />
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-6">
         <Type style="sectionTitleLarge">Active spotlights</Type>
         {active.map((spotlight) => (
           <EditableSpotlight key={spotlight._id} spotlight={spotlight} />
         ))}
         {active.length === 0 && <Type>No current spotlights</Type>}
       </section>
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-6">
         <Type style="sectionTitleLarge">Upcoming spotlights</Type>
         {upcoming.map((spotlight) => (
           <EditableSpotlight key={spotlight._id} spotlight={spotlight} />
         ))}
         {upcoming.length === 0 && <Type>No upcoming spotlights</Type>}
       </section>
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-6">
         <Type style="sectionTitleLarge">Previous spotlights</Type>
         {previous.map((spotlight) => (
           <EditableSpotlight key={spotlight._id} spotlight={spotlight} />

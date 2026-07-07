@@ -26,11 +26,24 @@ export const spotlightBaseProjection = {
     post: {
       columns: {
         _id: true,
+        slug: true,
+        title: true,
+        isEvent: true,
+        groupId: true,
       },
     },
     sequence: {
       columns: {
         _id: true,
+        title: true,
+      },
+      with: {
+        chapters: {
+          columns: {
+            number: true,
+            postIds: true,
+          },
+        },
       },
     },
   },

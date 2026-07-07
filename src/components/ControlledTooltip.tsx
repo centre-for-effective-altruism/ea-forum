@@ -2,6 +2,7 @@
 
 import type { ElementType, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useIsTouchDevice } from "@/lib/hooks/useIsTouchDevice";
 import {
   autoUpdate,
   flip,
@@ -18,10 +19,6 @@ import {
   useRole,
 } from "@floating-ui/react";
 import clsx from "clsx";
-import { useIsTouchDevice } from "@/lib/hooks/useIsTouchDevice";
-
-// Short delay before showing on hover; hide immediately on leave.
-const HOVER_DELAY = { open: 200, close: 0 };
 
 export default function ControlledTooltip({
   isOpen,
@@ -33,6 +30,7 @@ export default function ControlledTooltip({
   title,
   interactable,
   popover,
+  hoverDelay = 200,
   noHover,
   disabled,
   As = "div",
@@ -52,6 +50,7 @@ export default function ControlledTooltip({
    * non-essential details
    */
   popover?: boolean;
+  hoverDelay?: number;
   noHover?: boolean;
   disabled?: boolean;
   As?: ElementType;
@@ -74,7 +73,7 @@ export default function ControlledTooltip({
   const hover = useHover(context, {
     enabled: !noHover && !suppressOnTouch,
     move: false,
-    delay: HOVER_DELAY,
+    delay: { open: hoverDelay, close: 0 },
     handleClose: interactable ? safePolygon() : undefined,
   });
   const focus = useFocus(context, { enabled: !suppressOnTouch });
