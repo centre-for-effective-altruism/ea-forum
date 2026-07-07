@@ -63,7 +63,7 @@ export const getNextVersionAfterSemver = (
 export const getNextVersion = (
   previousRevision: Pick<Revision, "version"> | null,
   updateType: RevisionUpdateType = "minor",
-  isDraft: boolean,
+  isDraft: boolean = false,
 ) => {
   const version = previousRevision?.version || "1.0.0";
   return getNextVersionAfterSemver(version, updateType, isDraft);

@@ -48,14 +48,14 @@ export default async function AdminSpotlightsPage() {
         {upcoming.map((spotlight) => (
           <EditableSpotlight key={spotlight._id} spotlight={spotlight} />
         ))}
-        {active.length === 0 && <Type>No upcoming spotlights</Type>}
+        {upcoming.length === 0 && <Type>No upcoming spotlights</Type>}
       </section>
       <section className="flex flex-col gap-3">
         <Type style="sectionTitleLarge">Previous spotlights</Type>
         {previous.map((spotlight) => (
           <EditableSpotlight key={spotlight._id} spotlight={spotlight} />
         ))}
-        {active.length === 0 && <Type>No previous spotlights</Type>}
+        {previous.length === 0 && <Type>No previous spotlights</Type>}
       </section>
     </div>
   );

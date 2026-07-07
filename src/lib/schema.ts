@@ -3154,6 +3154,9 @@ export const spotlights = pgTable(
   ],
 );
 
+export type Spotlight = typeof spotlights.$inferSelect;
+export type InsertSpotlight = typeof spotlights.$inferInsert;
+
 export const userEagDetails = pgTable(
   "UserEAGDetails",
   {
