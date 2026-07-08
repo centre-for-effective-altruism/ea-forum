@@ -32,6 +32,7 @@ const newSitePatterns = [
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
+  /^\/best-of$/, // Best of
   /^\/admin$/, // Admin
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test

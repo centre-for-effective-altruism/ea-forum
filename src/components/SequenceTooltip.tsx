@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, ElementType, ReactNode, useState } from "react";
-import { captureException } from "@sentry/nextjs";
-import { rpc } from "@/lib/rpc";
+import { ElementType, ReactNode } from "react";
 import type { Placement } from "@floating-ui/react";
 import type { SequenceBase, SequencePost } from "@/lib/sequences/sequenceQueries";
+import { useSequencePosts } from "@/lib/hooks/useSequencePosts";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import {
   sequencePostCount,
@@ -20,6 +19,7 @@ import Link from "./Link";
 
 export default function SequenceTooltip({
   sequence,
+  sequencePosts,
   maxPosts = 8,
   placement = "bottom-start",
   As = "div",
@@ -27,31 +27,15 @@ export default function SequenceTooltip({
   children,
 }: Readonly<{
   sequence: SequenceBase | null | undefined;
+  sequencePosts?: { posts: SequencePost[]; loading: boolean };
   maxPosts?: number;
   placement?: Placement;
   As?: ElementType;
   className?: string;
   children: ReactNode;
 }>) {
-  const [posts, setPosts] = useState<SequencePost[] | null>(null);
-
-  useEffect(() => {
-    setPosts(null);
-    if (!sequence) {
-      return;
-    }
-    void (async () => {
-      try {
-        const result = await rpc.sequences.listPosts({
-          sequenceId: sequence._id,
-        });
-        setPosts(result ?? []);
-      } catch (e) {
-        console.error("Error fetching sequence posts:", e);
-        captureException(e);
-      }
-    })();
-  }, [sequence]);
+  const fetchedPosts = useSequencePosts(sequence?._id, !!sequencePosts);
+  const { posts, loading } = sequencePosts ?? fetchedPosts;
 
   if (!sequence) {
     return <>{children}</>;
@@ -59,8 +43,8 @@ export default function SequenceTooltip({
 
   const { title, user } = sequence;
   const postCount = sequencePostCount(sequence);
-  const readTime = posts ? sequenceReadTimeMinutes(posts) : null;
-  const postsById = posts ? keyBy(posts, "_id") : null;
+  const readTime = loading ? null : sequenceReadTimeMinutes(posts);
+  const postsById = loading ? null : keyBy(posts, "_id");
   return (
     <Tooltip
       placement={placement}

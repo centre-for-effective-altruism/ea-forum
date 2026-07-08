@@ -28,6 +28,9 @@ export const getPreviousAndNextPostIds = (
 export const sequencePostCount = (sequence: SequenceBase) =>
   sequence.chapters.flatMap(({ postIds }) => postIds).length;
 
+export const sequenceReadPostCount = (posts: SequencePost[]) =>
+  posts.reduce((total, post) => total + (post.readStatus?.[0]?.isRead ? 1 : 0), 0);
+
 export const sequenceReadTimeMinutes = (posts: SequencePost[]) => {
   const readTimes = posts.map((post) =>
     getPostReadTimeMinutes(

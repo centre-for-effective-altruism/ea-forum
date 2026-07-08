@@ -14,7 +14,9 @@ import { defineRelations } from "drizzle-orm";
 import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
+  books,
   chapters,
+  collections,
   commentModeratorActions,
   comments,
   conversations,
@@ -49,6 +51,8 @@ const relations = defineRelations(
     readStatuses,
     bookmarks,
     chapters,
+    collections,
+    books,
     comments,
     conversations,
     revisions,
@@ -143,6 +147,15 @@ const relations = defineRelations(
       chapters: r.many.chapters({
         from: r.sequences._id,
         to: r.chapters.sequenceId,
+      }),
+    },
+    collections: {
+      user: r.one.users({
+        from: r.collections.userId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
       }),
     },
     podcastEpisodes: {

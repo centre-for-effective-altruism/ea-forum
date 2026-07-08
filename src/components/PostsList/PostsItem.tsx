@@ -1,6 +1,6 @@
 "use client";
 
-import { SyntheticEvent, useCallback, useState } from "react";
+import { ReactNode, SyntheticEvent, useCallback, useState } from "react";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
@@ -42,12 +42,14 @@ export default function PostsItem({
   viewType,
   openInNewTab,
   curatedIconLeft = false,
+  underNode,
   className,
 }: Readonly<{
   post: PostListItem;
   viewType?: PostsListViewType;
   openInNewTab?: boolean;
   curatedIconLeft?: boolean;
+  underNode?: ReactNode;
   className?: string;
 }>) {
   const cardView = viewType === "card";
@@ -255,10 +257,16 @@ export default function PostsItem({
           </InteractionWrapper>
         </div>
         {cardView && (
-          <div className="flex gap-2 sm:gap-8 items-end pl-[48px] sm:pl-[57px] pr-5 pb-4 -mt-1">
+          <div
+            className="
+              flex gap-2 sm:gap-8 items-end pl-[48px] sm:pl-[57px] pr-5 pb-4 -mt-1
+            "
+          >
             <Type
               style="postDescription"
-              className="text-gray-600 line-clamp-3 overflow-hidden grow leading-[165%]"
+              className="
+                text-gray-600 line-clamp-3 overflow-hidden grow leading-[165%]
+              "
             >
               {description}
             </Type>
@@ -285,6 +293,7 @@ export default function PostsItem({
             <PostsItemNewComments post={post} className="px-3 py-2" />
           </InteractionWrapper>
         )}
+        {underNode}
       </article>
     </AnalyticsContext>
   );

@@ -15,6 +15,8 @@ export const sequenceBaseProjection = {
   columns: {
     _id: true,
     title: true,
+    gridImageId: true,
+    bannerImageId: true,
   },
   with: {
     user: userBaseProjection,
@@ -59,6 +61,46 @@ export const fetchSequenceById = async ({
     },
   });
   return result ?? null;
+};
+
+export const fetchSequencesByIds = async ({
+  currentUser,
+  sequenceIds,
+}: {
+  currentUser: CurrentUser | null;
+  sequenceIds: string[];
+}) => {
+  return await db.query.sequences.findMany({
+    ...sequenceBaseProjection,
+    where: {
+      _id: { in: sequenceIds },
+      ...sequencePermissionFilter(currentUser),
+    },
+  });
+};
+
+export const fetchFeaturedSequences = async (currentUser: CurrentUser | null) => {
+  return await fetchSequencesByIds({
+    currentUser,
+    sequenceIds: [
+      "HSA8wsaYiqdt4ouNF", // First Decade Winners
+      "gBjPorwZHRArNSQ5w", // Most important century implications
+    ],
+  });
+};
+
+export const fetchTopicIntroSequences = async (currentUser: CurrentUser | null) => {
+  return await fetchSequencesByIds({
+    currentUser,
+    sequenceIds: [
+      "vtmN9g6C57XbqPrZS", // AI risk
+      "hnEu2fKLQ9wTRJ9Zc", // Global health and development
+      "KWvPuGeFyb5aMdHgK", // Animal welfare
+      "JuwQwdLugR63ux2P8", // Biosecurity
+      "aH5to3as8yiQA6wGo", // Intro to moral philosophy
+      "pFageBjmsLra3ucDC", // Intro to cause prioritization
+    ],
+  });
 };
 
 export const fetchSequencePosts = async ({
