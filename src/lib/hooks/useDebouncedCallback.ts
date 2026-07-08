@@ -41,9 +41,7 @@ export const useStabilizedCallback = <T>(
 ): ((args: T) => void) => {
   const callback = useRef<(args: T) => void>(fn);
   const wrapper = useRef((args: T) => callback.current(args));
-  // eslint-disable-next-line react-hooks/refs
   callback.current = fn;
-  // eslint-disable-next-line react-hooks/refs
   return wrapper.current;
 };
 

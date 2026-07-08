@@ -19,6 +19,7 @@ export const typeStyles = {
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
   sectionTitleSmall:
     "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
+  spotlightTitle: "font-sans text-[22px] font-[600]",
   logo: "font-sans text-[19px] font-[400] tracking-[-0.015em]",
   postsPageTitle:
     "font-sans font-[700] text-[34px] leading-[1.15] sm:text-[40px] sm:leading-[125%]",

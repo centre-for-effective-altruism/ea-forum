@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import clsx from "clsx";
 
 export default function Label({
   htmlFor,
@@ -11,15 +10,13 @@ export default function Label({
   className?: string;
 }>) {
   return (
-    <label
-      data-component="Label"
-      htmlFor={htmlFor}
-      className={clsx(
-        "block text-[12px] font-[400] text-primary mb-[-2px]",
-        className,
-      )}
-    >
-      {children}
-    </label>
+    <div data-component="Label" className={className}>
+      <label
+        htmlFor={htmlFor}
+        className="inline-block text-[12px] font-[400] text-primary"
+      >
+        {children}
+      </label>
+    </div>
   );
 }

@@ -175,16 +175,12 @@ export function AnalyticsContext({
       // the same event on the same element, append to it
       const previousNestedPageElementContext = newContextData.current
         .nestedPageElementContext as string[] | undefined;
-      // eslint-disable-next-line react-hooks/refs
       if (previousNestedPageElementContext) {
         if (
-          // eslint-disable-next-line react-hooks/refs
           previousNestedPageElementContext.slice(-1)[0] !==
           props.nestedPageElementContext
         ) {
-          // eslint-disable-next-line react-hooks/refs
           newContextData.current.nestedPageElementContext = [
-            // eslint-disable-next-line react-hooks/refs
             ...(previousNestedPageElementContext as string[]),
             props.nestedPageElementContext,
           ];
@@ -195,19 +191,16 @@ export function AnalyticsContext({
         }
       } else {
         // If nestedPageElementContext doesn't exist yet, create it
-        // eslint-disable-next-line react-hooks/refs
         newContextData.current.nestedPageElementContext = [
           props.nestedPageElementContext,
         ];
       }
     } else {
       // Otherwise, just set the key to the value
-      // eslint-disable-next-line react-hooks/refs
       newContextData.current[key] = props[key as keyof typeof props];
     }
   }
   return (
-    // eslint-disable-next-line react-hooks/refs
     <trackingContext.Provider value={newContextData.current}>
       {children}
     </trackingContext.Provider>

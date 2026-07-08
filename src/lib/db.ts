@@ -34,6 +34,7 @@ import {
   reports,
   revisions,
   sequences,
+  spotlights,
   subscriptions,
   tagRels,
   tags,
@@ -61,6 +62,7 @@ const relations = defineRelations(
     messages,
     notifications,
     sequences,
+    spotlights,
     subscriptions,
     tags,
     tagRels,
@@ -324,6 +326,16 @@ const relations = defineRelations(
       conversation: r.one.conversations({
         from: r.messages.conversationId,
         to: r.conversations._id,
+      }),
+    },
+    spotlights: {
+      post: r.one.posts({
+        from: r.spotlights.documentId,
+        to: r.posts._id,
+      }),
+      sequence: r.one.sequences({
+        from: r.spotlights.documentId,
+        to: r.sequences._id,
       }),
     },
     userLoginTokens: {

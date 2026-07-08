@@ -44,8 +44,8 @@ export default function Select<T extends string>({
         disabled={disabled}
         onChange={onChange}
         className={clsx(
-          "block w-full px-1 py-2 text-sm bg-gray-0 text-gray-900",
-          "border-b-2 border-primary active:bg-gray-100 cursor-pointer",
+          "block w-full px-1 py-2 text-sm bg-gray-0 active:bg-gray-100 text-gray-900",
+          "border-b-2 border-gray-400 focus:border-primary cursor-pointer",
           "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
           selectClassName,
         )}

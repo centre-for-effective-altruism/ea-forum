@@ -39,3 +39,77 @@ export const getSiteLogoUrl = (sizePixels: number) =>
 
 export const getSiteOgImageUrl = () =>
   "https://res.cloudinary.com/cea/image/upload/v1582740871/EA_Forum_OG_Image.png";
+
+export const cloudinaryUploadArgsByImageType = {
+  gridImageId: {
+    minImageHeight: 80,
+    minImageWidth: 203,
+    croppingAspectRatio: 2.5375,
+    uploadPreset: "omqmhwsk",
+  },
+  bannerImageId: {
+    minImageHeight: 300,
+    minImageWidth: 700,
+    croppingAspectRatio: 4.7,
+    croppingDefaultSelectionRatio: 1,
+    uploadPreset: "dg6sakas",
+  },
+  squareImageId: {
+    minImageHeight: 300,
+    minImageWidth: 300,
+    croppingAspectRatio: 1,
+    croppingDefaultSelectionRatio: 1,
+    // Reuse the banner upload preset, since they are basically different
+    // versions of the same image
+    uploadPreset: "dg6sakas",
+  },
+  profileImageId: {
+    minImageHeight: 170,
+    minImageWidth: 170,
+    croppingAspectRatio: 1,
+    croppingDefaultSelectionRatio: 1,
+    uploadPreset: "ckffb3g5",
+  },
+  socialPreviewImageId: {
+    minImageHeight: 270,
+    minImageWidth: 500,
+    croppingAspectRatio: 1.91,
+    croppingDefaultSelectionRatio: 1.91,
+    uploadPreset: "xgsjqx55",
+  },
+  eventImageId: {
+    minImageHeight: 270,
+    minImageWidth: 500,
+    croppingAspectRatio: 1.91,
+    croppingDefaultSelectionRatio: 1.91,
+    uploadPreset: "r8g0ckcq",
+  },
+  spotlightImageId: {
+    minImageHeight: 232,
+    minImageWidth: 345,
+    cropping: false,
+    uploadPreset: "dg6sakas",
+  },
+  onsiteDigestImageId: {
+    minImageHeight: 300,
+    minImageWidth: 200,
+    cropping: false,
+    uploadPreset: "kwiphued",
+  },
+} as const;
+
+export type CloudinaryImageType = keyof typeof cloudinaryUploadArgsByImageType;
+
+export const formPreviewSizeByImageType: Record<
+  CloudinaryImageType,
+  { width: number | "auto"; height: number; imgProps?: Record<string, string> }
+> = {
+  gridImageId: { width: 250, height: 100 },
+  bannerImageId: { width: 1600, height: 380, imgProps: { g: "custom", dpr: "2.0" } },
+  squareImageId: { width: 90, height: 90 },
+  profileImageId: { width: 90, height: 90 },
+  socialPreviewImageId: { width: 153, height: 80 },
+  eventImageId: { width: 373, height: 195 },
+  spotlightImageId: { width: 716, height: 130 },
+  onsiteDigestImageId: { width: 200, height: 300 },
+};

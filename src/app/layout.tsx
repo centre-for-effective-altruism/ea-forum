@@ -123,7 +123,7 @@ export default function RootLayout({
           <div id="tooltip-target" />
           <Header />
           <MobileNav />
-          <main className="grow bg-background text-foreground font-sans">
+          <main className="grow bg-background text-foreground font-sans max-w-full">
             {children}
           </main>
           <OnboardingFlow />

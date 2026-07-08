@@ -5,8 +5,12 @@ import { db } from "../db";
 import { posts } from "../schema";
 import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
-import { fetchPostsListById, fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
+import {
+  fetchPostsListById,
+  fetchPostsListByIds,
+  fetchPostsListFromView,
+} from "./postLists";
 import {
   moveToDraft,
   setAsQuickTakesPost,
@@ -31,6 +35,12 @@ export const postsRouter = {
     .handler(async ({ input: { _id } }) => {
       const currentUser = await getCurrentUser();
       return fetchPostsListById(currentUser?._id ?? null, _id);
+    }),
+  listByIds: os
+    .input(z.object({ postIds: z.string().array() }))
+    .handler(async ({ input: { postIds } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchPostsListByIds(currentUser?._id ?? null, postIds);
     }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))

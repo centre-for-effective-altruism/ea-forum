@@ -18,12 +18,14 @@ type PostForTooltip = PostWithSocialPreview &
 export default function PostsTooltip({
   post,
   placement = "bottom-start",
+  hoverDelay,
   As = "div",
   className,
   children,
 }: Readonly<{
   post: PostForTooltip | null | undefined;
   placement?: Placement;
+  hoverDelay?: number;
   As?: ElementType;
   className?: string;
   children: ReactNode;
@@ -37,6 +39,7 @@ export default function PostsTooltip({
   return (
     <Tooltip
       placement={placement}
+      hoverDelay={hoverDelay}
       As={As}
       className={className}
       popover

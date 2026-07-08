@@ -65,6 +65,7 @@ export type EditorAutosave = {
 const Editor = forwardRef<
   EditorAPI | null,
   {
+    id?: string;
     editorType?: EditorTypeString;
     label?: string;
     formVariant?: "default" | "grey";
@@ -101,6 +102,7 @@ const Editor = forwardRef<
   }
 >(function Editor(
   {
+    id,
     label,
     formVariant,
     formType,
@@ -242,7 +244,7 @@ const Editor = forwardRef<
   const isGrey = formVariant === "grey";
   const CkEditor = commentEditor ? CommentEditor : PostEditor;
   return (
-    <div data-component="Editor" className={className}>
+    <div data-component="Editor" id={id} className={className}>
       {autosave && !autosaveDismissed && (
         <div
           className="
