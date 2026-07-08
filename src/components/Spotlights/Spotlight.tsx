@@ -60,7 +60,7 @@ export default function Spotlight({
               html={descriptionHtml}
               className="
                 w-[350px] max-w-full mt-0.5
-                [&_a]:text-always-white! [&_a]:underline
+                [&_*]:text-always-white! [&_a]:underline
               "
             />
           )}
