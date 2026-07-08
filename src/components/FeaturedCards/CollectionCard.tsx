@@ -17,17 +17,18 @@ export default function CollectionCard({
 }: Readonly<{
   collection: CollectionBase;
 }>) {
-  const { posts, loading } = useCollectionPosts(collection._id);
-
+  const posts = useCollectionPosts(collection._id);
   const { title, author, imageId } = getCollectionCardDetails(collection);
 
   const TitleWrapper = useCallback(
     ({ children }: { children: ReactNode }) => {
       return (
-        <CollectionsTooltip collection={collection}>{children}</CollectionsTooltip>
+        <CollectionsTooltip collection={collection} collectionPosts={posts}>
+          {children}
+        </CollectionsTooltip>
       );
     },
-    [collection],
+    [collection, posts],
   );
   return (
     <AnalyticsContext documentSlug={collection.slug}>
@@ -35,9 +36,9 @@ export default function CollectionCard({
         title={title}
         author={author}
         TitleWrapper={TitleWrapper}
-        postCount={posts.length}
-        readCount={collectionReadPostCount(posts)}
-        hideReadCount={loading}
+        postCount={posts.posts.length}
+        readCount={collectionReadPostCount(posts.posts)}
+        hideReadCount={posts.loading}
         imageId={imageId}
         href={collectionGetPageUrl({ collection })}
       />
