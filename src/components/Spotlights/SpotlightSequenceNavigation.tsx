@@ -61,8 +61,8 @@ export default function SpotlightSequenceNavigation({
           <Link
             href={postGetPageUrl({ post, sequenceId: sequence._id })}
             className={clsx(
-              "border-1 border-gray-900 rounded-[2px] hover:opacity-60",
-              post.readStatus?.[0]?.isRead && "bg-gray-900",
+              "border-1 border-always-white rounded-[2px] hover:opacity-60",
+              post.readStatus?.[0]?.isRead && "bg-always-white",
             )}
           >
             {""}
