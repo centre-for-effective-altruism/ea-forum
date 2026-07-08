@@ -16,18 +16,20 @@ import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import MagnifyingGlassIcon from "@heroicons/react/16/solid/MagnifyingGlassIcon";
 import Type, { typeStyles } from "../Type";
-import Dropdown from "../Dropdown/Dropdown";
-import TagTooltip from "./TagTooltip";
+import Dropdown, { DropdownDismissRef } from "../Dropdown/Dropdown";
+import TagTooltip from "../TagTooltip";
 import Loading from "../Loading";
 import Link from "../Link";
 
 export default function TagSelect({
   onSelect,
   placement,
+  dismissRef,
   children,
 }: Readonly<{
   onSelect?: (tag: { _id: string; name: string; slug: string }) => void;
   placement?: Placement;
+  dismissRef?: DropdownDismissRef;
   children: ReactNode;
 }>) {
   const [query, setQuery] = useState("");
@@ -58,7 +60,7 @@ export default function TagSelect({
           },
         ]);
         if (requestIdRef.current === requestId) {
-          setResults(results.results[0].hits ?? []);
+          setResults(results[0].hits ?? []);
         }
       })();
     } else {
@@ -76,7 +78,7 @@ export default function TagSelect({
       menu={
         <div
           className="
-            bg-surface-floating border-1 border-gray-100 rounded shadow py-1
+            bg-surface-floating border-1 border-gray-100 rounded shadow-md py-1
             flex flex-col gap-1 w-[240px] max-w-full
           "
         >
@@ -97,7 +99,12 @@ export default function TagSelect({
               </Type>
             )}
             {tagsToDisplay?.map((tag) => (
-              <TagTooltip key={tag._id} tag={tag} placement="left-start">
+              <TagTooltip
+                key={tag._id}
+                tag={tag}
+                placement="left-start"
+                className="max-w-full"
+              >
                 <Type
                   onClick={onSelect?.bind(null, {
                     _id: tag._id,
@@ -108,9 +115,11 @@ export default function TagSelect({
                   style="bodySmall"
                   className="
                     cursor-pointer w-full text-left text-gray-900 hover:text-primary
+                    flex items-center gap-1
                   "
                 >
-                  {tag.name} <span className="text-gray-600">({tag.postCount})</span>
+                  <span className="truncate">{tag.name}</span>
+                  <span className="text-gray-600">({tag.postCount})</span>
                 </Type>
               </TagTooltip>
             ))}
@@ -129,6 +138,7 @@ export default function TagSelect({
         </div>
       }
       placement={placement}
+      dismissRef={dismissRef}
     >
       {children}
     </Dropdown>

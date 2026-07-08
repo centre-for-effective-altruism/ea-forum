@@ -4,8 +4,15 @@ declare namespace NodeJS {
     LOG_DRIZZLE_QUERIES?: "true" | "false";
     ENABLE_QUERY_PERFORMANCE_LOGGER?: "full" | "simple" | "false";
     ENVIRONMENT: "dev" | "staging" | "prod";
+    NEXT_PUBLIC_ENVIRONMENT: "dev" | "staging" | "prod";
+    NEXT_PUBLIC_IS_BOT_SITE?: "true" | "false";
+    BOT_SITE_REDIRECT_HOST?: string;
+    NEXT_PUBLIC_NO_INDEX?: "true" | "false";
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
+    NEXT_PUBLIC_GOOGLE_TAG_MANAGER_KEY: string;
+    ADMIN_ACCOUNT_EMAIL: string;
+    NEXT_PUBLIC_ANALYTICS_EVENTS_DISABLED?: "true" | "false";
 
     // Auth0 settings
     NEXT_PUBLIC_AUTH0_DOMAIN: string;
@@ -50,7 +57,12 @@ declare namespace NodeJS {
     AKISMET_API_KEY: string;
     NEXT_PUBLIC_RECAPTCHA_KEY: string;
     RECAPTCHA_PRIVATE_KEY: string;
-    SENTRY_DSN: string;
+    NEXT_PUBLIC_SENTRY_DSN: string;
+    SENTRY_AUTH_TOKEN?: string;
+    INTERCOM_TOKEN: string;
+    PANGRAM_API_KEY: string;
+    NEXT_PUBLIC_POSTHOG_HOST: string;
+    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: string;
 
     // Site config
     START_HERE_POST_ID: string;

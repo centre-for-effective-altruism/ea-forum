@@ -13,6 +13,7 @@ import type { EventInfo } from "@ckeditor/ckeditor5-utils";
 import type { EditorCollectionName } from "@/lib/ckeditor/editorSettings";
 import type { CollaborativeEditingAccessLevel } from "@/lib/ckeditor/collabEditingPermissions";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import {
   autosaveIntervalMs,
   checkEditorValid,
@@ -24,7 +25,9 @@ import {
   FormProps,
   validationIntervalMs,
 } from "@/lib/ckeditor/editorHelpers";
+import clsx from "clsx";
 import debounce from "lodash/debounce";
+import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import PlaintextEditor from "./PlaintextEditor";
 import CommentEditor from "./CommentEditor";
 import PostEditor from "./PostEditor";
@@ -39,6 +42,11 @@ import "./ckeditor-styles.css";
 export type EditorOnChangeProps = {
   contents: EditorContents;
   autosave: boolean;
+};
+
+export type EditorAutosave = {
+  contents: EditorContents;
+  onRestore: () => void;
 };
 
 /**
@@ -57,6 +65,7 @@ export type EditorOnChangeProps = {
 const Editor = forwardRef<
   EditorAPI | null,
   {
+    id?: string;
     editorType?: EditorTypeString;
     label?: string;
     formVariant?: "default" | "grey";
@@ -78,6 +87,7 @@ const Editor = forwardRef<
     maxHeight?: boolean | null;
     hasCommitMessages?: boolean;
     document?: EditorDocument;
+    autosave?: EditorAutosave;
     /**
      * Whether to use the CkEditor collaborative editor, ie, this is the
      * contents field of a shared post.
@@ -92,6 +102,7 @@ const Editor = forwardRef<
   }
 >(function Editor(
   {
+    id,
     label,
     formVariant,
     formType,
@@ -106,6 +117,7 @@ const Editor = forwardRef<
     isCollaborative,
     accessLevel,
     document,
+    autosave,
     className,
   },
   ref,
@@ -118,6 +130,7 @@ const Editor = forwardRef<
   const [loading, setLoading] = useState(true);
   const [markdownImgErrors, setMarkdownImgErrors] = useState(false);
   const [editorWarning, setEditorWarning] = useState<string | undefined>();
+  const [autosaveDismissed, setAutosaveDismissed] = useState(false);
 
   useEffect(() => {
     setLoading(false);
@@ -212,10 +225,55 @@ const Editor = forwardRef<
     [debouncedValidateEditor, throttledSetCkEditor, setContents],
   );
 
+  const restoreAutosave = useCallback(() => {
+    if (autosave) {
+      if (autosave.contents.type === "ckEditorMarkup") {
+        ckEditorRef?.setData(autosave.contents.data);
+      } else {
+        setContents(autosave.contents.type, autosave.contents.data);
+      }
+      setAutosaveDismissed(true);
+      autosave.onRestore();
+    }
+  }, [autosave, setContents, ckEditorRef]);
+
+  const dismissAutosave = useCallback(() => {
+    setAutosaveDismissed(true);
+  }, []);
+
   const isGrey = formVariant === "grey";
   const CkEditor = commentEditor ? CommentEditor : PostEditor;
   return (
-    <div data-component="Editor" className={className}>
+    <div data-component="Editor" id={id} className={className}>
+      {autosave && !autosaveDismissed && (
+        <div
+          className="
+            w-full rounded px-3 py-2 mb-1 bg-primary-dark/40 flex items-center
+          "
+        >
+          <Type
+            onClick={restoreAutosave}
+            As="button"
+            style="bodyHeavy"
+            className="cursor-pointer hover:text-primary"
+          >
+            Restore autosave
+          </Type>
+          <Type
+            className="
+              ml-2 grow whitespace-nowrap overflow-hidden text-ellipsis opacity-70
+            "
+          >
+            {htmlToTextDefault(autosave.contents.data.slice(0, 150))}
+          </Type>
+          <button
+            onClick={dismissAutosave}
+            className="cursor-pointer hover:text-primary"
+          >
+            <XMarkIcon className="w-4" />
+          </button>
+        </div>
+      )}
       {label && isGrey && (
         <SectionTitle title={label} noTopMargin titleClassName="font-[12px]" />
       )}
@@ -229,7 +287,11 @@ const Editor = forwardRef<
         {loading || !CkEditor ? (
           <Loading />
         ) : (
-          <div className="forum-editor">
+          <div
+            // TODO: Do we need finer grained control here for editing collections
+            // other than comments and posts?
+            className={clsx("forum-editor", !commentEditor && "post-editor")}
+          >
             {editorWarning && <WarningBanner messageHtml={editorWarning} />}
             {value.type === "ckEditorMarkup" ? (
               <CkEditor

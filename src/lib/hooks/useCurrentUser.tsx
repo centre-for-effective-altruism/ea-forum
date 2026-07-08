@@ -5,9 +5,12 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import * as Sentry from "@sentry/browser";
+import posthog from "posthog-js";
 import { rpc } from "../rpc";
 import type { CurrentUser } from "../users/currentUser";
 
@@ -43,6 +46,31 @@ export function CurrentUserProvider({
     }),
     [currentUser, setCurrentUser, refetchCurrentUser],
   );
+
+  useEffect(() => {
+    if (window.dataLayer) {
+      window.dataLayer.push({ userId: currentUser?._id ?? null });
+    } else {
+      console.warn("Trying to call gtag before dataLayer has been initialized");
+    }
+    Sentry.setUser(
+      currentUser
+        ? {
+            id: currentUser._id,
+            email: currentUser.email ?? undefined,
+            username: currentUser.username ?? currentUser.displayName ?? undefined,
+          }
+        : null,
+    );
+    if (currentUser) {
+      posthog.identify(currentUser._id, {
+        email: currentUser.email ?? undefined,
+        username: currentUser.username ?? currentUser.displayName ?? undefined,
+      });
+    } else {
+      posthog.reset();
+    }
+  }, [currentUser]);
 
   return (
     <currentUserContext.Provider value={value}>

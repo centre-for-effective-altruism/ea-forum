@@ -1,4 +1,9 @@
-export type EditorCollectionName = "Posts" | "Comments" | "Tags" | "Users";
+export type EditorCollectionName =
+  | "Posts"
+  | "Comments"
+  | "Tags"
+  | "Users"
+  | "Spotlights";
 
 export const ckEditorBundleVersion = "43.1.6";
 

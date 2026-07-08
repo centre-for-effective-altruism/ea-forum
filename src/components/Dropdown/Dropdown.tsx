@@ -23,6 +23,8 @@ import {
 } from "@floating-ui/react";
 import clsx from "clsx";
 
+export type DropdownDismissRef = RefObject<(() => void) | null>;
+
 export default function Dropdown({
   placement,
   menu,
@@ -33,7 +35,7 @@ export default function Dropdown({
 }: Readonly<{
   placement?: Placement;
   menu: ReactNode;
-  dismissRef?: RefObject<(() => void) | null>;
+  dismissRef?: DropdownDismissRef;
   onToggleOpen?: (open: boolean) => void;
   className?: string;
   children: ReactNode;
@@ -57,7 +59,7 @@ export default function Dropdown({
     nodeId,
     open: isOpen,
     onOpenChange,
-    middleware: [flip(), shift()],
+    middleware: [flip(), shift({ padding: 12 })],
     whileElementsMounted: autoUpdate,
     placement,
   });

@@ -1,38 +1,99 @@
 import type { ReactNode } from "react";
-import type { Metadata } from "next";
-import { Charis_SIL, Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
-import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
+import { getSiteUrl } from "@/lib/routeHelpers";
+import { isNoIndexSite } from "@/lib/environment";
+import {
+  getSiteLogoUrl,
+  getSiteOgImageUrl,
+} from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header/Header";
 import MobileNav from "@/components/Nav/MobileNav";
 import IntercomButton from "@/components/Intercom/IntercomButton";
+import PageLoadListener from "@/components/PageLoadListener";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
 import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
+import PageAnalytics from "@/components/PageAnalytics";
 import SiteToggle from "@/components/Admin/SiteToggle";
 import "./globals.css";
 
-const inter = Inter({
+const inter = localFont({
+  src: "../fonts/InterVariable.woff2",
+  // Declare the full variable weight range so browsers (notably iOS Safari) use
+  // the font's own weight axis instead of synthesising bold, which made 600/700
+  // text look extra-bolded.
+  weight: "100 900",
+  style: "normal",
   variable: "--font-inter",
   display: "swap",
   preload: true,
 });
 
-const charis = Charis_SIL({
-  weight: ["400", "700"],
-  variable: "--font-charis",
+const newsreader = localFont({
+  src: [
+    {
+      path: "../fonts/Newsreader[opsz,wght].woff2",
+      style: "normal",
+      weight: "100 900",
+    },
+    {
+      path: "../fonts/Newsreader-Italic[opsz,wght].woff2",
+      style: "italic",
+      weight: "100 900",
+    },
+  ],
+  variable: "--font-newsreader",
   display: "swap",
   preload: true,
 });
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s — EA Forum",
-    default: "Effective Altruism Forum",
-  },
-  description:
-    "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "";
+  return {
+    metadataBase: getSiteUrl(),
+    title: {
+      template: "%s — EA Forum",
+      default: "Effective Altruism Forum",
+    },
+    description:
+      "The EA Forum hosts research, discussion, and updates on the world's most pressing problems. Including global health and development, animal welfare, AI safety, and biosecurity.",
+    applicationName: "Effective Altruism Forum",
+    robots: isNoIndexSite ? "noindex" : undefined,
+    alternates: {
+      types: {
+        "application/rss+xml": "/feed.xml",
+      },
+    },
+    icons: {
+      icon: getSiteLogoUrl(96),
+      shortcut: getSiteLogoUrl(50),
+      apple: getSiteLogoUrl(180),
+    },
+    manifest: "/site.webmanifest",
+    openGraph: {
+      type: "website",
+      url: getSiteUrl(),
+      title: "Effective Altruism Forum",
+      images: getSiteOgImageUrl(),
+    },
+    twitter: {
+      card: userAgent.startsWith("Slackbot-LinkExpanding")
+        ? "summary_large_image"
+        : "summary",
+      images: getSiteOgImageUrl(),
+    },
+    bookmarks: "/saved",
+  };
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -43,25 +104,26 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href={getSiteLogoUrl(96)} sizes="96x96" />
-        <link rel="apple-touch-icon" href={getSiteLogoUrl(180)} sizes="180x180" />
-        <link rel="shortcut icon" href={getSiteLogoUrl(50)} />
-        <meta name="apple-mobile-web-app-title" content="EA Forum" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <meta
+          httpEquiv="delegate-ch"
+          content="sec-ch-dpr https://res.cloudinary.com;"
+        />
       </head>
       <body
         className={clsx(
           "antialiased text-size-adjust-none w-full min-h-screen flex flex-col",
           "bg-background text-foreground font-sans",
           inter.variable,
-          charis.variable,
+          newsreader.variable,
         )}
       >
         <Providers>
+          <PageLoadListener />
+          <PageAnalytics />
           <div id="tooltip-target" />
           <Header />
           <MobileNav />
-          <main className="grow bg-background text-foreground font-sans">
+          <main className="grow bg-background text-foreground font-sans max-w-full">
             {children}
           </main>
           <OnboardingFlow />

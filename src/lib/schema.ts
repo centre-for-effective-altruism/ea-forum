@@ -1,8 +1,12 @@
 import "server-only";
+import type { ForumEventCommentMetadata } from "./forumEvents/forumEventHelpers";
+import type { PangramV3Response } from "./revisions/pangramHelpers";
 import type { EditorContents } from "./ckeditor/editorHelpers";
 import type { FilterSettings } from "./filterSettings";
 import type { Json, JsonRecord } from "./typeHelpers";
+import type { Pingbacks } from "./pingbacks";
 import type { VoteType } from "./votes/voteHelpers";
+import type { Rsvp } from "./posts/rsvpHelpers";
 import type { Theme } from "./themes";
 import {
   KarmaChangeSettings,
@@ -62,6 +66,8 @@ const timestamp = customType<{
 const timestampDefaultNow = () => timestamp().default(sql`CURRENT_TIMESTAMP`);
 
 const jsonb = <T = Json>() => jsonbRaw().$type<T>();
+
+const jsonbArray = <T = Json>() => jsonbRaw().array().$type<T>();
 
 const denormalizedRevision = () => jsonb<DenormalizedRevision>();
 
@@ -284,6 +290,10 @@ export const users = pgTable(
       .default(defaultKarmaChangeSettings),
     karmaChangeLastOpened: timestamp(),
     karmaChangeBatchStart: timestamp(),
+    auto_subscribe_to_my_posts: boolean().notNull().default(true),
+    auto_subscribe_to_my_comments: boolean().notNull().default(true),
+    autoSubscribeAsOrganizer: boolean().notNull().default(true),
+    blockedUserIds: varchar({ length: 27 }).array().notNull().default([]),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -307,16 +317,12 @@ export const users = pgTable(
   "collapseModerationGuidelines" BOOL,
   "bannedUserIds" VARCHAR(27) [],
   "bannedPersonalUserIds" VARCHAR(27) [],
-  "blockedUserIds" VARCHAR(27) [] NOT NULL DEFAULT '{}',
   "hiddenPostsMetadata" JSONB[] NOT NULL DEFAULT '{}',
   "legacyId" TEXT,
   "permanentDeletionRequestedAt" TIMESTAMPTZ,
   "voteBanned" BOOL,
   "nullifyVotes" BOOL,
   "deleteContent" BOOL,
-  "auto_subscribe_to_my_posts" BOOL NOT NULL DEFAULT TRUE,
-  "auto_subscribe_to_my_comments" BOOL NOT NULL DEFAULT TRUE,
-  "autoSubscribeAsOrganizer" BOOL NOT NULL DEFAULT TRUE,
   "hideDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
   "revealChecksToAdmins" BOOL NOT NULL DEFAULT FALSE,
   "optedInToDialogueFacilitation" BOOL NOT NULL DEFAULT FALSE,
@@ -618,7 +624,7 @@ export const comments = pgTable(
     afBaseScore: doublePrecision(),
     afExtendedScore: jsonb(),
     afVoteCount: doublePrecision(),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     relevantTagIds: varchar({ length: 27 }).array().default([]).notNull(),
     debateResponse: boolean(),
     rejected: boolean().default(false).notNull(),
@@ -629,7 +635,7 @@ export const comments = pgTable(
     shortformFrontpage: boolean().default(true).notNull(),
     originalDialogueId: varchar({ length: 27 }),
     forumEventId: varchar({ length: 27 }),
-    forumEventMetadata: jsonb(),
+    forumEventMetadata: jsonb<ForumEventCommentMetadata>(),
     lastEditedAt: timestamp(),
     draft: boolean().default(false).notNull(),
   },
@@ -1272,6 +1278,8 @@ export const conversations = pgTable(
   ],
 );
 
+export type Conversation = typeof conversations.$inferSelect;
+
 export const debouncerEvents = pgTable(
   "DebouncerEvents",
   {
@@ -1313,6 +1321,8 @@ export const debouncerEvents = pgTable(
     ),
   ],
 );
+
+export type DebouncerEvent = typeof debouncerEvents.$inferSelect;
 
 export const electionVotes = pgTable(
   "ElectionVotes",
@@ -1494,6 +1504,8 @@ export const messages = pgTable(
   ],
 );
 
+export type Message = typeof messages.$inferSelect;
+
 export const migrations = pgTable(
   "Migrations",
   {
@@ -1656,6 +1668,7 @@ export const notifications = pgTable(
 );
 
 export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
 
 export const podcastEpisodes = pgTable(
   "PodcastEpisodes",
@@ -1938,7 +1951,7 @@ export const posts = pgTable(
     lastCommentPromotedAt: timestamp(),
     tagRelevance: jsonb<Record<string, number>>(),
     noIndex: boolean().default(false).notNull(),
-    rsvps: jsonb().array(),
+    rsvps: jsonbArray<Rsvp[]>(),
     activateRSVPs: boolean(),
     nextDayReminderSent: boolean().default(false).notNull(),
     onlyVisibleToLoggedIn: boolean().default(false).notNull(),
@@ -2029,7 +2042,7 @@ export const posts = pgTable(
     reviewForAlignmentUserId: text(),
     agentFoundationsId: text(),
     contentsLatest: text("contents_latest"),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     moderationGuidelinesLatest: text("moderationGuidelines_latest"),
     customHighlight: jsonb(),
     customHighlightLatest: text("customHighlight_latest"),
@@ -2888,6 +2901,9 @@ export const tagRels = pgTable(
   ],
 );
 
+export type TagRel = typeof tagRels.$inferSelect;
+export type InsertTagRel = typeof tagRels.$inferInsert;
+
 export const subscriptions = pgTable(
   "Subscriptions",
   {
@@ -3023,6 +3039,10 @@ export const revisions = pgTable(
     afVoteCount: doublePrecision(),
     googleDocMetadata: jsonb(),
     skipAttributions: boolean().default(false).notNull(),
+    pangramAiScore: doublePrecision(),
+    pangramCheckedAt: timestamp(),
+    pangramStatus: text(),
+    pangramRawResponse: jsonb<PangramV3Response>(),
   },
   (table) => [
     index("idx_Revisions_collectionName_fieldName_editedAt__id_changeMetri").using(
@@ -3118,41 +3138,24 @@ export const spotlights = pgTable(
     ...universalFields,
     documentId: text().notNull(),
     documentType: text().default("Sequence").notNull(),
-    position: doublePrecision().notNull(),
-    duration: doublePrecision().default(3).notNull(),
-    customTitle: text(),
-    customSubtitle: text(),
-    lastPromotedAt: timestamp().default("'1970-01-01T00:00:00.000Z'").notNull(),
-    draft: boolean().default(true).notNull(),
-    spotlightImageId: text(),
+    title: text(),
+    imageId: text(),
     descriptionLatest: text("description_latest"),
-    description: jsonb(),
-    showAuthor: boolean().default(false).notNull(),
-    spotlightDarkImageId: text(),
-    imageFade: boolean().default(true).notNull(),
-    headerTitle: text(),
-    headerTitleLeftColor: text(),
-    headerTitleRightColor: text(),
+    description: denormalizedRevision(),
     imageFadeColor: text(),
-    deletedDraft: boolean().default(false).notNull(),
-    spotlightSplashImageUrl: text(),
-    subtitleUrl: text(),
+    startAt: timestamp(),
+    endAt: timestamp(),
   },
   (table) => [
-    index("idx_Spotlights_lastPromotedAt").using(
-      "btree",
-      table.lastPromotedAt.asc().nullsLast(),
-    ),
-    index("idx_Spotlights_position").using(
-      "btree",
-      table.position.asc().nullsLast(),
-    ),
     index("idx_Spotlights_schemaVersion").using(
       "btree",
       table.schemaVersion.asc().nullsLast(),
     ),
   ],
 );
+
+export type Spotlight = typeof spotlights.$inferSelect;
+export type InsertSpotlight = typeof spotlights.$inferInsert;
 
 export const userEagDetails = pgTable(
   "UserEAGDetails",
@@ -3390,7 +3393,7 @@ export const tags = pgTable(
     noindex: boolean().default(false).notNull(),
     isPostType: boolean().default(false).notNull(),
     isPlaceholderPage: boolean().default(false).notNull(),
-    pingbacks: jsonb(),
+    pingbacks: jsonb<Pingbacks>(),
     voteCount: doublePrecision().default(0).notNull(),
     score: doublePrecision().default(0).notNull(),
     baseScore: doublePrecision().default(0).notNull(),

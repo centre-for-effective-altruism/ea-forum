@@ -6,7 +6,10 @@ import NextLink from "next/link";
 import { useTracking } from "@/lib/analyticsEvents";
 
 export default function Link({
-  href,
+  // This default value is important even though this component is typed as
+  // requiring a string - user generated content can be missing a value for
+  // various reasons, and next/link throws an exception without one.
+  href = "#",
   id,
   rel,
   onClick: onClick_,
@@ -43,6 +46,9 @@ export default function Link({
       onClick={onClick}
       className={className ?? "hover:opacity-70"}
       {...props}
+      // This is really important to avoid hammering the old ForumMagnum servers
+      // with preemtive fetches - maybe we can remove it in the future though?
+      prefetch={false}
     >
       {children}
     </NextLink>

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { rpc } from "@/lib/rpc";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import { CommentsListProvider } from "../Comments/useCommentsList";
 import CommentsFeed from "../Comments/CommentsFeed";
 
 export default function ClientPopularCommentsList({
@@ -18,10 +19,12 @@ export default function ClientPopularCommentsList({
     [],
   );
   return (
-    <CommentsFeed
-      comments={initialComments}
-      loadMore={loadMore}
-      className={className}
-    />
+    <CommentsListProvider comments={initialComments} showPostTitle>
+      <CommentsFeed
+        comments={initialComments}
+        loadMore={loadMore}
+        className={className}
+      />
+    </CommentsListProvider>
   );
 }

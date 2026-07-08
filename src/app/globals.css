@@ -23,19 +23,30 @@
   --color-primary: #0c869b;
   --color-primary-light: #00b2be;
   --color-primary-dark: #085d6c;
+  /* Filled-button teal. Not overridden in dark mode, so buttons keep this darker
+     teal (vs the brighter #009da8 primary) for readable white text on dark. */
+  --color-primary-button: #0c869b;
 
   --color-panel-background: #fff;
   --color-error: #e04e4b;
   --color-error-light: #cb5e3c;
   --color-warning: #832013;
+  --color-warning-light: #ff9800;
   --color-warning-translucent: "rgba(255,152,0,0.1)";
+  --color-postitem: #ffffff;
   --color-postitemhover: #fafafa;
   --color-postitemhover-border: #e8e8e8;
+  /* Hover bg for interactive elements sitting on the page background (nav,
+     icon buttons, sidebar links). For items inside a floating surface
+     (dropdowns, the reaction palette) use surface-floating-hover instead, which
+     is lifted relative to the floating surface rather than the page. */
+  --color-item-hover: #eeeeee;
   --color-login-input: #efefef;
   --color-login-input-hover: #e4e4e4;
   --color-outline-button-hover: rgba(0, 0, 0, 0.035);
   --color-tooltip-background: #373737;
   --color-tooltip-text: #ffffff;
+  --color-tooltip-text-dim: #c2c2c2;
   --color-posts-page-hr: #e4e4e4;
   --color-visited-link: #7130a6;
   --color-table-border: #b3b3b3;
@@ -64,6 +75,28 @@
   --color-mentions-selected: #198cf0;
   --color-mentions-selected-hover: #0e7fe1;
   --color-mentions-border: #c4c4c4;
+  --color-strawpoll: rgb(251, 191, 36);
+  --color-post-body-bg: var(--color-gray-0);
+  --color-post-footer-bg: var(--color-background);
+
+  /* Admin Pangram badge */
+  --color-pangram-mid-bg: #fff8e1;
+  --color-pangram-high-bg: #ffebee;
+  --color-pangram-error-bg: #ffebee;
+  --color-pangram-ai-fraction: #b71c1c;
+  --color-pangram-assisted-fraction: #ef6c00;
+  --color-pangram-human-fraction: #2e7d32;
+
+  /* Post page Pangram status */
+  --color-pangram-low-bg: #f3f0ec;
+  --color-pangram-low-fg: #5a4f3f;
+  --color-pangram-low-hl: #d8cfc0;
+  --color-pangram-med-bg: #f5e8d7;
+  --color-pangram-med-fg: #8a5a1f;
+  --color-pangram-med-hl: #ecd9b6;
+  --color-pangram-high-bg: #e9c89a;
+  --color-pangram-high-fg: #774719;
+  --color-pangram-high-hl: #d9ad6f;
 
   --color-editor-bg: #fff;
   --color-editor-comment-bg: #f3f7fb;
@@ -90,6 +123,10 @@
   --color-surface-floating-hover: #f5f5f5;
   --color-card-tinted: #eeeeee;
 
+  --shadow-featured-card:
+    0 2px 6px 0 rgba(0, 0, 0, 0.1), -8px 8px 0 0 var(--color-surface-floating),
+    -10px 10px 10px -1px rgba(0, 0, 0, 0.1);
+
   --spacing: 4px;
 
   --radius-sm: 6px;
@@ -97,7 +134,7 @@
 
   --font-stack-sans:
     GreekFallback, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-stack-serif: "Charis SIL", Baskerville, "Libre Baskerville", Georgia, serif;
+  --font-stack-serif: "Newsreader", Baskerville, "Libre Baskerville", Georgia, serif;
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-digest-popup: 1050;
@@ -108,6 +145,7 @@
   --zindex-dropdown: 1305;
   --zindex-mobile-nav: 1306;
   --zindex-tooltip: 1308;
+  --zindex-intercom: 1350;
   --zindex-cookie-banner: 1400;
 
   --buzzsprout-opacity: 1;
@@ -131,6 +169,19 @@
     }
     to {
       opacity: 1;
+    }
+  }
+
+  --animate-poll-results-fade-in: poll-results-fade-in 2s ease;
+  @keyframes poll-results-fade-in {
+    0% {
+      pointer-events: none;
+    }
+    99% {
+      pointer-events: none;
+    }
+    100% {
+      pointer-events: auto;
     }
   }
 }
@@ -161,12 +212,16 @@
   --color-error-light: #e04e4b;
   --color-warning: #fff7e6;
   --color-warning-translucent: "rgba(255,173,8,0.3)";
-  --color-postitemhover: #2a2a2a;
+  /* Post-item resting surface, lifted clearly above the #141414 page bg so
+     cards read in dark mode; hover bumped in step to keep the hover delta. */
+  --color-postitem: #262626;
+  --color-postitemhover: #323232;
   --color-postitemhover-border: #363636;
+  --color-item-hover: #2a2a2a;
   --color-login-input: #2e2e2e;
   --color-login-input-hover: #363636;
   --color-outline-button-hover: rgba(255, 255, 255, 0.035);
-  --color-tooltip-background: rgba(95, 95, 95, 0.96);
+  --color-tooltip-background: rgba(70, 70, 70, 0.96);
   --color-tooltip-text: #ffffff;
   --color-posts-page-hr: #454545;
   --color-visited-link: #9b71be;
@@ -178,7 +233,7 @@
   --color-details-title: rgba(255, 255, 255, 0.3);
   --color-conditionally-visible: rgba(255, 255, 255, 0.2);
   --color-post-hr: rgba(255, 255, 255, 0.26);
-  --color-comment-border: #363636;
+  --color-comment-border: rgba(255, 255, 255, 0.2);
   --color-comment-odd: #1f1f1f;
   --color-comment-even: #262626;
   --color-people-directory-row-hover: #2a2a2a;
@@ -190,7 +245,27 @@
   --color-mentions-selected: #0c70c7;
   --color-mentions-selected-hover: #0b62ae;
   --color-mentions-border: #212121;
-  --color-strawpoll: rgb(251, 191, 36);
+  --color-post-body-bg: var(--color-background);
+  --color-post-footer-bg: var(--color-gray-0);
+
+  /* Admin Pangram badge */
+  --color-pangram-mid-bg: #3e2f10;
+  --color-pangram-high-bg: #4a1f23;
+  --color-pangram-error-bg: #4a1f23;
+  --color-pangram-ai-fraction: #ff8a80;
+  --color-pangram-assisted-fraction: #ffb74d;
+  --color-pangram-human-fraction: #81c784;
+
+  /* Post page Pangram status */
+  --color-pangram-low-bg: #504f4d;
+  --color-pangram-low-fg: #ffffff;
+  --color-pangram-low-hl: #d8cfc0;
+  --color-pangram-med-bg: #59472f;
+  --color-pangram-med-fg: #ffffff;
+  --color-pangram-med-hl: #ecd9b6;
+  --color-pangram-high-bg: #906c39;
+  --color-pangram-high-fg: #ffffff;
+  --color-pangram-high-hl: #d9ad6f;
 
   --color-editor-bg: #2a2a2a;
   --color-editor-comment-bg: #333333;
@@ -207,6 +282,10 @@
   --color-surface-floating: #353535;
   --color-surface-floating-hover: #4a4a4a;
   --color-card-tinted: #1f1f1f;
+
+  --shadow-featured-card:
+    0 2px 6px 0 rgba(255, 255, 255, 0.1), -8px 8px 0 0 var(--color-surface-floating),
+    -10px 10px 10px -1px rgba(255, 255, 255, 0.1);
 }
 
 .theme-light {
@@ -251,6 +330,29 @@
 .text-size-adjust-none {
   text-size-adjust: none;
   -webkit-text-size-adjust: none;
+}
+
+.spotlight-image-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    transparent 30%,
+    #fff 90%,
+    #fff 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    transparent 30%,
+    #fff 90%,
+    #fff 100%
+  );
+}
+
+/* Stop browsers (notably iOS Safari) from synthesising bold weights on top of
+   the variable Inter face, which made bold text render extra-bolded. */
+body {
+  font-synthesis-weight: none;
 }
 
 @keyframes profile-image-loader {
@@ -342,4 +444,58 @@
  */
 .grecaptcha-badge {
   visibility: hidden;
+}
+
+/**
+ * Place Intercom above everything except the cookie banner
+ */
+#intercom-container {
+  z-index: var(--zindex-intercom);
+}
+
+/**
+ * There's a bug in Tailwind where iframes can't have transparent backgrounds
+ * in dark mode. Force the Cloudinary upload widget to use light-mode instead.
+ */
+iframe[data-test="uw-iframe"] {
+  color-scheme: light;
+}
+
+/**
+ * Dark mode color overrides
+ * TODO: Tidy this up so we don't have to copy and paste...
+ */
+.theme-dark .content-base td[style*="background-color:"] {
+  background-color: black !important;
+}
+.theme-dark .content-base th[style*="background-color:"] {
+  background-color: var(--color-table-header-bg) !important;
+}
+.theme-dark .content-base table[style*="background-color:"] {
+  background-color: black !important;
+}
+.theme-dark .content-base td[style*="border:"],
+.theme-dark .content-base th[style*="border:"] {
+  border: var(--color-table-cell-border) !important;
+}
+.theme-dark .content-base table[style*="border:"] {
+  border-color: #333 !important;
+}
+@media (prefers-color-scheme: dark) {
+  .theme-auto .content-base td[style*="background-color:"] {
+    background-color: black !important;
+  }
+  .theme-auto .content-base th[style*="background-color:"] {
+    background-color: var(--color-table-header-bg) !important;
+  }
+  .theme-auto .content-base table[style*="background-color:"] {
+    background-color: black !important;
+  }
+  .theme-auto .content-base td[style*="border:"],
+  .theme-auto .content-base th[style*="border:"] {
+    border: var(--color-table-cell-border) !important;
+  }
+  .theme-auto .content-base table[style*="border:"] {
+    border-color: #333 !important;
+  }
 }

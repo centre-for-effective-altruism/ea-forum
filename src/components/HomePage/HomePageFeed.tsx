@@ -4,6 +4,7 @@ import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
+import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
@@ -18,15 +19,20 @@ import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
 import HomePageCommunitySection from "./HomePageCommunitySection";
+import Spotlight from "../Spotlights/Spotlight";
+import TextLinkButton from "../TextLinkButton";
 import Type from "../Type";
-import Link from "../Link";
 
 export default async function HomePageFeed({
   search,
 }: {
   search: NextSearchParams;
 }) {
-  const [cookieStore, coreTags] = await Promise.all([cookies(), fetchCoreTags()]);
+  const [cookieStore, coreTags, spotlight] = await Promise.all([
+    cookies(),
+    fetchCoreTags(),
+    fetchCurrentSpotlight(),
+  ]);
   const postViewCookie = cookieStore.get("posts_list_view_type")?.value ?? "";
   const ssrPostView = isPostsListViewType(postViewCookie)
     ? postViewCookie
@@ -43,14 +49,9 @@ export default async function HomePageFeed({
           <div className="mb-2 flex items-center justify-between">
             <Type style="sectionTitleLarge">New &amp; upvoted</Type>
             <div className="flex items-center gap-1">
-              <Type style="loadMore">
-                <Link
-                  href={`/topics/${search.tab}`}
-                  className="text-gray-600 hover:text-gray-1000"
-                >
-                  View more
-                </Link>
-              </Type>
+              <TextLinkButton href={`/topics/${search.tab}`}>
+                View more
+              </TextLinkButton>
               <PostsListViewPicker />
             </div>
           </div>
@@ -69,6 +70,7 @@ export default async function HomePageFeed({
         </>
       ) : (
         <>
+          {spotlight && <Spotlight spotlight={spotlight} className="mt-6 mb-4" />}
           <FilterSettingsProvider>
             <div className="mb-2 flex items-center justify-between">
               <Type style="sectionTitleLarge">New &amp; upvoted</Type>
@@ -109,7 +111,7 @@ export default async function HomePageFeed({
               />
             </HomePageCommunitySection>
           )}
-          <HomePageQuickTakesSection className="mb-10">
+          <HomePageQuickTakesSection coreTags={coreTags} className="mb-10">
             <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
               <FrontpageQuickTakesList initialLimit={5} />
             </Suspense>

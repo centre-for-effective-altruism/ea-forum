@@ -25,15 +25,12 @@ export default function CommentVoteButtons({
     <>
       <div
         data-component="CommentVoteButtons"
-        className="
-          inline-flex items-center h-[22px] px-2
-          rounded-sm border-1 border-comment-border
-        "
+        className="inline-flex items-center -mr-[6px]"
       >
         <VoteButton
           currentVoteStrength={getVoteDownStrength(voteType)}
           direction="Downvote"
-          orientation="left"
+          orientation="down"
           onVote={onVote}
           dimWhenNotVoted
           className="text-gray-400"
@@ -41,18 +38,19 @@ export default function CommentVoteButtons({
         <Tooltip
           title={
             <Type>
-              This comment has {baseScore} karma ({voteCount} vote
-              {voteCount === 1 ? "" : "s"})
+              {baseScore} karma ({voteCount} {voteCount === 1 ? "vote" : "votes"})
             </Type>
           }
-          className="text-[14px] font-500 text-gray-600 cursor-default"
+          className="text-gray-600 cursor-default mx-[2px]"
         >
-          {baseScore}
+          <Type style="bodyMedium" As="span">
+            {baseScore}
+          </Type>
         </Tooltip>
         <VoteButton
           currentVoteStrength={getVoteUpStrength(voteType)}
           direction="Upvote"
-          orientation="right"
+          orientation="up"
           onVote={onVote}
           dimWhenNotVoted
           className="text-gray-400"
@@ -63,6 +61,8 @@ export default function CommentVoteButtons({
         extendedScore={extendedScore}
         extendedVoteType={extendedVoteType}
         onReact={onReact}
+        reactClassName="-mr-0.5"
+        scoreStyle="bodyMedium"
       />
     </>
   );

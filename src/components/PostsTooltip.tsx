@@ -18,12 +18,14 @@ type PostForTooltip = PostWithSocialPreview &
 export default function PostsTooltip({
   post,
   placement = "bottom-start",
+  hoverDelay,
   As = "div",
   className,
   children,
 }: Readonly<{
   post: PostForTooltip | null | undefined;
   placement?: Placement;
+  hoverDelay?: number;
   As?: ElementType;
   className?: string;
   children: ReactNode;
@@ -37,17 +39,15 @@ export default function PostsTooltip({
   return (
     <Tooltip
       placement={placement}
+      hoverDelay={hoverDelay}
       As={As}
       className={className}
-      tooltipClassName="
-        bg-surface-floating! text-gray-900! p-0! shadow-md w-[360px] max-w-full
-      "
+      popover
+      tooltipClassName="p-0! w-[360px]"
       title={
         <div data-component="PostsTooltip">
           <div className="px-4 py-3 flex flex-col gap-4">
-            <Type style="postTitle" className="font-[700]">
-              {title}
-            </Type>
+            <Type style="postTitle">{title}</Type>
             {tags && tags.length > 0 && (
               <TruncationContainer
                 items={tags.map((tag) => (
@@ -61,14 +61,16 @@ export default function PostsTooltip({
               <PostBody
                 html={htmlHighlight}
                 className="
-                  [&_p]:text-[14px]! [&_li]:text-[14px]!
-                  [&_h1]:text-[14px]! [&_h1]:font-[700]!
-                  [&_h2]:text-[14px]! [&_h2]:font-[700]!
-                  [&_h3]:text-[14px]! [&_h3]:font-[700]!
-                  [&_h4]:text-[14px]! [&_h4]:font-[700]!
-                  [&_h5]:text-[14px]! [&_h5]:font-[700]!
-                  [&_h6]:text-[14px]! [&_h6]:font-[700]!
+                  [&_p]:text-[15px]! [&_li]:text-[15px]!
+                  [&_h1]:text-[15px]! [&_h1]:font-[700]!
+                  [&_h2]:text-[15px]! [&_h2]:font-[700]!
+                  [&_h3]:text-[15px]! [&_h3]:font-[700]!
+                  [&_h4]:text-[15px]! [&_h4]:font-[700]!
+                  [&_h5]:text-[15px]! [&_h5]:font-[700]!
+                  [&_h6]:text-[15px]! [&_h6]:font-[700]!
                   [&_iframe]:hidden! [&_img]:hidden! [&_video]:hidden!
+                  [&_hr]:hidden! [&_table]:hidden!
+                  line-clamp-6
                 "
               />
             )}

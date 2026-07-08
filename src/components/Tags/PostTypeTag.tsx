@@ -12,6 +12,7 @@ export default function PostTypeTag({
     return (
       <Tooltip
         placement="bottom-start"
+        tooltipClassName="w-[220px]"
         title={
           <Type style="bodySmall">
             The best 2-3 posts each week, selected by the moderation team. Curated
@@ -28,6 +29,7 @@ export default function PostTypeTag({
     return (
       <Tooltip
         placement="bottom-start"
+        tooltipClassName="w-[220px]"
         title={
           <Type style="bodySmall">
             Posts that are relevant to doing good effectively.
@@ -46,6 +48,7 @@ export default function PostTypeTag({
     return (
       <Tooltip
         placement="bottom-start"
+        tooltipClassName="w-[220px]"
         title={
           <Type style="bodySmall">
             <div>Users can write whatever they want on their personal blog.</div>

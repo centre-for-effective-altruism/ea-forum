@@ -30,7 +30,7 @@ export default function ToggleSwitch({
     >
       <div
         className={clsx(
-          "absolute top-[2px] w-3 h-3 rounded-full bg-gray-0 transition-all",
+          "absolute top-[2px] w-3 h-3 rounded-full bg-always-white transition-all",
           value ? "left-[14px]" : "left-[2px]",
         )}
       />

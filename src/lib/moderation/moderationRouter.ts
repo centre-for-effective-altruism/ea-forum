@@ -26,7 +26,7 @@ import {
   toRateLimitDisplay,
 } from "./moderationTransforms";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { userIsModOrAdmin } from "@/lib/users/userHelpers";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 
 const paginationSchema = z.object({
   page: z.number().int().min(1),
@@ -34,7 +34,7 @@ const paginationSchema = z.object({
 
 const moderationRoleGuard = async () => {
   const currentUser = await getCurrentUser();
-  const canViewModeratorActions = userIsModOrAdmin(currentUser);
+  const canViewModeratorActions = userIsAdminOrMod(currentUser);
 
   if (!canViewModeratorActions) {
     throw new Error("Forbidden");
@@ -43,7 +43,7 @@ const moderationRoleGuard = async () => {
 
 const canCurrentUserViewModeratorActions = async () => {
   const currentUser = await getCurrentUser();
-  return userIsModOrAdmin(currentUser);
+  return userIsAdminOrMod(currentUser);
 };
 
 export const moderationRouter = {

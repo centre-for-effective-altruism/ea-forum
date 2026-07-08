@@ -4,7 +4,6 @@ import { db } from "../db";
 import { posts, users } from "../schema";
 import { randomId } from "../utils/random";
 import {
-  userCanArchivePost,
   userCanEditPostMetadata,
   postStatuses,
   userCanSuggestPostForCurated,
@@ -212,20 +211,5 @@ export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
     throw new Error("Permission denied");
   }
   await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
-  void elasticSyncDocument("Posts", postId);
-};
-
-export const archiveDraft = async (currentUser: CurrentUser, postId: string) => {
-  const post = await fetchPostsListById(currentUser._id, postId);
-  if (!post) {
-    throw new Error("Post not found");
-  }
-  if (!userCanArchivePost(currentUser, post)) {
-    throw new Error("Permission denied");
-  }
-  await updateWithFieldChanges(db, currentUser, posts, postId, {
-    draft: true,
-    deletedDraft: true,
-  });
   void elasticSyncDocument("Posts", postId);
 };

@@ -17,24 +17,25 @@ suite("Conversion utils", () => {
         expect(output).toEqual("<p>Hello world</p>");
       });
       test("processes inline mathjax", async () => {
-        const input = "<p>Math $\\pi$</p>";
+        const input = "<p>Math \\(\\pi\\)</p>";
         const output = await dataToHtml(input, "html");
         expect(output).toContain("Math <mjx-container");
         expect(output).toContain("<style>");
       });
       test("processes block mathjax with text content", async () => {
-        const input = "<p>Math $$\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}$$</p>";
+        const input =
+          "<p>Math \\[\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}\\]</p>";
         const output = await dataToHtml(input, "html");
         expect(output).toContain("Math <mjx-container");
         expect(output).toContain("<style>");
       });
       test("filters out block mathjax without text content", async () => {
-        const input = "<p>Math $$\\pi$$</p>";
+        const input = "<p>Math \\[\\pi\\]</p>";
         const output = await dataToHtml(input, "html");
         expect(output).toEqual("<p>Math </p>");
       });
       test("can skip mathjax processing", async () => {
-        const input = "<p>Math $\\pi$</p>";
+        const input = "<p>Math \\(\\pi\\)</p>";
         const output = await dataToHtml(input, "html", { skipMathjax: true });
         expect(output).toEqual(input);
       });
@@ -46,13 +47,13 @@ suite("Conversion utils", () => {
         expect(output).toEqual(input);
       });
       test("processes mathjax", async () => {
-        const input = "<p>Math $\\pi$</p>";
+        const input = "<p>Math \\(\\pi\\)</p>";
         const output = await dataToHtml(input, "ckEditorMarkup");
         expect(output).toContain("<p>Math <mjx-container");
         expect(output).toContain("<style>");
       });
       test("can skip mathjax processing", async () => {
-        const input = "<p>Math $\\pi$</p>";
+        const input = "<p>Math \\(\\pi\\)</p>";
         const output = await dataToHtml(input, "ckEditorMarkup", {
           skipMathjax: true,
         });
@@ -66,15 +67,15 @@ suite("Conversion utils", () => {
         expect(output).toEqual("<h1>Hello world</h1>");
       });
       test("processes mathjax", async () => {
-        const input = "Math $\\pi$";
+        const input = "Math \\\\(\\pi\\\\)";
         const output = await dataToHtml(input, "markdown");
         expect(output).toContain("<p>Math <mjx-container");
         expect(output).toContain("<style>");
       });
       test("can skip mathjax processing", async () => {
-        const input = "Math $\\pi$";
+        const input = "Math \\(\\pi\\)";
         const output = await dataToHtml(input, "markdown", { skipMathjax: true });
-        expect(output).toEqual("<p>Math \\(\\pi\\)</p>");
+        expect(output).toEqual("<p>Math (\\pi)</p>");
       });
     });
   });

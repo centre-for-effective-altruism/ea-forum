@@ -1,25 +1,35 @@
 import type { ComponentType, ReactNode } from "react";
-import Tooltip from "../Tooltip";
+import clsx from "clsx";
 import Link from "../Link";
 import Type from "../Type";
 
 export default function HeaderSearchResult({
-  tooltipTitle,
   href,
   Icon,
+  leading,
+  selected,
   children,
 }: Readonly<{
-  tooltipTitle: string;
   href: string;
-  Icon: ComponentType<{ className?: string }>;
+  Icon?: ComponentType<{ className?: string }>;
+  leading?: ReactNode;
+  selected?: boolean;
   children: ReactNode;
 }>) {
   return (
-    <Type style="bodySmall" className="py-1 flex text-gray-600">
-      <Tooltip title={tooltipTitle} placement="top">
-        <Icon className="w-4 ml-1 mr-3 mt-1" />
-      </Tooltip>
-      <Link href={href} className="block grow hover:opacity-70">
+    <Type
+      style="bodySmall"
+      className={clsx(
+        "py-1 px-2 rounded flex text-gray-600",
+        "hover:bg-surface-floating-hover hover:text-gray-800",
+        selected && "bg-surface-floating-hover text-gray-800",
+      )}
+    >
+      {leading ??
+        (Icon ? (
+          <Icon className="w-5 shrink-0 self-start ml-1 mr-3 mt-0.5" />
+        ) : null)}
+      <Link href={href} className="block grow min-w-0 break-words">
         {children}
       </Link>
     </Type>

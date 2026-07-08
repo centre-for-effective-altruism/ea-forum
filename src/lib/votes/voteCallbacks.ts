@@ -1,14 +1,21 @@
 import { eq, sql } from "drizzle-orm";
-import { Post, posts, users } from "../schema";
-import { isAnyInArray } from "../utils/queryHelpers";
-import { userIsInGroup } from "../users/userHelpers";
+import { createNotification } from "../notifications/notificationMutations";
 import { userSmallVotePower, VoteType } from "./voteHelpers";
+import { Post, posts, TagRel, users } from "../schema";
+import { userIsInGroup } from "../users/userHelpers";
+import { isAnyInArray } from "../utils/queryHelpers";
+import { nDaysAgo } from "../timeUtils";
 import type { DbOrTransaction } from "../db";
 import type {
   VoteableCollectionName,
   VoteableDocument,
   VoteableDocumentAuthor,
 } from "./voteableDocument";
+import {
+  commentModeratorActionType,
+  isDownvotedBelowBar,
+} from "../commentModeratorActions/commentModeratorActionsHelpers";
+import { createCommentModeratorAction } from "../commentModeratorActions/commentModeratorActionMutations";
 
 const userVoteGroups = [
   {
@@ -23,10 +30,28 @@ const userVoteGroups = [
 
 const collectionsThatAffectKarma = ["Posts", "Comments", "Revisions"];
 
-const sendKarmaThresholdNotification = async (user: VoteableDocumentAuthor) => {
-  // TODO: Send karma threshold notifications
-  // See userKarmaChangedFrom in ForumMagnum
-  void user;
+const sendKarmaThresholdNotification = async (
+  db: DbOrTransaction,
+  user: VoteableDocumentAuthor,
+) => {
+  const existingNotifications = await db.query.notifications.findMany({
+    columns: {
+      _id: true,
+    },
+    where: {
+      userId: user._id,
+      type: "karmaPowersGained",
+      createdAt: { gt: nDaysAgo(1).toISOString() },
+    },
+  });
+  if (existingNotifications.length === 0) {
+    await createNotification({
+      userId: user._id,
+      type: "karmaPowersGained",
+      documentType: null,
+      documentId: null,
+    });
+  }
 };
 
 export const updateUserKarma = async (
@@ -65,7 +90,7 @@ export const updateUserKarma = async (
 
         // Send notification if crossing a vote power threshold
         if (userSmallVotePower(oldKarma, 1) < userSmallVotePower(newKarma, 1)) {
-          void sendKarmaThresholdNotification(author);
+          void sendKarmaThresholdNotification(db, author);
         }
 
         // Update the user groups if crossing a group threshold
@@ -76,10 +101,12 @@ export const updateUserKarma = async (
           }
         }
         if (newGroups.length) {
+          const separatedGroups = newGroups.map((g) => `'${g}'`).join(",");
+          const arrayLiteral = `ARRAY[${separatedGroups}]::TEXT[]`;
           await db
             .update(users)
             .set({
-              groups: sql`${users.groups} || ${newGroups}`,
+              groups: sql`${users.groups} || ${sql.raw(arrayLiteral)}`,
             })
             .where(eq(users._id, author._id));
         }
@@ -162,7 +189,7 @@ export const increasePostMaxBaseScore = async (
   }
 };
 
-export const triggerCommentAutomod = (
+export const triggerCommentAutomod = async (
   db: DbOrTransaction,
   collectionName: VoteableCollectionName,
   document: VoteableDocument,
@@ -170,8 +197,51 @@ export const triggerCommentAutomod = (
   if (collectionName !== "Comments") {
     return;
   }
+  const commentId = document._id;
+  const previousCommentModeratorActions =
+    await db.query.commentModeratorActions.findMany({
+      columns: {
+        _id: true,
+      },
+      where: {
+        commentId,
+        type: commentModeratorActionType("downvotedCommentAlert"),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  const needsModeration = isDownvotedBelowBar(document, -10);
+  if (previousCommentModeratorActions.length < 1 && needsModeration) {
+    void createCommentModeratorAction(db, commentId, "downvotedCommentAlert");
+  }
+};
 
-  // TODO: See triggerCommentAutomodIfNeeded in ForumMagnum
-  void db;
-  void document;
+export const updatePostDenormalizedTags = async (
+  txn: DbOrTransaction,
+  collectionName: VoteableCollectionName,
+  document: VoteableDocument,
+) => {
+  if (collectionName !== "TagRels") {
+    return;
+  }
+
+  const postId = (document as TagRel).postId;
+  const tagRels = await txn.query.tagRels.findMany({
+    columns: {
+      tagId: true,
+      baseScore: true,
+    },
+    where: {
+      postId,
+      deleted: false,
+    },
+  });
+
+  const tagRelevance: Record<string, number> = {};
+  for (const tagRel of tagRels) {
+    if (tagRel.baseScore > 0) {
+      tagRelevance[tagRel.tagId] = tagRel.baseScore;
+    }
+  }
+
+  await txn.update(posts).set({ tagRelevance }).where(eq(posts._id, postId));
 };

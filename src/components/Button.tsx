@@ -7,7 +7,7 @@ import clsx from "clsx";
 import Loading from "./Loading";
 
 const variants = {
-  primaryFilled: "text-always-white bg-primary hover:bg-primary-dark",
+  primaryFilled: "text-always-white bg-primary-button hover:bg-primary-dark",
   greyFilled: "text-gray-1000 bg-gray-300 hover:bg-gray-400",
   greyOutlined: "border border-gray-400 hover:bg-outline-button-hover",
 };

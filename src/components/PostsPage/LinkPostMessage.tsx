@@ -11,7 +11,10 @@ export default function LinkPostMessage({
   className?: string;
 }>) {
   return post.url ? (
-    <Type As="aside" className={clsx("bg-gray-100 rounded p-4", className)}>
+    <Type
+      As="aside"
+      className={clsx("bg-gray-200 rounded p-4 break-words", className)}
+    >
       This is a linkpost for{" "}
       <Link href={post.url} className="text-primary hover:opacity-70" openInNewTab>
         {post.url}

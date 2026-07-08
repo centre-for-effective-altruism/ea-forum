@@ -9,8 +9,10 @@ import Type from "../Type";
 
 export default function PostVoteButtons({
   hideReacts,
+  divider,
 }: Readonly<{
   hideReacts?: boolean;
+  divider?: boolean;
 }>) {
   const {
     post: { reactors },
@@ -25,43 +27,56 @@ export default function PostVoteButtons({
     },
   } = usePostDisplay();
   return (
-    <div data-component="PostVoteButtons" className="flex items-center gap-1">
-      <VoteButton
-        currentVoteStrength={getVoteDownStrength(voteType)}
-        direction="Downvote"
-        orientation="down"
-        onVote={onVote}
-        large
-        className="text-gray-600"
-      />
-      <Tooltip
-        title={
-          <Type>
-            This post has {baseScore} karma ({voteCount} vote
-            {voteCount === 1 ? "" : "s"})
-          </Type>
-        }
-        className="text-[14px] font-500 text-gray-600"
-      >
-        <Type style="bodyMedium" className="text-[16px] cursor-default">
-          {baseScore}
-        </Type>
-      </Tooltip>
-      <VoteButton
-        currentVoteStrength={getVoteUpStrength(voteType)}
-        direction="Upvote"
-        orientation="up"
-        onVote={onVote}
-        large
-        className="text-gray-600 mr-3"
-      />
-      {!hideReacts && (
-        <ReactButtons
-          reactors={reactors}
-          extendedScore={extendedScore}
-          extendedVoteType={extendedVoteType}
-          onReact={onReact}
+    <div
+      data-component="PostVoteButtons"
+      className="flex flex-wrap items-center gap-x-1 gap-y-2"
+    >
+      {/* Keep the vote arrows + score together; only the reactions wrap. */}
+      <div className="flex items-center gap-1 shrink-0">
+        <VoteButton
+          currentVoteStrength={getVoteDownStrength(voteType)}
+          direction="Downvote"
+          orientation="down"
+          onVote={onVote}
+          className="text-gray-400"
         />
+        <Tooltip
+          title={
+            <Type>
+              {baseScore} karma ({voteCount} {voteCount === 1 ? "vote" : "votes"})
+            </Type>
+          }
+          className="text-[14px] font-500 text-gray-600"
+        >
+          <Type style="voteScore" className="cursor-default">
+            {baseScore}
+          </Type>
+        </Tooltip>
+        <VoteButton
+          currentVoteStrength={getVoteUpStrength(voteType)}
+          direction="Upvote"
+          orientation="up"
+          onVote={onVote}
+          className="text-gray-400 mr-3"
+        />
+      </div>
+      {!hideReacts && (
+        <div className="flex flex-wrap items-center gap-1">
+          {divider && (
+            <div
+              aria-hidden
+              className="
+                w-[1px] min-w-[1px] bg-gray-200 self-stretch rounded -ml-1 mr-1
+              "
+            />
+          )}
+          <ReactButtons
+            reactors={reactors}
+            extendedScore={extendedScore}
+            extendedVoteType={extendedVoteType}
+            onReact={onReact}
+          />
+        </div>
       )}
     </div>
   );

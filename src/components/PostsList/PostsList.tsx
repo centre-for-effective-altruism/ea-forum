@@ -11,7 +11,7 @@ import { defaultPostsViewType, PostsListViewType } from "@/lib/posts/postsListVi
 import clsx from "clsx";
 import PostsListSkeleton from "./PostsListSkeleton";
 import PostsItem from "./PostsItem";
-import Type from "../Type";
+import TextLinkButton from "../TextLinkButton";
 
 export default function PostsList({
   posts,
@@ -20,6 +20,8 @@ export default function PostsList({
   maxOffset,
   bottomRightNode,
   className,
+  postItemClassName,
+  curatedIconLeft,
 }: Readonly<{
   posts: PostListItem[];
   /**
@@ -32,6 +34,8 @@ export default function PostsList({
   maxOffset?: number;
   bottomRightNode?: ReactNode;
   className?: string;
+  postItemClassName?: string;
+  curatedIconLeft?: boolean;
 }>) {
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(posts.length);
@@ -75,11 +79,17 @@ export default function PostsList({
 
   return (
     <section
-      className={clsx("max-w-full space-y-1", className)}
+      className={clsx("max-w-full space-y-0.5", className)}
       data-component="PostsList"
     >
       {displayedPosts.map((post) => (
-        <PostsItem key={post._id} post={post} viewType={actualViewType} />
+        <PostsItem
+          key={post._id}
+          post={post}
+          viewType={actualViewType}
+          curatedIconLeft={curatedIconLeft}
+          className={postItemClassName}
+        />
       ))}
       {loadMoreView && (
         <>
@@ -91,14 +101,9 @@ export default function PostsList({
           )}
           <div className="mt-2 flex justify-between items-center">
             {canLoadMore ? (
-              <Type
-                onClick={onLoadMore}
-                As="button"
-                style="loadMore"
-                className="cursor-pointer text-primary hover:opacity-70"
-              >
+              <TextLinkButton variant="primary" onClick={onLoadMore}>
                 Load more
-              </Type>
+              </TextLinkButton>
             ) : (
               <div />
             )}

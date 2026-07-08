@@ -11,7 +11,6 @@ import Popover from "../Popover";
 import LightbulbIcon from "../Icons/LightbulbIcon";
 import PasswordPolicy from "./PasswordPolicy";
 import LoginInput from "./LoginInput";
-import Loading from "../Loading";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
@@ -230,19 +229,16 @@ export default function LoginPopover() {
             )}
             <Button
               type="submit"
+              loading={pending}
               disabled={!canSubmit}
               testId="login-submit"
               className="w-full h-[50px] px-[17px] py-[15px] font-[600]"
             >
-              {pending ? (
-                <Loading />
-              ) : isResettingPassword ? (
-                "Request password reset"
-              ) : isSignup ? (
-                "Sign up"
-              ) : (
-                "Login"
-              )}
+              {isResettingPassword
+                ? "Request password reset"
+                : isSignup
+                  ? "Sign up"
+                  : "Login"}
             </Button>
           </form>
           <div className="flex items-center gap-3 w-full text-gray-600">
@@ -255,16 +251,18 @@ export default function LoginPopover() {
           <Button
             variant="greyOutlined"
             onClick={onClickGoogle}
-            className="w-full h-[50px] px-[17px] py-[15px] font-[600] flex gap-2"
+            className="
+              w-full h-[50px] p-4 font-[600] flex gap-2 items-center justify-center
+            "
           >
             <Image
               src="/googleLogo.png"
-              alt="Containue with google"
+              alt="Continue with google"
               width={20}
               height={20}
-              className="w-[20px] h-[20px]"
+              className="w-5 h-5"
             />
-            <Type>Continue with Google</Type>
+            Continue with Google
           </Button>
           {isSignup ? (
             <Type>

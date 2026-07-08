@@ -9,10 +9,11 @@ import {
   useState,
 } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { commentsToCommentTree, CommentTreeNode } from "@/lib/comments/CommentTree";
 import {
   CommentSorting,
-  defaultCommentSorting,
+  getDefaultCommentSortingForUser,
 } from "@/lib/comments/commentSortings";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
@@ -21,24 +22,34 @@ import { rpc } from "@/lib/rpc";
 type CommentsListContext = {
   comments: CommentTreeNode<CommentListItem>[];
   addTopLevelComment: (comment: CommentListItem) => void;
+  addComments: (comments: CommentListItem[]) => void;
   loadParentComment: (parentCommentId: string) => Promise<void>;
   updateComment: (comment: CommentListItem) => void;
   containsCommentWithId: (commentId: string) => boolean;
   commentSorting: CommentSorting;
   setCommentSorting: (sorting: CommentSorting) => void;
   commentIsLoaded: (commentId: string) => boolean;
+  collapsedIfRepliedTo: boolean;
+  showPostTitle: boolean;
 };
 
 const commentsListContext = createContext<CommentsListContext | null>(null);
 
 export const CommentsListProvider = ({
   comments,
+  collapsedIfRepliedTo = false,
+  showPostTitle = false,
   children,
 }: Readonly<{
   comments: CommentListItem[];
+  collapsedIfRepliedTo?: boolean;
+  showPostTitle?: boolean;
   children: ReactNode;
 }>) => {
-  const [commentSorting, setCommentSorting] = useState(defaultCommentSorting);
+  const { currentUser } = useCurrentUser();
+  const [commentSorting, setCommentSorting] = useState(() =>
+    getDefaultCommentSortingForUser(currentUser),
+  );
   const [localComments, setLocalComments] = useState<CommentListItem[]>([]);
   const tree = useMemo(
     () => commentsToCommentTree(commentSorting, comments, localComments),
@@ -46,6 +57,9 @@ export const CommentsListProvider = ({
   );
   const addTopLevelComment = useCallback((comment: CommentListItem) => {
     setLocalComments((comments) => [...comments, comment]);
+  }, []);
+  const addComments = useCallback((newComments: CommentListItem[]) => {
+    setLocalComments((comments) => [...comments, ...newComments]);
   }, []);
   const loadParentComment = useCallback(async (parentCommentId: string) => {
     try {
@@ -90,12 +104,15 @@ export const CommentsListProvider = ({
       value={{
         comments: tree,
         addTopLevelComment,
+        addComments,
         loadParentComment,
         updateComment,
         containsCommentWithId,
         commentSorting,
         setCommentSorting,
         commentIsLoaded,
+        collapsedIfRepliedTo,
+        showPostTitle,
       }}
     >
       {children}

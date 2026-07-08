@@ -1,8 +1,25 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useEffect, useMemo } from "react";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
+import posthog from "posthog-js";
+import type { Json, JsonRecord } from "./typeHelpers";
+import { usePathname } from "next/navigation";
+import { AnalyticsEvent } from "./analytics/analyticsHelpers";
+import { formatConsoleDate } from "./timeUtils";
+import { useCurrentUser } from "./hooks/useCurrentUser";
 import { useIsInView } from "./hooks/useIsInView";
-import type { Json } from "./typeHelpers";
+import { useClientId } from "./hooks/useClientId";
+import {
+  throttledFlushClientEvents,
+  throttledStoreEvent,
+} from "./analytics/storeEvent";
 
 type PostsViewTerms = Record<string, unknown>;
 
@@ -58,16 +75,37 @@ export type AnalyticsProps = {
 
 export type EventProps = AnalyticsProps | Record<string, Json | undefined>;
 
-export const captureEvent = (
-  eventType: string,
-  eventProps?: EventProps,
-  suppressConsoleLog = false,
+const stringToColor = (s: string) =>
+  `hsl(${[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % 360} 70% 50%)`;
+
+const browserConsoleLogAnalyticsEvent = (
+  event: AnalyticsEvent,
+  rateLimitExceeded: boolean,
 ) => {
-  // TODO: Implement tracking
-  void eventType;
-  void eventProps;
-  void suppressConsoleLog;
+  if (rateLimitExceeded) {
+    // eslint-disable-next-line no-console
+    console.groupCollapsed(`%cRate limit exceeded: ${event.type}`, "color:#c00000");
+  } else {
+    const color = stringToColor(event.type);
+    // eslint-disable-next-line no-console
+    console.groupCollapsed(`Analytics: %c${event.type}`, `color:${color}`);
+  }
+  for (const fieldName of Object.keys(event.props)) {
+    // eslint-disable-next-line no-console
+    console.log(`${fieldName}:`, event.props[fieldName]);
+  }
+  // Timestamp recorded on the server will differ. Obviously in part because of
+  // the latency of the network, but also because we have a queue that we only
+  // flush max once/second.
+  // eslint-disable-next-line no-console
+  console.log("[[time of day]]", formatConsoleDate(new Date()));
+  // eslint-disable-next-line no-console
+  console.groupEnd();
 };
+
+type TrackingContext = Record<string, unknown>;
+
+const trackingContext = createContext<TrackingContext>({});
 
 // An empty object, used as an argument default value. If the argument default
 // value were set to {} in the usual way, it would be a new instance of {} each
@@ -82,21 +120,35 @@ export const useTracking = ({
   eventType?: string;
   eventProps?: EventProps;
 } = {}) => {
-  const trackingContext = useMemo(() => ({}), []); // TODO Add tracking context
+  const { currentUser } = useCurrentUser();
+  const { clientId } = useClientId();
+  const path = usePathname();
+  const localTrackingContext = useContext(trackingContext);
   const track = useCallback(
     (type?: string | undefined, trackingData?: Record<string, Json>) => {
-      captureEvent(type || eventType, {
-        ...trackingContext,
+      const eventName = type || eventType;
+      const props = {
+        userId: currentUser?._id,
+        clientId,
+        path,
+        tabId: window.tabId,
+        ...localTrackingContext,
         ...eventProps,
         ...trackingData,
-      });
+      } as JsonRecord;
+      const event = {
+        type: eventName,
+        timestamp: new Date(),
+        props,
+      };
+      throttledStoreEvent(event, browserConsoleLogAnalyticsEvent);
+      throttledFlushClientEvents();
+      posthog.capture(eventName, props);
     },
-    [trackingContext, eventProps, eventType],
+    [currentUser, clientId, localTrackingContext, eventProps, eventType, path],
   );
   return { captureEvent: track };
 };
-
-const analyticsContext = createContext(null);
 
 export function AnalyticsContext({
   children,
@@ -106,9 +158,52 @@ export function AnalyticsContext({
     children: ReactNode;
   }
 >) {
-  void props; // TODO
+  const existingContextData = useContext(trackingContext);
+
+  // Create a child context, which is the parent context plus the provided props
+  // merged on top of it. But create it in a referentially stable way: reuse
+  // the same object, so that changes never cause child components to rerender.
+  // (As long as they captured the context in the obvious way, they'll still get
+  // the newest values of these props when they actually log an event.)
+  const newContextData = useRef<TrackingContext>({ ...existingContextData });
+
+  for (const key of Object.keys(props)) {
+    // If the key is nestedPageElementContext, we need to not clobber it when
+    // handling nested contexts
+    if (key === "nestedPageElementContext" && props.nestedPageElementContext) {
+      // If nestedPageElementContext already exists and isn't just us triggering
+      // the same event on the same element, append to it
+      const previousNestedPageElementContext = newContextData.current
+        .nestedPageElementContext as string[] | undefined;
+      if (previousNestedPageElementContext) {
+        if (
+          previousNestedPageElementContext.slice(-1)[0] !==
+          props.nestedPageElementContext
+        ) {
+          newContextData.current.nestedPageElementContext = [
+            ...(previousNestedPageElementContext as string[]),
+            props.nestedPageElementContext,
+          ];
+        } else {
+          // If nestedPageElementContext already exists and is just us triggering
+          // the same event on the same element, do nothing
+          continue;
+        }
+      } else {
+        // If nestedPageElementContext doesn't exist yet, create it
+        newContextData.current.nestedPageElementContext = [
+          props.nestedPageElementContext,
+        ];
+      }
+    } else {
+      // Otherwise, just set the key to the value
+      newContextData.current[key] = props[key as keyof typeof props];
+    }
+  }
   return (
-    <analyticsContext.Provider value={null}>{children}</analyticsContext.Provider>
+    <trackingContext.Provider value={newContextData.current}>
+      {children}
+    </trackingContext.Provider>
   );
 }
 

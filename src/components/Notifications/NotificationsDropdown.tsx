@@ -21,10 +21,12 @@ const PAGE_SIZE = 20;
 
 export default function NotificationsDropdown({
   karmaChanges,
+  onOpen,
   className,
   children,
 }: Readonly<{
   karmaChanges: UserKarmaChanges | null;
+  onOpen?: () => void;
   className?: string;
   children: ReactNode;
 }>) {
@@ -96,9 +98,10 @@ export default function NotificationsDropdown({
           openedAt: new Date(),
           endDate: karmaChanges?.endDate ?? new Date(),
         });
+        onOpen?.();
       }
     },
-    [karmaChanges],
+    [karmaChanges, onOpen],
   );
 
   const markAllAsRead = useCallback(async () => {
@@ -120,12 +123,12 @@ export default function NotificationsDropdown({
           <div
             data-component="NotificationsDropdown"
             className="
-              bg-surface-floating rounded shadow px-1 py-2 border border-gray-100
+              bg-surface-floating rounded shadow-lg px-2 py-3 border border-gray-100
               w-[400px] max-w-full max-h-[90vh] overflow-y-auto
             "
           >
             <div className="px-2">
-              <div className="flex items-center">
+              <div className="flex">
                 <Type className="text-[24px] font-[600] mb-6 grow">
                   Notifications
                 </Type>
@@ -146,7 +149,7 @@ export default function NotificationsDropdown({
                     },
                   ]}
                 >
-                  <button className="cursor-pointer">
+                  <button className="cursor-pointer hover:bg-item-hover rounded p-1">
                     <EllipsisVerticalIcon className="w-6" />
                   </button>
                 </DropdownMenu>

@@ -14,7 +14,6 @@ import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkPostMessage from "@/components/PostsPage/LinkPostMessage";
 import CommentsList from "@/components/Comments/CommentsList";
 import PostBody from "@/components/ContentStyles/PostBody";
-import PostsTooltip from "@/components/PostsTooltip";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Score from "@/components/Score";
@@ -62,11 +61,7 @@ export default function RecentDiscussionsPostCommented({
 }: {
   post: RecentDiscussionPost;
 }) {
-  const comments = post.comments;
-  if (!comments || !comments.length) {
-    // If we get here it usually means a spam comment was deleted
-    return null;
-  }
+  const comments = post.comments ?? [];
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
   const commentsLink = postGetCommentsUrl({ post });
@@ -86,14 +81,12 @@ export default function RecentDiscussionsPostCommented({
           />
           <div className="truncate grow">
             <Type style="postTitle" className="text-gray-1000 truncate">
-              <PostsTooltip As="span" post={post}>
-                <Link
-                  href={postLink}
-                  className="visited:text-gray-700 hover:opacity-60"
-                >
-                  {title}
-                </Link>
-              </PostsTooltip>
+              <Link
+                href={postLink}
+                className="visited:text-gray-600 hover:opacity-60"
+              >
+                {title}
+              </Link>
             </Type>
             <Type style="bodySmall">
               <UsersName user={user} />
@@ -119,15 +112,17 @@ export default function RecentDiscussionsPostCommented({
           )}
         </div>
         <LinkPostMessage post={post} />
-        <PostBody html={post.contents?.htmlHighlight ?? ""} />
+        <PostBody html={post.contents?.htmlHighlight ?? ""} smallText />
         <Type style="bodyMedium">
           <Link href={postLink} className="text-primary hover:opacity-70">
             Continue reading
           </Link>
         </Type>
-        <CommentsListProvider comments={comments}>
-          <CommentsList />
-        </CommentsListProvider>
+        {comments.length > 0 && (
+          <CommentsListProvider comments={comments} collapsedIfRepliedTo>
+            <CommentsList />
+          </CommentsListProvider>
+        )}
       </div>
     </RecentDiscussionsItem>
   );

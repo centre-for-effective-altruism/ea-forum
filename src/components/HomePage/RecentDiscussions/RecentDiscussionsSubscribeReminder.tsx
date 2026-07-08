@@ -74,7 +74,7 @@ export default function RecentDiscussionsSubscribeReminder() {
         <div
           data-component="RecentDiscussionsSubscribeReminder"
           className="
-            w-[520px] max-w-full bg-gray-0 rounded px-6 py-4 mx-auto my-7
+            w-[520px] max-w-full bg-gray-0 rounded px-4 py-4 mx-auto my-7
             border-1 border-gray-200 flex flex-col gap-3 relative
           "
         >
@@ -90,24 +90,26 @@ export default function RecentDiscussionsSubscribeReminder() {
             </div>
           ) : (
             <>
-              <Type style="postTitle" className="flex items-center gap-2 pr-8">
-                <EnvelopeIcon className="w-5 text-primary" />
-                Sign up for the Forum&apos;s email digest
+              <Type
+                style="sectionTitleLarge"
+                className="flex items-center gap-2 pr-8"
+              >
+                <EnvelopeIcon className="w-6 text-primary max-sm:hidden" />
+                Sign up for the weekly Forum Digest
               </Type>
-              <Type style="bodySmall">
-                You&apos;ll get a weekly email with the best posts from the past
-                week. The Forum team selects the posts to feature based on personal
-                preference and Forum popularity, and also adds some announcements and
-                a classic post.
+              <Type style="body">
+                The best posts on the Forum, in your inbox, every week. Hand-picked
+                by the EA Forum team.
               </Type>
               <form
                 onSubmit={onSubmit}
-                className="flex items-center justify-center gap-3"
+                className="flex items-center justify-center gap-2"
               >
                 <Input
                   value={email}
                   setValue={setEmail}
                   placeholder="Email address"
+                  variant="filled"
                   className={clsx("grow", currentUser && "hidden")}
                 />
                 <Button type="submit" loading={loading}>

@@ -30,44 +30,36 @@ const items = [
   {
     title: "Home",
     href: "/",
-    description:
-      "See recent posts on strategies for doing the most good, plus recent activity from all across the Forum",
     UnselectedIcon: HomeIcon,
     SelectedIcon: HomeSelectedIcon,
   },
   {
     title: "Best of the Forum",
     href: "/best-of",
-    description: "Curated by the Forum team",
     UnselectedIcon: StarIcon,
     SelectedIcon: StarSelectedIcon,
   },
   {
     title: "All posts",
     href: "/allPosts",
-    description: "See all posts, filtered and sorted by date, karma, and more",
     UnselectedIcon: ArchiveBoxIcon,
     SelectedIcon: ArchiveBoxSelectedIcon,
   },
   {
     title: "Topics",
     href: "/topics",
-    description:
-      "A sorted list of pages — “Topics” — in the EA Forum Wiki, which explains topics in EA and collects posts tagged with those topics",
     UnselectedIcon: TagIcon,
     SelectedIcon: TagSelectedIcon,
   },
   {
     title: "People directory",
     href: "/people-directory",
-    description: "Search and filter Forum users",
     UnselectedIcon: PeopleDirectoryIcon,
     SelectedIcon: PeopleDirectorySelectedIcon,
   },
   {
     title: "Take action",
     href: "/topics/opportunities-to-take-action",
-    description: "Opportunities to get involved with impactful work",
     UnselectedIcon: HeartIcon,
     SelectedIcon: HeartSelectedIcon,
     loggedOutOnly: true,
@@ -75,14 +67,12 @@ const items = [
   {
     title: "Events",
     href: "/events",
-    description: "Upcoming events near you",
     UnselectedIcon: CalendarIcon,
     SelectedIcon: CalendarSelectedIcon,
   },
   {
     title: "Groups directory",
     href: "/groups",
-    description: "Join a group near you or meet others online",
     UnselectedIcon: UserGroupIcon,
     SelectedIcon: UserGroupSelectedIcon,
   },

@@ -7,18 +7,21 @@ import { rpc } from "@/lib/rpc";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import QuickTakesListSkeleton from "./QuickTakesListSkeleton";
 import QuickTakeItem from "./QuickTakeItem";
-import Type from "../Type";
+import TextLinkButton from "../TextLinkButton";
 
 export default function QuickTakesList({
   quickTakes,
+  totalCount,
   className,
 }: Readonly<{
   quickTakes: CommentListItem[];
+  totalCount: number;
   className?: string;
 }>) {
   const { showCommunity, localQuickTakes } = useQuickTakesListContext();
   const withoutCommunityProps = useLoadMore({
     initialItems: quickTakes,
+    initialTotalCount: totalCount,
     fetchMore: (limit, offset) =>
       rpc.comments.listQuickTakes({
         limit,
@@ -37,9 +40,14 @@ export default function QuickTakesList({
       }),
   });
 
-  const { items, loading, limit, canLoadMore, onLoadMore } = showCommunity
-    ? withCommunityProps
-    : withoutCommunityProps;
+  const {
+    items,
+    loading,
+    limit,
+    canLoadMore,
+    onLoadMore,
+    totalCount: currentTotalCount,
+  } = showCommunity ? withCommunityProps : withoutCommunityProps;
 
   useEffect(() => {
     if (items.length === 0 && !loading && canLoadMore) {
@@ -49,22 +57,24 @@ export default function QuickTakesList({
 
   const quickTakesToDisplay = [...localQuickTakes, ...items];
 
+  // Locally-posted quick takes aren't reflected in the server total yet, so add
+  // them to both the shown and total counts to keep the ratio consistent.
+  const shownCount = quickTakesToDisplay.length;
+  const knownTotal =
+    currentTotalCount != null ? currentTotalCount + localQuickTakes.length : null;
+
   return (
-    <div data-component="QuickTakesList" className={className}>
+    <section data-component="QuickTakesList" className={className}>
       {quickTakesToDisplay.map((quickTake) => (
         <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
       ))}
       {loading && <QuickTakesListSkeleton count={limit} />}
       {canLoadMore && (
-        <Type
-          onClick={onLoadMore}
-          As="button"
-          style="loadMore"
-          className="cursor-pointer text-primary hover:opacity-70"
-        >
+        <TextLinkButton variant="primary" onClick={onLoadMore} disabled={loading}>
           Load more
-        </Type>
+          {knownTotal != null ? ` (${shownCount}/${knownTotal})` : ""}
+        </TextLinkButton>
       )}
-    </div>
+    </section>
   );
 }

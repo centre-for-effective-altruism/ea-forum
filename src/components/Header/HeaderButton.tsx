@@ -15,7 +15,7 @@ export default function HeaderButton({
     <Tooltip title={<Type style="bodySmall">{description}</Type>} placement="bottom">
       <button
         data-component="HeaderButton"
-        className="cursor-pointer hover:bg-gray-200 rounded-full p-2"
+        className="cursor-pointer hover:bg-item-hover rounded p-1.5"
         onClick={onClick}
       >
         <Icon className="w-[24px] text-gray-600" />

@@ -59,7 +59,7 @@ export default function RecentDiscussionsItem({
     <AnalyticsContext pageSubSectionContext={pageSubSectionContext}>
       <article
         data-component="RecentDiscussionsItem"
-        className="flex flex-col text-gray-600 my-7 text-[14px] font-[500]"
+        className="flex flex-col text-gray-600 mb-7 text-[14px] font-[500]"
       >
         <div className="flex gap-2">
           <RecentDiscussionIcon icon={icon} variant={iconVariant} />

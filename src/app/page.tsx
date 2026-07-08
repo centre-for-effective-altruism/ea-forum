@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import StructuredData from "@/components/StructuredData";
+import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import HomePageFeedSkeleton from "@/components/HomePage/HomePageFeedSkeleton";
 import HomePageFeed from "@/components/HomePage/HomePageFeed";
@@ -40,6 +41,7 @@ export default async function HomePage({
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
+      <BotSiteNotice />
       <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
         <HomePageTagBar className="mb-4" />
       </Suspense>

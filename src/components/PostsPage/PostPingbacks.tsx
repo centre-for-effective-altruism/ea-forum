@@ -1,11 +1,8 @@
 import type { CurrentUser } from "@/lib/users/currentUser";
 import { fetchPingbackPosts } from "@/lib/posts/postLists";
-import { postGetPageUrl } from "@/lib/posts/postsHelpers";
-import PostsTooltip from "../PostsTooltip";
+import PostPingbacksList from "./PostPingbacksList";
 import Tooltip from "../Tooltip";
-import Score from "../Score";
 import Type from "../Type";
-import Link from "../Link";
 
 export default async function PostPingbacks({
   postId,
@@ -21,32 +18,17 @@ export default async function PostPingbacks({
     return null;
   }
   return (
-    <div data-component="PostPingbacks" className={className}>
-      <Tooltip
-        title={<Type style="bodySmall">Posts that linked to this post</Type>}
-        placement="top-start"
-        className="mb-2"
-      >
-        <Type style="bodyMedium" className="cursor-default">
+    <section data-component="PostPingbacks" id="mentioned-in" className={className}>
+      <Type style="bodyMedium" className="cursor-default">
+        <Tooltip
+          title={<Type style="bodySmall">Posts that linked to this post</Type>}
+          placement="top"
+          className="inline-block mb-2"
+        >
           Mentioned in
-        </Type>
-      </Tooltip>
-      {pingbacks.map((post) => (
-        <PostsTooltip key={post._id} post={post}>
-          <Link
-            href={postGetPageUrl({ post })}
-            className="flex items-center gap-2 hover:bg-gray-100/70 rounded py-1"
-          >
-            <Score
-              baseScore={post.baseScore}
-              voteCount={post.voteCount}
-              orientation="horizontal"
-              className="w-[50px]"
-            />
-            <Type style="bodyHeavy">{post.title}</Type>
-          </Link>
-        </PostsTooltip>
-      ))}
-    </div>
+        </Tooltip>
+      </Type>
+      <PostPingbacksList pingbacks={pingbacks} />
+    </section>
   );
 }

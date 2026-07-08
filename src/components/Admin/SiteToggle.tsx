@@ -8,14 +8,15 @@ import ToggleSwitch from "../Forms/ToggleSwitch";
 
 export default function SiteToggle() {
   const [mounted, setMounted] = useState(false);
-  const { preferNewSite, setPreferNewSite } = useEAForumV3();
+  const { showNewSiteToggle, preferNewSite, setPreferNewSite } = useEAForumV3();
   const { showAdminToggle, isAdmin, setAdmin } = useAdminToggle();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || !showAdminToggle) {
+  const showAnyToggle = showNewSiteToggle || showAdminToggle;
+  if (!mounted || !showAnyToggle) {
     return null;
   }
 
@@ -24,20 +25,22 @@ export default function SiteToggle() {
       data-component="SiteToggle"
       className="
         fixed left-5 bottom-5 z-(--zindex-site-toggle) bg-gray-200/90 rounded-lg
-        shadow-md p-3 flex flex-col gap-2.5 font-sans text-[13px]
+        shadow p-3 flex flex-col gap-2.5 font-sans text-[13px]
         max-sm:hidden print:hidden
       "
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-gray-900">Prefer new site</span>
-        <ToggleSwitch value={preferNewSite} setValue={setPreferNewSite} />
-      </div>
       {showAdminToggle && (
         <div className="flex items-center justify-between gap-2">
           <span className="font-medium text-gray-900">
             Admin {isAdmin ? "on" : "off"}
           </span>
           <ToggleSwitch value={isAdmin} setValue={setAdmin} />
+        </div>
+      )}
+      {showNewSiteToggle && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium text-gray-900">Prefer new site</span>
+          <ToggleSwitch value={preferNewSite} setValue={setPreferNewSite} />
         </div>
       )}
     </div>,

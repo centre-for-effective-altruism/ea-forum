@@ -4,7 +4,7 @@ import type { Placement } from "@floating-ui/react";
 import type { ReactNode } from "react";
 import type { UserBase } from "@/lib/users/userQueries";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { userIsModOrAdmin, userGetProfileUrl } from "@/lib/users/userHelpers";
+import { userIsAdminOrMod, userGetProfileUrl } from "@/lib/users/userHelpers";
 import clsx from "clsx";
 import UsersTooltip from "./UsersTooltip";
 import Tooltip from "./Tooltip";
@@ -45,9 +45,9 @@ export default function UsersName({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
-  const viewerIsMod = userIsModOrAdmin(currentUser);
+  const viewerIsMod = userIsAdminOrMod(currentUser);
 
-  if (!user || (user.deleted && !viewerIsMod)) {
+  if (!user || (user.deleted && !viewerIsMod) || !user.displayName) {
     return <DeletedAccountTooltip>[anonymous]</DeletedAccountTooltip>;
   }
 
@@ -81,7 +81,7 @@ export default function UsersName({
       placement={tooltipPlacement}
     >
       <Link href={profileUrl} className={className}>
-        {user.displayName}
+        {user.displayName.trim()}
       </Link>
     </UsersTooltip>
   );

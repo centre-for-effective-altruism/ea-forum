@@ -5,7 +5,7 @@ import type { PostForCommentCreation } from "./commentQueries";
 import type { UserRateLimitType } from "../userRateLimits/userRateLimitHelpers";
 import { isNotTrue } from "../utils/queryHelpers";
 import { intervalToHours, isTimeInterval, nHoursAgo } from "../timeUtils";
-import { userIsAdmin, userIsInGroup } from "../users/userHelpers";
+import { userIsAdminOrMod } from "../users/userHelpers";
 import { getModeratorRateLimit } from "../moderatorActions/moderatorActionQueries";
 import { getRecentKarmaInfo } from "../votes/recentKarmaInfo";
 import { getCommentRateLimitInfos, RateLimitInfo } from "./commentRateLimitInfo";
@@ -33,11 +33,7 @@ const shouldIgnoreCommentRateLimit = async (
   user: CurrentUser,
   post: PostForCommentCreation | null,
 ): Promise<boolean> => {
-  if (
-    userIsAdmin(user) ||
-    userIsInGroup(user, "sunshineRegiment") ||
-    post?.ignoreRateLimits
-  ) {
+  if (userIsAdminOrMod(user) || post?.ignoreRateLimits) {
     return true;
   }
   const rateLimitExemptAction = await txn.query.moderatorActions.findFirst({

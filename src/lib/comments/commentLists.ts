@@ -1,15 +1,16 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { User } from "../schema";
+import { userIsAdminOrMod, UserPermissions } from "../users/userHelpers";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
 import { commentTagsProjection } from "../tags/tagQueries";
 import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
+import { fetchCommentDescendants } from "./commentQueries";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
-import { CurrentUser } from "../users/currentUser";
 
 export type CommentRelationalProjection = RelationalProjection<
   typeof db.query.comments
@@ -32,16 +33,16 @@ export const viewableCommentFilter = (currentUserId: string | null) => ({
   OR: [
     ...(currentUserId ? [{ userId: currentUserId }] : []),
     {
-      rejected: isNotTrue,
-      deleted: isNotTrue,
+      rejected: false,
+      deleted: false,
       debateResponse: isNotTrue,
-      authorIsUnreviewed: isNotTrue,
-      draft: isNotTrue,
+      authorIsUnreviewed: false,
+      draft: false,
     },
   ],
 });
 
-export const commentListProjection = (currentUserId: string | null) =>
+export const commentListProjection = (currentUser: UserPermissions | null) =>
   ({
     columns: {
       _id: true,
@@ -55,13 +56,22 @@ export const commentListProjection = (currentUserId: string | null) =>
       parentCommentId: true,
       topLevelCommentId: true,
       descendentCount: true,
+      directChildrenCount: true,
+      draft: true,
       deleted: true,
+      deletedDate: true,
+      deletedReason: true,
       tagCommentType: true,
       isPinnedOnProfile: true,
       shortform: true,
       shortformFrontpage: true,
       moderatorHat: true,
       promoted: true,
+      forumEventMetadata: true,
+      authorIsUnreviewed: true,
+      repliesBlockedUntil: true,
+      retracted: true,
+      rejected: true,
     },
     extras: {
       html: sql<string>`contents->>'html'`.as("html"),
@@ -69,6 +79,19 @@ export const commentListProjection = (currentUserId: string | null) =>
       tags: commentTagsProjection,
     },
     with: {
+      ...(userIsAdminOrMod(currentUser)
+        ? {
+            contentsRevision: {
+              columns: {
+                _id: true,
+                pangramAiScore: true,
+                pangramCheckedAt: true,
+                pangramStatus: true,
+                pangramRawResponse: true,
+              },
+            },
+          }
+        : {}),
       user: {
         ...userBaseProjection,
         where: {
@@ -80,23 +103,46 @@ export const commentListProjection = (currentUserId: string | null) =>
           displayName: true,
         },
       },
+      deletedBy: {
+        columns: {
+          _id: true,
+          displayName: true,
+        },
+      },
+      forumEvent: {
+        columns: {
+          _id: true,
+          isGlobal: true,
+          pollAgreeWording: true,
+          pollDisagreeWording: true,
+        },
+        with: {
+          pollQuestion: {
+            columns: {
+              html: true,
+            },
+          },
+        },
+      },
       post: {
         columns: {
           _id: true,
           slug: true,
+          title: true,
           userId: true,
           frontpageDate: true,
           coauthorUserIds: true,
+          postedAt: true,
         },
         with: {
-          ...(currentUserId
+          ...(currentUser
             ? {
                 readStatus: {
                   columns: {
                     lastUpdated: true,
                   },
                   where: {
-                    userId: currentUserId,
+                    userId: currentUser._id,
                   },
                 },
               }
@@ -105,17 +151,18 @@ export const commentListProjection = (currentUserId: string | null) =>
       },
       tag: {
         columns: {
+          _id: true,
           slug: true,
         },
       },
-      ...(currentUserId
+      ...(currentUser
         ? {
             bookmarks: {
               columns: {
                 active: true,
               },
               where: {
-                userId: currentUserId,
+                userId: currentUser._id,
               },
             },
             votes: {
@@ -125,7 +172,7 @@ export const commentListProjection = (currentUserId: string | null) =>
                 power: true,
               },
               where: {
-                userId: currentUserId,
+                userId: currentUser._id,
               },
               orderBy: {
                 votedAt: "desc",
@@ -137,6 +184,35 @@ export const commentListProjection = (currentUserId: string | null) =>
     },
   }) as const satisfies CommentRelationalProjection;
 
+// Merges the base comment filters (viewability + the moderator-aware post
+// filter) with a caller-supplied `where`. Shared between the list query and
+// count queries so they always filter on exactly the same set of comments.
+const commentsListWhere = (
+  currentUser: UserPermissions | null,
+  where?: CommentsFilter,
+): CommentsFilter => {
+  const currentUserId = currentUser?._id ?? null;
+  const currentUserIsModerator =
+    currentUser?.isAdmin ||
+    currentUser?.groups?.includes("sunshineRegiment") ||
+    false;
+  return {
+    ...viewableCommentFilter(currentUserId),
+    post: currentUserIsModerator
+      ? undefined
+      : {
+          OR: [
+            ...(currentUserId ? [{ userId: currentUserId }] : []),
+            {
+              draft: isNotTrue,
+              deletedDraft: isNotTrue,
+            },
+          ],
+        },
+    ...where,
+  };
+};
+
 const fetchCommentsList = ({
   currentUser,
   where,
@@ -144,34 +220,15 @@ const fetchCommentsList = ({
   offset,
   limit,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   where?: CommentsFilter;
   orderBy?: CommentsOrderBy;
   offset?: number;
   limit?: number;
 }) => {
-  const currentUserId = currentUser?._id ?? null;
-  const currentUserIsModerator =
-    currentUser?.isAdmin ||
-    currentUser?.groups?.includes("sunshineRegiment") ||
-    false;
   return db.query.comments.findMany({
-    ...commentListProjection(currentUserId),
-    where: {
-      ...viewableCommentFilter(currentUserId),
-      post: currentUserIsModerator
-        ? undefined
-        : {
-            OR: [
-              ...(currentUserId ? [{ userId: currentUserId }] : []),
-              {
-                draft: isNotTrue,
-                deletedDraft: isNotTrue,
-              },
-            ],
-          },
-      ...where,
-    },
+    ...commentListProjection(currentUser),
+    where: commentsListWhere(currentUser, where),
     orderBy,
     offset,
     limit,
@@ -182,9 +239,9 @@ export const fetchCommentsListItem = async ({
   currentUser,
   commentId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   commentId: string;
-}) => {
+}): Promise<CommentListItem | null> => {
   const result = await fetchCommentsList({
     currentUser,
     where: { _id: commentId },
@@ -197,7 +254,7 @@ export const fetchCommmentsForPost = ({
   currentUser,
   postId,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   postId: string;
 }) =>
   fetchCommentsList({
@@ -205,58 +262,81 @@ export const fetchCommmentsForPost = ({
     where: { postId },
   });
 
+export const fetchCommentsForForumEvent = ({
+  currentUser,
+  forumEventId,
+}: {
+  currentUser: UserPermissions | null;
+  forumEventId: string;
+}) =>
+  fetchCommentsList({
+    currentUser,
+    where: { forumEventId },
+  });
+
+const frontpageQuickTakesWhere = ({
+  currentUser,
+  includeCommunity,
+}: {
+  currentUser: UserPermissions | null;
+  includeCommunity?: boolean;
+}): CommentsFilter => {
+  const fiveDaysAgo = nDaysAgo(5).toISOString();
+  const twoHoursAgo = nHoursAgo(2).toISOString();
+  return {
+    shortform: true,
+    shortformFrontpage: true,
+    deleted: false,
+    parentCommentId: { isNull: true },
+    createdAt: { gt: fiveDaysAgo },
+    ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
+      ? {
+          NOT: {
+            relevantTagIds: {
+              arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
+            },
+          },
+        }
+      : null),
+    AND: [
+      {
+        OR: [
+          { authorIsUnreviewed: isNotTrue },
+          { userId: currentUser?._id ? { eq: currentUser?._id } : undefined },
+        ],
+      },
+      // Quick takes older than 2 hours must have at least 1 karma, quick
+      // takes younger than 2 hours must have at least -5 karma
+      {
+        OR: [
+          {
+            baseScore: { gte: 1 },
+            createdAt: { lt: twoHoursAgo },
+          },
+          {
+            baseScore: { gte: -5 },
+            createdAt: { gte: twoHoursAgo },
+          },
+        ],
+      },
+    ],
+  };
+};
+
 export const fetchFrontpageQuickTakes = ({
   currentUser,
   includeCommunity,
   offset,
   limit = 5,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: UserPermissions | null;
   includeCommunity?: boolean;
   offset?: number;
   limit?: number;
 }) => {
-  const fiveDaysAgo = nDaysAgo(5).toISOString();
-  const twoHoursAgo = nHoursAgo(2).toISOString();
   return fetchCommentsList({
     currentUser,
-    where: {
-      shortform: true,
-      shortformFrontpage: true,
-      parentCommentId: { isNull: true },
-      createdAt: { gt: fiveDaysAgo },
-      ...(!includeCommunity && process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
-        ? {
-            NOT: {
-              relevantTagIds: {
-                arrayContains: [process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID],
-              },
-            },
-          }
-        : null),
-      AND: [
-        {
-          OR: [
-            { authorIsUnreviewed: isNotTrue },
-            { userId: currentUser?._id ? { eq: currentUser?._id } : undefined },
-          ],
-        },
-        // Quick takes older than 2 hours must have at least 1 karma, quick
-        // takes younger than 2 hours must have at least -5 karma
-        {
-          OR: [
-            {
-              baseScore: { gte: 1 },
-              createdAt: { lt: twoHoursAgo },
-            },
-            {
-              baseScore: { gte: -5 },
-              createdAt: { gte: twoHoursAgo },
-            },
-          ],
-        },
-      ],
-    },
+    where: frontpageQuickTakesWhere({ currentUser, includeCommunity }),
     orderBy: {
       score: "desc",
       lastSubthreadActivity: "desc",
@@ -268,8 +348,26 @@ export const fetchFrontpageQuickTakes = ({
   });
 };
 
+export const countFrontpageQuickTakes = async ({
+  currentUser,
+  includeCommunity,
+}: {
+  currentUser: UserPermissions | null;
+  includeCommunity?: boolean;
+}): Promise<number> => {
+  const result = await db.query.comments.findFirst({
+    columns: {},
+    extras: { count: sql<number>`COUNT(*)` },
+    where: commentsListWhere(
+      currentUser,
+      frontpageQuickTakesWhere({ currentUser, includeCommunity }),
+    ),
+  });
+  return Number(result?.count ?? 0);
+};
+
 export const fetchNewComments = async (
-  currentUser: CurrentUser | null,
+  currentUser: UserPermissions | null,
   postId: string,
   limit: number,
 ) => {
@@ -284,7 +382,7 @@ export const fetchNewComments = async (
 };
 
 type PopularCommentsConfig = {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups"> | null;
+  currentUser: Pick<User, "_id" | "isAdmin" | "groups" | "banned"> | null;
   offset?: number;
   limit?: number;
   minScore?: number;
@@ -353,4 +451,20 @@ export const fetchPopularComments = async ({
   });
   const order = fromPairs(popularCommentIds.map((id, i) => [id, i]));
   return sortBy(result, (c) => order[c._id] ?? Number.MAX_SAFE_INTEGER);
+};
+
+export const fetchCommentReplies = async ({
+  currentUser,
+  commentId,
+}: {
+  currentUser: UserPermissions | null;
+  commentId: string;
+}) => {
+  const descendants = await fetchCommentDescendants(db, commentId);
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      _id: { in: descendants.map(({ _id }) => _id) },
+    },
+  });
 };

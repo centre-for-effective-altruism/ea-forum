@@ -22,6 +22,7 @@ const eslintConfig = [
     rules: {
       "@typescript-eslint/no-floating-promises": "error",
       "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -71,6 +72,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      ".claude/**",
       "ckEditor/**",
       "src/vendor/**",
       "*.mjs",

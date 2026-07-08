@@ -1,4 +1,5 @@
 import "server-only";
+
 import { isAnyTest } from "./environment";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
@@ -13,11 +14,17 @@ import { defineRelations } from "drizzle-orm";
 import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
+  books,
+  chapters,
+  collections,
+  commentModeratorActions,
   comments,
+  conversations,
   forumEvents,
   images,
   localgroups,
   lwEvents,
+  messages,
   moderatorActions,
   notifications,
   podcastEpisodes,
@@ -26,10 +33,14 @@ import {
   readStatuses,
   reports,
   revisions,
+  sequences,
+  spotlights,
   subscriptions,
+  tagRels,
   tags,
   userLoginTokens,
   userRateLimits,
+  userTagRels,
   users,
   votes,
 } from "./schema";
@@ -40,21 +51,31 @@ const relations = defineRelations(
     posts,
     readStatuses,
     bookmarks,
+    chapters,
+    collections,
+    books,
     comments,
+    conversations,
     revisions,
     votes,
     localgroups,
+    messages,
     notifications,
+    sequences,
+    spotlights,
     subscriptions,
     tags,
+    tagRels,
     images,
     lwEvents,
     forumEvents,
     podcastEpisodes,
     podcasts,
     moderatorActions,
+    commentModeratorActions,
     reports,
     userRateLimits,
+    userTagRels,
     userLoginTokens,
   },
   (r) => ({
@@ -75,6 +96,14 @@ const relations = defineRelations(
         to: r.localgroups._id,
         where: {
           deleted: false,
+        },
+      }),
+      canonicalSequence: r.one.sequences({
+        from: r.posts.canonicalSequenceId,
+        to: r.sequences._id,
+        where: {
+          draft: false,
+          isDeleted: false,
         },
       }),
       podcastEpisode: r.one.podcastEpisodes({
@@ -109,6 +138,28 @@ const relations = defineRelations(
         },
       }),
     },
+    sequences: {
+      user: r.one.users({
+        from: r.sequences.userId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      chapters: r.many.chapters({
+        from: r.sequences._id,
+        to: r.chapters.sequenceId,
+      }),
+    },
+    collections: {
+      user: r.one.users({
+        from: r.collections.userId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
+    },
     podcastEpisodes: {
       podcast: r.one.podcasts({
         from: r.podcastEpisodes.podcastId,
@@ -116,6 +167,10 @@ const relations = defineRelations(
       }),
     },
     comments: {
+      contentsRevision: r.one.revisions({
+        from: r.comments.contentsLatest,
+        to: r.revisions._id,
+      }),
       post: r.one.posts({
         from: r.comments.postId,
         to: r.posts._id,
@@ -136,6 +191,13 @@ const relations = defineRelations(
       }),
       promotedBy: r.one.users({
         from: r.comments.promotedByUserId,
+        to: r.users._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      deletedBy: r.one.users({
+        from: r.comments.deletedByUserId,
         to: r.users._id,
         where: {
           deleted: false,
@@ -164,6 +226,10 @@ const relations = defineRelations(
           collectionName: "Comments",
         },
       }),
+      forumEvent: r.one.forumEvents({
+        from: r.comments.forumEventId,
+        to: r.forumEvents._id,
+      }),
     },
     tags: {
       comments: r.many.comments({
@@ -171,6 +237,23 @@ const relations = defineRelations(
         to: r.comments.tagId,
         where: {
           deleted: false,
+        },
+      }),
+    },
+    tagRels: {
+      tag: r.one.tags({
+        from: r.tagRels.tagId,
+        to: r.tags._id,
+        where: {
+          deleted: false,
+        },
+      }),
+      post: r.one.posts({
+        from: r.tagRels.postId,
+        to: r.posts._id,
+        where: {
+          draft: false,
+          deletedDraft: false,
         },
       }),
     },
@@ -197,8 +280,20 @@ const relations = defineRelations(
           deletedDraft: false,
         },
       }),
+      comment: r.one.comments({
+        from: r.revisions.documentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
+        },
+      }),
     },
     forumEvents: {
+      pollQuestion: r.one.revisions({
+        from: r.forumEvents.pollQuestionLatest,
+        to: r.revisions._id,
+      }),
       post: r.one.posts({
         from: r.forumEvents.postId,
         to: r.posts._id,
@@ -207,12 +302,40 @@ const relations = defineRelations(
           deletedDraft: false,
         },
       }),
+      comment: r.one.comments({
+        from: r.forumEvents.commentId,
+        to: r.comments._id,
+        where: {
+          draft: false,
+          deleted: false,
+        },
+      }),
       tag: r.one.tags({
         from: r.forumEvents.tagId,
         to: r.tags._id,
         where: {
           deleted: false,
         },
+      }),
+    },
+    messages: {
+      user: r.one.users({
+        from: r.messages.userId,
+        to: r.users._id,
+      }),
+      conversation: r.one.conversations({
+        from: r.messages.conversationId,
+        to: r.conversations._id,
+      }),
+    },
+    spotlights: {
+      post: r.one.posts({
+        from: r.spotlights.documentId,
+        to: r.posts._id,
+      }),
+      sequence: r.one.sequences({
+        from: r.spotlights.documentId,
+        to: r.sequences._id,
       }),
     },
     userLoginTokens: {

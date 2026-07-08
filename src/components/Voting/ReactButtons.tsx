@@ -12,7 +12,7 @@ import AddReactionIcon from "../Icons/Reactions/AddReactionIcon";
 import ReactionPalette from "./ReactionPalette";
 import Dropdown from "../Dropdown/Dropdown";
 import Tooltip from "../Tooltip";
-import Type from "../Type";
+import Type, { TextStyle } from "../Type";
 
 const AnonymousTooltipContent: FC<{
   reaction: ReactionOption;
@@ -22,7 +22,7 @@ const AnonymousTooltipContent: FC<{
     <Type style="bodySmall">
       <div>
         {count === 1 ? "1 person" : `${count} people`}{" "}
-        <span className="text-gray-400">reacted with</span>
+        <span className="text-tooltip-text-dim">reacted with</span>
       </div>
       <div className="flex items-center justify-center gap-1">
         <reaction.Component className="text-primary-light w-4" /> {reaction.label}
@@ -50,7 +50,7 @@ const PublicTooltipContent: FC<{
       {displayNames.length > 0 && (
         <div>
           {formatReactorNames(displayNames)}{" "}
-          <span className="text-gray-400">reacted with</span>
+          <span className="text-tooltip-text-dim">reacted with</span>
         </div>
       )}
       <div className="flex items-center justify-center gap-1">
@@ -68,10 +68,10 @@ const ReactionButton: FC<{
   <button
     onClick={onClick}
     className={clsx(
-      "cursor-pointer flex items-center gap-1 user-select-none h-6 px-1 rounded",
+      "cursor-pointer flex items-center gap-1 select-none h-6 px-1 rounded",
       isSelected
         ? "text-primary bg-primary/5 hover:bg-primary/20 border-1 border-primary/50"
-        : "text-gray-600 hover:bg-gray-100",
+        : "text-gray-600 hover:bg-item-hover",
     )}
   >
     {children}
@@ -83,11 +83,15 @@ export default function ReactButtons({
   extendedScore,
   extendedVoteType,
   onReact,
+  reactClassName,
+  scoreStyle = "voteScore",
 }: Readonly<{
   reactors: Record<string, string[]> | null;
   extendedScore: Record<string, number>;
   extendedVoteType?: Record<string, boolean>;
   onReact: (reactionName: string) => void;
+  reactClassName?: string;
+  scoreStyle?: TextStyle;
 }>) {
   const { currentUser } = useCurrentUser();
   const reactions = countCurrentReactions(extendedScore);
@@ -98,10 +102,11 @@ export default function ReactButtons({
         return (
           <Tooltip
             key={reaction.name}
-            placement="top"
+            placement="bottom"
+            className={reactClassName}
             tooltipClassName={clsx(
-              "max-w-full text-center",
-              score > 10 ? "w-[400px]" : "w-[190px]",
+              "text-center",
+              score > 10 ? "max-w-[400px]!" : "max-w-[190px]!",
             )}
             title={
               anonymous ? (
@@ -121,7 +126,7 @@ export default function ReactButtons({
               isSelected={isSelected}
             >
               <reaction.Component className="w-4 text-primary" />
-              <Type style="reactScore">{score}</Type>
+              <Type style={scoreStyle}>{score}</Type>
             </ReactionButton>
           </Tooltip>
         );
@@ -130,7 +135,10 @@ export default function ReactButtons({
         menu={<ReactionPalette onReact={onReact} />}
         placement="bottom-start"
       >
-        <Tooltip placement="top" title={<Type style="bodySmall">Add reaction</Type>}>
+        <Tooltip
+          placement="bottom"
+          title={<Type style="bodySmall">Add reaction</Type>}
+        >
           <ReactionButton>
             <AddReactionIcon className="w-[18px]" />
           </ReactionButton>

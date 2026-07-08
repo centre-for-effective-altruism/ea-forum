@@ -3,7 +3,7 @@ import { rpc } from "@/lib/rpc";
 import { captureException } from "@sentry/nextjs";
 import type { Placement } from "@floating-ui/react";
 import type { TagBase } from "@/lib/tags/tagQueries";
-import TagTooltip from "./Tags/TagTooltip";
+import TagTooltip from "./TagTooltip";
 import Tooltip from "./Tooltip";
 import Loading from "./Loading";
 
@@ -67,7 +67,8 @@ export default function LazyTagTooltip({
       As={As}
       placement={placement}
       className={className}
-      tooltipClassName="bg-surface-floating! text-gray-900! p-0! shadow w-[270px]"
+      popover
+      tooltipClassName="px-3! py-2! w-[270px]"
       title={<Loading />}
     >
       <As onMouseEnter={onMouseEnter}>{children}</As>

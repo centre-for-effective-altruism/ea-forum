@@ -63,7 +63,6 @@ export default function Popover({
       >
         <FloatingFocusManager context={context} modal>
           <div
-            // eslint-disable-next-line react-hooks/refs
             ref={refs.setFloating}
             {...getFloatingProps()}
             data-component="Popover"

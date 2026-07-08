@@ -8,6 +8,8 @@ import { users } from "@/lib/schema";
 import { db } from "@/lib/db";
 import { createUser } from "./users/userMutations";
 import { getCurrentClientId } from "./clientIds/currentClientId";
+import { isProduction } from "./environment";
+import { captureServerEvent } from "./analytics/captureServerEvent";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -155,6 +157,7 @@ export const getOrCreateUser = async (
           emailVerified: !!profile._json.email_verified,
           services: { auth0: profile },
         });
+        captureServerEvent("userSignedUp", { userId: user._id, email }, user._id);
         break;
       case 1:
         user = matchingUsers[0];
@@ -205,6 +208,8 @@ export const loginUserFromIdToken = async (idToken: string) => {
     })
     .where(sql`${users._id} = ${user._id}`);
 
+  captureServerEvent("userLoggedIn", { userId: user._id }, user._id);
+
   return {
     hashedToken,
     cookie: {
@@ -214,7 +219,7 @@ export const loginUserFromIdToken = async (idToken: string) => {
         httpOnly: true,
         maxAge: 315360000, // 10 years
         path: "/",
-        secure: process.env.ENVIRONMENT === "prod",
+        secure: isProduction,
       },
     },
   };

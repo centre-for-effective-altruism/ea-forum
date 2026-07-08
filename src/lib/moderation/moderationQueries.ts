@@ -10,7 +10,7 @@ import {
 import { viewablePostFilter } from "@/lib/posts/postLists";
 import type { User } from "@/lib/schema";
 import { isNotTrue } from "@/lib/utils/queryHelpers";
-import { userIsModOrAdmin } from "@/lib/users/userHelpers";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { uniqueIds } from "./moderationTransforms";
 import type {
   GloballyBannedUserRow,
@@ -75,7 +75,7 @@ export const fetchModeratorComments = async ({
   limit: number;
 }): Promise<{ comments: CommentListItem[]; count: number }> => {
   const currentUserId = currentUser?._id ?? null;
-  const currentUserIsModerator = userIsModOrAdmin(currentUser);
+  const currentUserIsModerator = userIsAdminOrMod(currentUser);
   const publicPostVisibilityCondition = sql`(
     p."draft" = ${viewablePostFilter.draft}
     AND p."deletedDraft" = ${viewablePostFilter.deletedDraft}
@@ -116,7 +116,7 @@ export const fetchModeratorComments = async ({
         : publicPostVisibilityCondition,
   ].filter((condition) => condition !== null);
   const comments = await db.query.comments.findMany({
-    ...commentListProjection(currentUserId),
+    ...commentListProjection(currentUser),
     where: {
       ...viewableCommentFilter(currentUserId),
       moderatorHat: true,

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { bookmarksRouter } from "./bookmarks/bookmarksRouter";
+import { collectionsRouter } from "./collections/collectionsRouter";
 import { commentsRouter } from "./comments/commentsRouter";
 import { forumEventsRouter } from "./forumEvents/forumEventsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
@@ -11,6 +12,10 @@ import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
 import { recommendationsRouter } from "./recommendations/recommendationsRouter";
 import { reportsRouter } from "./reports/reportsRouter";
+import { revisionsRouter } from "./revisions/revisionsRouter";
+import { searchRouter } from "./search/searchRouter";
+import { sequencesRouter } from "./sequences/sequencesRouter";
+import { spotlightsRouter } from "./spotlights/spotlightsRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
 import { tagsRouter } from "./tags/tagsRouter";
 import { usersRouter } from "./users/usersRouter";
@@ -18,6 +23,7 @@ import { votesRouter } from "./votes/voteRouter";
 
 export const router = {
   bookmarks: bookmarksRouter,
+  collections: collectionsRouter,
   comments: commentsRouter,
   forumEvents: forumEventsRouter,
   lwEvents: lwEventRouter,
@@ -28,6 +34,10 @@ export const router = {
   recentDiscussions: recentDiscussionsRouter,
   recommendations: recommendationsRouter,
   reports: reportsRouter,
+  revisions: revisionsRouter,
+  search: searchRouter,
+  sequences: sequencesRouter,
+  spotlights: spotlightsRouter,
   subscriptions: subscriptionsRouter,
   tags: tagsRouter,
   users: usersRouter,

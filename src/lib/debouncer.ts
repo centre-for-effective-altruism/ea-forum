@@ -1,0 +1,419 @@
+import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
+import { captureException } from "@sentry/core";
+import { DebouncerEvent, debouncerEvents } from "./schema";
+import { isAnyTest } from "./environment";
+import { randomId } from "./utils/random";
+import { db } from "./db";
+
+const eventDebouncersByName: Partial<Record<string, EventDebouncer<unknown>>> = {};
+
+type DebouncerCallback<KeyType> = (
+  key: KeyType,
+  events: string[],
+) => void | Promise<void>;
+
+export type DebouncerTiming =
+  | { type: "none" }
+  | { type: "delayed"; delayMinutes: number; maxDelayMinutes?: number }
+  | { type: "daily"; timeOfDayGMT: number }
+  | { type: "weekly"; timeOfDayGMT: number; dayOfWeekGMT: string };
+
+/**
+ * Defines a debouncable event type; that is, an event which, some time after
+ * it happens, causes a function call, with events grouped together into a
+ * single call. We store these events in the database, rather than use a simple
+ * callback function, because this happens over long time scales, the server
+ * might restart before the handler fires, and the handler might run on a
+ * different server than the event(s) was/were generated.
+ *
+ * Each debounced event has a name, which is used in the database to identify
+ * its type and the callback that will handle it. Event types are independent.
+ * Each debounced event also has a key (a JSON object); events with different
+ * keys are also independent. For example, when debouncing notifications to
+ * users, the key would contain a userId. Finally, each debounced event has
+ * eventData (a string); events with different eventData are *not* independent,
+ * and the callback will receive an array containing the eventData for all of
+ * the grouped events.
+ *
+ * Within events that are grouped (ie, that share a name and a key), the way
+ * timing works is:
+ *  * When a debounced event happens, it goes into a "pending" state
+ *  * When the callback fires, it handles all pending events that share a name
+ *    and key, and moves them out of the pending state
+ *  * A callback fires when either delayTime or upperBoundTime is passed
+ *
+ * There are several different possible timing rules. In some cases, these
+ * correspond to user configuration, so different (name,key) pairs can have
+ * different timing rules. A timing rule is an object with a string field "type"
+ * plus other fields depending on the type. The possible timing rules are:
+ *
+ *   none:
+ *     Events fire on the next cron-tick after they're added (up to 1min).
+ *   delayed:
+ *     * delayMinutes: number
+ *     * maxDelayMinutes: number
+ *     Events fire when either it has
+ *     been delayMinutes since any event was added to the group, or
+ *     maxDelayMinutes since the first event was added to the group
+ *   daily:
+ *     * timeOfDayGMT: number
+ *     There is a day-boundary once per day, at timeOfDayGMT. Events fire
+ *     when the current time and the oldest event in the group are on opposite
+ *     sides of a day-boundary.
+ *   weekly:
+ *     * timeOfDayGMT: number
+ *     * dayOfWeekGMT: string
+ *     As daily, except that in addition to timeOfDayGMT there is also a
+ *     dayOfWeekGMT, which is a string like "Saturday".
+ *
+ * The timing rule is specified when each event is being added. If an event
+ * would be added to a group with a different timing rule, that group fires
+ * according to whichever timing rule would make it fire soonest.
+ *
+ * Constructor parameters:
+ *  * name: (String) - Used to identify this event type in the database. Must
+ *    be unique across EventDebouncers.
+ *  * defaultTiming: (Object, optional) - If an event is added with no timing
+ *    rule specified, this timing rule is used. If this argument is omitted,
+ *    then a timing rule is required when adding an event.
+ *  * callback: (key:JSON, events: Array[JSONObject])=>None
+ */
+export class EventDebouncer<KeyType = string> {
+  name: string;
+  defaultTiming?: DebouncerTiming;
+  callback: DebouncerCallback<KeyType>;
+
+  constructor({
+    name,
+    defaultTiming,
+    callback,
+  }: {
+    name: string;
+    defaultTiming: DebouncerTiming;
+    callback: DebouncerCallback<KeyType>;
+  }) {
+    if (!name || !callback) {
+      throw new Error("EventDebouncer constructor: missing required argument");
+    }
+    if (name in eventDebouncersByName) {
+      throw new Error(`Duplicate name for EventDebouncer: ${name}`);
+    }
+
+    this.name = name;
+    this.defaultTiming = defaultTiming;
+    this.callback = callback;
+    eventDebouncersByName[name] = this as EventDebouncer<unknown>;
+  }
+
+  /** Add a debounced event. */
+  recordEvent = async ({
+    key,
+    data,
+    timing = null,
+  }: {
+    key: KeyType;
+    data?: string;
+    timing?: DebouncerTiming | null;
+  }) => {
+    const timingRule = timing || this.defaultTiming;
+    if (!timingRule) {
+      throw new Error(
+        "EventDebouncer.recordEvent: missing timing argument and no defaultTiming set",
+      );
+    }
+    const { newDelayTime, newUpperBoundTime } = this.parseTiming(timingRule);
+    if (data !== undefined && typeof data !== "string") {
+      throw new Error(`Invalid debouncer event data: ${data}`);
+    }
+    await db
+      .insert(debouncerEvents)
+      .values([
+        {
+          _id: randomId(),
+          name: this.name,
+          af: false,
+          delayTime: newDelayTime.toISOString(),
+          upperBoundTime: newUpperBoundTime.toISOString(),
+          key: JSON.stringify(key),
+          pendingEvents: data === undefined ? null : [data],
+          dispatched: false,
+        },
+      ])
+      .onConflictDoUpdate({
+        target: [
+          debouncerEvents.dispatched,
+          debouncerEvents.af,
+          debouncerEvents.key,
+          debouncerEvents.name,
+        ],
+        targetWhere: sql`${debouncerEvents.dispatched} IS FALSE`,
+        set: {
+          delayTime: sql`GREATEST(${debouncerEvents.delayTime}, ${newDelayTime})`,
+          upperBoundTime: sql`LEAST(${debouncerEvents.upperBoundTime}, ${newUpperBoundTime})`,
+          pendingEvents: sql`ARRAY_APPEND(${debouncerEvents.pendingEvents}, ${data})`,
+        },
+      });
+  };
+
+  parseTiming = (timing: DebouncerTiming) => {
+    const now = new Date();
+    const msPerMin = 60 * 1000;
+
+    switch (timing.type) {
+      default:
+      case "none":
+        return {
+          newDelayTime: now,
+          newUpperBoundTime: now,
+        };
+      case "delayed":
+        return {
+          newDelayTime: new Date(now.getTime() + timing.delayMinutes * msPerMin),
+          newUpperBoundTime: new Date(
+            now.getTime() +
+              (timing.maxDelayMinutes || timing.delayMinutes) * msPerMin,
+          ),
+        };
+      case "daily":
+        const nextDailyBatchTime = getDailyBatchTimeAfter(now, timing.timeOfDayGMT);
+        return {
+          newDelayTime: nextDailyBatchTime,
+          newUpperBoundTime: nextDailyBatchTime,
+        };
+      case "weekly":
+        const nextWeeklyBatchTime = getWeeklyBatchTimeAfter(
+          now,
+          timing.timeOfDayGMT,
+          timing.dayOfWeekGMT,
+        );
+        return {
+          newDelayTime: nextWeeklyBatchTime,
+          newUpperBoundTime: nextWeeklyBatchTime,
+        };
+    }
+  };
+
+  _dispatchEvent = async (key: KeyType, events: string[] | null) => {
+    if (!isAnyTest) {
+      console.warn(`Handling ${events?.length} grouped ${this.name} events`);
+    }
+    await this.callback(key, events || []);
+  };
+}
+
+/**
+ * Get the earliest time after now which matches the given time of day. Limited
+ * to one-minute precision.
+ */
+export const getDailyBatchTimeAfter = (now: Date, timeOfDayGMT: number) => {
+  const result = new Date(now);
+  const hours = Math.floor(timeOfDayGMT);
+  const minutes = Math.floor(60 * (timeOfDayGMT % 1));
+  result.setUTCHours(hours, minutes, 0, 0);
+  if (result.getTime() < now.getTime()) {
+    result.setUTCDate(result.getUTCDate() + 1);
+  }
+  return result;
+};
+
+const DAY_NAMES: Record<string, number> = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+};
+
+/**
+ * Get the earliest time after now which matches the given time of day and day
+ * of the week. One-minute precision.
+ */
+export const getWeeklyBatchTimeAfter = (
+  now: Date,
+  timeOfDayGMT: number,
+  dayOfWeekGMT: string,
+): Date => {
+  const nextDailyBatch = getDailyBatchTimeAfter(now, timeOfDayGMT);
+  const targetDayOfWeekNum = DAY_NAMES[dayOfWeekGMT.trim().toLowerCase()];
+  if (targetDayOfWeekNum === undefined) {
+    throw new Error(`Invalid day of week: ${dayOfWeekGMT}`);
+  }
+  const nextDailyBatchDayOfWeekNum = nextDailyBatch.getUTCDay();
+  const daysOfWeekDifference =
+    (targetDayOfWeekNum - nextDailyBatchDayOfWeekNum + 7) % 7;
+  const nextWeeklyBatch = new Date(nextDailyBatch);
+  nextWeeklyBatch.setUTCDate(nextWeeklyBatch.getUTCDate() + daysOfWeekDifference);
+  return nextWeeklyBatch;
+};
+
+const dispatchEvent = async (event: DebouncerEvent) => {
+  const eventDebouncer = eventDebouncersByName[event.name];
+  if (!eventDebouncer) {
+    throw new Error(`Unrecognized event type: ${event.name}`);
+  }
+  await eventDebouncer._dispatchEvent(JSON.parse(event.key), event.pendingEvents);
+};
+
+export const dispatchPendingEvents = async () => {
+  const now = new Date().toISOString();
+  let eventToHandle = null;
+
+  do {
+    // Finds one grouped event that is ready to go, and marks it as handled in
+    // the same operation (to prevent race conditions between multiple servers
+    // checking for events at the same time).
+    const results = await db
+      .update(debouncerEvents)
+      .set({
+        dispatched: true,
+      })
+      .where(
+        inArray(
+          debouncerEvents._id,
+          db
+            .select({ _id: debouncerEvents._id })
+            .from(debouncerEvents)
+            .where(
+              and(
+                eq(debouncerEvents.dispatched, false),
+                or(
+                  lt(debouncerEvents.delayTime, now),
+                  lt(debouncerEvents.upperBoundTime, now),
+                ),
+              ),
+            )
+            .orderBy(debouncerEvents.delayTime)
+            .limit(1),
+        ),
+      )
+      .returning();
+    eventToHandle = results[0];
+
+    if (eventToHandle) {
+      try {
+        await dispatchEvent(eventToHandle);
+      } catch (e) {
+        await db
+          .update(debouncerEvents)
+          .set({
+            failed: true,
+          })
+          .where(eq(debouncerEvents._id, eventToHandle._id));
+        captureException(
+          new Error(
+            `Exception thrown while handling debouncer event ${eventToHandle._id}: ${e}`,
+          ),
+        );
+        captureException(e);
+      }
+    }
+
+    // Keep checking for more events to handle so long as one was handled.
+  } while (eventToHandle);
+};
+
+// https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
+const normalDistribution = (mean: number, variance: number) => {
+  let x = 0,
+    y = 0;
+  while (x === 0) {
+    x = Math.random(); //Converting [0,1) to (0,1)
+  }
+  while (y === 0) {
+    y = Math.random();
+  }
+  const initialNormal = Math.sqrt(-2.0 * Math.log(x)) * Math.cos(2.0 * Math.PI * y);
+  return initialNormal * variance + mean;
+};
+
+const sleepWithVariance = (ms: number) => {
+  const variance = Math.sqrt(ms);
+  const randomizedSleepTimeMs = Math.round(normalDistribution(ms, variance));
+  return new Promise((resolve) => setTimeout(resolve, randomizedSleepTimeMs));
+};
+
+/**
+ * Given a Date, dispatch any pending debounced events that would fire on or
+ * before then. If no date is given, dispatch any pending events, regardless of
+ * their timer. You would do this interactively if you're testing and don't
+ * want to wait.
+ * Exported to allow running manually with "yarn repl"
+ */
+export const forcePendingEvents = async ({
+  upToDate,
+  delay,
+}: {
+  upToDate?: string;
+  /** Delay between pending events in ms */
+  delay?: number;
+} = {}) => {
+  let eventToHandle = null;
+  let countHandled = 0;
+
+  do {
+    const results = await db
+      .update(debouncerEvents)
+      .set({
+        dispatched: true,
+      })
+      .where(
+        inArray(
+          debouncerEvents._id,
+          db
+            .select({ _id: debouncerEvents._id })
+            .from(debouncerEvents)
+            .where(
+              and(
+                eq(debouncerEvents.dispatched, false),
+                ...(upToDate
+                  ? [
+                      or(
+                        lt(debouncerEvents.delayTime, upToDate),
+                        lt(debouncerEvents.upperBoundTime, upToDate),
+                      ),
+                    ]
+                  : []),
+              ),
+            )
+            .orderBy(debouncerEvents.delayTime)
+            .limit(1),
+        ),
+      )
+      .returning();
+    eventToHandle = results[0];
+
+    if (eventToHandle) {
+      try {
+        await dispatchEvent(eventToHandle);
+      } catch (e) {
+        console.error("Error dispatching event:", e);
+        captureException(e);
+      }
+      countHandled++;
+    }
+
+    if (delay) {
+      await sleepWithVariance(delay);
+    }
+    // Keep checking for more events to handle so long as one was handled.
+  } while (eventToHandle);
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `Forced ${countHandled} pending event${countHandled === 1 ? "" : "s"}`,
+  );
+};
+
+/*
+export const cronDebouncedEventHandler = addCronJob({
+  name: "Debounced event handler",
+  // Once per minute, on the minute
+  cronStyleSchedule: '* * * * *',
+  disabled: testServerSetting.get(),
+  job() {
+    void dispatchPendingEvents();
+  }
+});
+*/

@@ -9,27 +9,20 @@ type CookiePreferencesChangedCallbackProps = {
 };
 
 /**
- * (Re)-initialise datadog RUM and ReCaptcha with the current cookie preferences.
- * NOTE: this will not turn it OFF if they have previously accepted and are now
- * rejecting analytics cookies, it will only turn it ON if they are now accepting.
- * There is no way to turn it off without reloading currently
- * (see https://github.com/DataDog/browser-sdk/issues/1008)
+ * (Re)-initialise ReCaptcha, etc. with the current cookie preferences.
  */
 export const cookiePreferencesChanged = ({
   cookiePreferences,
   explicitlyChanged,
 }: CookiePreferencesChangedCallbackProps) => {
-  // void initDatadog(); // TODO: Setup datadog
   void initRecaptcha();
 
   // Send a cookie_preferences_changed event to Google Tag Manager, which
   // triggers google analytics and hotjar to start
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dataLayer = (window as any).dataLayer;
-  if (!dataLayer) {
-    console.warn("Trying to call gtag before dataLayer has been initialized");
+  if (window.dataLayer) {
+    window.dataLayer.push({ event: "cookie_preferences_changed" });
   } else {
-    dataLayer.push({ event: "cookie_preferences_changed" });
+    console.warn("Trying to call gtag before dataLayer has been initialized");
   }
 
   // Remove all cookies that are not allowed. Don't try to remove any cookies if:

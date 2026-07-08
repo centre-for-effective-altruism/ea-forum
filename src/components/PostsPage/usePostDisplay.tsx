@@ -70,3 +70,5 @@ export const usePostDisplay = () => {
   }
   return context;
 };
+
+export const useOptionalPostDisplay = () => useContext(postDisplayContext);

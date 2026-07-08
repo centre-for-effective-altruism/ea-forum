@@ -1,3 +1,4 @@
+import { captureException } from "@sentry/nextjs";
 import { load as cheerioLoad, Cheerio } from "cheerio";
 import type { Element } from "domhandler";
 import cloudinary, { UploadApiResponse } from "cloudinary";
@@ -347,9 +348,7 @@ export const convertImagesInObject = async (
       failedUrls,
     };
   } catch (e) {
-    // TODO: sentry
-    // Always catch the error because the obj should mostly load fine without
-    // rehosting the images
+    captureException(e);
     console.error("Error in convertImagesInObject", e);
     return {
       newRevision: null,

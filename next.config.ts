@@ -46,8 +46,22 @@ const nextConfig: NextConfig = {
       source: "/contact",
       destination: "/posts/jpqJKZm9JXgMTwSfg/contact-us",
     },
+    {
+      source: "/ingest/static/:path*",
+      destination: "https://us-assets.i.posthog.com/static/:path*",
+    },
+    {
+      source: "/ingest/array/:path*",
+      destination: "https://us-assets.i.posthog.com/array/:path*",
+    },
+    {
+      source: "/ingest/:path*",
+      destination: "https://us.i.posthog.com/:path*",
+    },
   ],
+  skipTrailingSlashRedirect: true,
   serverExternalPackages: ["mathjax-full"],
+  poweredByHeader: false,
 };
 
 export default withSentryConfig(nextConfig, {
@@ -55,13 +69,20 @@ export default withSentryConfig(nextConfig, {
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
   org: "centre-for-effective-altruism",
-  project: "ea-forum",
+  project: "eaforum3",
   silent: !process.env.CI,
+  // Upload source maps for readable stack traces
+  authToken: process.env.SENTRY_AUTH_TOKEN,
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
   // Route browser requests to Sentry through a Next.js rewrite to circumvent
   // ad-blockers.
   tunnelRoute: "/monitoring",
+  telemetry: false,
+  sourcemaps: {
+    disable: false,
+    deleteSourcemapsAfterUpload: true,
+  },
   webpack: {
     automaticVercelMonitors: true,
     treeshake: {

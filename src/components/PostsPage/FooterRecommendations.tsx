@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
+import { AnalyticsContext } from "@/lib/analyticsEvents";
 import {
   fetchCuratedAndPopularPostsList,
   fetchMoreFromAuthorPostsList,
@@ -29,22 +30,29 @@ export default async function FooterRecommendations({ postId }: { postId: string
   return (
     <>
       {moreFromAuthor.length > 0 && (
-        <>
+        <AnalyticsContext pageSubSectionContext="moreFromAuthor">
           <Type style="sectionTitleLarge" className="mb-3">
             More from the author
           </Type>
           <PostsList posts={moreFromAuthor} className="mb-12" />
-        </>
+        </AnalyticsContext>
       )}
-      <Type style="sectionTitleLarge" className="mb-3">
-        Curated and popular this week
-      </Type>
-      {/* TODO: This post list should always use card view */}
-      <PostsList posts={curatedAndPopular} className="mb-12" />
-      <Type style="sectionTitleLarge" className="mb-3">
-        Recent opportunities to take action
-      </Type>
-      <PostsList posts={recentOpportunities} />
+      {curatedAndPopular.length > 0 && (
+        <AnalyticsContext pageSubSectionContext="curatedAndPopular">
+          <Type style="sectionTitleLarge" className="mb-3">
+            Curated and popular this week
+          </Type>
+          <PostsList posts={curatedAndPopular} viewType="card" className="mb-12" />
+        </AnalyticsContext>
+      )}
+      {recentOpportunities.length > 0 && (
+        <AnalyticsContext pageSubSectionContext="recentOpportunities">
+          <Type style="sectionTitleLarge" className="mb-3">
+            Recent opportunities to take action
+          </Type>
+          <PostsList posts={recentOpportunities} />
+        </AnalyticsContext>
+      )}
     </>
   );
 }

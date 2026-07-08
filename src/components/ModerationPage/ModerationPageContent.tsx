@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { userIsModOrAdmin } from "@/lib/users/userHelpers";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import {
   fetchAutoRateLimits,
   fetchDeletedComments,
@@ -23,7 +23,7 @@ export default async function ModerationPageContent() {
   const currentUser = await getCurrentUser();
   // For now, we're including some sections only visible to mods & admins.
   // We may later make these public or move them elsewhere.
-  const canViewModeratorActions = userIsModOrAdmin(currentUser);
+  const canViewModeratorActions = userIsAdminOrMod(currentUser);
 
   const [moderatorCommentsData, deletedCommentsData, autoRateLimitsData] =
     await Promise.all([

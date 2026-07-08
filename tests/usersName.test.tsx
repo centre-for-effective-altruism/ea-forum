@@ -1,46 +1,9 @@
 import { expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import UsersName from "@/components/UsersName";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
+import { createTestUser } from "./testHelpers";
 import type { CurrentUser } from "@/lib/users/currentUser";
-import { defaultKarmaChangeSettings } from "@/lib/users/karmaChangesTypes";
-
-const createCurrentUser = (overrides: Partial<CurrentUser> = {}): CurrentUser => ({
-  _id: "viewer",
-  displayName: "Viewer",
-  username: "viewer",
-  email: "viewer@example.com",
-  profileImageId: null,
-  slug: "viewer",
-  karma: 0,
-  isAdmin: false,
-  theme: { name: "default" },
-  hideIntercom: false,
-  acceptedTos: true,
-  hideNavigationSidebar: false,
-  hideHomeRHS: false,
-  usernameUnset: false,
-  currentFrontpageFilter: null,
-  frontpageFilterSettings: null,
-  lastNotificationsCheck: null,
-  expandedFrontpageSections: null,
-  markDownPostEditor: false,
-  banned: null,
-  groups: [],
-  conversationsDisabled: false,
-  mentionsDisabled: false,
-  showCommunityInRecentDiscussion: false,
-  hideCommunitySection: false,
-  reviewedByUserId: null,
-  snoozedUntilContentCount: null,
-  subscribedToDigest: false,
-  hideSubscribePoke: false,
-  mongoLocation: null,
-  karmaChangeNotifierSettings: defaultKarmaChangeSettings,
-  karmaChangeLastOpened: null,
-  karmaChangeBatchStart: null,
-  ...overrides,
-});
+import UsersName from "@/components/UsersName";
 
 const renderUsersName = ({
   currentUser = null,
@@ -77,9 +40,9 @@ test("UsersName treats a missing user as anonymous", () => {
   expect(html).toContain("[anonymous]");
 });
 
-test("UsersName keeps deleted users anonymous for normal logged-in viewers", () => {
+test("UsersName keeps deleted users anonymous for normal logged-in viewers", async () => {
   const html = renderUsersName({
-    currentUser: createCurrentUser(),
+    currentUser: await createTestUser(),
   });
 
   expect(html).toContain("[anonymous]");
@@ -87,10 +50,10 @@ test("UsersName keeps deleted users anonymous for normal logged-in viewers", () 
   expect(html).not.toContain("/users/deleted-user");
 });
 
-test("UsersName reveals deleted users for privileged contexts", () => {
+test("UsersName reveals deleted users for privileged contexts", async () => {
   const html = renderToStaticMarkup(
     <CurrentUserProvider
-      user={createCurrentUser({
+      user={await createTestUser({
         _id: "admin",
         slug: "admin",
         username: "admin",

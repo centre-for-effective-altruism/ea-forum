@@ -1,6 +1,5 @@
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
-import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
-import ChevronUpIcon from "@heroicons/react/16/solid/ChevronUpIcon";
+import SoftArrowUpIcon from "../Icons/SoftArrowUpIcon";
 import Type from "../Type";
 import PostColumn from "./PostColumn";
 
@@ -9,7 +8,7 @@ export default function PostDisplaySkeleton() {
     <PostColumn>
       {/* Title */}
       <div className="bg-gray-300 rounded mb-10 h-[52px] w-full" />
-      <div className="flex gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6">
         {/* User profile image */}
         <div
           className={`
@@ -28,14 +27,18 @@ export default function PostDisplaySkeleton() {
         <div className="flex items-center gap-4 grow">
           {/* Voting */}
           <div className="flex items-center gap-1">
-            <ChevronDownIcon className="w-[20px]" />
-            <Type style="bodyMedium" className="text-[16px]">
+            <SoftArrowUpIcon
+              width={13}
+              height={9}
+              className="rotate-180 text-gray-400"
+            />
+            <Type style="voteScore">
               <div className="h-3 w-6 rounded bg-gray-300" />
             </Type>
-            <ChevronUpIcon className="w-[20px]" />
+            <SoftArrowUpIcon width={13} height={9} className="text-gray-400" />
           </div>
           {/* Comment count */}
-          <Type style="bodyMedium" className="flex items-center gap-1">
+          <Type style="bodyLarge" className="flex items-center gap-1">
             <ChatBubbleLeftIcon className="w-[22px]" />
             <div className="h-3 w-6 rounded bg-gray-200" />
           </Type>

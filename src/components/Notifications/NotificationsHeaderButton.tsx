@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import type { UserKarmaChanges } from "@/lib/users/karmaChangesTypes";
 import { userHasKarmaChange } from "@/lib/users/userHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { usePolling } from "@/lib/hooks/usePolling";
 import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
@@ -37,9 +38,10 @@ export default function NotificationsHeaderButton() {
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    void refetch();
-  }, [refetch]);
+  usePolling({
+    callback: refetch,
+    intervalMs: 60000,
+  });
 
   if (!currentUser) {
     return null;
@@ -49,13 +51,21 @@ export default function NotificationsHeaderButton() {
   const showBadge = unreadNotifications > 0;
 
   return (
-    <NotificationsDropdown karmaChanges={karmaChanges} className="relative">
+    <NotificationsDropdown
+      // Add a key to force the notifications list to reload when the number of
+      // unread notifications changes
+      key={unreadNotifications}
+      karmaChanges={karmaChanges}
+      onOpen={refetch}
+      className="relative"
+    >
       {showBadge && (
         <Type
           style="bodySmall"
           className="
             absolute top-[-2px] right-[2px] bg-primary rounded-[50%] px-[1px]
             min-w-[19px] text-center font-[600]! pointer-events-none
+            text-always-white
           "
         >
           {unreadNotifications}

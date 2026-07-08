@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
+import { ClientIdProvider } from "@/lib/hooks/useClientId";
 import { ThemeProvider } from "@/lib/hooks/useTheme";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
 import { ItemsReadProvider } from "@/lib/hooks/useItemsRead";
@@ -27,19 +28,21 @@ export default async function Providers({
     <FloatingTreeClientProvider>
       <MobileNavProvider>
         <CookieClientProvider initialCookies={initialCookies}>
-          <CurrentUserProvider user={currentUser}>
-            <ThemeProvider>
-              <IntercomClientProvider>
-                <SubscriptionProvider>
-                  <ItemsReadProvider>
-                    <LoginPopoverContextProvider>
-                      {children}
-                    </LoginPopoverContextProvider>
-                  </ItemsReadProvider>
-                </SubscriptionProvider>
-              </IntercomClientProvider>
-            </ThemeProvider>
-          </CurrentUserProvider>
+          <ClientIdProvider>
+            <CurrentUserProvider user={currentUser}>
+              <ThemeProvider>
+                <IntercomClientProvider>
+                  <SubscriptionProvider>
+                    <ItemsReadProvider>
+                      <LoginPopoverContextProvider>
+                        {children}
+                      </LoginPopoverContextProvider>
+                    </ItemsReadProvider>
+                  </SubscriptionProvider>
+                </IntercomClientProvider>
+              </ThemeProvider>
+            </CurrentUserProvider>
+          </ClientIdProvider>
         </CookieClientProvider>
       </MobileNavProvider>
     </FloatingTreeClientProvider>

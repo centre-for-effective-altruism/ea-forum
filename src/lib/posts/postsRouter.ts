@@ -5,10 +5,13 @@ import { db } from "../db";
 import { posts } from "../schema";
 import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
-import { fetchPostsListById, fetchPostsListFromView } from "./postLists";
 import { postsListViewSchema } from "./postsHelpers";
 import {
-  archiveDraft,
+  fetchPostsListById,
+  fetchPostsListByIds,
+  fetchPostsListFromView,
+} from "./postLists";
+import {
   moveToDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
@@ -32,6 +35,12 @@ export const postsRouter = {
     .handler(async ({ input: { _id } }) => {
       const currentUser = await getCurrentUser();
       return fetchPostsListById(currentUser?._id ?? null, _id);
+    }),
+  listByIds: os
+    .input(z.object({ postIds: z.string().array() }))
+    .handler(async ({ input: { postIds } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchPostsListByIds(currentUser?._id ?? null, postIds);
     }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))
@@ -100,14 +109,5 @@ export const postsRouter = {
         throw new Error("Not logged in");
       }
       await moveToDraft(currentUser, postId);
-    }),
-  archiveDraft: os
-    .input(z.object({ postId: z.string() }))
-    .handler(async ({ input: { postId } }) => {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) {
-        throw new Error("Not logged in");
-      }
-      await archiveDraft(currentUser, postId);
     }),
 };

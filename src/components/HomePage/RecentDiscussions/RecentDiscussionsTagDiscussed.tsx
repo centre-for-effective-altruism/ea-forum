@@ -34,8 +34,8 @@ export default function RecentDiscussionsTagDiscussed({
           {tag.wikiOnly ? "Wiki page" : `Topic page — ${tag.postCount} posts`}
         </Type>
       </div>
-      <TagBody html={tag.html ?? ""} isExcerpt className="mb-4" />
-      <CommentsListProvider comments={comments}>
+      <TagBody html={tag.html ?? ""} className="mb-4" />
+      <CommentsListProvider comments={comments} collapsedIfRepliedTo>
         <CommentsList />
       </CommentsListProvider>
     </RecentDiscussionsItem>
