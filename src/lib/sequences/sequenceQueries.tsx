@@ -37,13 +37,16 @@ const sequencePermissionFilter = (currentUser: CurrentUser | null) => {
   if (currentUser?.isAdmin) {
     return {};
   }
-  if (currentUser) {
-    return { userId: currentUser._id };
-  }
-  return {
+  const publicFilter = {
     isDeleted: false,
     draft: false,
   };
+  if (currentUser) {
+    return {
+      OR: [{ userId: currentUser._id }, publicFilter],
+    };
+  }
+  return publicFilter;
 };
 
 export const fetchSequenceById = async ({
