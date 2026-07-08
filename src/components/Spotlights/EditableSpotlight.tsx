@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
+import { formatLongDateWithTime } from "@/lib/timeUtils";
 import { rpc } from "@/lib/rpc";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import toast from "react-hot-toast";
@@ -36,26 +37,36 @@ export default function EditableSpotlight({
     return null;
   }
 
+  const { startAt, endAt } = spotlight;
   return (
-    <div
-      data-component="EditableSpotlight"
-      className="w-full flex flex-col gap-1 items-end"
-    >
+    <div data-component="EditableSpotlight" className="w-full">
       <Spotlight spotlight={spotlight} />
-      <Type style="bodyHeavy" className="flex items-center gap-3">
-        <button
-          onClick={onDelete}
-          className="cursor-pointer text-primary-dark hover:text-primary"
-        >
-          Delete
-        </button>
-        <Link
-          href={`/admin/spotlights/${spotlight._id}`}
-          className="text-primary-dark hover:text-primary"
-        >
-          Edit
-        </Link>
-      </Type>
+      <div
+        className="
+          mt-1 w-full flex justify-between
+          items-start md:items-center flex-col md:flex-row
+        "
+      >
+        <Type className="text-gray-600">
+          {startAt ? formatLongDateWithTime(startAt) : "[No start date]"}
+          {" – "}
+          {endAt ? formatLongDateWithTime(endAt) : "[No end date]"}
+        </Type>
+        <Type style="bodyHeavy" className="flex items-center gap-3">
+          <button
+            onClick={onDelete}
+            className="cursor-pointer text-primary-dark hover:text-primary"
+          >
+            Delete
+          </button>
+          <Link
+            href={`/admin/spotlights/${spotlight._id}`}
+            className="text-primary-dark hover:text-primary"
+          >
+            Edit
+          </Link>
+        </Type>
+      </div>
     </div>
   );
 }

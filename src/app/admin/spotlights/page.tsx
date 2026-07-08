@@ -33,7 +33,7 @@ export default async function AdminSpotlightsPage() {
   return (
     <div
       data-component="AdminSpotlightsPage"
-      className="w-[716px] max-w-full mx-auto my-10 flex flex-col gap-10"
+      className="w-[732px] max-w-full mx-auto my-10 px-2 flex flex-col gap-10"
     >
       <NewSpotlightButton />
       <section className="flex flex-col gap-6">
