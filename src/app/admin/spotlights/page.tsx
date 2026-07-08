@@ -41,7 +41,7 @@ export default async function AdminSpotlightsPage() {
         {active.map((spotlight) => (
           <EditableSpotlight key={spotlight._id} spotlight={spotlight} />
         ))}
-        {active.length === 0 && <Type>No current spotlights</Type>}
+        {active.length === 0 && <Type>No active spotlights</Type>}
       </section>
       <section className="flex flex-col gap-6">
         <Type style="sectionTitleLarge">Upcoming spotlights</Type>
