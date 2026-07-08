@@ -3,6 +3,7 @@ import { combineUrls } from "./routeHelpers";
 import { RPCLink } from "@orpc/client/fetch";
 import { RouterClient } from "@orpc/server";
 import { createORPCClient } from "@orpc/client";
+import { BatchLinkPlugin } from "@orpc/client/plugins";
 
 // Browser: use the current origin so client fetches stay same-origin
 // (avoids CORS on preview deploys whose NEXT_PUBLIC_SITE_URL points at a
@@ -25,5 +26,15 @@ export const rpc: RouterClient<Router> = createORPCClient(
       const { headers } = await import("next/headers");
       return await headers();
     },
+    plugins: [
+      new BatchLinkPlugin({
+        groups: [
+          {
+            condition: (_options) => true,
+            context: {},
+          },
+        ],
+      }),
+    ],
   }),
 );

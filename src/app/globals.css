@@ -123,6 +123,10 @@
   --color-surface-floating-hover: #f5f5f5;
   --color-card-tinted: #eeeeee;
 
+  --shadow-featured-card:
+    0 2px 6px 0 rgba(0, 0, 0, 0.1), -8px 8px 0 0 var(--color-surface-floating),
+    -10px 10px 10px -1px rgba(0, 0, 0, 0.1);
+
   --spacing: 4px;
 
   --radius-sm: 6px;
@@ -278,6 +282,10 @@
   --color-surface-floating: #353535;
   --color-surface-floating-hover: #4a4a4a;
   --color-card-tinted: #1f1f1f;
+
+  --shadow-featured-card:
+    0 2px 6px 0 rgba(255, 255, 255, 0.1), -8px 8px 0 0 var(--color-surface-floating),
+    -10px 10px 10px -1px rgba(255, 255, 255, 0.1);
 }
 
 .theme-light {

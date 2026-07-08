@@ -1,6 +1,7 @@
 import { SQL, sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
 import type { FilterSettings } from "../filterSettings";
+import type { CurrentUser } from "../users/currentUser";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
@@ -590,4 +591,48 @@ export const fetchPostsListFromView = (
     default:
       throw new Error("Invalid posts list view");
   }
+};
+
+export const fetchHighlightsThisYear = async (currentUser: CurrentUser | null) => {
+  return await fetchPostsListByIds(currentUser?._id ?? null, [
+    "XkLnbSsjK7TpNFgPn", // Truthseeking is the ground
+    "2RdYDcwrnvdCn2SbK", // The Case for Insect Consciousness
+    "rxTPv3MdrsHiqK7kM", // Money, Population, and Insecticide Resistance
+    "JuGhpwTJxbeGt5GhH", // Good Judgment with Numbers
+    "RHqdSMscX25u7byQF", // Alignment Faking in Large Language Models
+  ]);
+};
+
+export const fetchHighlightsThisMonth = async (currentUser: CurrentUser | null) => {
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      curatedDate: { isNotNull: true },
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    limit: 4,
+  });
+};
+
+export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
+  // We do this manually in order to add a custom highlight length, ensuring we
+  // get enough HTML to extract the video embed
+  const postIds = [
+    "bsE5t6qhGC65fEpzN", // Growth and the case against randomista development
+    "whEmrvK9pzioeircr", // Will AI end everything?
+    "LtaT28tevyLbDwidb", // An update to our thinking on climate change
+  ];
+  const posts = await db.query.posts.findMany({
+    ...postsListProjection(currentUser?._id ?? null, { highlightLength: 1000 }),
+    where: {
+      ...viewablePostFilter,
+      _id: { in: postIds },
+    },
+  });
+  const order = new Map(postIds.map((id, i) => [id, i]));
+  return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
 };

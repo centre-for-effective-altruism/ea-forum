@@ -1,9 +1,11 @@
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
+import { BatchHandlerPlugin } from "@orpc/server/plugins";
 import { captureException } from "@sentry/nextjs";
 import { router } from "@/lib/router";
 
 const handler = new RPCHandler(router, {
+  plugins: [new BatchHandlerPlugin()],
   interceptors: [
     onError((error) => {
       console.error(error);
