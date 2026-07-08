@@ -1,5 +1,3 @@
-"use client";
-
 import SectionTitle from "@/components/SectionTitle";
 import Type from "@/components/Type";
 import ModerationTable from "./ModerationTable";
@@ -33,6 +31,7 @@ export default function GloballyBannedUsersBlock({
       <SectionTitle
         title={`Globally Banned Users (${state.totalCount})`}
         anchor="globally-banned-users"
+        rootClassName="mb-2"
       >
         <div className="flex flex-wrap items-center gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">

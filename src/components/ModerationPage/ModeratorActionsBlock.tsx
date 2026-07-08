@@ -1,5 +1,3 @@
-"use client";
-
 import SectionTitle from "@/components/SectionTitle";
 import Type from "@/components/Type";
 import ModerationTable from "./ModerationTable";
@@ -26,7 +24,11 @@ export default function ModeratorActionsBlock({
 }) {
   return (
     <>
-      <SectionTitle title="Moderator Actions" anchor="moderator-actions">
+      <SectionTitle
+        title="Moderator Actions"
+        anchor="moderator-actions"
+        rootClassName="mb-2"
+      >
         <Type style="bodySmall" className="text-warning">
           Admins/mods only
         </Type>

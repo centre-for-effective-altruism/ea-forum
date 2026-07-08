@@ -1,15 +1,13 @@
-"use client";
-
 import SectionTitle from "@/components/SectionTitle";
 import ModerationTable from "./ModerationTable";
 import type { AutoRateLimitRow } from "@/lib/moderation/moderationTypes";
+import type { ModerationRowsState } from "./moderationPageClientTypes";
 import { formatDate, formatRateLimitSummary } from "./moderationUtils";
 import {
   SectionStatus,
   TablePagination,
   renderUserLink,
 } from "./moderationPageClientUtils";
-import type { ModerationRowsState } from "./moderationPageClientTypes";
 
 export default function AutoRateLimitsBlock({
   state,
@@ -35,6 +33,7 @@ export default function AutoRateLimitsBlock({
       <SectionTitle
         title={`Auto Rate Limits (${state.totalCount})`}
         anchor="auto-rate-limits"
+        rootClassName="mb-2"
       >
         <div className="flex flex-wrap items-center gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">

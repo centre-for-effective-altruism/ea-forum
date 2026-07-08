@@ -1,5 +1,3 @@
-"use client";
-
 import SectionTitle from "@/components/SectionTitle";
 import ModerationTable from "./ModerationTable";
 import { formatDate } from "./moderationUtils";
@@ -27,6 +25,7 @@ export default function DeletedCommentsBlock({
       <SectionTitle
         title={`Deleted Comments (${state.totalCount})`}
         anchor="deleted-comments"
+        rootClassName="mb-2"
       />
       <div>
         <SectionStatus loading={state.loading} error={state.error} />

@@ -1,5 +1,3 @@
-"use client";
-
 import SectionTitle from "@/components/SectionTitle";
 import Type from "@/components/Type";
 import { MODERATOR_COMMENTS_PAGE_SIZE } from "@/lib/moderation/moderationTransforms";
@@ -24,6 +22,7 @@ export default function ModeratorCommentsBlock({
       <SectionTitle
         title={`Moderator Comments (${state.totalCount})`}
         anchor="moderator-comments"
+        rootClassName="mb-2"
       />
       <div>
         <SectionStatus loading={state.loading} error={state.error} />

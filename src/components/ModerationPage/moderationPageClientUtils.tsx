@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "@/components/Link";
 import Type from "@/components/Type";
 import UsersName from "@/components/UsersName";
@@ -76,7 +74,10 @@ export function TablePagination({
             type="button"
             onClick={onPrev}
             disabled={page <= 1 || isLoading}
-            className="text-primary text-sm hover:opacity-70 disabled:text-gray-500 disabled:cursor-not-allowed"
+            className="
+              text-primary-dark text-sm hover:text-primary disabled:text-gray-500
+              cursor-pointer disabled:cursor-not-allowed
+            "
           >
             Previous
           </button>
@@ -88,7 +89,10 @@ export function TablePagination({
             type="button"
             onClick={onNext}
             disabled={page >= totalPages || isLoading}
-            className="text-primary text-sm hover:opacity-70 disabled:text-gray-500 disabled:cursor-not-allowed"
+            className="
+              text-primary-dark text-sm hover:text-primary disabled:text-gray-500
+              cursor-pointer disabled:cursor-not-allowed
+            "
           >
             Next
           </button>

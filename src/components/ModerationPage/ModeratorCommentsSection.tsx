@@ -17,10 +17,8 @@ export default function ModeratorCommentsSection({
         <CommentItem
           key={comment._id}
           node={{ comment, depth: 0, children: [], isLocal: false }}
-          startCollapsed
           showPreviewWhenCollapsed
-          hidePermalink
-          hideMenu
+          startCollapsed
         />
       ))}
     </div>

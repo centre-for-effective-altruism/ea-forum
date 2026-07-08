@@ -1,5 +1,3 @@
-"use client";
-
 import SectionTitle from "@/components/SectionTitle";
 import Type from "@/components/Type";
 import ModerationTable from "./ModerationTable";
@@ -26,7 +24,11 @@ export default function ManualRateLimitsBlock({
 }) {
   return (
     <>
-      <SectionTitle title="Manual Rate Limits" anchor="manual-rate-limits">
+      <SectionTitle
+        title="Manual Rate Limits"
+        anchor="manual-rate-limits"
+        rootClassName="mb-2"
+      >
         <Type style="bodySmall" className="text-warning">
           Admins/mods only
         </Type>

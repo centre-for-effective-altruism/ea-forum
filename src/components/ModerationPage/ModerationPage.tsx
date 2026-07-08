@@ -19,7 +19,7 @@ type ModerationPageSection = {
   render: () => ReactNode;
 };
 
-export default function ModerationPageContentClient({
+export default function ModerationPage({
   initialData,
 }: {
   initialData: ModerationPageInitialData;
@@ -151,24 +151,30 @@ export default function ModerationPageContentClient({
   const visibleSections = sections.filter((section) => section.visible);
 
   return (
-    <div className="px-4 py-5 sm:px-6 lg:px-10 flex flex-col gap-4">
+    <div
+      data-component="ModerationPage"
+      className="px-4 pt-10 pb-30 sm:px-6 lg:px-10 flex flex-col gap-4"
+    >
       <Type As="h1" style="sectionTitleLarge" className="text-[32px] mt-2 mb-1">
         Moderation Log
       </Type>
-      <Type style="body">This page is in beta and may contain errors.</Type>
+      <Type>This page is in beta and may contain errors.</Type>
       <div className="rounded-md border border-gray-200 bg-gray-0 p-4">
         <Type style="bodyMedium" className="mb-2">
           Contents
         </Type>
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           {visibleSections.map((section) => (
-            <Link key={section.id} href={`#${section.id}`} className="text-primary">
+            <Link
+              key={section.id}
+              href={`#${section.id}`}
+              className="text-primary-dark hover:text-primary"
+            >
               {section.label}
             </Link>
           ))}
         </div>
       </div>
-
       {visibleSections.map((section) => (
         <div key={section.id}>{section.render()}</div>
       ))}

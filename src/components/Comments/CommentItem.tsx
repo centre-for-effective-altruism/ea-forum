@@ -55,8 +55,6 @@ export default function CommentItem({
   showPreviewWhenCollapsed,
   loadingReplies,
   borderless,
-  hidePermalink,
-  hideMenu,
   className,
 }: Readonly<{
   node: CommentTreeNode<CommentListItem>;
@@ -78,8 +76,6 @@ export default function CommentItem({
    * component.
    */
   borderless?: boolean;
-  hidePermalink?: boolean;
-  hideMenu?: boolean;
   className?: string;
 }>) {
   const commentsListContext = useOptionalCommentsList();
@@ -332,24 +328,22 @@ export default function CommentItem({
           </div>
           {!draft && (
             <>
-              {!hidePermalink && (
-                <Tooltip
-                  title={<Type style="bodySmall">Copy link</Type>}
-                  placement="bottom"
+              <Tooltip
+                title={<Type style="bodySmall">Copy link</Type>}
+                placement="bottom"
+              >
+                <Link
+                  href={commentGetPageUrl({ comment })}
+                  onClick={copyLink}
+                  className="
+                    flex items-center h-6 px-1 rounded text-gray-600
+                    hover:bg-item-hover
+                  "
                 >
-                  <Link
-                    href={commentGetPageUrl({ comment })}
-                    onClick={copyLink}
-                    className="
-                      flex items-center h-6 px-1 rounded text-gray-600
-                      hover:bg-item-hover
-                    "
-                  >
-                    <LinkIcon className="w-[16px]" />
-                  </Link>
-                </Tooltip>
-              )}
-              {currentUser && !hideMenu && (
+                  <LinkIcon className="w-[16px]" />
+                </Link>
+              </Tooltip>
+              {currentUser && (
                 <CommentTripleDotMenu
                   comment={comment}
                   onEdit={isEditing ? undefined : onEdit}
