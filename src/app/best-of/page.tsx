@@ -72,7 +72,7 @@ export default async function BestOfPage() {
           </div>
           <div>
             <Type style="sectionTitleLarge">Featured collections</Type>
-            <div className="flex items-center gap-4 my-4">
+            <div className="my-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {featuredCollections.map((collection) => (
                 <CollectionCard collection={collection} key={collection._id} />
               ))}
@@ -89,7 +89,7 @@ export default async function BestOfPage() {
           </div>
           <div>
             <Type style="sectionTitleLarge">Explore cause areas</Type>
-            <div className="mt-4 grid grid-cols-3 gap-4">
+            <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {topicIntroSequences.map((sequence) => (
                 <SequenceCard sequence={sequence} key={sequence._id} />
               ))}
@@ -113,7 +113,7 @@ export default async function BestOfPage() {
                     <div className="p-3">
                       <iframe
                         {...getPostVideoAttributes(post)}
-                        className="border-none w-full h-[183px] rounded"
+                        className="border-none outline-none w-full h-[183px] rounded"
                       />
                     </div>
                   }

@@ -28,10 +28,10 @@ export default function PostBody({
     "content-base",
     smallText &&
       `
-      text-[17px] [&_p]:text-[17px] [&_li]:text-[17px] [&_blockquote]:text-[17px]
-      [&_h1]:text-[18px]! [&_h2]:text-[17px]! [&_h3]:text-[16px]!
-      [&_h4]:text-[16px]! [&_h5]:text-[16px]! [&_h6]:text-[16px]!
-    `,
+        text-[17px] [&_p]:text-[17px] [&_li]:text-[17px] [&_blockquote]:text-[17px]
+        [&_h1]:text-[18px]! [&_h2]:text-[17px]! [&_h3]:text-[16px]!
+        [&_h4]:text-[16px]! [&_h5]:text-[16px]! [&_h6]:text-[16px]!
+      `,
     className,
   );
   if (html) {
