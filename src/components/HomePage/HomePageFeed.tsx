@@ -4,7 +4,7 @@ import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { isPostsListViewType } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
-// import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
+import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
@@ -31,7 +31,7 @@ export default async function HomePageFeed({
   const [cookieStore, coreTags, spotlight] = await Promise.all([
     cookies(),
     fetchCoreTags(),
-    null, // fetchCurrentSpotlight(), // TODO Renable frontpage spotlight
+    fetchCurrentSpotlight(),
   ]);
   const postViewCookie = cookieStore.get("posts_list_view_type")?.value ?? "";
   const ssrPostView = isPostsListViewType(postViewCookie)

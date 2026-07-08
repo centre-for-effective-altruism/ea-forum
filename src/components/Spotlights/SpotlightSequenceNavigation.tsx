@@ -46,7 +46,7 @@ export default function SpotlightSequenceNavigation({
     >
       {!posts && (
         <div className="h-3 min-h-3 max-h-3">
-          <Loading className="-translate-y-3" />
+          <Loading className="-translate-y-3" colorClassName="bg-always-white" />
         </div>
       )}
       {posts?.map((post) => (
