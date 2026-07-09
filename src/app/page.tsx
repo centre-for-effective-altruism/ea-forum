@@ -1,9 +1,10 @@
-import type { NextSearchParams } from "@/lib/typeHelpers";
+import { Suspense } from "react";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
+import type { NextSearchParams } from "@/lib/typeHelpers";
 import StructuredData from "@/components/StructuredData";
 import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
-import HomePageTabs from "@/components/HomePage/HomePageTabs";
+import HomePageContent from "@/components/HomePage/HomePageContent";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -34,25 +35,13 @@ export default async function HomePage({
   searchParams: Promise<NextSearchParams>;
 }) {
   const search = await searchParams;
-  void search; // TODO
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
-      <HomePageTabs />
-      {/*
-      <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
-        <HomePageTagBar className="mb-4" />
+      <Suspense>
+        <HomePageContent search={search} />
       </Suspense>
-      <Suspense
-        // This key forces react to render the fallback when navigating on the
-        // client instead of waiting for the server response
-        key={typeof search.tab === "string" ? search.tab : "frontpage"}
-        fallback={<HomePageFeedSkeleton postCount={30} />}
-      >
-        <HomePageFeed search={search} />
-      </Suspense>
-        */}
     </HomePageColumns>
   );
 }

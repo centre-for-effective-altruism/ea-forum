@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import Nav from "../Nav/Nav";
 
-export default async function HomePageColumns({
+export default function HomePageColumns({
   pageContext,
   children,
 }: Readonly<{

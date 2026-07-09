@@ -78,6 +78,10 @@
   --color-strawpoll: rgb(251, 191, 36);
   --color-post-body-bg: var(--color-gray-0);
   --color-post-footer-bg: var(--color-background);
+  --color-post-curated-bg: #ffc501;
+  --color-post-curated-border: #d79600;
+  --color-post-community-bg: #e8e8e7;
+  --color-post-community-border: #000;
 
   /* Admin Pangram badge */
   --color-pangram-mid-bg: #fff8e1;

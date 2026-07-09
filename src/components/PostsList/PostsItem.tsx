@@ -4,14 +4,12 @@ import { ReactNode, SyntheticEvent, useCallback, useState } from "react";
 import Image from "next/image";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
-import { formatPostItemHiddenAuthors } from "@/lib/formatHelpers";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { useHideRepeatedPosts } from "@/lib/hooks/useHideRepeatedPosts";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import {
   getPostPlaintextDescription,
-  getPostReadTimeMinutes,
   getPostSocialImageUrl,
   postGetPageUrl,
   postHasNewUnreadComments,
@@ -20,11 +18,9 @@ import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
 import PostsItemNewComments from "./PostsItemNewComments";
-import TruncationContainer from "../TruncationContainer";
+import PostsItemMeta from "./PostsItemMeta";
 import PostsTooltip from "../PostsTooltip";
-import UsersName from "../UsersName";
 import PostIcons from "./PostIcons";
-import TimeAgo from "../TimeAgo";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
@@ -53,22 +49,9 @@ export default function PostsItem({
   className?: string;
 }>) {
   const cardView = viewType === "card";
-  const {
-    _id,
-    title,
-    baseScore,
-    commentCount,
-    voteCount,
-    sticky,
-    user,
-    coauthors,
-    readStatus,
-  } = post;
+  const { _id, title, baseScore, commentCount, voteCount, sticky, readStatus } =
+    post;
   const postLink = postGetPageUrl({ post });
-  const readTime = getPostReadTimeMinutes(
-    post.readTimeMinutesOverride,
-    post.contents?.wordCount ?? null,
-  );
   const { postsRead } = useItemsRead();
   const isRead = !!(post._id in postsRead
     ? postsRead[post._id]
@@ -187,53 +170,7 @@ export default function PostsItem({
               </InteractionWrapper>
             </Type>
             <Type style="bodySmallMedium" className="min-w-0 flex">
-              <InteractionWrapper className="grow min-w-0">
-                <TruncationContainer
-                  items={[
-                    <UsersName key="author" user={user} />,
-                    ...(coauthors ?? []).map((coauthor) => (
-                      <span key={coauthor._id}>
-                        <span className="coauthor-comma">, </span>
-                        <UsersName user={coauthor} />
-                      </span>
-                    )),
-                  ]}
-                  tooltipClassName="[&_.coauthor-comma]:hidden"
-                  gap={0}
-                  hiddenItemsTooltip
-                  afterNodeTextStyle="bodySmallMedium"
-                  afterNodeFormat={formatPostItemHiddenAuthors}
-                  finalNode={
-                    <>
-                      <span className="px-1">·</span>
-                      <TimeAgo
-                        As="span"
-                        textStyle="bodySmallMedium"
-                        time={post.postedAt}
-                        tooltipPrefix="Posted on "
-                        includeAgo
-                      />
-                      {post.curatedDate && (
-                        <span className="max-sm:hidden">
-                          <span className="px-1">·</span>
-                          <span>Curated </span>
-                          <TimeAgo
-                            As="span"
-                            textStyle="bodySmallMedium"
-                            time={post.curatedDate}
-                            tooltipPrefix="Curated on "
-                            includeAgo
-                          />
-                        </span>
-                      )}
-                      <span className="max-sm:hidden">
-                        <span className="px-1">·</span>
-                        <span>{readTime}m read</span>
-                      </span>
-                    </>
-                  }
-                />
-              </InteractionWrapper>
+              <PostsItemMeta post={post} />
               <InteractionWrapper className="sm:hidden">
                 {commentsNode}
               </InteractionWrapper>

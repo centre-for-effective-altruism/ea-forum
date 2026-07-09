@@ -1,28 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { HomePageTabName, homePageTabs, useHomePage } from "./HomePageContext";
 import Type from "../Type";
 import clsx from "clsx";
 
-const tabs = [
-  {
-    label: "Featured",
-    name: "featured",
-  },
-  {
-    label: "New & upvoted",
-    name: "magic",
-  },
-] as const;
-
-type TabName = (typeof tabs)[number]["name"];
-
-export default function HomePageTabs() {
-  const [currentTab, setCurrentTab] = useState<TabName>(tabs[0].name);
+export default function HomePageTabs({
+  className,
+}: Readonly<{
+  className?: string;
+}>) {
+  const { currentTab, setCurrentTab } = useHomePage();
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const tabRefs = useRef<Record<TabName, HTMLElement | null>>({
+  const tabRefs = useRef<Record<HomePageTabName, HTMLElement | null>>({
     featured: null,
     magic: null,
   });
@@ -56,10 +48,10 @@ export default function HomePageTabs() {
   return (
     <div
       data-component="HomePageTabs"
-      className="relative flex gap-6"
+      className={clsx("relative flex gap-6", className)}
       ref={containerRef}
     >
-      {tabs.map(({ label, name }) => (
+      {homePageTabs.map(({ label, name }) => (
         <Type
           key={name}
           As="button"

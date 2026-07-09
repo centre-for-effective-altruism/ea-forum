@@ -117,7 +117,7 @@ export const getPostReadTimeMinutes = (
 
 type SocialImageOptions = {
   width?: number;
-  dpr?: number;
+  dpr?: number | "auto";
 };
 
 export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {

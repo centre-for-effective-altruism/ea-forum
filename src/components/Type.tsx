@@ -29,6 +29,10 @@ export const typeStyles = {
   loadMore: "font-sans text-[14px] font-[550]",
   onboardingTitle: "font-sans text-[30px] font-[600] tracking-[-0.6px]",
   onboardingTag: "font-sans text-[13px] font-[700] leading-[16px]",
+  featuredPostTitle:
+    "font-sans text-[22px] font-[600] leading-[120%] tracking-[0.44px]",
+  featuredPostTitleLarge:
+    "font-sans text-[32px] font-[600] leading-[110%] tracking-[0.64px]",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof typeStyles;

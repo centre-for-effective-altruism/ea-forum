@@ -625,3 +625,19 @@ export const fetchFeaturedFrontpagePosts = async ({
   });
   return filterNonNull(results.map(({ post }) => post));
 };
+
+export const fetchMostRecentlyCuratedPost = async (
+  currentUser: CurrentUser | null,
+) => {
+  const result = await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      curatedDate: { isNotNull: true },
+    },
+    orderBy: {
+      curatedDate: "desc",
+    },
+    limit: 1,
+  });
+  return result[0] ?? null;
+};
