@@ -7,7 +7,6 @@ import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { fetchTagBySlug, postTagsProjection } from "../tags/tagQueries";
-import { filterNonNull } from "../typeHelpers";
 import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
@@ -605,28 +604,49 @@ export const fetchFeaturedFrontpagePosts = async ({
   offset?: number;
   limit?: number;
 }): Promise<PostListItem[]> => {
-  const results = await db.query.digestPosts.findMany({
-    columns: {},
-    with: {
-      post: postsListProjection(currentUser?._id ?? null),
-    },
+  const excludeCommunity = excludeTagFilter(
+    process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
+  );
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
     where: {
-      onsiteDigestStatus: "yes",
-      post: {
-        ...viewablePostFilter,
-        // The most recently curated post is always shown first and that is
-        // fetched separately, so we should skip it here.
-        _id: { ne: "mnLqdvnpKiudivyfv" },
-      },
+      AND: [
+        {
+          // The most recently curated post is always shown first and that is
+          // fetched separately, so we should skip it here.
+          OR: [
+            { curatedDate: { isNull: true } },
+            {
+              RAW: (postsTable) => sql`
+                ${postsTable}."curatedDate" < (
+                  SELECT MAX("curatedDate")
+                  FROM "Posts"
+                  WHERE "curatedDate" IS NOT NULL
+                )
+              `,
+            },
+          ],
+        },
+        {
+          OR: [
+            {
+              baseScore: { gte: 100 },
+              RAW: (postsTable) => excludeCommunity(postsTable),
+            },
+            {
+              digestPost: {
+                onsiteDigestAt: { isNotNull: true },
+              },
+            },
+          ],
+        },
+      ],
     },
-    orderBy: {
-      createdAt: "desc",
-      _id: "desc",
-    },
+    orderBy: (posts, { desc }) =>
+      desc(sql`COALESCE(${posts}."onsiteDigestAt", ${posts}."postedAt")`),
     offset,
     limit: Math.min(limit, 50),
   });
-  return filterNonNull(results.map(({ post }) => post));
 };
 
 export const fetchMostRecentlyCuratedPost = async (

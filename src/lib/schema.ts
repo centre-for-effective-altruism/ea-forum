@@ -1148,6 +1148,7 @@ export const digestPosts = pgTable(
     postId: varchar({ length: 27 }).notNull(),
     emailDigestStatus: text(),
     onsiteDigestStatus: text(),
+    onsiteDigestAt: timestamp(),
   },
   (table) => [
     index("idx_DigestPosts_digestId").using(
@@ -2074,6 +2075,7 @@ export const posts = pgTable(
     generateDraftJargon: boolean().default(false).notNull(),
     coauthorUserIds: text().array().default([""]).notNull(),
     marginalFundingOrg: text(),
+    onsiteDigestAt: timestamp(),
   },
   (table) => [
     index("idx_Posts_agentFoundationsId").using(

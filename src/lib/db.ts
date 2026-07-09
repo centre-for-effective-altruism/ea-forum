@@ -139,6 +139,10 @@ const relations = defineRelations(
           collectionName: "Posts",
         },
       }),
+      digestPost: r.many.digestPosts({
+        from: r.posts._id,
+        to: r.digestPosts.postId,
+      }),
     },
     sequences: {
       user: r.one.users({
