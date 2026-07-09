@@ -7,6 +7,7 @@ import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
 import { fetchTagBySlug, postTagsProjection } from "../tags/tagQueries";
+import { filterNonNull } from "../typeHelpers";
 import { nDaysAgo } from "../timeUtils";
 import {
   htmlSubstring,
@@ -24,7 +25,6 @@ import {
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
-const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 
 // TODO: Maybe this should be a function that takes the current user and does
 // permission checks
@@ -377,47 +377,6 @@ export const fetchPingbackPosts = async (
     },
   });
 
-export const fetchSidebarOpportunities = (
-  currentUserId: string | null,
-  limit: number,
-) => {
-  const tagId = process.env.OPPORTUNITIES_TAG_ID;
-  if (!tagId) {
-    console.warn("Opportunities tag ID is not configured");
-    return Promise.resolve([]);
-  }
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: false,
-      sticky: false,
-      groupId: { isNull: true },
-      frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
-      RAW: (postsTable: typeof posts) =>
-        sql`(${postsTable.tagRelevance}->>${tagId})::FLOAT >= 1`,
-    },
-    orderBy: magicSort(),
-    limit,
-  });
-};
-
-export const fetchSidebarEvents = (currentUserId: string | null, limit: number) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: true,
-      startTime: { gt: new Date().toISOString() },
-    },
-    orderBy: {
-      startTime: "asc",
-      baseScore: "desc",
-      _id: "desc",
-    },
-    limit,
-  });
-};
-
 export const fetchMoreFromAuthorPostsList = async ({
   currentUserId,
   postId,
@@ -635,4 +594,34 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
   });
   const order = new Map(postIds.map((id, i) => [id, i]));
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
+};
+
+export const fetchFeaturedFrontpagePosts = async ({
+  currentUser,
+  offset,
+  limit,
+}: {
+  currentUser: CurrentUser | null;
+  offset?: number;
+  limit?: number;
+}): Promise<PostListItem[]> => {
+  const results = await db.query.digestPosts.findMany({
+    columns: {},
+    with: {
+      post: {
+        ...postsListProjection(currentUser?._id ?? null),
+        where: viewablePostFilter,
+      },
+    },
+    where: {
+      onsiteDigestStatus: "yes",
+    },
+    orderBy: {
+      createdAt: "desc",
+      _id: "desc",
+    },
+    offset: Math.min(offset ?? 0, 1000),
+    limit: Math.min(limit ?? 10, 50),
+  });
+  return filterNonNull(results.map(({ post }) => post));
 };

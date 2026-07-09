@@ -1,4 +1,4 @@
-import type { CSSProperties, ElementType, MouseEvent, ReactNode } from "react";
+import type { CSSProperties, ElementType, MouseEvent, ReactNode, Ref } from "react";
 
 export const typeStyles = {
   body: "font-sans text-[14px] font-[450]",
@@ -14,6 +14,7 @@ export const typeStyles = {
     "font-serif text-[19px] font-[430] tracking-tight [&_em]:tracking-[0.02em] [&_i]:tracking-[0.02em]",
   postTitle: "font-sans text-[16px] font-[600]",
   voteScore: "font-sans text-[16px] font-[500]",
+  homePageTab: "font-sans text-[24px] font-[700] leading-[24px] tracking-[-0.5px]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[28px]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
@@ -37,6 +38,7 @@ export default function Type({
   As = "div",
   className = "",
   cssStyle,
+  innerRef,
   children,
   ...rest
 }: Readonly<{
@@ -47,12 +49,14 @@ export default function Type({
   disabled?: boolean;
   onClick?: (ev: MouseEvent) => void;
   cssStyle?: CSSProperties;
+  innerRef?: Ref<HTMLElement | null>;
   className?: string;
   children: ReactNode;
 }>) {
   return (
     <As
       {...rest}
+      ref={innerRef}
       style={cssStyle}
       className={`${typeStyles[style]} ${className}`}
       data-component="Type"

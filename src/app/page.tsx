@@ -1,13 +1,9 @@
-import { Suspense } from "react";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import StructuredData from "@/components/StructuredData";
 import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
-import HomePageFeedSkeleton from "@/components/HomePage/HomePageFeedSkeleton";
-import HomePageFeed from "@/components/HomePage/HomePageFeed";
-import HomePageTabBarSkeleton from "@/components/HomePage/HomePageTagBarSkeleton";
-import HomePageTagBar from "@/components/HomePage/HomePageTagBar";
+import HomePageTabs from "@/components/HomePage/HomePageTabs";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -38,10 +34,13 @@ export default async function HomePage({
   searchParams: Promise<NextSearchParams>;
 }) {
   const search = await searchParams;
+  void search; // TODO
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
+      <HomePageTabs />
+      {/*
       <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
         <HomePageTagBar className="mb-4" />
       </Suspense>
@@ -53,6 +52,7 @@ export default async function HomePage({
       >
         <HomePageFeed search={search} />
       </Suspense>
+        */}
     </HomePageColumns>
   );
 }
