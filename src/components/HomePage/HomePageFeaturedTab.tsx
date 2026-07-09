@@ -1,10 +1,16 @@
 "use client";
 
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import { useHomePage } from "./HomePageContext";
+import ClientPopularCommentsList from "./ClientPopularCommentsList";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
 import Type from "../Type";
 
-export default function HomePageFeaturedTab() {
+export default function HomePageFeaturedTab({
+  initialPopularComments,
+}: Readonly<{
+  initialPopularComments: CommentListItem[];
+}>) {
   const { currentTab, featuredPosts, curatedPost } = useHomePage();
   if (currentTab !== "featured") {
     return null;
@@ -34,7 +40,10 @@ export default function HomePageFeaturedTab() {
         ))}
       </section>
       <section>
-        <Type style="sectionTitleLarge">Popular comments</Type>
+        <Type style="sectionTitleLarge" className="mb-4">
+          Popular comments
+        </Type>
+        <ClientPopularCommentsList initialComments={initialPopularComments} />
       </section>
       <section className="grid grid-cols-3 gap-1">
         {switchingPosts.map((post) => (
