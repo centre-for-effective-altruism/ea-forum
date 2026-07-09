@@ -598,8 +598,8 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
 
 export const fetchFeaturedFrontpagePosts = async ({
   currentUser,
-  offset,
-  limit,
+  offset = 0,
+  limit = 10,
 }: {
   currentUser: CurrentUser | null;
   offset?: number;
@@ -608,20 +608,23 @@ export const fetchFeaturedFrontpagePosts = async ({
   const results = await db.query.digestPosts.findMany({
     columns: {},
     with: {
-      post: {
-        ...postsListProjection(currentUser?._id ?? null),
-        where: viewablePostFilter,
-      },
+      post: postsListProjection(currentUser?._id ?? null),
     },
     where: {
       onsiteDigestStatus: "yes",
+      post: {
+        ...viewablePostFilter,
+        // The most recently curated post is always shown first and that is
+        // fetched separately, so we should skip it here.
+        _id: { ne: "mnLqdvnpKiudivyfv" },
+      },
     },
     orderBy: {
       createdAt: "desc",
       _id: "desc",
     },
-    offset: Math.min(offset ?? 0, 1000),
-    limit: Math.min(limit ?? 10, 50),
+    offset,
+    limit: Math.min(limit, 50),
   });
   return filterNonNull(results.map(({ post }) => post));
 };

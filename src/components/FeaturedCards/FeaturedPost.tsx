@@ -59,7 +59,10 @@ export default function FeaturedPost({
   const isCommunity = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
     ? !!tags?.some(({ _id }) => _id === process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID)
     : false;
-  const imageUrl = getPostSocialImageUrl(post, { width: 250, dpr: "auto" });
+  const imageUrl = getPostSocialImageUrl(post, {
+    width: large ? 700 : 450,
+    dpr: "auto",
+  });
 
   const { onClick } = useClickableCell({
     href,

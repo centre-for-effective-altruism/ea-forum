@@ -15,7 +15,7 @@ export default async function HomePageContent({
 }>) {
   const currentUser = await getCurrentUser();
   const [featuredPosts, curatedPost] = await Promise.all([
-    fetchFeaturedFrontpagePosts({ currentUser, limit: 10, offset: 0 }),
+    fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
     fetchMostRecentlyCuratedPost(currentUser),
   ]);
   return (
