@@ -62,7 +62,9 @@ export default function HomePageTabs({
           }}
           className={clsx(
             "cursor-pointer relative pb-2",
-            name === currentTab ? "text-gray-1000" : "text-gray-400",
+            name === currentTab
+              ? "text-gray-1000"
+              : "text-gray-400 hover:text-gray-500 transition-all",
           )}
         >
           {label}

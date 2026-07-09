@@ -41,7 +41,7 @@ export default function HomePageFeaturedTab({
       </section>
       <section>
         <Type style="sectionTitleLarge" className="mb-4">
-          Popular comments
+          Popular comments and quick takes
         </Type>
         <ClientPopularCommentsList initialComments={initialPopularComments} />
       </section>

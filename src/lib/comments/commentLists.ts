@@ -409,7 +409,6 @@ export const fetchPopularComments = async ({
       FROM "Comments"
       WHERE
         CURRENT_TIMESTAMP - "postedAt" < '1 week'::INTERVAL
-        AND "shortform" IS NOT TRUE
         AND "baseScore" >= ${minScore}
         AND "retracted" IS NOT TRUE
         AND "deleted" IS NOT TRUE
@@ -427,7 +426,6 @@ export const fetchPopularComments = async ({
       AND p."deletedDraft" IS NOT TRUE
       AND p."isFuture" IS NOT TRUE
       AND p."unlisted" IS NOT TRUE
-      AND p."shortform" IS NOT TRUE
       AND p."authorIsUnreviewed" IS NOT TRUE
       AND p."hiddenRelatedQuestion" IS NOT TRUE
       AND p."isEvent" IS NOT TRUE
