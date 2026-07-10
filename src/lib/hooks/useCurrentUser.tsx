@@ -64,7 +64,6 @@ export function CurrentUserProvider({
           }
         : null,
     );
-    posthog.reset();
     if (currentUser) {
       posthog.identify(currentUser._id, {
         email: currentUser.email ?? undefined,
@@ -72,7 +71,7 @@ export function CurrentUserProvider({
         clientId,
       });
     } else {
-      posthog.identify(`logged-out-${clientId}`, { clientId });
+      posthog.identify(clientId, { clientId });
     }
   }, [currentUser, clientId]);
 
