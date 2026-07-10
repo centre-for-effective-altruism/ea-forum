@@ -7,8 +7,8 @@ import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { getDefaultFilterSettings } from "@/lib/filterSettings";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import ClientFrontpagePostsList from "./ClientFrontpagePostsList";
-import PostsList from "./PostsList";
 import TextLinkButton from "../TextLinkButton";
+import PostsList from "./PostsList";
 
 export default async function FrontpagePostsList() {
   const currentUser = await getCurrentUser();

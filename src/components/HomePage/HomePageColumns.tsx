@@ -20,7 +20,7 @@ export default function HomePageColumns({
         "
       >
         <Nav className="max-mobile-nav:hidden sticky top-[98px] self-start" />
-        <div className="w-full max-w-[1500px] mx-auto">{children}</div>
+        <div className="w-full max-w-[1200px] mx-auto">{children}</div>
       </div>
     </AnalyticsContext>
   );
