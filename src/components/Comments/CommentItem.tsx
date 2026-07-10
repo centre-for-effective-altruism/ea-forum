@@ -101,14 +101,15 @@ export default function CommentItem({
     !draft &&
     !!post?.readStatus?.[0]?.lastUpdated &&
     new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
-  const collapsedBecauseRepliedTo =
-    commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew;
   const repliesBlockedUntil = commentRepliesBlockedUntil(comment);
 
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
+  const [collapsedBecauseRepliedTo, setCollapsedBecauseRepliedTo] = useState(
+    commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew,
+  );
   const [isExpanded, setIsExpanded] = useState(
     !draft && !startCollapsed && !collapsedBecauseRepliedTo,
   );
@@ -123,6 +124,9 @@ export default function CommentItem({
   const toggleExpanded = useCallback(() => {
     setIsExpanded((expanded) => {
       const newExpanded = !expanded;
+      if (newExpanded) {
+        setCollapsedBecauseRepliedTo(false);
+      }
       onToggleExpanded?.(newExpanded, node);
       return newExpanded;
     });
@@ -188,6 +192,7 @@ export default function CommentItem({
     if (draft) {
       setIsExpanded(true);
       setIsEditing(true);
+      setCollapsedBecauseRepliedTo(false);
     }
   }, [draft]);
 
@@ -335,7 +340,10 @@ export default function CommentItem({
                 <Link
                   href={commentGetPageUrl({ comment })}
                   onClick={copyLink}
-                  className="flex items-center h-6 px-1 rounded text-gray-600 hover:bg-item-hover"
+                  className="
+                    flex items-center h-6 px-1 rounded text-gray-600
+                    hover:bg-item-hover
+                  "
                 >
                   <LinkIcon className="w-[16px]" />
                 </Link>
@@ -447,7 +455,7 @@ export default function CommentItem({
         )}
       </article>
       {loadingReplies && <Loading />}
-      {children.length > 0 && (
+      {children.length > 0 && (isExpanded || collapsedBecauseRepliedTo) && (
         <div>
           {children.map((node) => (
             <CommentItem node={node} key={node.comment._id} />

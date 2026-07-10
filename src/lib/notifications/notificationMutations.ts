@@ -68,7 +68,7 @@ export const createNotification = async ({
       documentId,
       extraData,
     }),
-    notificationType.getLink?.({
+    notificationType.getLink({
       documentType,
       documentId,
       extraData,
