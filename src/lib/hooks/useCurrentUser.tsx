@@ -71,7 +71,7 @@ export function CurrentUserProvider({
         clientId,
       });
     } else {
-      posthog.identify(clientId, { clientId });
+      posthog.identify(`clientId-${clientId}`, { clientId });
     }
   }, [currentUser, clientId]);
 
