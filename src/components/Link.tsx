@@ -29,6 +29,13 @@ export default function Link({
 
   const onClick = useCallback(
     (ev: MouseEvent<HTMLAnchorElement>) => {
+      if (href?.[0] === "#") {
+        ev.preventDefault();
+        document.getElementById(href.slice(1))?.scrollIntoView({
+          block: "start",
+          behavior: "smooth",
+        });
+      }
       captureEvent("linkClicked", { to: href, buttonPressed: ev.button });
       onClick_?.(ev);
     },
