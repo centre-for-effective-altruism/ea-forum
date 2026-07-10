@@ -24,6 +24,12 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
   ui_host: "https://us.posthog.com",
   defaults: "2026-01-30",
   capture_exceptions: true,
+  persistence: "localStorage+cookie",
+  loaded: (ph) => {
+    ph.register({
+      environment: process.env.NEXT_PUBLIC_ENVIRONMENT,
+    });
+  },
   // Set this to true to enable verbose posthog logs in the console
   debug: false,
 });

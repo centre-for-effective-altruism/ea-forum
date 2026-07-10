@@ -5,6 +5,7 @@ import { useTheme } from "@/lib/hooks/useTheme";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userGetProfileUrl, userGetStatsUrl } from "@/lib/users/userHelpers";
 import { rpc } from "@/lib/rpc";
+import posthog from "posthog-js";
 import AdjustmentsHorizontalIcon from "@heroicons/react/24/outline/AdjustmentsHorizontalIcon";
 import PencilSquareIcon from "@heroicons/react/24/outline/PencilSquareIcon";
 import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
@@ -36,6 +37,7 @@ export default function UserDropdownMenu({
 
   const onLogout = useCallback(async () => {
     await rpc.users.logout();
+    posthog.reset();
     window.location.reload();
   }, []);
 
