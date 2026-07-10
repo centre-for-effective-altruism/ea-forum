@@ -36,8 +36,8 @@ export const postGetPageUrl = ({
   isAbsolute,
 }: {
   post: Pick<Post, "_id" | "slug"> & Partial<Pick<Post, "isEvent" | "groupId">>;
-  isAbsolute?: boolean;
   sequenceId?: string;
+  isAbsolute?: boolean;
 }) => {
   const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
   if (sequenceId) {
