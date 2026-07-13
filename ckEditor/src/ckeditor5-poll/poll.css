@@ -55,6 +55,34 @@
   background: var(--palette-grey-300);
 }
 
+/* Multiple-choice authoring fields: show either the slider group or the
+   multiple-choice group depending on the selected poll's type. */
+.ck-reset_all .ck-poll-form-mc-group {
+  display: none;
+  gap: 4px;
+}
+.ck-reset_all .ck-poll-form--mc .ck-poll-form-slider-group {
+  display: none;
+}
+.ck-reset_all .ck-poll-form--mc .ck-poll-form-mc-group {
+  display: flex;
+  flex-direction: column;
+}
+.ck-reset_all .ck-poll-answers-input {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+.ck-reset_all .ck-poll-multiselect-toggle {
+  align-self: flex-start;
+  margin-top: 6px;
+  cursor: pointer;
+  font-family: var(--palette-fonts-sansSerifStack);
+}
+.ck-reset_all .ck-poll-multiselect-toggle.ck-on {
+  font-weight: 700;
+}
+
 .ck.ck.ck.ck.ck.ck-poll-balloon {
   box-shadow: none;
   background: none;
@@ -156,6 +184,38 @@
   margin: 10px 40px;
 }
 .ck-poll-label {
+  font-weight: 500;
+  color: var(--forum-event-banner-text);
+}
+
+/* Multiple-choice poll preview (in-editor only; not part of the saved HTML) */
+.ck-poll-mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 20px 0;
+}
+.ck-poll-mc-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  text-align: left;
+  border: 1px solid color-mix(in oklab, var(--forum-event-foreground) 22%, transparent);
+}
+.ck-poll-mc-bullet {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklab, var(--forum-event-foreground) 60%, transparent);
+}
+.ck-poll-mc-bullet-square {
+  border-radius: 4px;
+}
+.ck-poll-mc-label {
+  flex: 1;
   font-weight: 500;
   color: var(--forum-event-banner-text);
 }

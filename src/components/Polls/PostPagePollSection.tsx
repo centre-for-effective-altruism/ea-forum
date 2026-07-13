@@ -12,6 +12,7 @@ import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
 import ForumEventPoll from "./ForumEventPoll";
+import ForumEventMcPoll from "./ForumEventMcPoll";
 import Link from "../Link";
 import Type from "../Type";
 
@@ -90,7 +91,8 @@ export default function PostPagePollSection({
     bannerImageId,
   } = event;
 
-  if (eventFormat !== "POLL" || (isGlobal && !postId)) {
+  const isPoll = eventFormat === "POLL" || eventFormat === "MC_POLL";
+  if (!isPoll || (isGlobal && !postId)) {
     return null;
   }
 
@@ -167,11 +169,15 @@ export default function PostPagePollSection({
           >
             <LinkIcon className="block w-4 opacity-80" />
           </button>
-          <ForumEventPoll
-            event={event}
-            refetchEvent={refetchEvent}
-            hideViewResults={event.isGlobal}
-          />
+          {eventFormat === "MC_POLL" ? (
+            <ForumEventMcPoll event={event} refetchEvent={refetchEvent} />
+          ) : (
+            <ForumEventPoll
+              event={event}
+              refetchEvent={refetchEvent}
+              hideViewResults={event.isGlobal}
+            />
+          )}
         </div>
       </div>
     </AnalyticsContext>

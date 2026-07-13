@@ -1,7 +1,12 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { addPollVote, removePollVote } from "./forumEventMutations";
+import {
+  addPollVote,
+  removePollVote,
+  addMcPollVote,
+  removeMcPollVote,
+} from "./forumEventMutations";
 import { fetchForumEventById } from "./forumEventQueries";
 
 export const forumEventsRouter = {
@@ -32,5 +37,28 @@ export const forumEventsRouter = {
         throw new Error("Please login");
       }
       await removePollVote(currentUser, forumEventId);
+    }),
+  addMcVote: os
+    .input(
+      z.object({
+        forumEventId: z.string().nonempty(),
+        answerId: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { forumEventId, answerId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await addMcPollVote({ currentUser, forumEventId, answerId });
+    }),
+  removeMcVote: os
+    .input(z.object({ forumEventId: z.string().nonempty() }))
+    .handler(async ({ input: { forumEventId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await removeMcPollVote(currentUser, forumEventId);
     }),
 };

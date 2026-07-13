@@ -4,8 +4,9 @@ import { toWidget } from "@ckeditor/ckeditor5-widget/src/utils";
 import Widget from "@ckeditor/ckeditor5-widget/src/widget";
 import PollForm, { DEFAULT_POLL_DURATION, POLL_COLOR_SCHEMES } from "./poll-form";
 import pollIcon from "./poll-icon.svg";
+import mcPollIcon from "./mc-poll-icon.svg";
 import { randomId } from "../random";
-import { POLL_CLASS, PollProps } from "./constants";
+import { POLL_CLASS, PollProps, isMultipleChoicePoll } from "./constants";
 import ModelElement from "@ckeditor/ckeditor5-engine/src/model/element";
 import ViewElement from "@ckeditor/ckeditor5-engine/src/view/element";
 import { DowncastWriter } from "@ckeditor/ckeditor5-engine";
@@ -17,6 +18,63 @@ const DEFAULT_PROPS: PollProps = {
   colorScheme: POLL_COLOR_SCHEMES[0],
   duration: DEFAULT_POLL_DURATION,
 };
+
+// Multiple-choice polls reuse the slider defaults (colour/duration/wording) and
+// add an answer list. agree/disagree wording is unused here but kept so the
+// shared `PollProps` shape stays satisfied.
+function mcDefaultProps(): PollProps {
+  return {
+    ...DEFAULT_PROPS,
+    multiSelect: false,
+    answers: [
+      { _id: randomId(), text: "Answer 1" },
+      { _id: randomId(), text: "Answer 2" },
+    ],
+  };
+}
+
+/** Build the in-editor preview for a multiple-choice poll. */
+function insertMcPollChildren(
+  viewWriter: DowncastWriter,
+  container: ViewElement,
+  props: PollProps,
+) {
+  const questionContainer = viewWriter.createContainerElement("div", {
+    class: `${POLL_CLASS}-question`,
+  });
+  viewWriter.insert(
+    viewWriter.createPositionAt(questionContainer, 0),
+    viewWriter.createText(props.question),
+  );
+  viewWriter.insert(viewWriter.createPositionAt(container, "end"), questionContainer);
+
+  const optionsContainer = viewWriter.createContainerElement("div", {
+    class: `${POLL_CLASS}-mc-options`,
+  });
+  for (const answer of props.answers ?? []) {
+    const option = viewWriter.createContainerElement("div", {
+      class: `${POLL_CLASS}-mc-option`,
+    });
+    const bulletClasses = [`${POLL_CLASS}-mc-bullet`];
+    if (props.multiSelect) {
+      bulletClasses.push(`${POLL_CLASS}-mc-bullet-square`);
+    }
+    const bullet = viewWriter.createEmptyElement("div", {
+      class: bulletClasses,
+    });
+    const label = viewWriter.createContainerElement("div", {
+      class: `${POLL_CLASS}-mc-label`,
+    });
+    viewWriter.insert(
+      viewWriter.createPositionAt(label, 0),
+      viewWriter.createText(answer.text),
+    );
+    viewWriter.insert(viewWriter.createPositionAt(option, "end"), bullet);
+    viewWriter.insert(viewWriter.createPositionAt(option, "end"), label);
+    viewWriter.insert(viewWriter.createPositionAt(optionsContainer, "end"), option);
+  }
+  viewWriter.insert(viewWriter.createPositionAt(container, "end"), optionsContainer);
+}
 
 /** Helper function to update a text value in the editor view */
 function updateViewElementText(
@@ -67,6 +125,32 @@ export default class PollPlugin extends Plugin {
     this._defineSchema();
     this._defineConverters();
 
+    const insertPoll = (props: PollProps) => {
+      const model = editor.model;
+
+      model.change((writer) => {
+        const uniqueId = randomId();
+        const selection = editor.model.document.selection;
+        const currentElement = selection.getFirstPosition().parent;
+        let insertPosition;
+
+        if (currentElement.childCount > 0) {
+          insertPosition = writer.createPositionAfter(
+            currentElement as AnyBecauseTodo,
+          );
+        } else {
+          insertPosition = writer.createPositionAt(currentElement, 0);
+        }
+
+        const pollElement = writer.createElement("poll", {
+          id: uniqueId,
+          props,
+        });
+
+        model.insertContent(pollElement, insertPosition);
+      });
+    };
+
     editor.ui.componentFactory.add("pollToolbarItem", (locale) => {
       const toolbarButton = new ButtonView(locale);
 
@@ -75,31 +159,20 @@ export default class PollPlugin extends Plugin {
       toolbarButton.icon = pollIcon;
       toolbarButton.tooltip = true;
 
-      toolbarButton.on("execute", () => {
-        const model = editor.model;
+      toolbarButton.on("execute", () => insertPoll({ ...DEFAULT_PROPS }));
 
-        model.change((writer) => {
-          const uniqueId = randomId();
-          const selection = editor.model.document.selection;
-          const currentElement = selection.getFirstPosition().parent;
-          let insertPosition;
+      return toolbarButton;
+    });
 
-          if (currentElement.childCount > 0) {
-            insertPosition = writer.createPositionAfter(
-              currentElement as AnyBecauseTodo,
-            );
-          } else {
-            insertPosition = writer.createPositionAt(currentElement, 0);
-          }
+    editor.ui.componentFactory.add("mcPollToolbarItem", (locale) => {
+      const toolbarButton = new ButtonView(locale);
 
-          const pollElement = writer.createElement("poll", {
-            id: uniqueId,
-            props: { ...DEFAULT_PROPS },
-          });
+      toolbarButton.isEnabled = true;
+      toolbarButton.label = editor.t("Insert multiple-choice poll");
+      toolbarButton.icon = mcPollIcon;
+      toolbarButton.tooltip = true;
 
-          model.insertContent(pollElement, insertPosition);
-        });
-      });
+      toolbarButton.on("execute", () => insertPoll(mcDefaultProps()));
 
       return toolbarButton;
     });
@@ -137,6 +210,13 @@ export default class PollPlugin extends Plugin {
             --forum-event-foreground: ${colorScheme.lightColor};
           `,
         });
+
+        if (isMultipleChoicePoll(props)) {
+          insertMcPollChildren(viewWriter, container, props);
+          return toWidget(container, viewWriter, {
+            label: "Multiple-choice poll widget",
+          });
+        }
 
         const questionContainer = viewWriter.createContainerElement("div", {
           class: `${POLL_CLASS}-question`,
@@ -220,6 +300,29 @@ export default class PollPlugin extends Plugin {
           editor.editing.mapper.toViewElement(pollModelElement);
         if (!pollViewElement) return;
 
+        const { colorScheme } = props;
+        const applyColorScheme = () => {
+          if (colorScheme) {
+            viewWriter.setStyle(
+              {
+                "--forum-event-background": colorScheme.darkColor,
+                "--forum-event-banner-text": colorScheme.bannerTextColor,
+                "--forum-event-foreground": colorScheme.lightColor,
+              },
+              pollViewElement,
+            );
+          }
+        };
+
+        if (isMultipleChoicePoll(props)) {
+          // The answer list is dynamic, so rebuild the preview's contents from
+          // scratch rather than trying to patch individual rows.
+          viewWriter.remove(viewWriter.createRangeIn(pollViewElement));
+          insertMcPollChildren(viewWriter, pollViewElement, props);
+          applyColorScheme();
+          return;
+        }
+
         // Update text content
         updateViewElementText(
           viewWriter,
@@ -240,18 +343,7 @@ export default class PollPlugin extends Plugin {
           props.agreeWording,
         );
 
-        // Update color scheme
-        const { colorScheme } = props;
-        if (colorScheme) {
-          viewWriter.setStyle(
-            {
-              "--forum-event-background": colorScheme.darkColor,
-              "--forum-event-banner-text": colorScheme.bannerTextColor,
-              "--forum-event-foreground": colorScheme.lightColor,
-            },
-            pollViewElement,
-          );
-        }
+        applyColorScheme();
       },
     });
 

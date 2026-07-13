@@ -9,9 +9,13 @@ import { isAnyTest } from "../environment";
 import { updateWithFieldChanges } from "../fieldChanges";
 import {
   addUserPollVote,
+  addUserMcPollVote,
   buildForumEventRevisions,
   removeUserPollVote,
+  removeUserMcPollVote,
   setLatestPollVote,
+  setLatestMcPollVote,
+  setMcPollOptions,
 } from "./forumEventQueries";
 import {
   forumEvents,
@@ -24,7 +28,10 @@ import {
 import {
   endDateFromDuration,
   ForumEventPollVote,
+  getMcPollPublicData,
+  McPollPublicData,
   PollProps,
+  pollPropsIsMultipleChoice,
   pollPropsSchema,
   revisionIsAllowedPolls,
 } from "./forumEventHelpers";
@@ -102,7 +109,94 @@ const updateForumEvent = async ({
   });
 };
 
-/** Upsert a ForumEvent with eventFormat = "POLL" */
+/**
+ * Shared create/update path for both poll formats. Computes the shared fields
+ * (endDate — fixed once the parent is published — colour columns, post/comment
+ * links, revisioned question) and dispatches create vs update. `formatData`
+ * carries the format-specific columns, `publicData` seeds a new event, and
+ * `afterUpdate` runs format-specific follow-up on the update path (e.g.
+ * refreshing multiple-choice answers without clobbering votes).
+ */
+const persistPoll = async ({
+  txn,
+  user,
+  _id,
+  post,
+  comment,
+  existingPoll,
+  duration,
+  question,
+  colorScheme,
+  formatData,
+  publicData,
+  afterUpdate,
+}: {
+  txn: DbOrTransaction;
+  user: CurrentUser;
+  _id: string;
+  post: Pick<Post, "_id" | "draft">;
+  comment?: Pick<Comment, "_id" | "draft">;
+  existingPoll?: Pick<ForumEvent, "_id" | "endDate">;
+  duration: PollProps["duration"];
+  question: string;
+  colorScheme: PollProps["colorScheme"];
+  formatData: UpdateForumEventData;
+  publicData?: McPollPublicData;
+  afterUpdate?: (documentId: string) => Promise<void>;
+}) => {
+  const parentIsDraft = comment ? comment.draft : post.draft;
+  // Poll timer starts when the post/comment is published. Don't update the end
+  // date after that.
+  const endDate =
+    existingPoll?.endDate ??
+    (parentIsDraft ? null : endDateFromDuration(duration).toISOString());
+  const pollQuestion = {
+    data: `<p>${question}</p>`,
+    type: "ckEditorMarkup" as const,
+  };
+  const data = {
+    ...formatData,
+    endDate,
+    ...colorScheme,
+    postId: post._id,
+    commentId: comment?._id,
+  };
+  if (existingPoll) {
+    await updateForumEvent({
+      txn,
+      user,
+      documentId: existingPoll._id,
+      data,
+      pollQuestion,
+    });
+    await afterUpdate?.(existingPoll._id);
+    return;
+  }
+  await createForumEvent({
+    txn,
+    user,
+    pollQuestion,
+    data: {
+      _id,
+      title: `New Poll for ${_id}`,
+      startDate: new Date().toISOString(),
+      isGlobal: false,
+      ...(publicData !== undefined ? { publicData } : {}),
+      ...data,
+    },
+  });
+};
+
+type UpsertPollArgs = {
+  txn: DbOrTransaction;
+  user: CurrentUser;
+  _id: string;
+  existingPoll?: Pick<ForumEvent, "_id" | "endDate">;
+  post: Pick<Post, "_id" | "draft">;
+  comment?: Pick<Comment, "_id" | "draft">;
+} & PollProps;
+
+/** Upsert a ForumEvent with eventFormat = "POLL" (agree/disagree slider) */
 const upsertPoll = ({
   txn,
   user,
@@ -115,53 +209,54 @@ const upsertPoll = ({
   disagreeWording,
   colorScheme,
   duration,
-}: {
-  txn: DbOrTransaction;
-  user: CurrentUser;
-  _id: string;
-  existingPoll?: Pick<ForumEvent, "_id" | "endDate">;
-  post: Pick<Post, "_id" | "draft">;
-  comment?: Pick<Comment, "_id" | "draft">;
-} & PollProps) => {
-  const parentIsDraft = comment ? comment.draft : post.draft;
-  // Poll timer starts when the post/comment is published. Don't update the end
-  // date after that.
-  const endDate =
-    existingPoll?.endDate ??
-    (parentIsDraft ? null : endDateFromDuration(duration).toISOString());
-  const pollQuestion = {
-    data: `<p>${question}</p>`,
-    type: "ckEditorMarkup" as const,
-  };
-  const data = {
-    eventFormat: "POLL" as const,
-    pollAgreeWording: agreeWording,
-    pollDisagreeWording: disagreeWording,
-    endDate,
-    ...colorScheme,
-    postId: post._id,
-    commentId: comment?._id,
-  };
-  if (existingPoll) {
-    return updateForumEvent({
-      txn,
-      user,
-      documentId: existingPoll._id,
-      data,
-      pollQuestion,
-    });
-  }
-  return createForumEvent({
+}: UpsertPollArgs) =>
+  persistPoll({
     txn,
     user,
-    pollQuestion,
-    data: {
-      _id,
-      title: `New Poll for ${_id}`,
-      startDate: new Date().toISOString(),
-      isGlobal: false,
-      ...data,
+    _id,
+    post,
+    comment,
+    existingPoll,
+    duration,
+    question,
+    colorScheme,
+    formatData: {
+      eventFormat: "POLL",
+      pollAgreeWording: agreeWording,
+      pollDisagreeWording: disagreeWording,
     },
+  });
+
+/** Upsert a ForumEvent with eventFormat = "MC_POLL" (multiple-choice poll) */
+const upsertMcPoll = ({
+  txn,
+  user,
+  _id,
+  post,
+  comment,
+  existingPoll,
+  question,
+  answers,
+  multiSelect,
+  colorScheme,
+  duration,
+}: UpsertPollArgs) => {
+  const answerList = answers ?? [];
+  return persistPoll({
+    txn,
+    user,
+    _id,
+    post,
+    comment,
+    existingPoll,
+    duration,
+    question,
+    colorScheme,
+    formatData: { eventFormat: "MC_POLL" },
+    publicData: { answers: answerList, multiSelect: !!multiSelect, votes: {} },
+    // Update the answer options/mode without clobbering existing votes.
+    afterUpdate: (documentId) =>
+      setMcPollOptions(txn, documentId, answerList, !!multiSelect),
   });
 };
 
@@ -231,9 +326,27 @@ export const upsertPolls = async ({
       const existingPoll = existingPolls.find(
         (poll) => poll && poll._id === data._id,
       );
-      return upsertPoll({ txn, user, ...data, post, comment, existingPoll });
+      return pollPropsIsMultipleChoice(data)
+        ? upsertMcPoll({ txn, user, ...data, post, comment, existingPoll })
+        : upsertPoll({ txn, user, ...data, post, comment, existingPoll });
     }),
   );
+};
+
+/**
+ * Assert a fetched forum event exists and its voting window is still open,
+ * returning the (narrowed) event. Shared by every poll vote mutation.
+ */
+const assertPollVotingOpen = <T extends { endDate: string | Date | null }>(
+  event: T | undefined | null,
+): T => {
+  if (!event) {
+    throw new Error("Event not found");
+  }
+  if (event.endDate && new Date(event.endDate) < new Date()) {
+    throw new Error("Cannot edit vote after voting has closed");
+  }
+  return event;
 };
 
 export const addPollVote = async ({
@@ -249,25 +362,21 @@ export const addPollVote = async ({
   delta?: number;
   postIds?: string[];
 }) => {
-  const event = await db.query.forumEvents.findFirst({
-    columns: {
-      _id: true,
-      endDate: true,
-    },
-    where: {
-      _id: forumEventId,
-    },
-    extras: {
-      oldVote: (forumEvents) =>
-        sql<ForumEventPollVote>`${forumEvents.publicData}->${currentUser._id}`,
-    },
-  });
-  if (!event) {
-    throw new Error("Event not found");
-  }
-  if (event?.endDate && new Date(event.endDate) < new Date()) {
-    throw new Error("Cannot edit vote after voting has closed");
-  }
+  const event = assertPollVotingOpen(
+    await db.query.forumEvents.findFirst({
+      columns: {
+        _id: true,
+        endDate: true,
+      },
+      where: {
+        _id: forumEventId,
+      },
+      extras: {
+        oldVote: (forumEvents) =>
+          sql<ForumEventPollVote>`${forumEvents.publicData}->${currentUser._id}`,
+      },
+    }),
+  );
 
   const voteData: ForumEventPollVote = {
     x,
@@ -299,25 +408,102 @@ export const removePollVote = async (
   currentUser: CurrentUser,
   forumEventId: string,
 ) => {
-  const event = await db.query.forumEvents.findFirst({
-    columns: {
-      _id: true,
-      endDate: true,
-    },
-    where: {
-      _id: forumEventId,
-    },
-  });
-  if (!event) {
-    throw new Error("Event not found");
-  }
-  if (event.endDate && new Date(event.endDate) < new Date()) {
-    throw new Error("Cannot edit vote after voting has closed");
-  }
+  const event = assertPollVotingOpen(
+    await db.query.forumEvents.findFirst({
+      columns: {
+        _id: true,
+        endDate: true,
+      },
+      where: {
+        _id: forumEventId,
+      },
+    }),
+  );
   await db.transaction(async (txn) => {
     await Promise.all([
       removeUserPollVote(txn, currentUser, event),
       setLatestPollVote(txn, currentUser, event, null),
+    ]);
+  });
+};
+
+/**
+ * Cast (or, in multi-select polls, toggle) a vote in a multiple-choice poll.
+ * The server derives replace-vs-toggle from the poll's own `multiSelect` flag,
+ * so the client only sends the clicked `answerId`. Returns the user's resulting
+ * selection.
+ */
+export const addMcPollVote = async ({
+  currentUser,
+  forumEventId,
+  answerId,
+}: {
+  currentUser: CurrentUser;
+  forumEventId: string;
+  answerId: string;
+}) => {
+  const event = assertPollVotingOpen(
+    await db.query.forumEvents.findFirst({
+      columns: {
+        _id: true,
+        endDate: true,
+        publicData: true,
+      },
+      where: {
+        _id: forumEventId,
+      },
+    }),
+  );
+
+  const pollData = getMcPollPublicData(event);
+  if (!pollData.answers.some((answer) => answer._id === answerId)) {
+    throw new Error("Unknown answer");
+  }
+
+  const currentAnswerIds = pollData.votes[currentUser._id]?.answerIds ?? [];
+  const newAnswerIds = pollData.multiSelect
+    ? currentAnswerIds.includes(answerId)
+      ? currentAnswerIds.filter((id) => id !== answerId)
+      : [...currentAnswerIds, answerId]
+    : [answerId];
+
+  await db.transaction(async (txn) => {
+    if (newAnswerIds.length === 0) {
+      // Toggled the last selection off in a multi-select poll
+      await Promise.all([
+        removeUserMcPollVote(txn, currentUser, event),
+        setLatestMcPollVote(txn, currentUser, event, null),
+      ]);
+    } else {
+      await Promise.all([
+        addUserMcPollVote(txn, currentUser, event, { answerIds: newAnswerIds }),
+        setLatestMcPollVote(txn, currentUser, event, newAnswerIds),
+      ]);
+    }
+  });
+
+  return newAnswerIds;
+};
+
+export const removeMcPollVote = async (
+  currentUser: CurrentUser,
+  forumEventId: string,
+) => {
+  const event = assertPollVotingOpen(
+    await db.query.forumEvents.findFirst({
+      columns: {
+        _id: true,
+        endDate: true,
+      },
+      where: {
+        _id: forumEventId,
+      },
+    }),
+  );
+  await db.transaction(async (txn) => {
+    await Promise.all([
+      removeUserMcPollVote(txn, currentUser, event),
+      setLatestMcPollVote(txn, currentUser, event, null),
     ]);
   });
 };

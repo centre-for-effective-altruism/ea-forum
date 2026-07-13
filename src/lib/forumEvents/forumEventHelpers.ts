@@ -3,7 +3,12 @@ import type { Revision } from "../schema";
 import { ForumEventBase } from "./forumEventQueries";
 import { CurrentUser } from "../users/currentUser";
 
-const forumEventFormatSchema = z.enum(["BASIC", "POLL", "STICKERS"] as const);
+const forumEventFormatSchema = z.enum([
+  "BASIC",
+  "POLL",
+  "MC_POLL",
+  "STICKERS",
+] as const);
 
 export type ForumEventFormat = z.infer<typeof forumEventFormatSchema>;
 
@@ -38,6 +43,22 @@ export type ForumEventPollVote = {
   points: Record<string, number>;
 };
 
+/** An answer option for a multiple-choice poll. */
+export type McPollAnswer = { _id: string; text: string };
+
+/** A single user's vote in a multiple-choice poll (one or more answer ids). */
+export type McPollVote = { answerIds: string[] };
+
+/**
+ * Shape of `ForumEvents.publicData` for an `MC_POLL` event. The answer options
+ * and every user's vote live here, so no schema/table change is needed.
+ */
+export type McPollPublicData = {
+  answers: McPollAnswer[];
+  multiSelect: boolean;
+  votes: Record<string, McPollVote>;
+};
+
 export const forumEventCommentMetadataSchema = z.object({
   eventFormat: forumEventFormatSchema,
   sticker: forumEventStickerInputSchema.nullable().optional(),
@@ -50,6 +71,19 @@ export const forumEventCommentMetadataSchema = z.object({
        * null and voteWhenPublished will have the latest vote
        */
       latestVote: z.number().nullable().optional(),
+      /** _id of the revision of the question when the comment was published */
+      pollQuestionWhenPublished: z.string().nullable().optional(),
+      /** The content that is prefilled into the comment box after voting */
+      commentPrompt: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  mcPoll: z
+    .object({
+      /** The answer ids the user had selected when the comment was published */
+      answerIdsWhenPublished: z.array(z.string()),
+      /** The user's latest selection, if it has changed since publishing */
+      latestAnswerIds: z.array(z.string()).nullable().optional(),
       /** _id of the revision of the question when the comment was published */
       pollQuestionWhenPublished: z.string().nullable().optional(),
       /** The content that is prefilled into the comment box after voting */
@@ -94,9 +128,18 @@ export const pollPropsSchema = z.object({
     hours: z.number().min(0),
     minutes: z.number().min(0),
   }),
+  // Present only for multiple-choice polls. When `answers` is set the poll is
+  // upserted as an `MC_POLL` rather than the agree/disagree slider `POLL`.
+  answers: z.array(z.object({ _id: z.string(), text: z.string() })).optional(),
+  multiSelect: z.boolean().optional(),
 });
 
 export type PollProps = z.infer<typeof pollPropsSchema>;
+
+export const pollPropsIsMultipleChoice = (
+  props: PollProps,
+): props is PollProps & { answers: McPollAnswer[] } =>
+  Array.isArray(props.answers);
 
 const ONE_MINUTE_MS = 60 * 1000;
 const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
@@ -123,3 +166,33 @@ export const getForumEventVoteForUser = (
 
 export const getForumEventVoteCount = (event: ForumEventBase) =>
   Object.keys(event.publicData || {}).length;
+
+/**
+ * Read the `MC_POLL` payload out of `publicData`, tolerating a not-yet-voted
+ * event (empty votes) and legacy/empty data.
+ */
+export const getMcPollPublicData = (
+  event: Pick<ForumEventBase, "publicData"> | null | undefined,
+): McPollPublicData => {
+  const data = (event?.publicData ?? {}) as Partial<McPollPublicData>;
+  return {
+    answers: data.answers ?? [],
+    multiSelect: !!data.multiSelect,
+    votes: data.votes ?? {},
+  };
+};
+
+export const getMcPollAnswers = (
+  event: Pick<ForumEventBase, "publicData"> | null | undefined,
+): McPollAnswer[] => getMcPollPublicData(event).answers;
+
+/** The current user's selected answer ids, or null if they haven't voted. */
+export const getMcPollVoteForUser = (
+  event: Pick<ForumEventBase, "publicData"> | null | undefined,
+  user: CurrentUser | null,
+): string[] | null => {
+  if (!user) {
+    return null;
+  }
+  return getMcPollPublicData(event).votes[user._id]?.answerIds ?? null;
+};

@@ -20,7 +20,13 @@ import type Writer from "@ckeditor/ckeditor5-engine/src/model/writer";
 import submitHandler from "@ckeditor/ckeditor5-ui/src/bindings/submithandler";
 
 import "./poll.css";
-import { PollProps } from "./constants";
+import {
+  PollProps,
+  PollAnswer,
+  MAX_POLL_ANSWERS,
+  isMultipleChoicePoll,
+} from "./constants";
+import { randomId } from "../random";
 
 export const DEFAULT_POLL_DURATION = { days: 7, hours: 0, minutes: 0 };
 
@@ -37,6 +43,8 @@ class MainFormView extends View {
   questionView: InputTextView;
   agreeWordingView: InputTextView;
   disagreeWordingView: InputTextView;
+  answersView: InputTextView;
+  multiSelectButton: ButtonView;
   colorSchemeButtons: ButtonView[];
   daysInputView: InputTextView;
   hoursInputView: InputTextView;
@@ -59,6 +67,8 @@ class MainFormView extends View {
       questionView,
       agreeWordingView,
       disagreeWordingView,
+      answersView,
+      multiSelectButton,
       colorSchemeButtons,
       daysInputView,
       hoursInputView,
@@ -67,6 +77,8 @@ class MainFormView extends View {
     this.questionView = questionView;
     this.agreeWordingView = agreeWordingView;
     this.disagreeWordingView = disagreeWordingView;
+    this.answersView = answersView;
+    this.multiSelectButton = multiSelectButton;
     this.colorSchemeButtons = colorSchemeButtons;
     this.daysInputView = daysInputView;
     this.hoursInputView = hoursInputView;
@@ -99,7 +111,7 @@ class MainFormView extends View {
         {
           tag: "div",
           attributes: {
-            class: ["ck-poll-form-row"],
+            class: ["ck-poll-form-row", "ck-poll-form-slider-group"],
           },
           children: [
             {
@@ -134,6 +146,23 @@ class MainFormView extends View {
                 agreeWordingView,
               ],
             },
+          ],
+        },
+        {
+          tag: "div",
+          attributes: {
+            class: ["ck-poll-form-group", "ck-poll-form-mc-group"],
+          },
+          children: [
+            {
+              tag: "div",
+              attributes: {
+                class: ["ck-poll-form-label"],
+              },
+              children: [`Answers (one per line, up to ${MAX_POLL_ANSWERS})`],
+            },
+            answersView,
+            multiSelectButton,
           ],
         },
         {
@@ -226,6 +255,8 @@ class MainFormView extends View {
       this.questionView,
       this.disagreeWordingView,
       this.agreeWordingView,
+      this.answersView,
+      this.multiSelectButton,
       ...this.colorSchemeButtons,
       this.daysInputView,
       this.hoursInputView,
@@ -380,6 +411,69 @@ class MainFormView extends View {
       });
     });
 
+    // Create answers textarea (multiple-choice polls). One answer per line;
+    // empty lines are ignored and the list is capped at MAX_POLL_ANSWERS.
+    const answersView = new InputTextView(this.locale);
+    const answersBind = answersView.bindTemplate;
+    answersView.setTemplate({
+      tag: "textarea",
+      attributes: {
+        type: "text",
+        class: ["ck-poll-form-input", "ck-poll-answers-input"],
+        id: answersBind.to("id"),
+        rows: "5",
+        readonly: false,
+      },
+      on: {
+        input: answersBind.to("input"),
+      },
+    });
+    (answersView as AnyBecauseTodo).label = "Answers";
+    answersView.on("input", () => {
+      const model = this.editor.model;
+      const selectedElement = this.selectedElement;
+      if (!selectedElement) return;
+
+      model.change((writer: Writer) => {
+        const props = selectedElement.getAttribute("props") as PollProps;
+        // Preserve existing answer ids by position so edits to a published
+        // poll's wording don't orphan votes that reference those ids.
+        const previousAnswers = props.answers ?? [];
+        const answers: PollAnswer[] = answersView.element.value
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .slice(0, MAX_POLL_ANSWERS)
+          .map((text, index) => ({
+            _id: previousAnswers[index]?._id ?? randomId(),
+            text,
+          }));
+
+        writer.setAttribute("props", { ...props, answers }, selectedElement);
+      });
+    });
+
+    // Create the single/multi-select toggle (multiple-choice polls)
+    const multiSelectButton = new ButtonView(this.locale);
+    multiSelectButton.withText = true;
+    multiSelectButton.isToggleable = true;
+    multiSelectButton.label = "Allow selecting multiple answers";
+    multiSelectButton.on("render", () => {
+      multiSelectButton.element.classList.add("ck-poll-multiselect-toggle");
+    });
+    multiSelectButton.on("execute", () => {
+      const model = this.editor.model;
+      const selectedElement = this.selectedElement;
+      if (!selectedElement) return;
+
+      model.change((writer: Writer) => {
+        const props = selectedElement.getAttribute("props") as PollProps;
+        const multiSelect = !props.multiSelect;
+        writer.setAttribute("props", { ...props, multiSelect }, selectedElement);
+        multiSelectButton.isOn = multiSelect;
+      });
+    });
+
     // Create color scheme buttons
     const colorSchemeButtons = POLL_COLOR_SCHEMES.map((colorScheme, index) => {
       const buttonView = new ButtonView(this.locale);
@@ -485,6 +579,8 @@ class MainFormView extends View {
       questionView,
       agreeWordingView,
       disagreeWordingView,
+      answersView,
+      multiSelectButton,
       colorSchemeButtons,
       daysInputView,
       hoursInputView,
@@ -584,6 +680,8 @@ export default class PollForm extends Plugin {
         btn.isOn = currentIndex === btnIndex;
       });
 
+      this._syncMultipleChoiceFields(pollProps);
+
       return; // Don't add the view again
     }
 
@@ -620,6 +718,22 @@ export default class PollForm extends Plugin {
     this.formView.colorSchemeButtons.forEach((btn, btnIndex) => {
       btn.isOn = currentIndex === btnIndex;
     });
+
+    this._syncMultipleChoiceFields(pollProps);
+  }
+
+  /**
+   * Reflect a poll's multiple-choice state into the form: toggle which fields
+   * are shown (via a root class) and fill the answers textarea + multi-select
+   * toggle.
+   */
+  _syncMultipleChoiceFields(pollProps: PollProps) {
+    const isMc = isMultipleChoicePoll(pollProps);
+    this.formView.element.classList.toggle("ck-poll-form--mc", isMc);
+    this.formView.answersView.element.value = (pollProps.answers ?? [])
+      .map((answer) => answer.text)
+      .join("\n");
+    this.formView.multiSelectButton.isOn = !!pollProps.multiSelect;
   }
 
   _closeFormView() {

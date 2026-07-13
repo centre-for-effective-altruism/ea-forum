@@ -13,6 +13,8 @@ import {
   ForumEventPollVote,
   ForumEventSticker,
   ForumEventStickerData,
+  McPollAnswer,
+  McPollVote,
 } from "./forumEventHelpers";
 
 export type ForumEventRelationalProjection = RelationalProjection<
@@ -291,6 +293,103 @@ export const setLatestPollVote = async (
             WHEN ${latestVote}::FLOAT IS NULL THEN 'null'::JSONB
             ELSE TO_JSONB(${latestVote}::FLOAT)
           END
+        )
+      `,
+    })
+    .where(
+      and(
+        eq(comments.forumEventId, event._id),
+        eq(comments.userId, currentUser._id),
+      ),
+    );
+};
+
+/**
+ * Write a multiple-choice poll's answer options + mode into `publicData`
+ * without touching the `votes` sub-object (so edits don't wipe existing votes).
+ */
+export const setMcPollOptions = async (
+  db: DbOrTransaction,
+  forumEventId: string,
+  answers: McPollAnswer[],
+  multiSelect: boolean,
+) => {
+  await db.execute(sql`
+    -- setMcPollOptions
+    UPDATE "ForumEvents"
+    SET "publicData" = JSONB_SET(
+      JSONB_SET(
+        COALESCE("publicData", '{}'::JSONB),
+        '{answers}',
+        ${JSON.stringify(answers)}::JSONB,
+        true
+      ),
+      '{multiSelect}',
+      ${JSON.stringify(multiSelect)}::JSONB,
+      true
+    )
+    WHERE "_id" = ${forumEventId}
+  `);
+};
+
+export const addUserMcPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  vote: McPollVote,
+) => {
+  // Ensure the `votes` object exists, then set this user's entry within it.
+  await db.execute(sql`
+    -- addUserMcPollVote
+    UPDATE "ForumEvents"
+    SET "publicData" = JSONB_SET(
+      JSONB_SET(
+        COALESCE("publicData", '{}'::JSONB),
+        '{votes}',
+        COALESCE("publicData"->'votes', '{}'::JSONB),
+        true
+      ),
+      ARRAY['votes', ${currentUser._id}],
+      ${JSON.stringify(vote)}::JSONB,
+      true
+    )
+    WHERE "_id" = ${event._id}
+  `);
+};
+
+export const removeUserMcPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+) => {
+  await db.execute(sql`
+    -- removeUserMcPollVote
+    UPDATE "ForumEvents"
+    SET "publicData" = JSONB_SET(
+      COALESCE("publicData", '{}'::JSONB),
+      '{votes}',
+      COALESCE("publicData"->'votes', '{}'::JSONB) - ${currentUser._id},
+      true
+    )
+    WHERE "_id" = ${event._id}
+  `);
+};
+
+export const setLatestMcPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  latestAnswerIds: string[] | null,
+) => {
+  const value = latestAnswerIds === null ? "null" : JSON.stringify(latestAnswerIds);
+  await db
+    .update(comments)
+    .set({
+      forumEventMetadata: sql`
+        JSONB_SET(
+          ${comments.forumEventMetadata},
+          '{mcPoll,latestAnswerIds}',
+          ${value}::JSONB
         )
       `,
     })
