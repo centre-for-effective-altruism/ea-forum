@@ -12,6 +12,7 @@ import {
   removeMcPollVote,
 } from "@/lib/forumEvents/forumEventMutations";
 import {
+  forumEventIsMcPoll,
   getMcPollPublicData,
   McPollAnswer,
 } from "@/lib/forumEvents/forumEventHelpers";
@@ -78,7 +79,10 @@ suite("Multiple-choice polls", () => {
       });
       const event = await fetchForumEventById("mc-create");
       expect(event).toBeTruthy();
-      expect(event!.eventFormat).toBe("MC_POLL");
+      // MC polls share the slider's "POLL" eventFormat (the shared table only
+      // permits the existing values); they're identified via publicData.
+      expect(event!.eventFormat).toBe("POLL");
+      expect(forumEventIsMcPoll(event)).toBe(true);
       const data = getMcPollPublicData(event);
       expect(data.answers.map((a) => a.text)).toEqual([
         "Global health",
@@ -250,7 +254,7 @@ suite("Multiple-choice polls", () => {
       await db.insert(forumEvents).values({
         _id: "mc-closed",
         title: "Closed poll",
-        eventFormat: "MC_POLL",
+        eventFormat: "POLL",
         startDate: new Date("2000-01-01").toISOString(),
         endDate: new Date("2000-01-02").toISOString(),
         createdAt: new Date("2000-01-01").toISOString(),
@@ -280,7 +284,7 @@ suite("Multiple-choice polls", () => {
       await db.insert(forumEvents).values({
         _id: "mc-agg",
         title: "Aggregation poll",
-        eventFormat: "MC_POLL",
+        eventFormat: "POLL",
         startDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         publicData: {

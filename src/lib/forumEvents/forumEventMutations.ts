@@ -254,11 +254,13 @@ const upsertMcPoll = ({
     duration,
     question,
     colorScheme,
-    // The shared "ForumEvents" table (owned by the older codebase) has NOT NULL
-    // agree/disagree wording columns; the slider always fills them, so populate
-    // them here too even though the multiple-choice display ignores them.
+    // Store multiple-choice polls with the same shape as the slider so the row
+    // is accepted by the shared "ForumEvents" table (owned by the older
+    // codebase): its `eventFormat` column only permits the existing values, and
+    // its agree/disagree wording columns are NOT NULL. The multiple-choice
+    // variant is identified by `publicData.answers`, not by `eventFormat`.
     formatData: {
-      eventFormat: "MC_POLL",
+      eventFormat: "POLL",
       pollAgreeWording: agreeWording,
       pollDisagreeWording: disagreeWording,
     },

@@ -3,7 +3,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
-import { getForumEventVoteForUser } from "@/lib/forumEvents/forumEventHelpers";
+import {
+  forumEventIsMcPoll,
+  getForumEventVoteForUser,
+} from "@/lib/forumEvents/forumEventHelpers";
 import { makeCloudinaryImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
@@ -91,6 +94,7 @@ export default function PostPagePollSection({
     bannerImageId,
   } = event;
 
+  const isMcPoll = forumEventIsMcPoll(event);
   const isPoll = eventFormat === "POLL" || eventFormat === "MC_POLL";
   if (!isPoll || (isGlobal && !postId)) {
     return null;
@@ -169,7 +173,7 @@ export default function PostPagePollSection({
           >
             <LinkIcon className="block w-4 opacity-80" />
           </button>
-          {eventFormat === "MC_POLL" ? (
+          {isMcPoll ? (
             <ForumEventMcPoll event={event} refetchEvent={refetchEvent} />
           ) : (
             <ForumEventPoll

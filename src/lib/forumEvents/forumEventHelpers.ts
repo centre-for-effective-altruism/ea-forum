@@ -186,6 +186,19 @@ export const getMcPollAnswers = (
   event: Pick<ForumEventBase, "publicData"> | null | undefined,
 ): McPollAnswer[] => getMcPollPublicData(event).answers;
 
+/**
+ * Whether a forum event is a multiple-choice poll. Both poll formats are stored
+ * with `eventFormat = "POLL"` in the shared `ForumEvents` table (its
+ * `eventFormat` column rejects other values), so the multiple-choice variant is
+ * distinguished by the presence of `answers` in `publicData`.
+ */
+export const forumEventIsMcPoll = (
+  event: Pick<ForumEventBase, "publicData"> | null | undefined,
+): boolean => {
+  const data = (event?.publicData ?? {}) as Partial<McPollPublicData>;
+  return Array.isArray(data.answers);
+};
+
 /** The current user's selected answer ids, or null if they haven't voted. */
 export const getMcPollVoteForUser = (
   event: Pick<ForumEventBase, "publicData"> | null | undefined,
