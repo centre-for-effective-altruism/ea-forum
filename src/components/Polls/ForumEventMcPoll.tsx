@@ -46,15 +46,22 @@ export default function ForumEventMcPoll({
   const { currentUser } = useCurrentUser();
   const { captureEvent } = useTracking();
 
-  const [currentUserAnswerIds, setCurrentUserAnswerIds] = useState<
-    string[] | null
-  >(() => getMcPollVoteForUser(event, currentUser));
+  // `selectedAnswerIds` is the reader's current (possibly unsubmitted) choice;
+  // `submittedAnswerIds` is what's actually saved on the server. For
+  // single-select they move together (a click submits immediately); for
+  // multi-select the selection is built up locally and committed on "Submit".
+  const [selectedAnswerIds, setSelectedAnswerIds] = useState<string[]>(
+    () => getMcPollVoteForUser(event, currentUser) ?? [],
+  );
+  const [submittedAnswerIds, setSubmittedAnswerIds] = useState<string[]>(
+    () => getMcPollVoteForUser(event, currentUser) ?? [],
+  );
   const [resultsVisible, setResultsVisible] = useState(false);
   const [commentFormOpen, setCommentFormOpen] = useState(false);
   const [voters, setVoters] = useState<UserBase[] | null>(null);
   const [comments, setComments] = useState<CommentListItem[] | null>(null);
 
-  const hasVoted = (currentUserAnswerIds?.length ?? 0) > 0;
+  const hasVoted = submittedAnswerIds.length > 0;
   const votingOpen = !event.endDate || new Date(event.endDate) > new Date();
 
   const pollData = useMemo(
@@ -112,8 +119,38 @@ export default function ForumEventMcPoll({
 
   const votesLoading = voters === null;
 
-  const handleVote = useCallback(
-    async (answerId: string) => {
+  const submitVote = useCallback(
+    async (answerIds: string[], autoPromptComment: boolean) => {
+      if (!currentUser) {
+        onLogin();
+        return;
+      }
+      try {
+        const saved = await rpc.forumEvents.addMcVote({
+          forumEventId: event._id,
+          answerIds,
+        });
+        setSelectedAnswerIds(saved);
+        setSubmittedAnswerIds(saved);
+        if (autoPromptComment && saved.length > 0 && event.post) {
+          setCommentFormOpen(true);
+        }
+        void refetchEvent();
+        captureEvent("addMcPollVote", {
+          forumEventId: event._id,
+          userId: currentUser._id,
+          answerIds: saved,
+        });
+      } catch (e) {
+        toast.error((e as Error).message || "Something went wrong");
+        captureException(e);
+      }
+    },
+    [currentUser, event._id, event.post, onLogin, refetchEvent, captureEvent],
+  );
+
+  const handleSelect = useCallback(
+    (answerId: string) => {
       if (!votingOpen) {
         return;
       }
@@ -121,39 +158,32 @@ export default function ForumEventMcPoll({
         onLogin();
         return;
       }
-
-      const wasFirstVote = !hasVoted;
-      try {
-        const newAnswerIds = await rpc.forumEvents.addMcVote({
-          forumEventId: event._id,
-          answerId,
-        });
-        setCurrentUserAnswerIds(newAnswerIds);
-        if (wasFirstVote && newAnswerIds.length > 0 && event.post) {
-          setCommentFormOpen(true);
-        }
-        void refetchEvent();
-        captureEvent("addMcPollVote", {
-          forumEventId: event._id,
-          userId: currentUser._id,
-          answerId,
-        });
-      } catch (e) {
-        toast.error((e as Error).message || "Something went wrong");
-        captureException(e);
+      if (multiSelect) {
+        // Toggle locally; committed when the reader clicks "Submit vote".
+        setSelectedAnswerIds((prev) =>
+          prev.includes(answerId)
+            ? prev.filter((id) => id !== answerId)
+            : [...prev, answerId],
+        );
+      } else {
+        // Single-select: one decisive click, submit and prompt for a comment.
+        void submitVote([answerId], true);
       }
     },
-    [
-      votingOpen,
-      currentUser,
-      hasVoted,
-      event._id,
-      event.post,
-      onLogin,
-      refetchEvent,
-      captureEvent,
-    ],
+    [votingOpen, currentUser, multiSelect, onLogin, submitVote],
   );
+
+  const handleSubmit = useCallback(
+    () => submitVote(selectedAnswerIds, true),
+    [submitVote, selectedAnswerIds],
+  );
+
+  // Submit (multi-select) is enabled only when there's a non-empty selection
+  // that differs from what's already been submitted.
+  const selectionChanged =
+    selectedAnswerIds.length !== submittedAnswerIds.length ||
+    selectedAnswerIds.some((id) => !submittedAnswerIds.includes(id));
+  const submitDisabled = selectedAnswerIds.length === 0 || !selectionChanged;
 
   const questionNode = useMemo(() => createQuestionNode(event), [event]);
 
@@ -169,7 +199,7 @@ export default function ForumEventMcPoll({
     eventFormat: "MC_POLL",
     sticker: null,
     mcPoll: {
-      answerIdsWhenPublished: currentUserAnswerIds ?? [],
+      answerIdsWhenPublished: submittedAnswerIds,
       latestAnswerIds: null,
       pollQuestionWhenPublished: event.pollQuestion?._id ?? null,
       commentPrompt,
@@ -213,14 +243,14 @@ export default function ForumEventMcPoll({
 
         <div className="flex flex-col gap-2">
           {results.map((row) => {
-            const selected = !!currentUserAnswerIds?.includes(row.answer._id);
+            const selected = selectedAnswerIds.includes(row.answer._id);
             const shownVoters = row.voters.slice(-MAX_ROW_AVATARS);
             const overflow = row.voters.length - shownVoters.length;
             return (
               <button
                 key={row.answer._id}
                 type="button"
-                onClick={() => handleVote(row.answer._id)}
+                onClick={() => handleSelect(row.answer._id)}
                 disabled={!votingOpen}
                 className={clsx(
                   `relative flex items-center gap-3 px-3.5 py-3 rounded-md
@@ -312,7 +342,11 @@ export default function ForumEventMcPoll({
           <Loading colorClassName="bg-gray-1000" className="mt-3" />
         )}
 
-        {/* Anchor for the post-vote comment prompt popover */}
+        {/* Multi-select commits the selection via "Submit vote", which then
+            opens the comment prompt. Single-select commits on click and
+            auto-opens the prompt (see handleSelect), so it only needs an
+            invisible anchor for the popover. */}
+        <div className="flex justify-center mt-4">
         <ForumEventCommentForm
           isOpen={commentFormOpen}
           setIsOpen={setCommentFormOpen}
@@ -325,7 +359,7 @@ export default function ForumEventMcPoll({
           commentPrompt={commentPrompt}
           forumEventMetadata={forumEventMetadata}
           parentCommentId={event.comment?._id}
-          className="block"
+          className="inline-block"
           title={() => "What made you vote this way?"}
           subtitle={(post, comment) => (
             <div>
@@ -353,8 +387,26 @@ export default function ForumEventMcPoll({
             </div>
           )}
         >
-          <span className="block w-full" />
+          {multiSelect && votingOpen ? (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitDisabled}
+              className={clsx(
+                `px-4 py-1.5 rounded-md text-sm font-semibold
+                 bg-(--forum-event-foreground) text-(--forum-event-background)`,
+                submitDisabled
+                  ? "opacity-50 cursor-default"
+                  : "cursor-pointer hover:opacity-90",
+              )}
+            >
+              Submit vote
+            </button>
+          ) : (
+            <span className="block" />
+          )}
         </ForumEventCommentForm>
+        </div>
       </section>
     </AnalyticsContext>
   );

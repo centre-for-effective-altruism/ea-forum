@@ -42,15 +42,15 @@ export const forumEventsRouter = {
     .input(
       z.object({
         forumEventId: z.string().nonempty(),
-        answerId: z.string().nonempty(),
+        answerIds: z.array(z.string().nonempty()).max(50),
       }),
     )
-    .handler(async ({ input: { forumEventId, answerId } }) => {
+    .handler(async ({ input: { forumEventId, answerIds } }) => {
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         throw new Error("Please login");
       }
-      return await addMcPollVote({ currentUser, forumEventId, answerId });
+      return await addMcPollVote({ currentUser, forumEventId, answerIds });
     }),
   removeMcVote: os
     .input(z.object({ forumEventId: z.string().nonempty() }))

@@ -98,7 +98,7 @@ suite("Multiple-choice polls", () => {
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-edit",
-        answerId: "a1",
+        answerIds: ["a1"],
       });
 
       // Re-save with reworded a1 and an extra answer
@@ -137,19 +137,35 @@ suite("Multiple-choice polls", () => {
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-single",
-        answerId: "a1",
+        answerIds: ["a1"],
       });
       expect(await voteIdsFor("mc-single", user._id)).toEqual(["a1"]);
 
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-single",
-        answerId: "a2",
+        answerIds: ["a2"],
       });
       expect(await voteIdsFor("mc-single", user._id)).toEqual(["a2"]);
     });
 
-    test("multi-select toggles answers in and out", async () => {
+    test("single-select keeps only the first answer even if more are sent", async () => {
+      const { user } = await createMcPoll("mc-single-clamp", {
+        answers: [
+          { _id: "a1", text: "A" },
+          { _id: "a2", text: "B" },
+        ],
+        multiSelect: false,
+      });
+      await addMcPollVote({
+        currentUser: user,
+        forumEventId: "mc-single-clamp",
+        answerIds: ["a1", "a2"],
+      });
+      expect(await voteIdsFor("mc-single-clamp", user._id)).toEqual(["a1"]);
+    });
+
+    test("multi-select stores the submitted set", async () => {
       const { user } = await createMcPoll("mc-multi", {
         answers: [
           { _id: "a1", text: "A" },
@@ -161,28 +177,23 @@ suite("Multiple-choice polls", () => {
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-multi",
-        answerId: "a1",
-      });
-      await addMcPollVote({
-        currentUser: user,
-        forumEventId: "mc-multi",
-        answerId: "a2",
+        answerIds: ["a1", "a2"],
       });
       expect((await voteIdsFor("mc-multi", user._id))?.sort()).toEqual([
         "a1",
         "a2",
       ]);
 
-      // Toggle a1 back off
+      // Re-submitting a smaller set replaces the previous one
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-multi",
-        answerId: "a1",
+        answerIds: ["a2"],
       });
       expect(await voteIdsFor("mc-multi", user._id)).toEqual(["a2"]);
     });
 
-    test("toggling off the last multi-select answer removes the vote", async () => {
+    test("submitting an empty set removes the vote", async () => {
       const { user } = await createMcPoll("mc-empty", {
         answers: [{ _id: "a1", text: "A" }],
         multiSelect: true,
@@ -190,12 +201,12 @@ suite("Multiple-choice polls", () => {
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-empty",
-        answerId: "a1",
+        answerIds: ["a1"],
       });
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-empty",
-        answerId: "a1",
+        answerIds: [],
       });
       expect(await voteIdsFor("mc-empty", user._id)).toBeUndefined();
     });
@@ -210,7 +221,7 @@ suite("Multiple-choice polls", () => {
       await addMcPollVote({
         currentUser: user,
         forumEventId: "mc-remove",
-        answerId: "a1",
+        answerIds: ["a1"],
       });
       await removeMcPollVote(user, "mc-remove");
       expect(await voteIdsFor("mc-remove", user._id)).toBeUndefined();
@@ -224,7 +235,7 @@ suite("Multiple-choice polls", () => {
         addMcPollVote({
           currentUser: user,
           forumEventId: "mc-unknown",
-          answerId: "does-not-exist",
+          answerIds: ["does-not-exist"],
         }),
       ).rejects.toThrow("Unknown answer");
     });
@@ -248,7 +259,7 @@ suite("Multiple-choice polls", () => {
         addMcPollVote({
           currentUser: user,
           forumEventId: "mc-closed",
-          answerId: "a1",
+          answerIds: ["a1"],
         }),
       ).rejects.toThrow("voting has closed");
     });

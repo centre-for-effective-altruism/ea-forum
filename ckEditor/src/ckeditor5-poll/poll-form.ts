@@ -50,7 +50,7 @@ class MainFormView extends View {
   agreeWordingView: InputTextView;
   disagreeWordingView: InputTextView;
   answersView: InputTextView;
-  multiSelectButton: ButtonView;
+  multiSelectView: View;
   colorSchemeButtons: ButtonView[];
   daysInputView: InputTextView;
   hoursInputView: InputTextView;
@@ -74,7 +74,7 @@ class MainFormView extends View {
       agreeWordingView,
       disagreeWordingView,
       answersView,
-      multiSelectButton,
+      multiSelectView,
       colorSchemeButtons,
       daysInputView,
       hoursInputView,
@@ -84,7 +84,7 @@ class MainFormView extends View {
     this.agreeWordingView = agreeWordingView;
     this.disagreeWordingView = disagreeWordingView;
     this.answersView = answersView;
-    this.multiSelectButton = multiSelectButton;
+    this.multiSelectView = multiSelectView;
     this.colorSchemeButtons = colorSchemeButtons;
     this.daysInputView = daysInputView;
     this.hoursInputView = hoursInputView;
@@ -168,7 +168,7 @@ class MainFormView extends View {
               children: [`Answers (one per line, up to ${MAX_POLL_ANSWERS})`],
             },
             answersView,
-            multiSelectButton,
+            multiSelectView,
           ],
         },
         {
@@ -262,7 +262,8 @@ class MainFormView extends View {
       this.disagreeWordingView,
       this.agreeWordingView,
       this.answersView,
-      this.multiSelectButton,
+      // multiSelectView is a plain checkbox View without a focus() method, so
+      // it's not part of the focus cycler; the native <input> is still tabbable.
       ...this.colorSchemeButtons,
       this.daysInputView,
       this.hoursInputView,
@@ -459,24 +460,36 @@ class MainFormView extends View {
       });
     });
 
-    // Create the single/multi-select toggle (multiple-choice polls)
-    const multiSelectButton = new ButtonView(this.locale);
-    multiSelectButton.withText = true;
-    multiSelectButton.isToggleable = true;
-    multiSelectButton.label = "Allow selecting multiple answers";
-    multiSelectButton.on("render", () => {
-      multiSelectButton.element.classList.add("ck-poll-multiselect-toggle");
+    // Create the single/multi-select checkbox (multiple-choice polls)
+    const multiSelectView = new View(this.locale);
+    multiSelectView.setTemplate({
+      tag: "label",
+      attributes: { class: ["ck-poll-multiselect-toggle"] },
+      children: [
+        {
+          tag: "input",
+          attributes: {
+            type: "checkbox",
+            class: ["ck-poll-multiselect-checkbox"],
+          },
+          on: {
+            change: multiSelectView.bindTemplate.to("change"),
+          },
+        },
+        {
+          tag: "span",
+          children: ["Allow selecting multiple answers"],
+        },
+      ],
     });
-    multiSelectButton.on("execute", () => {
-      const model = this.editor.model;
+    multiSelectView.on("change", () => {
       const selectedElement = this.selectedElement;
       if (!selectedElement) return;
-
-      model.change((writer: Writer) => {
+      const checkbox = multiSelectView.element?.querySelector("input");
+      const multiSelect = !!checkbox?.checked;
+      this.editor.model.change((writer: Writer) => {
         const props = selectedElement.getAttribute("props") as PollProps;
-        const multiSelect = !props.multiSelect;
         writer.setAttribute("props", { ...props, multiSelect }, selectedElement);
-        multiSelectButton.isOn = multiSelect;
       });
     });
 
@@ -586,7 +599,7 @@ class MainFormView extends View {
       agreeWordingView,
       disagreeWordingView,
       answersView,
-      multiSelectButton,
+      multiSelectView,
       colorSchemeButtons,
       daysInputView,
       hoursInputView,
@@ -739,7 +752,11 @@ export default class PollForm extends Plugin {
     this.formView.answersView.element.value = (pollProps.answers ?? [])
       .map((answer) => answer.text)
       .join("\n");
-    this.formView.multiSelectButton.isOn = !!pollProps.multiSelect;
+    const checkbox =
+      this.formView.multiSelectView.element?.querySelector("input");
+    if (checkbox) {
+      checkbox.checked = !!pollProps.multiSelect;
+    }
   }
 
   _closeFormView() {

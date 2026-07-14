@@ -428,19 +428,18 @@ export const removePollVote = async (
 };
 
 /**
- * Cast (or, in multi-select polls, toggle) a vote in a multiple-choice poll.
- * The server derives replace-vs-toggle from the poll's own `multiSelect` flag,
- * so the client only sends the clicked `answerId`. Returns the user's resulting
- * selection.
+ * Set a user's vote in a multiple-choice poll to the given answer set. The
+ * client sends the full desired selection (a single answer for single-select,
+ * or the submitted set for multi-select). Returns the resulting selection.
  */
 export const addMcPollVote = async ({
   currentUser,
   forumEventId,
-  answerId,
+  answerIds,
 }: {
   currentUser: CurrentUser;
   forumEventId: string;
-  answerId: string;
+  answerIds: string[];
 }) => {
   const event = assertPollVotingOpen(
     await db.query.forumEvents.findFirst({
@@ -456,20 +455,18 @@ export const addMcPollVote = async ({
   );
 
   const pollData = getMcPollPublicData(event);
-  if (!pollData.answers.some((answer) => answer._id === answerId)) {
-    throw new Error("Unknown answer");
+  const validAnswerIds = new Set(pollData.answers.map((answer) => answer._id));
+  // De-dupe, and enforce a single choice server-side for single-select polls.
+  const requested = pollData.multiSelect ? answerIds : answerIds.slice(0, 1);
+  const newAnswerIds = [...new Set(requested)];
+  for (const answerId of newAnswerIds) {
+    if (!validAnswerIds.has(answerId)) {
+      throw new Error("Unknown answer");
+    }
   }
-
-  const currentAnswerIds = pollData.votes[currentUser._id]?.answerIds ?? [];
-  const newAnswerIds = pollData.multiSelect
-    ? currentAnswerIds.includes(answerId)
-      ? currentAnswerIds.filter((id) => id !== answerId)
-      : [...currentAnswerIds, answerId]
-    : [answerId];
 
   await db.transaction(async (txn) => {
     if (newAnswerIds.length === 0) {
-      // Toggled the last selection off in a multi-select poll
       await Promise.all([
         removeUserMcPollVote(txn, currentUser, event),
         setLatestMcPollVote(txn, currentUser, event, null),

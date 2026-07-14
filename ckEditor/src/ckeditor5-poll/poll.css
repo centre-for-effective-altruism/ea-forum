@@ -74,13 +74,21 @@
   line-height: 1.5;
 }
 .ck-reset_all .ck-poll-multiselect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   align-self: flex-start;
   margin-top: 6px;
   cursor: pointer;
   font-family: var(--font-stack-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-gray-1000);
 }
-.ck-reset_all .ck-poll-multiselect-toggle.ck-on {
-  font-weight: 700;
+.ck-reset_all .ck-poll-multiselect-checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
 
 .ck.ck.ck.ck.ck.ck-poll-balloon {
