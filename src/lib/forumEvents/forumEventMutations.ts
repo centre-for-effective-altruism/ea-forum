@@ -238,6 +238,8 @@ const upsertMcPoll = ({
   question,
   answers,
   multiSelect,
+  agreeWording,
+  disagreeWording,
   colorScheme,
   duration,
 }: UpsertPollArgs) => {
@@ -252,7 +254,14 @@ const upsertMcPoll = ({
     duration,
     question,
     colorScheme,
-    formatData: { eventFormat: "MC_POLL" },
+    // The shared "ForumEvents" table (owned by the older codebase) has NOT NULL
+    // agree/disagree wording columns; the slider always fills them, so populate
+    // them here too even though the multiple-choice display ignores them.
+    formatData: {
+      eventFormat: "MC_POLL",
+      pollAgreeWording: agreeWording,
+      pollDisagreeWording: disagreeWording,
+    },
     publicData: { answers: answerList, multiSelect: !!multiSelect, votes: {} },
     // Update the answer options/mode without clobbering existing votes.
     afterUpdate: (documentId) =>

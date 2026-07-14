@@ -86,6 +86,11 @@ suite("Multiple-choice polls", () => {
       ]);
       expect(data.multiSelect).toBe(true);
       expect(data.votes).toEqual({});
+      // The shared "ForumEvents" table has NOT NULL agree/disagree wording
+      // columns, so MC polls must populate them too (else the insert 500s in
+      // production, where those columns are NOT NULL unlike the test schema).
+      expect(event!.pollAgreeWording).toBe("agree");
+      expect(event!.pollDisagreeWording).toBe("disagree");
     });
 
     test("editing answers preserves existing votes", async () => {
