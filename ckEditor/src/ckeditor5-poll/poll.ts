@@ -1,10 +1,17 @@
 import Plugin from "@ckeditor/ckeditor5-core/src/plugin";
-import ButtonView from "@ckeditor/ckeditor5-ui/src/button/buttonview";
 import { toWidget } from "@ckeditor/ckeditor5-widget/src/utils";
 import Widget from "@ckeditor/ckeditor5-widget/src/widget";
+import {
+  createDropdown,
+  addListToDropdown,
+  ListDropdownItemDefinition,
+} from "@ckeditor/ckeditor5-ui/src/dropdown/utils";
+import Model from "@ckeditor/ckeditor5-ui/src/model";
+import Collection from "@ckeditor/ckeditor5-utils/src/collection";
 import PollForm, { DEFAULT_POLL_DURATION, POLL_COLOR_SCHEMES } from "./poll-form";
 import pollIcon from "./poll-icon.svg";
 import mcPollIcon from "./mc-poll-icon.svg";
+import pollDropdownIcon from "./poll-dropdown-icon.svg";
 import { randomId } from "../random";
 import { POLL_CLASS, PollProps, isMultipleChoicePoll } from "./constants";
 import ModelElement from "@ckeditor/ckeditor5-engine/src/model/element";
@@ -154,30 +161,45 @@ export default class PollPlugin extends Plugin {
       });
     };
 
+    const SLIDER_LABEL = "Slider";
+    const MULTIPLE_CHOICE_LABEL = "Multiple choice";
+
+    // A single "Insert poll" dropdown offering the two poll types.
     editor.ui.componentFactory.add("pollToolbarItem", (locale) => {
-      const toolbarButton = new ButtonView(locale);
+      const dropdownView = createDropdown(locale);
+      dropdownView.buttonView.set({
+        label: editor.t("Insert poll"),
+        icon: pollDropdownIcon,
+        tooltip: true,
+      });
 
-      toolbarButton.isEnabled = true;
-      toolbarButton.label = editor.t("Insert poll");
-      toolbarButton.icon = pollIcon;
-      toolbarButton.tooltip = true;
+      const items = new Collection<ListDropdownItemDefinition>();
+      items.add({
+        type: "button",
+        model: new Model({
+          label: SLIDER_LABEL,
+          icon: pollIcon,
+          withText: true,
+        }),
+      });
+      items.add({
+        type: "button",
+        model: new Model({
+          label: MULTIPLE_CHOICE_LABEL,
+          icon: mcPollIcon,
+          withText: true,
+        }),
+      });
+      addListToDropdown(dropdownView, items);
 
-      toolbarButton.on("execute", () => insertPoll({ ...DEFAULT_PROPS }));
+      dropdownView.on("execute", (evt) => {
+        const label = (evt.source as { label?: string }).label;
+        insertPoll(
+          label === MULTIPLE_CHOICE_LABEL ? mcDefaultProps() : { ...DEFAULT_PROPS },
+        );
+      });
 
-      return toolbarButton;
-    });
-
-    editor.ui.componentFactory.add("mcPollToolbarItem", (locale) => {
-      const toolbarButton = new ButtonView(locale);
-
-      toolbarButton.isEnabled = true;
-      toolbarButton.label = editor.t("Insert multiple-choice poll");
-      toolbarButton.icon = mcPollIcon;
-      toolbarButton.tooltip = true;
-
-      toolbarButton.on("execute", () => insertPoll(mcDefaultProps()));
-
-      return toolbarButton;
+      return dropdownView;
     });
   }
 

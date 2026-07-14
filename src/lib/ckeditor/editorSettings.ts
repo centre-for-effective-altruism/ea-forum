@@ -38,7 +38,6 @@ export const commentEditorToolbarConfig = {
     "imageUpload",
     "ctaButtonToolbarItem",
     "pollToolbarItem",
-    "mcPollToolbarItem",
     "footnote",
   ],
 };
