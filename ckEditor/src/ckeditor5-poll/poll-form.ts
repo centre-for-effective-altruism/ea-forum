@@ -107,9 +107,11 @@ class MainFormView extends View {
             {
               tag: "div",
               attributes: {
-                class: ["ck-poll-form-label"],
+                // Label text is switched between "Statement" (slider) and
+                // "Question" (multiple-choice) in `_syncMultipleChoiceFields`.
+                class: ["ck-poll-form-label", "ck-poll-question-label"],
               },
-              children: ["Question"],
+              children: ["Statement"],
             },
             questionView,
           ],
@@ -749,6 +751,13 @@ export default class PollForm extends Plugin {
   _syncMultipleChoiceFields(pollProps: PollProps) {
     const isMc = isMultipleChoicePoll(pollProps);
     this.formView.element.classList.toggle("ck-poll-form--mc", isMc);
+    const questionLabel = this.formView.element?.querySelector(
+      ".ck-poll-question-label",
+    );
+    if (questionLabel) {
+      // The slider is an agree/disagree statement; multiple-choice is a question.
+      questionLabel.textContent = isMc ? "Question" : "Statement";
+    }
     this.formView.answersView.element.value = (pollProps.answers ?? [])
       .map((answer) => answer.text)
       .join("\n");

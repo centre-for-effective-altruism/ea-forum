@@ -12,7 +12,8 @@ import ViewElement from "@ckeditor/ckeditor5-engine/src/view/element";
 import { DowncastWriter } from "@ckeditor/ckeditor5-engine";
 
 const DEFAULT_PROPS: PollProps = {
-  question: "Ask a question",
+  // The slider poll is an agree/disagree statement, not a question.
+  question: "Write a statement",
   agreeWording: "agree",
   disagreeWording: "disagree",
   colorScheme: POLL_COLOR_SCHEMES[0],
@@ -25,6 +26,8 @@ const DEFAULT_PROPS: PollProps = {
 function mcDefaultProps(): PollProps {
   return {
     ...DEFAULT_PROPS,
+    // Unlike the slider, a multiple-choice poll really is a question.
+    question: "Ask a question",
     multiSelect: false,
     answers: [
       { _id: randomId(), text: "Answer 1" },
