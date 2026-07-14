@@ -30,11 +30,17 @@ import { randomId } from "../random";
 
 export const DEFAULT_POLL_DURATION = { days: 7, hours: 0, minutes: 0 };
 
+// Poll colour schemes (v2). Each is a light card background (`darkColor` ->
+// --forum-event-background) with a saturated accent used for the text, slider
+// line, bars and avatar outlines (`lightColor`/`bannerTextColor` ->
+// --forum-event-foreground / --forum-event-banner-text). Order matches the
+// colour picker in the design (neutral, orange, teal, blue, green).
 export const POLL_COLOR_SCHEMES: PollProps["colorScheme"][] = [
-  { darkColor: "#06005C", lightColor: "#FFFFFF", bannerTextColor: "#FFFFFF" },
-  { darkColor: "#1D2A17", lightColor: "#FFFFFF", bannerTextColor: "#FFFFFF" },
-  { darkColor: "#7B3402", lightColor: "#FFFFFF", bannerTextColor: "#FFFFFF" },
-  { darkColor: "#F3F3E1", lightColor: "#222222", bannerTextColor: "#222222" },
+  { darkColor: "#F5F5F5", lightColor: "#000000", bannerTextColor: "#000000" },
+  { darkColor: "#FEF2EE", lightColor: "#D94300", bannerTextColor: "#D94300" },
+  { darkColor: "#EDF6F7", lightColor: "#007584", bannerTextColor: "#007584" },
+  { darkColor: "#EEF5F6", lightColor: "#004A83", bannerTextColor: "#004A83" },
+  { darkColor: "#EEF6F0", lightColor: "#007311", bannerTextColor: "#007311" },
 ];
 
 class MainFormView extends View {
