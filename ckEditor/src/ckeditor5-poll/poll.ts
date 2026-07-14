@@ -167,6 +167,7 @@ export default class PollPlugin extends Plugin {
     // A single "Insert poll" dropdown offering the two poll types.
     editor.ui.componentFactory.add("pollToolbarItem", (locale) => {
       const dropdownView = createDropdown(locale);
+      dropdownView.class = "ck-poll-dropdown";
       dropdownView.buttonView.set({
         label: editor.t("Insert poll"),
         icon: pollDropdownIcon,
