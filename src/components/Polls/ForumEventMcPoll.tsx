@@ -346,7 +346,7 @@ export default function ForumEventMcPoll({
             opens the comment prompt. Single-select commits on click and
             auto-opens the prompt (see handleSelect), so it only needs an
             invisible anchor for the popover. */}
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-end mt-4">
         <ForumEventCommentForm
           isOpen={commentFormOpen}
           setIsOpen={setCommentFormOpen}
