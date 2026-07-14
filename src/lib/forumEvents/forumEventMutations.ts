@@ -486,21 +486,6 @@ export const removeMcPollVote = async (
   currentUser: CurrentUser,
   forumEventId: string,
 ) => {
-  const event = assertPollVotingOpen(
-    await db.query.forumEvents.findFirst({
-      columns: {
-        _id: true,
-        endDate: true,
-      },
-      where: {
-        _id: forumEventId,
-      },
-    }),
-  );
-  await db.transaction(async (txn) => {
-    await Promise.all([
-      removeUserMcPollVote(txn, currentUser, event),
-      setLatestMcPollVote(txn, currentUser, event, null),
-    ]);
-  });
+  // Removing a vote is just submitting an empty selection.
+  await addMcPollVote({ currentUser, forumEventId, answerIds: [] });
 };

@@ -70,9 +70,16 @@ export default function ForumEventMcPoll({
   );
   const multiSelect = pollData.multiSelect;
 
+  // Key the voter fetch on the *set* of voter ids, so changing which answers
+  // you've picked (which mutates publicData.votes values but not its keys)
+  // doesn't re-download the whole voter list.
+  const voterIdsKey = useMemo(
+    () => Object.keys(pollData.votes).slice(0, 1000).join(","),
+    [pollData],
+  );
   const refetchVoters = useCallback(async () => {
     try {
-      const voterIds = Object.keys(pollData.votes).slice(0, 1000);
+      const voterIds = voterIdsKey ? voterIdsKey.split(",") : [];
       const result = voterIds.length
         ? await rpc.users.listByIds({ userIds: voterIds })
         : {};
@@ -81,7 +88,7 @@ export default function ForumEventMcPoll({
       console.error("Error fetching poll voters:", e);
       captureException(e);
     }
-  }, [pollData]);
+  }, [voterIdsKey]);
 
   useEffect(() => {
     void refetchVoters();

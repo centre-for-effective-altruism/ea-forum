@@ -280,36 +280,39 @@ export const aggregateMcPollVotes = ({
       .map((c) => [c.user!._id, c]),
   );
 
-  const counts = new Map<string, number>();
-  const voterDisplays = new Map<string, ForumEventVoteDisplay[]>();
-  for (const answer of answers) {
-    counts.set(answer._id, 0);
-    voterDisplays.set(answer._id, []);
-  }
+  // `count` intentionally tracks every selection (including voters whose user
+  // record wasn't loaded), while `voters` only holds the loaded avatars.
+  const tallies = new Map<string, { count: number; voters: ForumEventVoteDisplay[] }>(
+    answers.map((answer) => [answer._id, { count: 0, voters: [] }]),
+  );
 
   for (const [userId, vote] of Object.entries(votes)) {
     const user = votersById.get(userId);
     const comment = commentsByUserId.get(userId) ?? null;
     for (const answerId of vote.answerIds) {
       // Ignore ids that are no longer part of the poll (e.g. a removed answer)
-      if (!counts.has(answerId)) {
+      const tally = tallies.get(answerId);
+      if (!tally) {
         continue;
       }
-      counts.set(answerId, (counts.get(answerId) ?? 0) + 1);
+      tally.count += 1;
       if (user) {
-        voterDisplays.get(answerId)?.push({ x: 0, user, comment });
+        tally.voters.push({ x: 0, user, comment });
       }
     }
   }
 
-  const totalSelections = Array.from(counts.values()).reduce((a, b) => a + b, 0);
+  const totalSelections = answers.reduce(
+    (sum, answer) => sum + (tallies.get(answer._id)?.count ?? 0),
+    0,
+  );
   const results = answers.map((answer) => {
-    const count = counts.get(answer._id) ?? 0;
+    const { count, voters: answerVoters } = tallies.get(answer._id)!;
     return {
       answer,
       count,
       pct: totalSelections > 0 ? Math.round((count / totalSelections) * 100) : 0,
-      voters: sortVoteDisplays(voterDisplays.get(answer._id) ?? [], currentUser),
+      voters: sortVoteDisplays(answerVoters, currentUser),
     };
   });
 
