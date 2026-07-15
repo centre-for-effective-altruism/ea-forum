@@ -1738,7 +1738,6 @@ export const forumEvents = pgTable(
     frontpageDescriptionMobileLatest: text("frontpageDescriptionMobile_latest"),
     postId: varchar({ length: 27 }),
     customComponent: text(),
-    textColor: text(),
     eventFormat: text().default("BASIC").notNull(),
     maxStickersPerUser: doublePrecision().default(1).notNull(),
     bannerTextColor: text().default("#ffffff").notNull(),

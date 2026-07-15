@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { os, ORPCError } from "@orpc/server";
+import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
@@ -86,60 +86,22 @@ export const commentsRouter = {
         if (!user) {
           throw new Error("You must be logged in to comment");
         }
-        // TEMPORARY DIAGNOSTIC: surface the real server error in the client
-        // toast so we can pin down why poll comments fail on the live DB.
-        // Revert once the poll-comment 500 is understood.
-        try {
-          const commentId = await createPostComment({
-            user,
-            postId,
-            shortform,
-            parentCommentId,
-            editorData,
-            draft,
-            shortformFrontpage,
-            relevantTagIds,
-            forumEventId,
-            forumEventMetadata,
-          });
-          return await fetchCommentsListItem({
-            currentUser: user,
-            commentId,
-          });
-        } catch (e) {
-          // Walk the error/cause chain and pull out the underlying Postgres
-          // fields (message/detail/constraint/column/table), which carry the
-          // real reason the insert was rejected.
-          const parts: string[] = [];
-          let current: unknown = e;
-          for (let depth = 0; current && depth < 5; depth++) {
-            if (current instanceof Error) {
-              parts.push(`${current.name}: ${current.message}`);
-            } else {
-              parts.push(String(current));
-            }
-            const pg = current as Record<string, unknown>;
-            for (const key of [
-              "code",
-              "detail",
-              "constraint",
-              "column",
-              "table",
-            ]) {
-              if (pg[key]) {
-                parts.push(`${key}=${String(pg[key])}`);
-              }
-            }
-            current =
-              current && typeof current === "object" && "cause" in current
-                ? (current as { cause?: unknown }).cause
-                : undefined;
-          }
-          throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            message: `DIAG createPostComment failed — ${parts.join(" | ")}`,
-            cause: e,
-          });
-        }
+        const commentId = await createPostComment({
+          user,
+          postId,
+          shortform,
+          parentCommentId,
+          editorData,
+          draft,
+          shortformFrontpage,
+          relevantTagIds,
+          forumEventId,
+          forumEventMetadata,
+        });
+        return await fetchCommentsListItem({
+          currentUser: user,
+          commentId,
+        });
       },
     ),
   edit: os
