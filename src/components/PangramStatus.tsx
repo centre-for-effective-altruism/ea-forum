@@ -60,7 +60,7 @@ export default function PangramStatus({
         data-component="PangramStatus"
         href="/posts/bxA9fsY9Psgarcq6e/new-ea-forum-llm-use-policy"
         className={clsx(
-          "inline-block border-1 rounded-[100px] px-2 py-0.5 font-sans text-[14px] leading-none",
+          "inline-block border-1 rounded-[100px] px-2 py-0.5 font-sans text-[11px] leading-none",
           "cursor-pointer",
           className,
         )}
