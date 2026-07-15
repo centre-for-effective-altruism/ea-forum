@@ -36,10 +36,11 @@
 }
 
 .ck-reset_all .ck-poll-form-input {
-  background: var(--color-gray-600);
   border-radius: 4px;
-  opacity: 0.8;
   background: var(--color-gray-200);
+  /* A visible outline so the field reads as a box in both light and dark mode
+     (its fill is otherwise nearly the same as the form background in dark). */
+  border: 1px solid var(--color-gray-300);
   min-width: 225px;
   max-width: 490px;
   width: 100%;
@@ -94,10 +95,17 @@
   font-weight: 500;
   color: var(--color-gray-1000);
 }
+/* CKEditor's `.ck-reset_all` forces its own text colour onto child elements,
+   which hides the label on a dark background. Restore the label colour. */
+.ck-reset_all .ck-poll-multiselect-toggle span {
+  color: var(--color-gray-1000);
+}
 .ck-reset_all .ck-poll-multiselect-checkbox {
   width: 14px;
   height: 14px;
   cursor: pointer;
+  /* Render the tick/box in the theme's text colour so it's visible in dark mode. */
+  accent-color: var(--color-gray-1000);
 }
 
 .ck.ck.ck.ck.ck.ck-poll-balloon {
