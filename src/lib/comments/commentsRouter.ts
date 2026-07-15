@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { os } from "@orpc/server";
+import { os, ORPCError } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
@@ -86,22 +86,34 @@ export const commentsRouter = {
         if (!user) {
           throw new Error("You must be logged in to comment");
         }
-        const commentId = await createPostComment({
-          user,
-          postId,
-          shortform,
-          parentCommentId,
-          editorData,
-          draft,
-          shortformFrontpage,
-          relevantTagIds,
-          forumEventId,
-          forumEventMetadata,
-        });
-        return await fetchCommentsListItem({
-          currentUser: user,
-          commentId,
-        });
+        // TEMPORARY DIAGNOSTIC: surface the real server error in the client
+        // toast so we can pin down why poll comments fail on the live DB.
+        // Revert once the poll-comment 500 is understood.
+        try {
+          const commentId = await createPostComment({
+            user,
+            postId,
+            shortform,
+            parentCommentId,
+            editorData,
+            draft,
+            shortformFrontpage,
+            relevantTagIds,
+            forumEventId,
+            forumEventMetadata,
+          });
+          return await fetchCommentsListItem({
+            currentUser: user,
+            commentId,
+          });
+        } catch (e) {
+          const detail =
+            e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: `DIAG createPostComment failed — ${detail}`,
+            cause: e,
+          });
+        }
       },
     ),
   edit: os
