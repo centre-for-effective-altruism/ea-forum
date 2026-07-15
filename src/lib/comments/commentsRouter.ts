@@ -107,10 +107,36 @@ export const commentsRouter = {
             commentId,
           });
         } catch (e) {
-          const detail =
-            e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+          // Walk the error/cause chain and pull out the underlying Postgres
+          // fields (message/detail/constraint/column/table), which carry the
+          // real reason the insert was rejected.
+          const parts: string[] = [];
+          let current: unknown = e;
+          for (let depth = 0; current && depth < 5; depth++) {
+            if (current instanceof Error) {
+              parts.push(`${current.name}: ${current.message}`);
+            } else {
+              parts.push(String(current));
+            }
+            const pg = current as Record<string, unknown>;
+            for (const key of [
+              "code",
+              "detail",
+              "constraint",
+              "column",
+              "table",
+            ]) {
+              if (pg[key]) {
+                parts.push(`${key}=${String(pg[key])}`);
+              }
+            }
+            current =
+              current && typeof current === "object" && "cause" in current
+                ? (current as { cause?: unknown }).cause
+                : undefined;
+          }
           throw new ORPCError("INTERNAL_SERVER_ERROR", {
-            message: `DIAG createPostComment failed — ${detail}`,
+            message: `DIAG createPostComment failed — ${parts.join(" | ")}`,
             cause: e,
           });
         }
