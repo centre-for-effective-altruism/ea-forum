@@ -165,7 +165,11 @@ export const getForumEventVoteForUser = (
 };
 
 export const getForumEventVoteCount = (event: ForumEventBase) =>
-  Object.keys(event.publicData || {}).length;
+  // Multiple-choice polls nest per-user votes under `publicData.votes`; the
+  // slider stores each vote at the top level keyed by userId.
+  forumEventIsMcPoll(event)
+    ? Object.keys(getMcPollPublicData(event).votes).length
+    : Object.keys(event.publicData || {}).length;
 
 /**
  * Read the `MC_POLL` payload out of `publicData`, tolerating a not-yet-voted
