@@ -227,7 +227,11 @@ const upsertPoll = ({
     },
   });
 
-/** Upsert a ForumEvent with eventFormat = "MC_POLL" (multiple-choice poll) */
+/**
+ * Upsert a multiple-choice poll. Stored like the slider (eventFormat "POLL");
+ * the multiple-choice answers/mode/votes live in `publicData`, and
+ * `forumEventIsMcPoll` distinguishes the two at read time.
+ */
 const upsertMcPoll = ({
   txn,
   user,
@@ -491,12 +495,4 @@ export const addMcPollVote = async ({
   });
 
   return newAnswerIds;
-};
-
-export const removeMcPollVote = async (
-  currentUser: CurrentUser,
-  forumEventId: string,
-) => {
-  // Removing a vote is just submitting an empty selection.
-  await addMcPollVote({ currentUser, forumEventId, answerIds: [] });
 };

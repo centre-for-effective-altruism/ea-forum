@@ -9,7 +9,6 @@ import { db } from "@/lib/db";
 import {
   upsertPolls,
   addMcPollVote,
-  removeMcPollVote,
 } from "@/lib/forumEvents/forumEventMutations";
 import {
   forumEventIsMcPoll,
@@ -218,22 +217,6 @@ suite("Multiple-choice polls", () => {
         answerIds: [],
       });
       expect(await voteIdsFor("mc-empty", user._id)).toBeUndefined();
-    });
-
-    test("removeMcPollVote clears the user's vote", async () => {
-      const { user } = await createMcPoll("mc-remove", {
-        answers: [
-          { _id: "a1", text: "A" },
-          { _id: "a2", text: "B" },
-        ],
-      });
-      await addMcPollVote({
-        currentUser: user,
-        forumEventId: "mc-remove",
-        answerIds: ["a1"],
-      });
-      await removeMcPollVote(user, "mc-remove");
-      expect(await voteIdsFor("mc-remove", user._id)).toBeUndefined();
     });
 
     test("rejects an unknown answer id", async () => {
