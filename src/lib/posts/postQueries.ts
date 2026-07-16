@@ -106,6 +106,16 @@ export const fetchPostDisplay = async (
           wordCount: true,
           pangramAiScore: true,
         },
+        extras: {
+          // Only pull the two fractions we display; the full pangramRawResponse
+          // jsonb also carries mod-only free-text (headline/prediction) that
+          // shouldn't be shipped to every client. pangramAiScore already
+          // provides fraction_ai.
+          pangramFractionAiAssisted: (revisions) =>
+            sql<number | null>`(${revisions}."pangramRawResponse"->>'fraction_ai_assisted')::double precision`,
+          pangramFractionHuman: (revisions) =>
+            sql<number | null>`(${revisions}."pangramRawResponse"->>'fraction_human')::double precision`,
+        },
       },
       group: {
         columns: {

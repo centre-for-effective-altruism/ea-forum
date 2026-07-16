@@ -150,7 +150,12 @@ export default async function PostDisplay({
                     <span aria-hidden className="mx-1.5">
                       ·
                     </span>
-                    <PangramStatus classification={pangramClassification} />
+                    <PangramStatus
+                      classification={pangramClassification}
+                      fractionAi={post.contents?.pangramAiScore}
+                      fractionAssisted={post.contents?.pangramFractionAiAssisted}
+                      fractionHuman={post.contents?.pangramFractionHuman}
+                    />
                   </>
                 )}
               </Type>

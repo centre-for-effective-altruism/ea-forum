@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { formatPercent } from "@/lib/formatHelpers";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
 import Link from "./Link";
@@ -35,9 +36,15 @@ export const classifyPangramScore = (
 export default function PangramStatus({
   score,
   classification,
+  fractionAi,
+  fractionAssisted,
+  fractionHuman,
 }: Readonly<{
   score?: number;
   classification?: PangramClassification | null;
+  fractionAi?: number | null;
+  fractionAssisted?: number | null;
+  fractionHuman?: number | null;
 }>) {
   if (typeof score === "number" && !classification) {
     classification = classifyPangramScore(score);
@@ -46,11 +53,23 @@ export default function PangramStatus({
     return null;
   }
   const { label, className } = classification;
+  const hasFractions =
+    typeof fractionAi === "number" &&
+    typeof fractionAssisted === "number" &&
+    typeof fractionHuman === "number";
   return (
     <Tooltip
       title={
         <Type style="bodySmall" className="text-center">
-          <div>Assigned via Pangram</div>
+          {hasFractions ? (
+            <div>
+              Assigned based on a Pangram score of: {formatPercent(fractionAi)} AI,{" "}
+              {formatPercent(fractionAssisted)} Assisted and{" "}
+              {formatPercent(fractionHuman)} Human
+            </div>
+          ) : (
+            <div>Assigned via Pangram</div>
+          )}
           <div>Click for more details</div>
         </Type>
       }
