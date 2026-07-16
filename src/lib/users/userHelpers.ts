@@ -494,3 +494,30 @@ const getSignature = (name: string) => {
 
 export const getSignatureWithNote = (name: string, note: string) =>
   `${getSignature(name)}: ${note}\n`;
+
+/**
+ * A user cannot send any messages, including responses. Note also the function
+ * `userCanInitiateConversations` for users who can respond to messages, but not
+ * create new conversations.
+ */
+export const userHasMessagingDisabled = (user: CurrentUser | null) =>
+  !!(user?.banned || user?.conversationsDisabled);
+
+/**
+ * A user who can create new message chains with users. Note also the function
+ * `userHasMessagingDisabled` for users who can't message at all, including
+ * sending responses.
+ */
+export const userCanInitiateConversations = (user: CurrentUser | null): boolean => {
+  if (!user || userHasMessagingDisabled(user)) {
+    return false;
+  }
+  if (userIsAdminOrMod(user)) {
+    return true;
+  }
+  const adminAccountEmail = process.env.NEXT_PUBLIC_ADMIN_ACCOUNT_EMAIL;
+  if (adminAccountEmail && adminAccountEmail === user.email) {
+    return true;
+  }
+  return (user.karma ?? 0) >= 10;
+};
