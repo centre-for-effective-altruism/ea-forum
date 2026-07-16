@@ -10,6 +10,7 @@ import { createUser } from "./users/userMutations";
 import { getCurrentClientId } from "./clientIds/currentClientId";
 import { isProduction } from "./environment";
 import { captureServerEvent } from "./analytics/captureServerEvent";
+import { userIsBanned } from "./users/userHelpers";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -174,7 +175,7 @@ export const getOrCreateUser = async (
     throw new Error("Couldn't find or create user");
   }
 
-  if (user.banned && new Date(user.banned) > new Date()) {
+  if (userIsBanned(user)) {
     throw new UserIsBannedError();
   }
 
