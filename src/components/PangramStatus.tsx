@@ -62,11 +62,12 @@ export default function PangramStatus({
       title={
         <Type style="bodySmall" className="text-center">
           {hasFractions ? (
-            <div>
-              Assigned based on a Pangram score of: {formatPercent(fractionAi)} AI,{" "}
-              {formatPercent(fractionAssisted)} Assisted and{" "}
-              {formatPercent(fractionHuman)} Human
-            </div>
+            <>
+              <div>Assigned based on a Pangram score of:</div>
+              <div>{formatPercent(fractionAi)} AI</div>
+              <div>{formatPercent(fractionAssisted)} Assisted</div>
+              <div>{formatPercent(fractionHuman)} Human</div>
+            </>
           ) : (
             <div>Assigned via Pangram</div>
           )}
