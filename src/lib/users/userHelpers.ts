@@ -204,6 +204,9 @@ export const userIsAdmin = <T extends Partial<User>>(
 export const userIsRealAdmin = (user: CurrentUser | null) =>
   userIsInGroup(user, "realAdmins");
 
+export const userIsBanned = (user: Pick<User, "banned">) =>
+  user.banned ? new Date(user.banned) > new Date() : false;
+
 export type UserPermissions = Pick<User, "_id" | "groups" | "banned" | "isAdmin">;
 
 /**
@@ -213,10 +216,9 @@ export const userGetGroups = (user: UserPermissions | null): string[] => {
   if (!user) {
     return ["guests"];
   }
-  if (user.banned && new Date(user.banned) > new Date()) {
+  if (userIsBanned(user)) {
     return ["guests"];
   }
-
   let userGroups = ["members"];
   if (user.groups) {
     userGroups = userGroups.concat(user.groups);
