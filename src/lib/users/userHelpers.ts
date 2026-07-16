@@ -1,6 +1,8 @@
 import type { CurrentUser } from "./currentUser";
 import type { Localgroup, Post, User } from "../schema";
 import type { UserKarmaChanges } from "./karmaChangesTypes";
+import AcademicCapIcon from "@heroicons/react/24/solid/AcademicCapIcon";
+import BriefcaseIcon from "@heroicons/react/24/solid/BriefcaseIcon";
 import { combineUrls, getSiteUrl } from "../routeHelpers";
 import { allUserGroupsByName } from "./userGroups";
 import { z } from "zod/v4";
@@ -23,6 +25,12 @@ export const userGetProfileUrl = ({
   const taggedUrl = from ? `${url}?from=${from}` : url;
   return isAbsolute ? combineUrls(getSiteUrl(), taggedUrl) : taggedUrl;
 };
+
+export const userGetEditUrl = (args: {
+  user: { slug: string | null };
+  from?: string;
+  isAbsolute?: boolean;
+}) => `${userGetProfileUrl(args)}/edit`;
 
 export const userGetStatsUrl = ({ slug }: Pick<CurrentUser, "slug">) =>
   `/users/${slug}/stats`;
@@ -140,6 +148,11 @@ export const userCareerStages: CareerStage[] = [
   },
 ];
 
+export const userCareerStageIcons = {
+  School: AcademicCapIcon,
+  Work: BriefcaseIcon,
+} as const;
+
 export type SocialMediaSiteName =
   | "linkedin"
   | "facebook"
@@ -148,7 +161,7 @@ export type SocialMediaSiteName =
   | "github"
   | "website";
 
-const socalMediaProfileFields = {
+export const socialMediaProfileFields = {
   linkedinProfileURL: "linkedin.com/in/",
   facebookProfileURL: "facebook.com/",
   blueskyProfileURL: "bsky.app/profile/",
@@ -156,12 +169,24 @@ const socalMediaProfileFields = {
   githubProfileURL: "github.com/",
 };
 
-type SocialMediaProfileField = keyof typeof socalMediaProfileFields;
+export const socialMediaIconNameByUserFieldName: Record<
+  SocialMediaProfileField | "website",
+  SocialMediaSiteName
+> = {
+  linkedinProfileURL: "linkedin",
+  facebookProfileURL: "facebook",
+  blueskyProfileURL: "bluesky",
+  twitterProfileURL: "twitter",
+  githubProfileURL: "github",
+  website: "website",
+};
 
-const profileFieldToSocialMediaHref = (
+export type SocialMediaProfileField = keyof typeof socialMediaProfileFields;
+
+export const profileFieldToSocialMediaHref = (
   field: SocialMediaProfileField,
   userUrl: string,
-) => combineUrls("https://" + socalMediaProfileFields[field], userUrl);
+) => combineUrls("https://" + socialMediaProfileFields[field], userUrl);
 
 export const socialMediaSiteNameToHref = (
   siteName: SocialMediaSiteName | "website",
@@ -170,6 +195,29 @@ export const socialMediaSiteNameToHref = (
   siteName === "website"
     ? `https://${userUrl}`
     : profileFieldToSocialMediaHref(`${siteName}ProfileURL`, userUrl);
+
+export const userProgramParticipation = [
+  { value: "vpIntro", label: "Completed the Introductory EA Virtual Program" },
+  { value: "vpInDepth", label: "Completed the In-Depth EA Virtual Program" },
+  { value: "vpPrecipice", label: "Completed the Precipice Reading Group" },
+  { value: "vpLegal", label: "Completed the Legal Topics in EA Virtual Program" },
+  {
+    value: "vpAltProtein",
+    label: "Completed the Alt Protein Fundamentals Virtual Program",
+  },
+  {
+    value: "vpAGISafety",
+    label: "Completed the AGI Safety Fundamentals Virtual Program",
+  },
+  { value: "vpMLSafety", label: "Completed the ML Safety Scholars Virtual Program" },
+  { value: "eag", label: "Attended an EA Global conference" },
+  { value: "eagx", label: "Attended an EAGx conference" },
+  {
+    value: "localgroup",
+    label: "Attended more than three meetings with a local EA group",
+  },
+  { value: "80k", label: "Received career coaching from 80,000 Hours" },
+];
 
 type UserDisplayNameInfo = {
   username: string | null;
@@ -388,6 +436,11 @@ export const userHasKarmaChange = (
   const lastOpened = currentUser.karmaChangeLastOpened ?? new Date(0);
   return lastOpened < (endDate ?? new Date(0)) || updateFrequency === "realtime";
 };
+
+export const userCanEditUser = (
+  currentUser: CurrentUser | null,
+  user: Pick<User, "_id">,
+) => user._id === currentUser?._id || userCanDo(currentUser, "users.edit.all");
 
 export const userCanMention = (
   currentUser: CurrentUser,

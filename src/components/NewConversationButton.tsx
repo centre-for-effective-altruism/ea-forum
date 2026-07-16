@@ -1,10 +1,10 @@
+"use client";
+
 import type { ReactNode } from "react";
-import type { CurrentUser } from "@/lib/users/currentUser";
 
 export default function NewConversationButton({
   children,
 }: Readonly<{
-  currentUser: CurrentUser | null;
   userId: string;
   from?: string;
   openInNewTab?: boolean;
