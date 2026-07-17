@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
   profileFieldToSocialMediaHref,
@@ -20,6 +21,7 @@ import CalendarIcon from "@heroicons/react/24/solid/CalendarIcon";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
 import DisplayNameWithMarkers from "./DisplayNameWithMarkers";
 import NewConversationButton from "../NewConversationButton";
+import UserSubscribeButton from "./UserSubscribeButton";
 import UserProfileImage from "../UserProfileImage";
 import SocialMediaIcon from "../SocialMediaIcon";
 import StructuredData from "../StructuredData";
@@ -28,7 +30,7 @@ import CopyUserId from "./CopyUserId";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
-import UserSubscribeButton from "./UserSubscribeButton";
+import UserProfileTags from "./UserProfileTags";
 
 export default async function UserProfileSummary({
   slug,
@@ -57,6 +59,7 @@ export default async function UserProfileSummary({
     howICanHelpOthersHtml,
     howOthersCanHelpMeHtml,
     createdAt,
+    profileTagIds,
   } = user;
 
   const biography = biographyHtml ? htmlToTextDefault(biographyHtml) : null;
@@ -193,15 +196,20 @@ export default async function UserProfileSummary({
         )}
       </div>
       {!isCurrentUser && (
-        <div className="mb-3.5 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <NewConversationButton userId={_id}>
             <Button>Message</Button>
           </NewConversationButton>
           <UserSubscribeButton userId={_id} />
         </div>
       )}
+      {profileTagIds.length > 0 && (
+        <Suspense fallback={<div className="bg-gray-300 w-full h-7 rounded mt-4" />}>
+          <UserProfileTags tagIds={profileTagIds} className="mt-4" />
+        </Suspense>
+      )}
       {(isAdmin || isCurrentUser || canEdit) && (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mt-3.5">
           {isAdmin && <CopyUserId _id={_id} />}
           {isCurrentUser && (
             <Type style="bodyHeavy" className="text-primary-dark">

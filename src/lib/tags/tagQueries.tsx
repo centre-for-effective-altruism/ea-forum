@@ -20,6 +20,7 @@ const tagBaseProjection = {
     shortName: true,
     slug: true,
     postCount: true,
+    core: true,
   },
   extras: {
     description: htmlSubstring(sql`"description"->>'html'`),
@@ -55,7 +56,7 @@ export const fetchTagBySlug = async (slug: string): Promise<TagBase | null> => {
   return result ?? null;
 };
 
-export const fetchTagsById = async (
+export const fetchTagsByIds = async (
   tagIds: string[],
 ): Promise<Record<string, TagBase>> => {
   const result = await db.query.tags.findMany({

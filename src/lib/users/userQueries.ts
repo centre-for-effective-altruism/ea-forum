@@ -409,6 +409,7 @@ export const fetchUserProfile = cache(
         noindex: true,
         mapLocation: true,
         programParticipation: true,
+        profileTagIds: true,
       },
       extras: {
         biographyHtml: (usersTable) =>

@@ -5,7 +5,7 @@ import {
   fetchCoreTags,
   fetchOnboardingTags,
   fetchTagBySlug,
-  fetchTagsById,
+  fetchTagsByIds,
 } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 import { getCurrentUser } from "../users/currentUser";
@@ -17,7 +17,7 @@ export const tagsRouter = {
     .handler(({ input }) => fetchCoreTags(input?.limit)),
   listByIds: os
     .input(z.object({ tagIds: z.array(z.string()) }))
-    .handler(({ input: { tagIds } }) => fetchTagsById(tagIds)),
+    .handler(({ input: { tagIds } }) => fetchTagsByIds(tagIds)),
   listBySlug: os
     .input(z.object({ slug: z.string().nonempty() }))
     .handler(({ input: { slug } }) => fetchTagBySlug(slug)),
