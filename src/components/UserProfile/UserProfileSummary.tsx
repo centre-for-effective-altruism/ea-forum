@@ -28,6 +28,7 @@ import CopyUserId from "./CopyUserId";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
+import UserSubscribeButton from "./UserSubscribeButton";
 
 export default async function UserProfileSummary({
   slug,
@@ -192,10 +193,11 @@ export default async function UserProfileSummary({
         )}
       </div>
       {!isCurrentUser && (
-        <div className="mb-3.5">
+        <div className="mb-3.5 flex items-center gap-2">
           <NewConversationButton userId={_id}>
             <Button>Message</Button>
           </NewConversationButton>
+          <UserSubscribeButton userId={_id} />
         </div>
       )}
       {(isAdmin || isCurrentUser || canEdit) && (
