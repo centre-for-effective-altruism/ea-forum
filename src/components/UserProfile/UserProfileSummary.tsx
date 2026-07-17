@@ -135,8 +135,7 @@ export default async function UserProfileSummary({
       )}
       <div
         className="
-          flex items-center flex-wrap gap-x-5 gap-y-2.5 text-gray-600
-          mt-5 mb-4
+          flex items-center flex-wrap gap-x-5 gap-y-2.5 text-gray-600 my-4
         "
       >
         <Type className="flex items-center gap-1">

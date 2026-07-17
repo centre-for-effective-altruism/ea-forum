@@ -12,6 +12,7 @@ import UserProfileComments from "@/components/UserProfile/UserProfileComments";
 import UserProfileSummary from "@/components/UserProfile/UserProfileSummary";
 import UserProfileDrafts from "@/components/UserProfile/UserProfileDrafts";
 import UserProfilePosts from "@/components/UserProfile/UserProfilePosts";
+import ReportUserButton from "@/components/UserProfile/ReportUserButton";
 
 type UserProfilePageProps = {
   params: Promise<{ slug: string }>;
@@ -89,6 +90,9 @@ export default async function UserProfile({ params }: UserProfilePageProps) {
         <Suspense fallback={<div className="bg-surface-floating rounded h-160" />}>
           <UserProfileComments slug={slug} />
         </Suspense>
+        <div className="flex justify-end mt-8">
+          <ReportUserButton slug={slug} />
+        </div>
       </div>
     </AnalyticsContext>
   );

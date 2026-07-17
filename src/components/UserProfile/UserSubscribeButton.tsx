@@ -13,7 +13,7 @@ export default function UserSubscribeButton({
 }>) {
   const { subscriptionMenuItems } = useUserSubscriptions(userId);
   return (
-    <DropdownMenu items={subscriptionMenuItems}>
+    <DropdownMenu items={subscriptionMenuItems} placement="bottom-start">
       <button
         data-component="UserSubscribeButton"
         className="
