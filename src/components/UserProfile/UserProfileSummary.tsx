@@ -19,18 +19,18 @@ import { fetchUserProfile } from "@/lib/users/userQueries";
 import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import CalendarIcon from "@heroicons/react/24/solid/CalendarIcon";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
+import EditableUserProfileImage from "./EditableUserProfileImage";
 import DisplayNameWithMarkers from "./DisplayNameWithMarkers";
 import NewConversationButton from "../NewConversationButton";
 import UserSubscribeButton from "./UserSubscribeButton";
-import UserProfileImage from "../UserProfileImage";
 import SocialMediaIcon from "../SocialMediaIcon";
+import UserProfileTags from "./UserProfileTags";
 import StructuredData from "../StructuredData";
 import PinIcon from "../Icons/PinIcon";
 import CopyUserId from "./CopyUserId";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
-import UserProfileTags from "./UserProfileTags";
 
 export default async function UserProfileSummary({
   slug,
@@ -124,7 +124,7 @@ export default async function UserProfileSummary({
           Edit public profile
         </Button>
       )}
-      <UserProfileImage user={user} size={96} />
+      <EditableUserProfileImage user={user} />
       <Type style="onboardingTitle" className="mt-1 mb-0.5">
         <DisplayNameWithMarkers displayName={displayName} />
       </Type>
@@ -209,7 +209,7 @@ export default async function UserProfileSummary({
         </Suspense>
       )}
       {(isAdmin || isCurrentUser || canEdit) && (
-        <div className="flex items-center gap-4 mt-3.5">
+        <div className="flex items-center gap-x-6 gap-y-2 flex-wrap mt-3.5">
           {isAdmin && <CopyUserId _id={_id} />}
           {isCurrentUser && (
             <Type style="bodyHeavy" className="text-primary-dark">

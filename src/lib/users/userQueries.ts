@@ -13,10 +13,12 @@ import {
   getSignatureWithNote,
   CareerStageValue,
   userIsAdminOrMod,
+  userCanEditUser,
 } from "./userHelpers";
 import { getReactionsForKarmaChanges } from "../votes/reactions";
 import { filterNonNull } from "../typeHelpers";
 import keyBy from "lodash/keyBy";
+import { updateWithFieldChanges } from "../fieldChanges";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
 
@@ -208,7 +210,20 @@ export const updateWork = async (
     careerStage?: CareerStageValue[] | null;
   },
 ) => {
-  await db.update(users).set(values).where(eq(users._id, currentUser._id));
+  await updateWithFieldChanges(db, currentUser, users, currentUser._id, values);
+};
+
+export const updateProfileImage = async (
+  currentUser: CurrentUser,
+  userId: string,
+  profileImageId: string | null,
+) => {
+  if (!userCanEditUser(currentUser, { _id: userId })) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, users, userId, {
+    profileImageId,
+  });
 };
 
 export const fetchOnboardingUsers = async () => {

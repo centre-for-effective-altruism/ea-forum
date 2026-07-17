@@ -3,7 +3,7 @@ import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { fetchUserProfile } from "@/lib/users/userQueries";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import UserProfileCommentsList from "./UserProfileCommentsList";
-import Type from "../Type";
+import UserProfileHeading from "./UserProfileHeading";
 
 export default async function UserProfileComments({
   slug,
@@ -30,9 +30,9 @@ export default async function UserProfileComments({
         id="comments"
         className="bg-surface-floating rounded p-6"
       >
-        <Type style="sectionTitleLarge" className="mb-4">
+        <UserProfileHeading className="mb-4">
           Comments <span className="text-gray-600">{user.commentCount}</span>
-        </Type>
+        </UserProfileHeading>
         <UserProfileCommentsList
           initialComments={comments}
           userId={user._id}

@@ -7,6 +7,7 @@ import type { PostListItem } from "@/lib/posts/postLists";
 import { CommentsListProvider } from "../Comments/useCommentsList";
 import InformationCircleIcon from "@heroicons/react/24/solid/InformationCircleIcon";
 import SequenceCard from "../FeaturedCards/SequenceCard";
+import UserProfileHeading from "./UserProfileHeading";
 import CommentsList from "../Comments/CommentsList";
 import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
@@ -60,7 +61,7 @@ export default function UserProfileDraftsList({
       >
         <InformationCircleIcon className="w-5" />
       </Tooltip>
-      <Type style="sectionTitleLarge">Drafts</Type>
+      <UserProfileHeading>Drafts</UserProfileHeading>
       <Type style="sectionTitleSmall" className="mt-4 mb-3">
         Draft/hidden posts
       </Type>

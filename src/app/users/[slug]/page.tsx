@@ -69,7 +69,7 @@ export default async function UserProfile({ params }: UserProfilePageProps) {
     <AnalyticsContext pageContext="userPage">
       <div
         data-component="UserProfile"
-        className="w-[766px] max-w-full mx-auto pt-6 pb-30 flex flex-col gap-6"
+        className="w-[766px] max-w-full mx-auto pt-6 pb-30 px-1 flex flex-col gap-6"
       >
         <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
           <UserProfileSummary slug={slug} />

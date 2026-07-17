@@ -2,7 +2,7 @@ import { fetchUserProfile } from "@/lib/users/userQueries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
-import Type from "../Type";
+import UserProfileHeading from "./UserProfileHeading";
 
 export default async function UserProfilePosts({
   slug,
@@ -22,9 +22,9 @@ export default async function UserProfilePosts({
         id="posts"
         className="bg-surface-floating rounded p-6"
       >
-        <Type style="sectionTitleLarge" className="mb-4">
+        <UserProfileHeading className="mb-4">
           Posts <span className="text-gray-600">{user.postCount}</span>
-        </Type>
+        </UserProfileHeading>
         <ViewBasedPostsList
           view={{
             view: "userProfile",
