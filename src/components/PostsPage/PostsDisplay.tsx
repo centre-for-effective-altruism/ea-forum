@@ -14,7 +14,7 @@ import {
 } from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
-import PangramStatus, { classifyPangramScore } from "../PangramStatus";
+import PangramStatus from "../PangramStatus";
 import PostSequenceBottomNavigation from "./PostSequenceBottomNavigation";
 import PostSequenceTopNavigation from "./PostSequenceTopNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
@@ -64,7 +64,6 @@ export default async function PostDisplay({
     post.readTimeMinutesOverride,
     wordCount,
   );
-  const pangramClassification = classifyPangramScore(post.contents);
 
   const showRecommendations =
     !sequence &&
@@ -144,14 +143,7 @@ export default async function PostDisplay({
                 >
                   {formatShortDate(post.postedAt)}
                 </Tooltip>
-                {pangramClassification && (
-                  <>
-                    <span aria-hidden className="mx-1.5">
-                      ·
-                    </span>
-                    <PangramStatus classification={pangramClassification} />
-                  </>
-                )}
+                <PangramStatus revision={post.contents} />
               </Type>
             </div>
           </div>
