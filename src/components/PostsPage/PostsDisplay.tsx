@@ -6,6 +6,7 @@ import { fetchSequenceById } from "@/lib/sequences/sequenceQueries";
 import { htmlToTableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { formatThousands } from "@/lib/formatHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
+import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
 import {
   getPostReadTimeMinutes,
@@ -30,6 +31,7 @@ import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
 import StructuredData from "../StructuredData";
 import PostPingbacks from "./PostPingbacks";
+import PangramBadge from "../PangramBadge";
 import PostBookmark from "./PostBookmark";
 import ReadProgress from "./ReadProgress";
 import PostTags from "../Tags/PostTags";
@@ -62,10 +64,7 @@ export default async function PostDisplay({
     post.readTimeMinutesOverride,
     wordCount,
   );
-  const pangramClassification =
-    typeof post.contents?.pangramAiScore === "number"
-      ? classifyPangramScore(post.contents.pangramAiScore)
-      : null;
+  const pangramClassification = classifyPangramScore(post.contents);
 
   const showRecommendations =
     !sequence &&
@@ -150,12 +149,7 @@ export default async function PostDisplay({
                     <span aria-hidden className="mx-1.5">
                       ·
                     </span>
-                    <PangramStatus
-                      classification={pangramClassification}
-                      fractionAi={post.contents?.pangramAiScore}
-                      fractionAssisted={post.contents?.pangramFractionAiAssisted}
-                      fractionHuman={post.contents?.pangramFractionHuman}
-                    />
+                    <PangramStatus classification={pangramClassification} />
                   </>
                 )}
               </Type>
@@ -172,6 +166,13 @@ export default async function PostDisplay({
                   </Type>
                 </Link>
               </Tooltip>
+              {post.contents &&
+                "pangramAiScore" in post.contents &&
+                userIsAdminOrMod(currentUser) && (
+                  <div className="max-sm:hidden">
+                    <PangramBadge revision={post.contents} />
+                  </div>
+                )}
             </div>
             <div className="flex items-center gap-2">
               <PostAudioToggle />

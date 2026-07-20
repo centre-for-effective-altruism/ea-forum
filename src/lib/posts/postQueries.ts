@@ -102,19 +102,20 @@ export const fetchPostDisplay = async (
       user: userBaseProjection,
       contents: {
         columns: {
+          _id: true,
           html: true,
           wordCount: true,
           pangramAiScore: true,
+          pangramCheckedAt: true,
+          pangramStatus: true,
         },
         extras: {
-          // Only pull the two fractions we display; the full pangramRawResponse
-          // jsonb also carries mod-only free-text (headline/prediction) that
-          // shouldn't be shipped to every client. pangramAiScore already
-          // provides fraction_ai.
-          pangramFractionAiAssisted: (revisions) =>
-            sql<number | null>`(${revisions}."pangramRawResponse"->>'fraction_ai_assisted')::double precision`,
-          pangramFractionHuman: (revisions) =>
-            sql<number | null>`(${revisions}."pangramRawResponse"->>'fraction_human')::double precision`,
+          pangramAssistedScore: (revisions) => sql<number | null>`
+            (${revisions}."pangramRawResponse"->>'fraction_ai_assisted')::REAL
+          `,
+          pangramHumanScore: (revisions) => sql<number | null>`
+            (${revisions}."pangramRawResponse"->>'fraction_human')::REAL
+          `,
         },
       },
       group: {
