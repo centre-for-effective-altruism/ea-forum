@@ -63,7 +63,10 @@ export default function TagRevisionItem({
       className="border-1 border-gray-300 rounded"
     >
       <div
-        className="cursor-pointer select-none flex items-center gap-2 px-2 py-1.5"
+        className="
+          cursor-pointer select-none flex items-center gap-2 px-2 py-1.5
+          hover:bg-gray-300
+        "
         onClick={onClick}
       >
         <Type style="bodyHeavy" className="text-gray-700 grow truncate">
