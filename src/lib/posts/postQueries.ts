@@ -102,9 +102,20 @@ export const fetchPostDisplay = async (
       user: userBaseProjection,
       contents: {
         columns: {
+          _id: true,
           html: true,
           wordCount: true,
           pangramAiScore: true,
+          pangramCheckedAt: true,
+          pangramStatus: true,
+        },
+        extras: {
+          pangramAssistedScore: (revisions) => sql<number | null>`
+            (${revisions}."pangramRawResponse"->>'fraction_ai_assisted')::REAL
+          `,
+          pangramHumanScore: (revisions) => sql<number | null>`
+            (${revisions}."pangramRawResponse"->>'fraction_human')::REAL
+          `,
         },
       },
       group: {
