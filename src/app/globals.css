@@ -68,6 +68,8 @@
   --color-new-user-sprout: #5eb25c;
   --color-diff-added: #d4ead4;
   --color-diff-removed: #f0d3d3;
+  --color-diff-added-text: #72b065;
+  --color-diff-removed-text: #832013;
   --color-moderator-comment: #ecf2ed;
   --color-promoted-comment: #137283;
   --color-karma-star: #ffad08;
@@ -238,8 +240,10 @@
   --color-comment-even: #262626;
   --color-people-directory-row-hover: #2a2a2a;
   --color-popover-dim: rgba(0, 0, 0, 0.65);
-  --color-diff-added: #008800;
+  --color-diff-added: #205120;
   --color-diff-removed: #880000;
+  --color-diff-added-text: #72b065;
+  --color-diff-removed-text: #e45542;
   --color-moderator-comment: #202719;
   --color-mentions-hover: #333;
   --color-mentions-selected: #0c70c7;

@@ -14,6 +14,7 @@ import PostsItem from "../PostsList/PostsItem";
 import Tooltip from "../Tooltip";
 import Button from "../Button";
 import Type from "../Type";
+import Link from "../Link";
 
 export default function UserProfileDraftsList({
   isCurrentUser,
@@ -62,9 +63,12 @@ export default function UserProfileDraftsList({
         <InformationCircleIcon className="w-5" />
       </Tooltip>
       <UserProfileHeading>Drafts</UserProfileHeading>
-      <Type style="sectionTitleSmall" className="mt-4 mb-3">
-        Draft/hidden posts
-      </Type>
+      <div className="flex items-center justify-between">
+        <Type style="sectionTitleSmall" className="mt-4 mb-3">
+          Draft/hidden posts
+        </Type>
+        <Link href="/newPost">New post</Link>
+      </div>
       {posts.length > 0 ? (
         <div>
           <div className="max-w-full space-y-0.5">
@@ -81,9 +85,12 @@ export default function UserProfileDraftsList({
       ) : (
         <Type className="text-gray-600">No posts to display</Type>
       )}
-      <Type style="sectionTitleSmall" className="mt-4 mb-3">
-        Draft/hidden sequences
-      </Type>
+      <div className="flex items-center justify-between">
+        <Type style="sectionTitleSmall" className="mt-4 mb-3">
+          Draft/hidden sequences
+        </Type>
+        <Link href="/sequencesnew">New sequence</Link>
+      </div>
       {sequences.length > 0 ? (
         <div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">

@@ -9,7 +9,7 @@ import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
 import { filterSettingsSchema } from "../filterSettings";
-import { tagGetUrl } from "../tags/tagHelpers";
+import { tagGetPageUrl } from "../tags/tagHelpers";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -377,7 +377,7 @@ export const postGetStructuredData = (
       .map((tag) => ({
         "@type": "Thing",
         name: tag.name,
-        url: tagGetUrl({ tag, isAbsolute: true }),
+        url: tagGetPageUrl({ tag, isAbsolute: true }),
         description: tag.description,
       })),
     author: [

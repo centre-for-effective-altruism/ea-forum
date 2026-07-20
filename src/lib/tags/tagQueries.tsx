@@ -174,3 +174,50 @@ export const fetchOnboardingTags = async () => {
 };
 
 export type OnboardingTag = Awaited<ReturnType<typeof fetchOnboardingTags>>[number];
+
+export const fetchUserProfileTagRevisions = async ({
+  userId,
+  limit = 10,
+  offset = 0,
+}: {
+  userId: string;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await db.query.revisions.findMany({
+    columns: {
+      _id: true,
+      changeMetrics: true,
+      editedAt: true,
+      createdAt: true,
+    },
+    with: {
+      tag: {
+        columns: {
+          _id: true,
+          name: true,
+          slug: true,
+        },
+      },
+    },
+    where: {
+      tag: {
+        _id: { isNotNull: true },
+      },
+      userId,
+      collectionName: "Tags",
+      fieldName: "description",
+    },
+    orderBy: {
+      editedAt: "desc",
+      createdAt: "desc",
+      _id: "asc",
+    },
+    limit,
+    offset,
+  });
+};
+
+export type TagRevision = Awaited<
+  ReturnType<typeof fetchUserProfileTagRevisions>
+>[number];

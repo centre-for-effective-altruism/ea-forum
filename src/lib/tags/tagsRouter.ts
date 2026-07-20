@@ -6,6 +6,7 @@ import {
   fetchOnboardingTags,
   fetchTagBySlug,
   fetchTagsByIds,
+  fetchUserProfileTagRevisions,
 } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 import { getCurrentUser } from "../users/currentUser";
@@ -21,6 +22,21 @@ export const tagsRouter = {
   listBySlug: os
     .input(z.object({ slug: z.string().nonempty() }))
     .handler(({ input: { slug } }) => fetchTagBySlug(slug)),
+  listUserProfile: os
+    .input(
+      z.object({
+        userId: z.string().nonempty(),
+        offset: z.int().nonnegative().optional(),
+        limit: z.int().positive().max(50).optional().default(10),
+      }),
+    )
+    .handler(async ({ input: { userId, offset, limit } }) => {
+      return await fetchUserProfileTagRevisions({
+        userId,
+        offset,
+        limit,
+      });
+    }),
   diff: os
     .input(z.object({ revisionId: z.string().nonempty() }))
     .handler(async ({ input: { revisionId } }) => {

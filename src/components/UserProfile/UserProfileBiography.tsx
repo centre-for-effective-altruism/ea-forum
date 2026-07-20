@@ -1,6 +1,10 @@
-import { getCurrentUser } from "@/lib/users/currentUser";
+import { userProgramParticipation } from "@/lib/users/userHelpers";
 import { fetchUserProfile } from "@/lib/users/userQueries";
-import UserProfileBiographyTabs from "./UserProfileBiographyTabs";
+import { getCurrentUser } from "@/lib/users/currentUser";
+import { filterNonNull } from "@/lib/typeHelpers";
+import UserProfileTabs from "./UserProfileTabs";
+import PostBody from "../ContentStyles/PostBody";
+import Type from "../Type";
 
 export default async function UserProfileBiography({
   slug,
@@ -14,7 +18,13 @@ export default async function UserProfileBiography({
   }
 
   const { biographyHtml, programParticipation } = user;
-  if (!biographyHtml && !programParticipation?.length) {
+  const participation = filterNonNull(
+    programParticipation?.map(
+      (p) => userProgramParticipation.find(({ value }) => p === value)?.label,
+    ) ?? [],
+  );
+
+  if (!biographyHtml && !participation?.length) {
     return null;
   }
 
@@ -24,9 +34,32 @@ export default async function UserProfileBiography({
       id="bio"
       className="bg-surface-floating rounded p-6 flex flex-col gap-2"
     >
-      <UserProfileBiographyTabs
-        biographyHtml={biographyHtml}
-        programParticipation={programParticipation}
+      <UserProfileTabs
+        tabs={[
+          {
+            name: "bio",
+            title: "Bio",
+            content: biographyHtml ? <PostBody html={biographyHtml} /> : null,
+          },
+          {
+            name: "participation",
+            title: (
+              <>
+                Participation{" "}
+                <span className="text-gray-600">{participation.length}</span>
+              </>
+            ),
+            content: participation.length ? (
+              <ul className="list-disc ml-5">
+                {participation.map((participation) => (
+                  <Type key={participation} style="bodySerif" As="li">
+                    {participation}
+                  </Type>
+                ))}
+              </ul>
+            ) : null,
+          },
+        ]}
       />
     </section>
   );
