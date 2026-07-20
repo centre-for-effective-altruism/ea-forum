@@ -29,6 +29,16 @@ const nextConfig: NextConfig = {
       destination: "/ban-notice",
       permanent: true,
     },
+    {
+      source: "/user/:path*",
+      destination: "/users/:path*",
+      permanent: true,
+    },
+    {
+      source: "/u/:path*",
+      destination: "/users/:path*",
+      permanent: true,
+    },
   ],
   rewrites: async () => [
     {
