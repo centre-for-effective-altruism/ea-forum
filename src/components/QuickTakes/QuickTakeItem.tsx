@@ -103,13 +103,15 @@ const QuickTakeItemInner: FC<{
         <div className="grow">
           <CommentTags comment={quickTake} />
         </div>
-        <Type
-          style="body"
-          className="flex flex-row gap-1 cursor-pointer hover:text-gray-1000"
-        >
-          <ChatBubbleLeftIcon className="w-[16px]" />
-          {descendentCount}
-        </Type>
+        {descendentCount > 0 && (
+          <Type
+            style="body"
+            className="flex flex-row gap-1 cursor-pointer hover:text-gray-1000"
+          >
+            <ChatBubbleLeftIcon className="w-[16px]" />
+            {descendentCount}
+          </Type>
+        )}
         {currentUser && (
           <InteractionWrapper className="flex items-center">
             <CommentTripleDotMenu comment={quickTake} small />
