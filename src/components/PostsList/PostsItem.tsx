@@ -99,7 +99,10 @@ export default function PostsItem({
   }
   addPost(post._id);
 
-  const commentsNode = (
+  // Hide the comment icon and count entirely when a post has no comments, so
+  // the title can stretch into the freed space. The empty InteractionWrapper
+  // cells are kept below so the triple-dot menu stays aligned across rows.
+  const commentsNode = commentCount > 0 && (
     <button
       onClick={toggleShowNewComments}
       className={clsx(

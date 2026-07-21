@@ -158,14 +158,16 @@ export default async function PostDisplay({
           <div className="py-4 border-y border-posts-page-hr text-gray-600 flex">
             <div className="flex items-center gap-4 grow">
               <PostVoteButtons hideReacts />
-              <Tooltip title={<Type style="bodySmall">Comments</Type>}>
-                <Link href="#comments" className="hover:text-gray-1000">
-                  <Type style="bodyLarge" className="flex items-center gap-1">
-                    <ChatBubbleLeftIcon className="w-[22px]" />
-                    {post.commentCount}
-                  </Type>
-                </Link>
-              </Tooltip>
+              {post.commentCount > 0 && (
+                <Tooltip title={<Type style="bodySmall">Comments</Type>}>
+                  <Link href="#comments" className="hover:text-gray-1000">
+                    <Type style="bodyLarge" className="flex items-center gap-1">
+                      <ChatBubbleLeftIcon className="w-[22px]" />
+                      {post.commentCount}
+                    </Type>
+                  </Link>
+                </Tooltip>
+              )}
               {post.contents &&
                 "pangramAiScore" in post.contents &&
                 userIsAdminOrMod(currentUser) && (
