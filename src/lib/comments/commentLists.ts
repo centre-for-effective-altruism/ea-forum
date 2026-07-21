@@ -510,6 +510,7 @@ export const fetchUserProfileDraftComments = async ({
     where: {
       userId,
       draft: true,
+      deleted: false,
     },
     orderBy: {
       createdAt: "desc",
