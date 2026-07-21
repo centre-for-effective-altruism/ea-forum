@@ -1,5 +1,5 @@
 import { fetchUserProfileSequences } from "@/lib/sequences/sequenceQueries";
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import SequenceCard from "../FeaturedCards/SequenceCard";
 import UserProfileHeading from "./UserProfileHeading";
@@ -10,7 +10,7 @@ export default async function UserProfileSequences({
   slug: string;
 }>) {
   const currentUser = await getCurrentUser();
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (!user?.sequenceCount) {
     return null;
   }

@@ -15,7 +15,7 @@ import {
 import { formatLongDate } from "@/lib/timeUtils";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { formatThousands } from "@/lib/formatHelpers";
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import CalendarIcon from "@heroicons/react/24/solid/CalendarIcon";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
@@ -38,7 +38,7 @@ export default async function UserProfileSummary({
   slug: string;
 }>) {
   const currentUser = await getCurrentUser();
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (!user) {
     notFound();
   }

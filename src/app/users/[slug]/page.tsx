@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { makeCloudinaryImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import UserProfileBiography from "@/components/UserProfile/UserProfileBiography";
@@ -22,7 +22,7 @@ export async function generateMetadata({
   params,
 }: UserProfilePageProps): Promise<Metadata> {
   const [currentUser, { slug }] = await Promise.all([getCurrentUser(), params]);
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (!user) {
     return {
       title: "User not found",

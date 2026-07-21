@@ -1,5 +1,5 @@
 import { userProgramParticipation } from "@/lib/users/userHelpers";
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { filterNonNull } from "@/lib/typeHelpers";
 import UserProfileTabs from "./UserProfileTabs";
@@ -12,7 +12,7 @@ export default async function UserProfileBiography({
   slug: string;
 }>) {
   const currentUser = await getCurrentUser();
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (!user) {
     return null;
   }

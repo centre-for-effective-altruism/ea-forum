@@ -1,4 +1,4 @@
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { formatThousands } from "@/lib/formatHelpers";
@@ -11,7 +11,7 @@ export default async function UserProfilePosts({
   slug: string;
 }>) {
   const currentUser = await getCurrentUser();
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (!user?.postCount) {
     return null;
   }

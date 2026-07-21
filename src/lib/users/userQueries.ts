@@ -395,7 +395,7 @@ export const appendToSunshineNotes = async ({
   });
 };
 
-export const fetchUserProfile = cache(
+export const fetchUserProfileCached = cache(
   async (currentUser: CurrentUser | null, slug: string) => {
     return await db.query.users.findFirst({
       columns: {

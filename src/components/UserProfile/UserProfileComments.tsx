@@ -1,7 +1,7 @@
 import { fetchUserProfileComments } from "@/lib/comments/commentLists";
 import { fetchUserProfileTagRevisions } from "@/lib/tags/tagQueries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { formatThousands } from "@/lib/formatHelpers";
 import UserProfileCommentsList from "./UserProfileCommentsList";
@@ -14,7 +14,7 @@ export default async function UserProfileComments({
   slug: string;
 }>) {
   const currentUser = await getCurrentUser();
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (!user?.commentCount && !user?.tagRevisionCount) {
     return null;
   }

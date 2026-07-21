@@ -2,7 +2,7 @@ import { fetchUserProfileDraftSequences } from "@/lib/sequences/sequenceQueries"
 import { fetchUserProfileDraftComments } from "@/lib/comments/commentLists";
 import { fetchUserProfileDraftPosts } from "@/lib/posts/postLists";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
-import { fetchUserProfile } from "@/lib/users/userQueries";
+import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import UserProfileDraftsList from "./UserProfileDraftsList";
@@ -13,7 +13,7 @@ export default async function UserPageDrafts({
   slug: string;
 }>) {
   const currentUser = await getCurrentUser();
-  const user = await fetchUserProfile(currentUser, slug);
+  const user = await fetchUserProfileCached(currentUser, slug);
   if (
     !currentUser ||
     !user ||
