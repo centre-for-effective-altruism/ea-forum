@@ -24,8 +24,8 @@ export default async function UserProfileSequences({
       id="sequences"
       className="bg-surface-floating rounded p-6"
     >
-      <UserProfileHeading className="mb-4">
-        Sequences <span className="text-gray-600">{user.sequenceCount}</span>
+      <UserProfileHeading count={user.sequenceCount} className="mb-4">
+        Sequences
       </UserProfileHeading>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {sequences.map((sequence) => (

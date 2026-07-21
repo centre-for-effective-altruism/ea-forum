@@ -1,7 +1,6 @@
 import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { formatThousands } from "@/lib/formatHelpers";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import UserProfileHeading from "./UserProfileHeading";
 
@@ -15,7 +14,7 @@ export default async function UserProfilePosts({
   if (!user?.postCount) {
     return null;
   }
-  // TODO: Different sortings
+  // TODO: Different sortings when we implement the all posts page
   return (
     <AnalyticsContext listContext="userPagePosts">
       <section
@@ -23,9 +22,8 @@ export default async function UserProfilePosts({
         id="posts"
         className="bg-surface-floating rounded p-6"
       >
-        <UserProfileHeading className="mb-4">
-          Posts{" "}
-          <span className="text-gray-600">{formatThousands(user.postCount)}</span>
+        <UserProfileHeading count={user.postCount} className="mb-4">
+          Posts
         </UserProfileHeading>
         <ViewBasedPostsList
           view={{

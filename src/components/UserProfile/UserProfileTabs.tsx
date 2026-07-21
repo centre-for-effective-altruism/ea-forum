@@ -1,9 +1,7 @@
 "use client";
 
 import { ReactNode, useState } from "react";
-import { formatThousands } from "@/lib/formatHelpers";
-import Type from "../Type";
-import clsx from "clsx";
+import UserProfileHeading from "./UserProfileHeading";
 
 type Tab = {
   name: string;
@@ -30,23 +28,18 @@ export default function UserProfileTabs({
       >
         {tabs.map(({ name, count, content }) =>
           content === null ? null : (
-            <Type
+            <button
               key={name}
-              As="button"
-              style="sectionTitleLarge"
               onClick={() => setTab(name)}
-              className={clsx(
-                "cursor-pointer border-b-3 pb-[3px] flex items-baseline gap-1.5",
-                tab === name ? "border-primary" : "border-transparent",
-              )}
+              className="cursor-pointer"
             >
-              {name}
-              {typeof count === "number" && (
-                <Type style="bodyMedium" className="text-gray-600">
-                  {formatThousands(count)}
-                </Type>
-              )}
-            </Type>
+              <UserProfileHeading
+                count={count}
+                className={tab !== name ? "!border-transparent" : undefined}
+              >
+                {name}
+              </UserProfileHeading>
+            </button>
           ),
         )}
       </div>
