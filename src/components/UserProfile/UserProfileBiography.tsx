@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import { filterNonNull } from "@/lib/typeHelpers";
 import UserProfileTabs from "./UserProfileTabs";
 import PostBody from "../ContentStyles/PostBody";
+import Expandable from "../Expandable";
 import Type from "../Type";
 
 export default async function UserProfileBiography({
@@ -38,7 +39,11 @@ export default async function UserProfileBiography({
         tabs={[
           {
             name: "Bio",
-            content: biographyHtml ? <PostBody html={biographyHtml} /> : null,
+            content: biographyHtml ? (
+              <Expandable maxHeight={350}>
+                <PostBody html={biographyHtml} />
+              </Expandable>
+            ) : null,
           },
           {
             name: "Participation",
