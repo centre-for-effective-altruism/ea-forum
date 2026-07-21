@@ -244,7 +244,6 @@ suite("Multiple-choice polls", () => {
         publicData: {
           answers: [{ _id: "a1", text: "A" }],
           multiSelect: false,
-          votes: {},
         },
       });
       await expect(
@@ -276,11 +275,11 @@ suite("Multiple-choice polls", () => {
             { _id: "a2", text: "B" },
           ],
           multiSelect: false,
-          votes: {
-            [u1._id]: { answerIds: ["a1"] },
-            [u2._id]: { answerIds: ["a1"] },
-            [u3._id]: { answerIds: ["a2"] },
-          },
+          // Votes live at the top level of publicData, keyed by userId (like
+          // the slider), not under a nested `votes` object.
+          [u1._id]: { answerIds: ["a1"] },
+          [u2._id]: { answerIds: ["a1"] },
+          [u3._id]: { answerIds: ["a2"] },
         },
       });
 

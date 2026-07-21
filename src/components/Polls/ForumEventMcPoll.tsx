@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { captureException } from "@sentry/nextjs";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
-import type { CommentListItem } from "@/lib/comments/commentLists";
-import type { UserBase } from "@/lib/users/userQueries";
 import {
   ForumEventCommentMetadata,
   getMcPollPublicData,
@@ -17,17 +15,15 @@ import {
   stripFootnotes,
 } from "@/lib/utils/pollHelpers";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
-import { commentGetPageUrlFromIds } from "@/lib/comments/commentHelpers";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
-import ForumEventCommentForm from "../ForumEvents/ForumEventCommentForm";
 import PollResultIcon from "./PollResultIcon";
 import PollSubtitle from "./PollSubtitle";
+import PollCommentForm from "./PollCommentForm";
 import Loading from "../Loading";
-import Link from "../Link";
+import { usePollParticipants } from "./usePollParticipants";
 
 // Cap on how many voter avatars to show per answer row before collapsing into
 // a "+N" overflow bubble.
@@ -53,13 +49,10 @@ export default function ForumEventMcPoll({
   const [selectedAnswerIds, setSelectedAnswerIds] = useState<string[]>(
     () => getMcPollVoteForUser(event, currentUser) ?? [],
   );
-  const [submittedAnswerIds, setSubmittedAnswerIds] = useState<string[]>(
-    () => getMcPollVoteForUser(event, currentUser) ?? [],
-  );
+  const [submittedAnswerIds, setSubmittedAnswerIds] =
+    useState<string[]>(selectedAnswerIds);
   const [resultsVisible, setResultsVisible] = useState(false);
   const [commentFormOpen, setCommentFormOpen] = useState(false);
-  const [voters, setVoters] = useState<UserBase[] | null>(null);
-  const [comments, setComments] = useState<CommentListItem[] | null>(null);
 
   const hasVoted = submittedAnswerIds.length > 0;
   const votingOpen = !event.endDate || new Date(event.endDate) > new Date();
@@ -70,61 +63,17 @@ export default function ForumEventMcPoll({
   );
   const multiSelect = pollData.multiSelect;
 
-  // Key the voter fetch on the *set* of voter ids, so changing which answers
-  // you've picked (which mutates publicData.votes values but not its keys)
-  // doesn't re-download the whole voter list.
-  const voterIdsKey = useMemo(
-    () => Object.keys(pollData.votes).slice(0, 1000).join(","),
-    [pollData],
-  );
-  const refetchVoters = useCallback(async () => {
-    try {
-      const voterIds = voterIdsKey ? voterIdsKey.split(",") : [];
-      const result = voterIds.length
-        ? await rpc.users.listByIds({ userIds: voterIds })
-        : {};
-      setVoters(Object.values(result));
-    } catch (e) {
-      console.error("Error fetching poll voters:", e);
-      captureException(e);
-    }
-  }, [voterIdsKey]);
-
-  useEffect(() => {
-    void refetchVoters();
-  }, [refetchVoters]);
-
-  const refetchComments = useCallback(async () => {
-    try {
-      const result = await rpc.comments.listByForumEvent({
-        forumEventId: event._id,
-      });
-      setComments(result);
-    } catch (e) {
-      console.error("Error fetching poll comments:", e);
-      captureException(e);
-    }
-  }, [event._id]);
-
-  useEffect(() => {
-    void refetchComments();
-  }, [refetchComments]);
-
-  const currentUserComment = useMemo(() => {
-    if (!currentUser) {
-      return null;
-    }
-    return (
-      comments?.find((comment) => comment.user?._id === currentUser._id) || null
-    );
-  }, [comments, currentUser]);
+  const { voters, comments, currentUserComment, refetchComments, votesLoading } =
+    usePollParticipants({
+      eventId: event._id,
+      voterIds: Object.keys(pollData.votes),
+      currentUser,
+    });
 
   const { results, voterCount } = useMemo(
     () => aggregateMcPollVotes({ voters, comments, event, currentUser }),
     [voters, comments, event, currentUser],
   );
-
-  const votesLoading = voters === null;
 
   const submitVote = useCallback(
     async (answerIds: string[], autoPromptComment: boolean) => {
@@ -354,45 +303,15 @@ export default function ForumEventMcPoll({
             auto-opens the prompt (see handleSelect), so it only needs an
             invisible anchor for the popover. */}
         <div className="flex justify-end mt-4">
-        <ForumEventCommentForm
+        <PollCommentForm
+          event={event}
           isOpen={commentFormOpen}
           setIsOpen={setCommentFormOpen}
-          disabled={!event.post}
-          comment={currentUserComment}
-          successMessage="Success! Open the results to view everyone's votes and comments."
-          forumEvent={event}
-          onCancel={() => setCommentFormOpen(false)}
-          successCallback={refetchComments}
+          currentUserComment={currentUserComment}
           commentPrompt={commentPrompt}
           forumEventMetadata={forumEventMetadata}
-          parentCommentId={event.comment?._id}
+          refetchComments={refetchComments}
           className="inline-block"
-          title={() => "What made you vote this way?"}
-          subtitle={(post, comment) => (
-            <div>
-              Your response will appear as a comment on{" "}
-              {event.isGlobal ? (
-                <Link
-                  href={
-                    comment
-                      ? commentGetPageUrlFromIds({
-                          postId: comment.post?._id,
-                          commentId: comment._id,
-                        })
-                      : post
-                        ? postGetPageUrl({ post })
-                        : "#"
-                  }
-                  openInNewTab
-                >
-                  this post
-                </Link>
-              ) : (
-                "this post"
-              )}
-              .
-            </div>
-          )}
         >
           {multiSelect && votingOpen ? (
             <button
@@ -412,7 +331,7 @@ export default function ForumEventMcPoll({
           ) : (
             <span className="block" />
           )}
-        </ForumEventCommentForm>
+        </PollCommentForm>
         </div>
       </section>
     </AnalyticsContext>

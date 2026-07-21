@@ -246,11 +246,16 @@ export const buildForumEventRevisions = async (
   return Object.assign({}, ...revisions);
 };
 
+/**
+ * Upsert the current user's vote into `publicData`, keyed by userId. Shared by
+ * both poll formats: the slider stores a `{ x, points }` payload, the
+ * multiple-choice poll a `{ answerIds }` payload.
+ */
 export const addUserPollVote = async (
   db: DbOrTransaction,
   currentUser: CurrentUser,
   event: Pick<ForumEvent, "_id">,
-  voteData: ForumEventPollVote,
+  voteData: ForumEventPollVote | McPollVote,
 ) => {
   return db
     .update(forumEvents)
@@ -314,65 +319,17 @@ export const setMcPollOptions = async (
   answers: McPollAnswer[],
   multiSelect: boolean,
 ) => {
-  await db.execute(sql`
-    -- setMcPollOptions
-    UPDATE "ForumEvents"
-    SET "publicData" = JSONB_SET(
-      JSONB_SET(
-        COALESCE("publicData", '{}'::JSONB),
-        '{answers}',
-        ${JSON.stringify(answers)}::JSONB,
-        true
-      ),
-      '{multiSelect}',
-      ${JSON.stringify(multiSelect)}::JSONB,
-      true
-    )
-    WHERE "_id" = ${forumEventId}
-  `);
-};
-
-export const addUserMcPollVote = async (
-  db: DbOrTransaction,
-  currentUser: CurrentUser,
-  event: Pick<ForumEvent, "_id">,
-  vote: McPollVote,
-) => {
-  // Ensure the `votes` object exists, then set this user's entry within it.
-  await db.execute(sql`
-    -- addUserMcPollVote
-    UPDATE "ForumEvents"
-    SET "publicData" = JSONB_SET(
-      JSONB_SET(
-        COALESCE("publicData", '{}'::JSONB),
-        '{votes}',
-        COALESCE("publicData"->'votes', '{}'::JSONB),
-        true
-      ),
-      ARRAY['votes', ${currentUser._id}],
-      ${JSON.stringify(vote)}::JSONB,
-      true
-    )
-    WHERE "_id" = ${event._id}
-  `);
-};
-
-export const removeUserMcPollVote = async (
-  db: DbOrTransaction,
-  currentUser: CurrentUser,
-  event: Pick<ForumEvent, "_id">,
-) => {
-  await db.execute(sql`
-    -- removeUserMcPollVote
-    UPDATE "ForumEvents"
-    SET "publicData" = JSONB_SET(
-      COALESCE("publicData", '{}'::JSONB),
-      '{votes}',
-      COALESCE("publicData"->'votes', '{}'::JSONB) - ${currentUser._id},
-      true
-    )
-    WHERE "_id" = ${event._id}
-  `);
+  // Top-level merge replaces the answer options and mode while preserving
+  // `votes` (and any other keys).
+  await db
+    .update(forumEvents)
+    .set({
+      publicData: sql`
+        COALESCE(${forumEvents.publicData}, '{}'::JSONB) ||
+          ${JSON.stringify({ answers, multiSelect })}::JSONB
+      `,
+    })
+    .where(eq(forumEvents._id, forumEventId));
 };
 
 export const setLatestMcPollVote = async (

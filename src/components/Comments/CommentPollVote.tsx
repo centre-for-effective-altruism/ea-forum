@@ -4,7 +4,7 @@ import {
   pollVoteToPercentage,
   stripFootnotes,
 } from "@/lib/utils/pollHelpers";
-import { getMcPollAnswers } from "@/lib/forumEvents/forumEventHelpers";
+import { getMcPollPublicData } from "@/lib/forumEvents/forumEventHelpers";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
@@ -20,7 +20,7 @@ export default function CommentPollVote({
 
   const mcPoll = forumEventMetadata?.mcPoll;
   if (mcPoll) {
-    const answers = getMcPollAnswers(forumEvent);
+    const { answers } = getMcPollPublicData(forumEvent);
     const chosenIds = mcPoll.latestAnswerIds ?? mcPoll.answerIdsWhenPublished;
     const chosenTexts = chosenIds
       .map((id) => answers.find((answer) => answer._id === id)?.text)

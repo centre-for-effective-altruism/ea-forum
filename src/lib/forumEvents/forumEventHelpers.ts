@@ -50,8 +50,11 @@ export type McPollAnswer = { _id: string; text: string };
 export type McPollVote = { answerIds: string[] };
 
 /**
- * Shape of `ForumEvents.publicData` for an `MC_POLL` event. The answer options
- * and every user's vote live here, so no schema/table change is needed.
+ * The parsed contents of a multiple-choice poll's `publicData` (see
+ * `getMcPollPublicData`). Everything lives in `publicData`, so no schema/table
+ * change is needed: `answers`/`multiSelect` are stored under those keys, and
+ * each user's vote is stored at the top level keyed by userId (exactly like the
+ * slider) — `votes` here is that per-user map, gathered for convenience.
  */
 export type McPollPublicData = {
   answers: McPollAnswer[];
@@ -164,31 +167,43 @@ export const getForumEventVoteForUser = (
   return user ? (data?.[user._id]?.x ?? null) : null;
 };
 
-export const getForumEventVoteCount = (event: ForumEventBase) =>
-  // Multiple-choice polls nest per-user votes under `publicData.votes`; the
-  // slider stores each vote at the top level keyed by userId.
-  forumEventIsMcPoll(event)
-    ? Object.keys(getMcPollPublicData(event).votes).length
-    : Object.keys(event.publicData || {}).length;
+/**
+ * Both poll formats store each user's vote at the top level of `publicData`,
+ * keyed by userId (see `addUserPollVote`). Multiple-choice polls additionally
+ * keep their answer options and single/multi mode under these reserved keys,
+ * which are poll config rather than votes.
+ */
+const MC_POLL_RESERVED_KEYS = new Set(["answers", "multiSelect"]);
+
+export const getForumEventVoteCount = (
+  event: Pick<ForumEventBase, "publicData">,
+) =>
+  Object.keys(event.publicData ?? {}).filter(
+    (key) => !MC_POLL_RESERVED_KEYS.has(key),
+  ).length;
 
 /**
- * Read the `MC_POLL` payload out of `publicData`, tolerating a not-yet-voted
- * event (empty votes) and legacy/empty data.
+ * Read the multiple-choice poll payload out of `publicData`: the answer
+ * options, the single/multi mode, and every user's vote (each stored at the top
+ * level keyed by userId, exactly like the slider). Tolerates a not-yet-voted or
+ * empty event.
  */
 export const getMcPollPublicData = (
   event: Pick<ForumEventBase, "publicData"> | null | undefined,
 ): McPollPublicData => {
-  const data = (event?.publicData ?? {}) as Partial<McPollPublicData>;
+  const data = (event?.publicData ?? {}) as Record<string, unknown>;
+  const votes: Record<string, McPollVote> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (!MC_POLL_RESERVED_KEYS.has(key)) {
+      votes[key] = value as McPollVote;
+    }
+  }
   return {
-    answers: data.answers ?? [],
+    answers: (data.answers as McPollAnswer[] | undefined) ?? [],
     multiSelect: !!data.multiSelect,
-    votes: data.votes ?? {},
+    votes,
   };
 };
-
-export const getMcPollAnswers = (
-  event: Pick<ForumEventBase, "publicData"> | null | undefined,
-): McPollAnswer[] => getMcPollPublicData(event).answers;
 
 /**
  * Whether a forum event is a multiple-choice poll. Both poll formats are stored

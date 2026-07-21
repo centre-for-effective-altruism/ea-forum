@@ -9,10 +9,8 @@ import { isAnyTest } from "../environment";
 import { updateWithFieldChanges } from "../fieldChanges";
 import {
   addUserPollVote,
-  addUserMcPollVote,
   buildForumEventRevisions,
   removeUserPollVote,
-  removeUserMcPollVote,
   setLatestPollVote,
   setLatestMcPollVote,
   setMcPollOptions,
@@ -112,10 +110,10 @@ const updateForumEvent = async ({
 /**
  * Shared create/update path for both poll formats. Computes the shared fields
  * (endDate — fixed once the parent is published — colour columns, post/comment
- * links, revisioned question) and dispatches create vs update. `formatData`
- * carries the format-specific columns, `publicData` seeds a new event, and
- * `afterUpdate` runs format-specific follow-up on the update path (e.g.
- * refreshing multiple-choice answers without clobbering votes).
+ * links, revisioned question) and dispatches create vs update. `publicData`
+ * seeds a new event, and `afterUpdate` runs format-specific follow-up on the
+ * update path (e.g. refreshing multiple-choice answers without clobbering
+ * votes).
  */
 const persistPoll = async ({
   txn,
@@ -126,8 +124,9 @@ const persistPoll = async ({
   existingPoll,
   duration,
   question,
+  agreeWording,
+  disagreeWording,
   colorScheme,
-  formatData,
   publicData,
   afterUpdate,
 }: {
@@ -139,9 +138,10 @@ const persistPoll = async ({
   existingPoll?: Pick<ForumEvent, "_id" | "endDate">;
   duration: PollProps["duration"];
   question: string;
+  agreeWording: string;
+  disagreeWording: string;
   colorScheme: PollProps["colorScheme"];
-  formatData: UpdateForumEventData;
-  publicData?: McPollPublicData;
+  publicData?: Pick<McPollPublicData, "answers" | "multiSelect">;
   afterUpdate?: (documentId: string) => Promise<void>;
 }) => {
   const parentIsDraft = comment ? comment.draft : post.draft;
@@ -155,7 +155,14 @@ const persistPoll = async ({
     type: "ckEditorMarkup" as const,
   };
   const data = {
-    ...formatData,
+    // Both formats are stored with eventFormat "POLL"; multiple-choice polls
+    // are identified by publicData.answers, not by eventFormat. The shared
+    // "ForumEvents" table (owned by the older codebase) only permits the
+    // existing eventFormat values, and its agree/disagree wording columns are
+    // NOT NULL.
+    eventFormat: "POLL" as const,
+    pollAgreeWording: agreeWording,
+    pollDisagreeWording: disagreeWording,
     endDate,
     ...colorScheme,
     postId: post._id,
@@ -219,12 +226,9 @@ const upsertPoll = ({
     existingPoll,
     duration,
     question,
+    agreeWording,
+    disagreeWording,
     colorScheme,
-    formatData: {
-      eventFormat: "POLL",
-      pollAgreeWording: agreeWording,
-      pollDisagreeWording: disagreeWording,
-    },
   });
 
 /**
@@ -257,18 +261,12 @@ const upsertMcPoll = ({
     existingPoll,
     duration,
     question,
+    agreeWording,
+    disagreeWording,
     colorScheme,
-    // Store multiple-choice polls with the same shape as the slider so the row
-    // is accepted by the shared "ForumEvents" table (owned by the older
-    // codebase): its `eventFormat` column only permits the existing values, and
-    // its agree/disagree wording columns are NOT NULL. The multiple-choice
-    // variant is identified by `publicData.answers`, not by `eventFormat`.
-    formatData: {
-      eventFormat: "POLL",
-      pollAgreeWording: agreeWording,
-      pollDisagreeWording: disagreeWording,
-    },
-    publicData: { answers: answerList, multiSelect: !!multiSelect, votes: {} },
+    // Votes are stored at the top level of publicData (keyed by userId), like
+    // the slider, so a new poll seeds only its answer options and mode.
+    publicData: { answers: answerList, multiSelect: !!multiSelect },
     // Update the answer options/mode without clobbering existing votes.
     afterUpdate: (documentId) =>
       setMcPollOptions(txn, documentId, answerList, !!multiSelect),
@@ -483,12 +481,12 @@ export const addMcPollVote = async ({
   await db.transaction(async (txn) => {
     if (newAnswerIds.length === 0) {
       await Promise.all([
-        removeUserMcPollVote(txn, currentUser, event),
+        removeUserPollVote(txn, currentUser, event),
         setLatestMcPollVote(txn, currentUser, event, null),
       ]);
     } else {
       await Promise.all([
-        addUserMcPollVote(txn, currentUser, event, { answerIds: newAnswerIds }),
+        addUserPollVote(txn, currentUser, event, { answerIds: newAnswerIds }),
         setLatestMcPollVote(txn, currentUser, event, newAnswerIds),
       ]);
     }

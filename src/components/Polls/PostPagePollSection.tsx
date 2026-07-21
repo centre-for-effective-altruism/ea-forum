@@ -95,7 +95,9 @@ export default function PostPagePollSection({
   } = event;
 
   const isMcPoll = forumEventIsMcPoll(event);
-  const isPoll = eventFormat === "POLL" || eventFormat === "MC_POLL";
+  // Both poll formats are stored with eventFormat "POLL"; the multiple-choice
+  // variant is distinguished by publicData (see forumEventIsMcPoll).
+  const isPoll = eventFormat === "POLL";
   if (!isPoll || (isGlobal && !postId)) {
     return null;
   }
