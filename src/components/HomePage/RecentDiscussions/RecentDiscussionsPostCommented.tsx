@@ -101,7 +101,7 @@ export default function RecentDiscussionsPostCommented({
               {readTime}m read
             </Type>
           </div>
-          {!isEvent && (
+          {!isEvent && commentCount > 0 && (
             <Link
               href={commentsLink}
               className="flex items-center gap-1 hover:text-gray-1000"
