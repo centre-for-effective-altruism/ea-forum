@@ -1,12 +1,13 @@
 "use client";
 
 import { ReactNode, useState } from "react";
+import { formatThousands } from "@/lib/formatHelpers";
 import Type from "../Type";
 import clsx from "clsx";
 
 type Tab = {
   name: string;
-  title: ReactNode;
+  count?: number;
   content: ReactNode;
 };
 
@@ -27,7 +28,7 @@ export default function UserProfileTabs({
           flex-col md:flex-row items-start md:items-center
         "
       >
-        {tabs.map(({ name, title, content }) =>
+        {tabs.map(({ name, count, content }) =>
           content === null ? null : (
             <Type
               key={name}
@@ -35,11 +36,16 @@ export default function UserProfileTabs({
               style="sectionTitleLarge"
               onClick={() => setTab(name)}
               className={clsx(
-                "cursor-pointer border-b-3 pb-[3px]",
+                "cursor-pointer border-b-3 pb-[3px] flex items-baseline gap-1.5",
                 tab === name ? "border-primary" : "border-transparent",
               )}
             >
-              {title}
+              {name}
+              {typeof count === "number" && (
+                <Type style="bodyMedium" className="text-gray-600">
+                  {formatThousands(count)}
+                </Type>
+              )}
             </Type>
           ),
         )}

@@ -3,7 +3,6 @@ import { fetchUserProfileTagRevisions } from "@/lib/tags/tagQueries";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { formatThousands } from "@/lib/formatHelpers";
 import UserProfileCommentsList from "./UserProfileCommentsList";
 import TagRevisionsList from "./TagRevisionsList";
 import UserProfileTabs from "./UserProfileTabs";
@@ -38,15 +37,8 @@ export default async function UserProfileComments({
         <UserProfileTabs
           tabs={[
             {
-              name: "comments",
-              title: (
-                <>
-                  Comments{" "}
-                  <span className="text-gray-600">
-                    {formatThousands(user.commentCount)}
-                  </span>
-                </>
-              ),
+              name: "Comments",
+              count: user.commentCount,
               content: comments.length ? (
                 <UserProfileCommentsList
                   initialComments={comments}
@@ -56,15 +48,8 @@ export default async function UserProfileComments({
               ) : null,
             },
             {
-              name: "topicContributions",
-              title: (
-                <>
-                  Topic contributions{" "}
-                  <span className="text-gray-600">
-                    {formatThousands(user.tagRevisionCount)}
-                  </span>
-                </>
-              ),
+              name: "Topic contributions",
+              count: user.tagRevisionCount,
               content: tagRevisions.length ? (
                 <TagRevisionsList
                   initialRevisions={tagRevisions}

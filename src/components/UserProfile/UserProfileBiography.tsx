@@ -37,18 +37,12 @@ export default async function UserProfileBiography({
       <UserProfileTabs
         tabs={[
           {
-            name: "bio",
-            title: "Bio",
+            name: "Bio",
             content: biographyHtml ? <PostBody html={biographyHtml} /> : null,
           },
           {
-            name: "participation",
-            title: (
-              <>
-                Participation{" "}
-                <span className="text-gray-600">{participation.length}</span>
-              </>
-            ),
+            name: "Participation",
+            count: participation.length,
             content: participation.length ? (
               <ul className="list-disc ml-5">
                 {participation.map((participation) => (

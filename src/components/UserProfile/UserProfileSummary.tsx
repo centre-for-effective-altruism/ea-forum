@@ -14,7 +14,6 @@ import {
 } from "@/lib/users/userHelpers";
 import { formatLongDate } from "@/lib/timeUtils";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { formatThousands } from "@/lib/formatHelpers";
 import { fetchUserProfileCached } from "@/lib/users/userQueries";
 import { htmlToTextDefault } from "@/lib/utils/htmlToText";
 import CalendarIcon from "@heroicons/react/24/solid/CalendarIcon";
@@ -140,7 +139,7 @@ export default async function UserProfileSummary({
       >
         <Type className="flex items-center gap-1">
           <StarIcon className="w-5 min-w-5" />
-          {formatThousands(user.karma)} karma
+          {user.karma ?? 0} karma
         </Type>
         <Type className="flex items-center gap-1">
           <CalendarIcon className="w-5 min-w-5" />
