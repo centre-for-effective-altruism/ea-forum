@@ -99,26 +99,24 @@ export default function PostsItem({
   }
   addPost(post._id);
 
-  // Hide the comment icon and count entirely when a post has no comments, so
-  // the title can stretch into the freed space. The empty InteractionWrapper
-  // cells are kept below so the triple-dot menu stays aligned across rows.
-  const commentsNode = commentCount > 0 && (
-    <button
-      onClick={toggleShowNewComments}
-      className={clsx(
-        "flex items-center gap-1 hover:text-gray-1000 cursor-pointer w-[44px] ml-5",
-        hasNewUnreadComments ? "text-gray-900" : "text-gray-600",
-      )}
-    >
-      <ChatBubbleLeftIcon className="w-[16px]" />
-      <Type
-        style="bodySmall"
-        className={clsx(hasNewUnreadComments && "font-[600]!")}
+  const commentsNode =
+    commentCount < 1 ? null : (
+      <button
+        onClick={toggleShowNewComments}
+        className={clsx(
+          "flex items-center gap-1 hover:text-gray-1000 cursor-pointer w-[44px] ml-5",
+          hasNewUnreadComments ? "text-gray-900" : "text-gray-600",
+        )}
       >
-        {commentCount}
-      </Type>
-    </button>
-  );
+        <ChatBubbleLeftIcon className="w-[16px]" />
+        <Type
+          style="bodySmall"
+          className={clsx(hasNewUnreadComments && "font-[600]!")}
+        >
+          {commentCount}
+        </Type>
+      </button>
+    );
 
   return (
     <AnalyticsContext
