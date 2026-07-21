@@ -125,7 +125,7 @@ export default async function UserProfileSummary({
         </Button>
       )}
       <EditableUserProfileImage user={user} />
-      <Type style="onboardingTitle" className="mt-1 mb-0.5">
+      <Type style="userProfileName" className="mt-1 mb-0.5">
         <DisplayNameWithMarkers displayName={displayName} />
       </Type>
       {(jobTitle || organization) && (
