@@ -87,10 +87,6 @@ export const forumEventCommentMetadataSchema = z.object({
       answerIdsWhenPublished: z.array(z.string()),
       /** The user's latest selection, if it has changed since publishing */
       latestAnswerIds: z.array(z.string()).nullable().optional(),
-      /** _id of the revision of the question when the comment was published */
-      pollQuestionWhenPublished: z.string().nullable().optional(),
-      /** The content that is prefilled into the comment box after voting */
-      commentPrompt: z.string().nullable().optional(),
     })
     .nullable()
     .optional(),
