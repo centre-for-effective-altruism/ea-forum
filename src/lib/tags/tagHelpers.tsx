@@ -10,7 +10,7 @@ export const tagGetPageUrl = ({
 }: {
   tag: { slug: string };
   hash?: string;
-  isAbsolute?: string;
+  isAbsolute?: boolean;
   tab?: string;
   from?: string;
 }) => {
@@ -21,6 +21,22 @@ export const tagGetPageUrl = ({
   const urlWithSuffixes = `${url}${searchSuffix}${hashSuffix}`;
   return isAbsolute ? combineUrls(getSiteUrl(), urlWithSuffixes) : urlWithSuffixes;
 };
+
+export const tagGetHistoryUrl = (props: {
+  tag: { slug: string };
+  hash?: string;
+  isAbsolute?: boolean;
+  tab?: string;
+  from?: string;
+}) => combineUrls(tagGetPageUrl(props), "/history");
+
+export const tagGetDiscussionUrl = (props: {
+  tag: { slug: string };
+  hash?: string;
+  isAbsolute?: boolean;
+  tab?: string;
+  from?: string;
+}) => combineUrls(tagGetPageUrl(props), "/discussion");
 
 /**
  * Sort tags in order of: core-ness, score, then name (alphabetical)
@@ -37,34 +53,6 @@ export const stableSortTags = (tags: PostTag[]): PostTag[] => {
   });
 };
 
-export const tagGetUrl = ({
-  tag,
-  isAbsolute,
-  hash,
-  ...urlSearchParams
-}: {
-  tag: { slug: string };
-  isAbsolute?: boolean;
-  hash?: string;
-  from?: string;
-  tab?: string;
-}) => {
-  const search = qs.stringify(urlSearchParams);
-  const searchSuffix = search ? `?${search}` : "";
-  const hashSuffix = hash ? `#${hash}` : "";
-  const url = `/topics/${tag.slug}`;
-  const urlWithSuffixes = `${url}${searchSuffix}${hashSuffix}`;
-  return isAbsolute ? combineUrls(getSiteUrl(), urlWithSuffixes) : urlWithSuffixes;
-};
-
-export const tagGetDiscussionUrl = (tag: { slug: string }, isAbsolute = false) => {
-  const suffix = `/topics/${tag.slug}/discussion`;
-  return isAbsolute ? combineUrls(getSiteUrl(), suffix) : suffix;
-};
-
-export const tagGetSubforumUrl = (tag: { slug: string }, isAbsolute = false) =>
-  tagGetUrl({ tag, tab: "posts", isAbsolute });
-
 export type TagCommentType = "SUBFORUM" | "DISCUSSION";
 
 export const tagGetCommentLink = ({
@@ -80,8 +68,8 @@ export const tagGetCommentLink = ({
 }): string => {
   const base =
     tagCommentType === "DISCUSSION"
-      ? tagGetDiscussionUrl({ slug: tagSlug }, isAbsolute)
-      : tagGetSubforumUrl({ slug: tagSlug }, isAbsolute);
+      ? tagGetDiscussionUrl({ tag: { slug: tagSlug }, isAbsolute })
+      : tagGetPageUrl({ tag: { slug: tagSlug }, isAbsolute });
   return commentId
     ? `${base}${base.includes("?") ? "&" : "?"}commentId=${commentId}`
     : base;

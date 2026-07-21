@@ -21,10 +21,7 @@ class WrappedStrategy extends FeatureStrategy {
     count: number,
     strategy: StrategySpecification,
   ): Promise<RecommendationResult> {
-    const year = strategy.year;
-    if (!year) {
-      throw new Error("Wrapped recommendation strategy requires a year");
-    }
+    const year = strategy.year || new Date().getFullYear() - 1;
     return super.recommend(
       currentUser,
       count,

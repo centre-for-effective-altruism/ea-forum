@@ -15,6 +15,7 @@ import {
   fetchUsersById,
   isDisplayNameTaken,
   updateExpandedSection,
+  updateProfileImage,
   updateWork,
 } from "./userQueries";
 import {
@@ -234,6 +235,20 @@ export const usersRouter = {
         throw new Error("Please login");
       }
       return await updateWork(currentUser, input);
+    }),
+  updateProfileImage: os
+    .input(
+      z.object({
+        userId: z.string().nonempty(),
+        profileImageId: z.string().nonempty().nullable(),
+      }),
+    )
+    .handler(async ({ input: { userId, profileImageId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateProfileImage(currentUser, userId, profileImageId);
     }),
   fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
   karmaChanges: os

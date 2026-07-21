@@ -16,7 +16,7 @@ import { sequenceGetPageUrl } from "../sequences/sequenceHelpers";
 import { localgroupGetPageUrl } from "../localgroups/localgroupHelpers";
 import { getNotificationDocumentSummary } from "./notificationQueries";
 import { rsvpToText } from "../posts/rsvpHelpers";
-import { tagGetUrl } from "../tags/tagHelpers";
+import { tagGetPageUrl } from "../tags/tagHelpers";
 import { db } from "../db";
 import keyBy from "lodash/keyBy";
 import sortBy from "lodash/sortBy";
@@ -849,7 +849,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "karmaPowersGained",
     userSettingField: "notificationKarmaPowersGained",
-    getLink: () => tagGetUrl({ tag: { slug: "vote-strength" } }),
+    getLink: () => tagGetPageUrl({ tag: { slug: "vote-strength" } }),
     getMessage: async () => "Your votes are stronger because your karma went up!",
   }),
   createNotificationType({
