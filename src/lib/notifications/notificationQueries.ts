@@ -1,5 +1,11 @@
 import type { NotificationDocument } from "./notificationHelpers";
 import { InsertNotification, notifications } from "../schema";
+import { localgroupGetPageUrl } from "../localgroups/localgroupHelpers";
+import { sequenceGetPageUrl } from "../sequences/sequenceHelpers";
+import { commentGetPageUrl } from "../comments/commentHelpers";
+import { messageGetPageUrl } from "../messages/messageHelpers";
+import { userGetProfileUrl } from "../users/userHelpers";
+import { postGetPageUrl } from "../posts/postsHelpers";
 import { randomId } from "../utils/random";
 import { db } from "../db";
 
@@ -20,6 +26,7 @@ type NotificationDocumentSummary = {
   type: NotificationDocument;
   associatedUserName: string | null;
   displayName: string | null;
+  link: string;
 };
 
 export const getNotificationDocumentSummary = async (
@@ -33,7 +40,11 @@ export const getNotificationDocumentSummary = async (
     case "post":
       const post = await db.query.posts.findFirst({
         columns: {
+          _id: true,
+          slug: true,
           title: true,
+          isEvent: true,
+          groupId: true,
         },
         with: {
           user: {
@@ -51,21 +62,26 @@ export const getNotificationDocumentSummary = async (
             type: documentType,
             displayName: post.title,
             associatedUserName: post.user?.displayName ?? null,
+            link: post ? postGetPageUrl({ post }) : "#",
           }
         : null;
     case "comment":
       const comment = await db.query.comments.findFirst({
         columns: {
           _id: true,
+          tagCommentType: true,
         },
         with: {
           post: {
             columns: {
+              _id: true,
+              slug: true,
               title: true,
             },
           },
           tag: {
             columns: {
+              slug: true,
               name: true,
             },
           },
@@ -85,11 +101,13 @@ export const getNotificationDocumentSummary = async (
             displayName:
               comment.post?.title ?? comment.tag?.name ?? "unknown document",
             associatedUserName: comment.user?.displayName ?? null,
+            link: comment ? commentGetPageUrl({ comment }) : "#",
           }
         : null;
     case "user":
       const user = await db.query.users.findFirst({
         columns: {
+          slug: true,
           displayName: true,
         },
         where: {
@@ -101,12 +119,14 @@ export const getNotificationDocumentSummary = async (
             type: documentType,
             displayName: user.displayName,
             associatedUserName: user.displayName,
+            link: user ? userGetProfileUrl({ user }) : "#",
           }
         : null;
     case "message":
       const message = await db.query.messages.findFirst({
         columns: {
           _id: true,
+          conversationId: true,
         },
         with: {
           conversation: {
@@ -129,28 +149,41 @@ export const getNotificationDocumentSummary = async (
             type: documentType,
             displayName: message.conversation?.title ?? null,
             associatedUserName: message.user?.displayName ?? null,
+            link: message ? messageGetPageUrl({ message }) : "#",
           }
         : null;
     case "localgroup":
-      const group = await db.query.localgroups.findFirst({
+      const localgroup = await db.query.localgroups.findFirst({
         columns: {
+          _id: true,
           name: true,
         },
         where: {
           _id: documentId,
         },
       });
-      return group
+      return localgroup
         ? {
             type: documentType,
-            displayName: group.name ?? "[missing local group name]",
+            displayName: localgroup.name ?? "[missing local group name]",
             associatedUserName: null,
+            link: localgroup ? localgroupGetPageUrl({ localgroup }) : "#",
           }
         : null;
     case "tagRel":
       const tagRel = await db.query.tagRels.findFirst({
         columns: {
           _id: true,
+        },
+        with: {
+          post: {
+            columns: {
+              _id: true,
+              slug: true,
+              isEvent: true,
+              groupId: true,
+            },
+          },
         },
         where: {
           _id: documentId,
@@ -161,6 +194,7 @@ export const getNotificationDocumentSummary = async (
             type: documentType,
             displayName: null,
             associatedUserName: null,
+            link: tagRel?.post ? postGetPageUrl({ post: tagRel.post }) : "#",
           }
         : null;
     case "sequence":
@@ -177,6 +211,7 @@ export const getNotificationDocumentSummary = async (
             type: documentType,
             displayName: null,
             associatedUserName: null,
+            link: sequence ? sequenceGetPageUrl({ sequence }) : "#",
           }
         : null;
     default:

@@ -11,6 +11,7 @@ const oldSitePatterns = [
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
   /^\/api\/search.*$/,
+  /^\/api\/eafunds-posts$/,
 ];
 
 // Middle precedence: Route these to the new site
@@ -19,6 +20,7 @@ const newSitePatterns = [
   /^\/posts\/[^/]+\/[^/]+$/, // Post pages: /posts/[id]/[slug]
   /^\/posts\/[^/]+$/, // Post pages without slug: /posts/[id]
   /^\/s\/[A-Za-z0-9]+\/p\/[A-Za-z0-9]+$/, // Sequence posts
+  /^\/(users|user|u)\/[^/]+$/, // User profiles
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
   /^\/rpc\//, // All /rpc/* routes

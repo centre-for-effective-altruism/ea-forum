@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
+import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import type {
   RecentDiscussionComment,
   RecentDiscussionPost,
@@ -10,10 +11,10 @@ import RecentDiscussionIcon, {
   RecentDiscussionIconName,
   RecentDiscussionIconVariant,
 } from "./RecentDiscussionIcon";
+import TagTooltip from "@/components/TagTooltip";
 import UsersName from "@/components/UsersName";
 import TimeAgo from "@/components/TimeAgo";
 import Link from "@/components/Link";
-import { tagGetUrl } from "@/lib/tags/tagHelpers";
 
 type RecentDiscussionItemDocument =
   | {
@@ -83,14 +84,14 @@ export default function RecentDiscussionsItem({
               </Link>
             )}
             {tag && (
-              /*<TagsTooltip tag={tag} As="span"> TODO Add tag tooltip*/
-              <Link
-                href={tagGetUrl({ tag })}
-                className="text-gray-1000 hover:opacity-70"
-              >
-                {tag.name}
-              </Link>
-              /*</TagsTooltip>*/
+              <TagTooltip tag={tag} As="span">
+                <Link
+                  href={tagGetPageUrl({ tag })}
+                  className="text-gray-1000 hover:opacity-70"
+                >
+                  {tag.name}
+                </Link>
+              </TagTooltip>
             )}{" "}
             <TimeAgo time={timestamp} includeAgo As="span" />
           </div>

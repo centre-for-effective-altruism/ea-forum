@@ -18,15 +18,23 @@ type ReportDocument =
   | {
       post: PostDisplay | PostListItem;
       comment?: never;
+      userSlug?: never;
     }
   | {
       post?: never;
       comment: CommentListItem;
+      userSlug?: never;
+    }
+  | {
+      post?: never;
+      comment?: never;
+      userSlug: string;
     };
 
 export default function ReportPopover({
   post,
   comment,
+  userSlug,
   open,
   onClose,
 }: Readonly<
@@ -51,7 +59,9 @@ export default function ReportPopover({
       ev.preventDefault();
       const action = post
         ? rpc.reports.createPost({ postId: post._id, description })
-        : rpc.reports.createComment({ commentId: comment._id, description });
+        : comment
+          ? rpc.reports.createComment({ commentId: comment._id, description })
+          : rpc.reports.createUser({ userSlug, description });
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       toast.promise(action, {
         loading: <Type>Creating report...</Type>,
@@ -61,20 +71,20 @@ export default function ReportPopover({
       onClose();
       setDescription("");
     },
-    [onClose, post, comment, description],
+    [onClose, post, comment, userSlug, description],
   );
 
   return (
     <Popover open={open} onClose={onClose}>
       <form onSubmit={onSubmit} className="w-[300px] max-w-full flex flex-col gap-4">
         <Type style="postTitle">
-          {post ? (
-            <>Report post &quot;{post.title}&quot;</>
-          ) : (
+          {post && <>Report post &quot;{post.title}&quot;</>}
+          {comment && (
             <>
               Report comment by <UsersName user={comment.user} />
             </>
           )}
+          {userSlug && <>Report user</>}
         </Type>
         <Input value={description} setValue={setDescription} placeholder="Reason" />
         <Button type="submit" disabled={description.length < 1}>

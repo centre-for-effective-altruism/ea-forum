@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
 import { posts, users } from "../schema";
@@ -8,10 +9,16 @@ import type {
   RelationalOrderBy,
   RelationalProjection,
 } from "../utils/queryHelpers";
-import { getSignatureWithNote, CareerStageValue } from "./userHelpers";
+import {
+  getSignatureWithNote,
+  CareerStageValue,
+  userIsAdminOrMod,
+  userCanEditUser,
+} from "./userHelpers";
 import { getReactionsForKarmaChanges } from "../votes/reactions";
 import { filterNonNull } from "../typeHelpers";
 import keyBy from "lodash/keyBy";
+import { updateWithFieldChanges } from "../fieldChanges";
 
 export type UserRelationalProjection = RelationalProjection<typeof db.query.users>;
 
@@ -203,7 +210,20 @@ export const updateWork = async (
     careerStage?: CareerStageValue[] | null;
   },
 ) => {
-  await db.update(users).set(values).where(eq(users._id, currentUser._id));
+  await updateWithFieldChanges(db, currentUser, users, currentUser._id, values);
+};
+
+export const updateProfileImage = async (
+  currentUser: CurrentUser,
+  userId: string,
+  profileImageId: string | null,
+) => {
+  if (!userCanEditUser(currentUser, { _id: userId })) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, users, userId, {
+    profileImageId,
+  });
 };
 
 export const fetchOnboardingUsers = async () => {
@@ -342,7 +362,7 @@ export const fetchKarmaChanges = async ({
   return results.rows;
 };
 
-export async function appendToSunshineNotes({
+export const appendToSunshineNotes = async ({
   moderatedUserId,
   adminName,
   text,
@@ -350,7 +370,7 @@ export async function appendToSunshineNotes({
   moderatedUserId: string;
   adminName: string;
   text: string;
-}): Promise<void> {
+}): Promise<void> => {
   await db.transaction(async (txn) => {
     const moderatedUser = await txn.query.users.findFirst({
       columns: {
@@ -373,4 +393,62 @@ export async function appendToSunshineNotes({
       })
       .where(eq(users._id, moderatedUserId));
   });
-}
+};
+
+export const fetchUserProfileCached = cache(
+  async (currentUser: CurrentUser | null, slug: string) => {
+    return await db.query.users.findFirst({
+      columns: {
+        _id: true,
+        displayName: true,
+        slug: true,
+        oldSlugs: true,
+        profileImageId: true,
+        karma: true,
+        createdAt: true,
+        jobTitle: true,
+        organization: true,
+        careerStage: true,
+        website: true,
+        deleted: true,
+        banned: true,
+        linkedinProfileURL: true,
+        facebookProfileURL: true,
+        blueskyProfileURL: true,
+        twitterProfileURL: true,
+        githubProfileURL: true,
+        postCount: true,
+        commentCount: true,
+        sequenceCount: true,
+        tagRevisionCount: true,
+        noindex: true,
+        mapLocation: true,
+        programParticipation: true,
+        profileTagIds: true,
+      },
+      extras: {
+        biographyHtml: (usersTable) =>
+          sql<string | null>`${usersTable}."biography"->>'html'`,
+        howOthersCanHelpMeHtml: (usersTable) =>
+          sql<string | null>`${usersTable}."howOthersCanHelpMe"->>'html'`,
+        howICanHelpOthersHtml: (usersTable) =>
+          sql<string | null>`${usersTable}."howICanHelpOthers"->>'html'`,
+      },
+      where: {
+        OR: [
+          { slug },
+          {
+            RAW: (usersTable) =>
+              sql<boolean>`${usersTable}."oldSlugs" @> ARRAY[${slug}]`,
+          },
+        ],
+        ...(userIsAdminOrMod(currentUser)
+          ? {}
+          : {
+              deleted: false,
+              banned: { isNull: true },
+            }),
+      },
+    });
+  },
+);

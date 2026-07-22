@@ -1,7 +1,11 @@
 import { os } from "@orpc/server";
 import { z } from "zod/v4";
 import { getCurrentUser } from "../users/currentUser";
-import { createCommentReport, createPostReport } from "./reportMutations";
+import {
+  createCommentReport,
+  createPostReport,
+  createUserReport,
+} from "./reportMutations";
 
 export const reportsRouter = {
   createPost: os
@@ -31,5 +35,19 @@ export const reportsRouter = {
         throw new Error("Please login");
       }
       await createCommentReport(currentUser, commentId, description);
+    }),
+  createUser: os
+    .input(
+      z.object({
+        userSlug: z.string(),
+        description: z.string(),
+      }),
+    )
+    .handler(async ({ input: { userSlug, description } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await createUserReport(currentUser, userSlug, description);
     }),
 };

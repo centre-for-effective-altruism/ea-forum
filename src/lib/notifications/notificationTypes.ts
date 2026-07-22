@@ -4,11 +4,19 @@ import type {
   NotificationChannel,
   NotificationDocument,
 } from "./notificationHelpers";
-import { getPostCollaborateUrl, postGetEditUrl } from "../posts/postsHelpers";
+import {
+  getPostCollaborateUrl,
+  postGetEditUrl,
+  postGetPageUrl,
+} from "../posts/postsHelpers";
+import { userGetProfileUrl } from "../users/userHelpers";
+import { commentGetPageUrl } from "../comments/commentHelpers";
+import { messageGetPageUrl } from "../messages/messageHelpers";
 import { sequenceGetPageUrl } from "../sequences/sequenceHelpers";
+import { localgroupGetPageUrl } from "../localgroups/localgroupHelpers";
 import { getNotificationDocumentSummary } from "./notificationQueries";
 import { rsvpToText } from "../posts/rsvpHelpers";
-import { tagGetUrl } from "../tags/tagHelpers";
+import { tagGetPageUrl } from "../tags/tagHelpers";
 import { db } from "../db";
 import keyBy from "lodash/keyBy";
 import sortBy from "lodash/sortBy";
@@ -21,7 +29,7 @@ type GetMessageProps = {
 };
 
 type GetLinkProps = {
-  documentType: string | null;
+  documentType: NotificationDocument | null;
   documentId: string | null;
   extraData?: JsonRecord;
 };
@@ -30,8 +38,8 @@ type NotificationType = {
   name: string;
   userSettingField: (keyof User & `notification${string}`) | null;
   allowedChannels?: NotificationChannel[];
+  getLink: (props: GetLinkProps) => Promise<string> | string;
   getMessage: (props: GetMessageProps) => Promise<string>;
-  getLink?: (props: GetLinkProps) => string;
 };
 
 const createNotificationType = ({
@@ -39,10 +47,64 @@ const createNotificationType = ({
   ...otherArgs
 }: NotificationType) => ({ allowedChannels, ...otherArgs });
 
+const getPostLink = async ({ documentId }: GetLinkProps): Promise<string> => {
+  if (!documentId) {
+    throw new Error("Notification get link missing document id");
+  }
+  const post = await db.query.posts.findFirst({
+    columns: {
+      _id: true,
+      slug: true,
+      isEvent: true,
+      groupId: true,
+    },
+    where: {
+      _id: documentId,
+    },
+  });
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  return postGetPageUrl({ post });
+};
+
+const getCommentLink = async ({ documentId }: GetLinkProps): Promise<string> => {
+  if (!documentId) {
+    throw new Error("Notification get link missing document id");
+  }
+  const comment = await db.query.comments.findFirst({
+    columns: {
+      _id: true,
+      tagCommentType: true,
+    },
+    with: {
+      post: {
+        columns: {
+          _id: true,
+          slug: true,
+        },
+      },
+      tag: {
+        columns: {
+          slug: true,
+        },
+      },
+    },
+    where: {
+      _id: documentId,
+    },
+  });
+  if (!comment) {
+    throw new Error("Post not found");
+  }
+  return commentGetPageUrl({ comment });
+};
+
 export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newPost",
     userSettingField: "notificationSubscribedUserPost",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new post _id for notification");
@@ -71,6 +133,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newUserComment",
     userSettingField: "notificationSubscribedUserComment",
+    getLink: getCommentLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new comment _id for notification");
@@ -104,6 +167,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "postApproved",
     userSettingField: null,
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing approved post _id for notification");
@@ -125,6 +189,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "postNominated",
     userSettingField: "notificationPostsNominatedReview",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing nominated post _id for notification");
@@ -146,6 +211,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newEvent",
     userSettingField: "notificationPostsInGroups",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new event _id for notification");
@@ -181,6 +247,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newGroupPost",
     userSettingField: "notificationPostsInGroups",
+    getLink: getPostLink,
     async getMessage({ documentId }) {
       if (!documentId) {
         throw new Error("Missing new group post _id for notification");
@@ -217,6 +284,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newComment",
     userSettingField: "notificationCommentsOnSubscribedPost",
+    getLink: getCommentLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new comment _id for notification");
@@ -257,6 +325,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newSubforumComment",
     userSettingField: "notificationSubforumUnread",
+    getLink: getCommentLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new subforum comment _id for notification");
@@ -294,6 +363,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newDialogueMessages",
     userSettingField: "notificationDialogueMessages",
+    getLink: ({ documentId }: GetLinkProps) => `/editPost?postId=${documentId}`,
     getMessage: async ({ documentId, extraData }) => {
       const newMessageAuthorId = extraData?.newMessageAuthorId;
       if (!documentId || typeof newMessageAuthorId !== "string") {
@@ -322,7 +392,6 @@ export const notificationTypesArray: NotificationType[] = [
       }
       return `${commenter.displayName} left a new reply in your dialogue "${post.title}"`;
     },
-    getLink: ({ documentId }: GetLinkProps) => `/editPost?postId=${documentId}`,
   }),
   // Used when a user already has unread dialogue message notification. Primitive
   // batching to prevent spamming the user. Send instead of
@@ -332,6 +401,7 @@ export const notificationTypesArray: NotificationType[] = [
     name: "newDialogueBatchMessages",
     // Using same setting as regular NewDialogueMessageNotification
     userSettingField: "notificationDialogueMessages",
+    getLink: ({ documentId }) => `/editPost?postId=${documentId}`,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new dialogue _id for notification");
@@ -349,11 +419,11 @@ export const notificationTypesArray: NotificationType[] = [
       }
       return `Multiple new messages in your dialogue "${post.title}"`;
     },
-    getLink: ({ documentId }) => `/editPost?postId=${documentId}`,
   }),
   createNotificationType({
     name: "newShortform",
     userSettingField: "notificationShortformContent",
+    getLink: getCommentLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new quick take _id for notification");
@@ -387,6 +457,33 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newTagPosts",
     userSettingField: "notificationSubscribedTagPost",
+    getLink: async ({ documentId }) => {
+      if (!documentId) {
+        throw new Error("Missing tag rel _id for notification link");
+      }
+      const tagRel = await db.query.tagRels.findFirst({
+        columns: {
+          _id: true,
+        },
+        with: {
+          post: {
+            columns: {
+              _id: true,
+              slug: true,
+              isEvent: true,
+              groupId: true,
+            },
+          },
+        },
+        where: {
+          _id: documentId,
+        },
+      });
+      if (!tagRel || !tagRel.post) {
+        throw new Error("Missing document for notification");
+      }
+      return postGetPageUrl({ post: tagRel.post });
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing tag rel _id for notification");
@@ -420,6 +517,8 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newSequencePosts",
     userSettingField: "notificationSubscribedSequencePost",
+    getLink: ({ documentId }) =>
+      documentId ? sequenceGetPageUrl({ sequence: { _id: documentId } }) : "#",
     async getMessage({ documentId }: GetMessageProps) {
       if (!documentId) {
         throw new Error("Missing sequence _id for notification");
@@ -437,13 +536,12 @@ export const notificationTypesArray: NotificationType[] = [
       }
       return `Posts added to ${sequence.title}`;
     },
-    getLink: ({ documentId }) =>
-      documentId ? sequenceGetPageUrl({ sequence: { _id: documentId } }) : "#",
   }),
   // Reply to a comment you're subscribed to
   createNotificationType({
     name: "newReply",
     userSettingField: "notificationRepliesToSubscribedComments",
+    getLink: getCommentLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing new reply _id for notification");
@@ -484,6 +582,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newReplyToYou",
     userSettingField: "notificationRepliesToMyComments",
+    getLink: getCommentLink,
     getMessage: async ({ documentId, extraData }) => {
       if (!documentId) {
         throw new Error("Missing new reply _id for notification");
@@ -525,6 +624,23 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newMessage",
     userSettingField: "notificationPrivateMessage",
+    getLink: async ({ documentId }) => {
+      if (!documentId) {
+        throw new Error("Missing message _id for notification link");
+      }
+      const message = await db.query.messages.findFirst({
+        columns: {
+          conversationId: true,
+        },
+        where: {
+          _id: documentId,
+        },
+      });
+      if (!message) {
+        throw new Error("Message not found");
+      }
+      return messageGetPageUrl({ message });
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing message _id for notification");
@@ -561,19 +677,19 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "wrapped",
     userSettingField: null,
+    getLink: () => "/wrapped",
     getMessage: async ({ extraData }) =>
       `Check out your ${extraData?.year ?? 2023} EA Forum Wrapped`,
-    getLink: () => "/wrapped",
-  }),
-  createNotificationType({
-    name: "emailVerificationRequired",
-    userSettingField: null,
-    getMessage: async () =>
-      "Verify your email address to activate email subscriptions.",
   }),
   createNotificationType({
     name: "postSharedWithUser",
     userSettingField: "notificationSharedWithMe",
+    getLink: ({ documentId }): string => {
+      if (!documentId) {
+        throw new Error("PostSharedWithUserNotification documentId is missing");
+      }
+      return getPostCollaborateUrl(documentId, false);
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing shared post _id for notification");
@@ -599,16 +715,16 @@ export const notificationTypesArray: NotificationType[] = [
       }
       return `${post.user?.displayName} shared their ${post.draft ? "draft" : "post"} "${post.title}" with you`;
     },
-    getLink: ({ documentId }): string => {
-      if (!documentId) {
-        throw new Error("PostSharedWithUserNotification documentId is missing");
-      }
-      return getPostCollaborateUrl(documentId, false);
-    },
   }),
   createNotificationType({
     name: "addedAsCoauthor",
     userSettingField: "notificationAddedAsCoauthor",
+    getLink: ({ documentId }): string => {
+      if (!documentId) {
+        throw new Error("PostAddedAsCoauthorNotification documentId is missing");
+      }
+      return postGetEditUrl(documentId, false);
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing coauthored post _id for notification");
@@ -635,16 +751,11 @@ export const notificationTypesArray: NotificationType[] = [
       const postOrDialogue = post.collabEditorDialogue ? "dialogue" : "post";
       return `${post.user?.displayName} added you as a coauthor to the ${postOrDialogue} "${post.title}"`;
     },
-    getLink: ({ documentId }): string => {
-      if (!documentId) {
-        throw new Error("PostAddedAsCoauthorNotification documentId is missing");
-      }
-      return postGetEditUrl(documentId, false);
-    },
   }),
   createNotificationType({
     name: "newEventInRadius",
     userSettingField: "notificationEventInRadius",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing event _id for notification");
@@ -666,6 +777,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "editedEventInRadius",
     userSettingField: "notificationEventInRadius",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing event _id for notification");
@@ -687,6 +799,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newRSVP",
     userSettingField: "notificationRSVPs",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing event _id for notification");
@@ -714,6 +827,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "cancelledRSVP",
     userSettingField: "notificationRSVPs",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing event _id for notification");
@@ -735,12 +849,29 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "karmaPowersGained",
     userSettingField: "notificationKarmaPowersGained",
+    getLink: () => tagGetPageUrl({ tag: { slug: "vote-strength" } }),
     getMessage: async () => "Your votes are stronger because your karma went up!",
-    getLink: () => tagGetUrl({ tag: { slug: "vote-strength" } }),
   }),
   createNotificationType({
     name: "newGroupOrganizer",
     userSettingField: "notificationGroupAdministration",
+    getLink: async ({ documentId }) => {
+      if (!documentId) {
+        throw new Error("Missing group _id for notification link");
+      }
+      const localgroup = await db.query.localgroups.findFirst({
+        columns: {
+          _id: true,
+        },
+        where: {
+          _id: documentId,
+        },
+      });
+      if (!localgroup) {
+        throw new Error("Missing group for notification link");
+      }
+      return localgroupGetPageUrl({ localgroup });
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing group _id for notification");
@@ -762,6 +893,23 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newSubforumMember",
     userSettingField: "notificationGroupAdministration",
+    getLink: async ({ documentId }) => {
+      if (!documentId) {
+        throw new Error("Missing user _id for notification link");
+      }
+      const user = await db.query.users.findFirst({
+        columns: {
+          slug: true,
+        },
+        where: {
+          _id: documentId,
+        },
+      });
+      if (!user) {
+        throw new Error("Missing user for notification link");
+      }
+      return userGetProfileUrl({ user });
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing user _id for notification");
@@ -783,6 +931,12 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newCommentOnDraft",
     userSettingField: "notificationCommentsOnDraft",
+    getLink: ({ documentId, extraData }): string => {
+      if (!documentId) {
+        throw new Error("NewCommentOnDraftNotification documentId is missing");
+      }
+      return postGetEditUrl(documentId, false, extraData?.linkSharingKey as string);
+    },
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing post _id for notification");
@@ -800,16 +954,11 @@ export const notificationTypesArray: NotificationType[] = [
       }
       return `New comments on your draft ${post.title}`;
     },
-    getLink: ({ documentId, extraData }): string => {
-      if (!documentId) {
-        throw new Error("NewCommentOnDraftNotification documentId is missing");
-      }
-      return postGetEditUrl(documentId, false, extraData?.linkSharingKey as string);
-    },
   }),
   createNotificationType({
     name: "coauthorRequestNotification",
     userSettingField: "notificationSharedWithMe",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing post _id for notification");
@@ -838,6 +987,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "coauthorAcceptNotification",
     userSettingField: "notificationSharedWithMe",
+    getLink: getPostLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
         throw new Error("Missing post _id for notification");
@@ -859,10 +1009,6 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "keywordAlert",
     userSettingField: "notificationKeywordAlert",
-    getMessage: async ({ extraData }) => {
-      const alerts = extraData?.count === 1 ? "alert" : "alerts";
-      return `${extraData?.count} new ${alerts} for "${extraData?.keyword}"`;
-    },
     getLink: ({ extraData }) => {
       if (!extraData?.keyword || !extraData.startDate || !extraData.endDate) {
         throw new Error("Invalid keyword alert data");
@@ -873,10 +1019,18 @@ export const notificationTypesArray: NotificationType[] = [
       const encodedKeyword = encodeURIComponent(keyword as string);
       return `/keywords/${encodedKeyword}?start=${start}&end=${end}`;
     },
+    getMessage: async ({ extraData }) => {
+      const alerts = extraData?.count === 1 ? "alert" : "alerts";
+      return `${extraData?.count} new ${alerts} for "${extraData?.keyword}"`;
+    },
   }),
   createNotificationType({
     name: "newMention",
     userSettingField: "notificationNewMention",
+    getLink: async ({ documentType, documentId }) => {
+      const summary = await getNotificationDocumentSummary(documentType, documentId);
+      return summary?.link ?? "#";
+    },
     getMessage: async ({ documentType, documentId }) => {
       const summary = await getNotificationDocumentSummary(documentType, documentId);
       return `${summary?.associatedUserName} mentioned you in ${summary?.displayName}`;
@@ -885,6 +1039,10 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "newPingback",
     userSettingField: "notificationNewPingback",
+    getLink: async ({ documentType, documentId }) => {
+      const summary = await getNotificationDocumentSummary(documentType, documentId);
+      return summary?.link ?? "#";
+    },
     getMessage: async ({ documentType, documentId, extraData }) => {
       const summary = await getNotificationDocumentSummary(documentType, documentId);
       return `${summary?.associatedUserName} mentioned your ${extraData?.pingbackType} "${extraData?.pingbackDocumentExcerpt}"`;
@@ -893,6 +1051,7 @@ export const notificationTypesArray: NotificationType[] = [
   createNotificationType({
     name: "pollClosingSoon",
     userSettingField: "notificationPollClosingSoon",
+    getLink: ({ extraData }) => (extraData?.link as string) || "#",
     getMessage: async ({ extraData }) => {
       const isCreator = extraData?.isCreator;
       const pollQuestion = extraData?.pollQuestion || "a poll";
@@ -900,11 +1059,11 @@ export const notificationTypesArray: NotificationType[] = [
         ? `Your poll closes soon: "${pollQuestion}"`
         : `A poll you voted on closes soon: "${pollQuestion}"`;
     },
-    getLink: ({ extraData }) => (extraData?.link as string) || "#",
   }),
   createNotificationType({
     name: "pollClosed",
     userSettingField: "notificationPollClosed",
+    getLink: ({ extraData }) => (extraData?.link as string) || "#",
     getMessage: async ({ extraData }) => {
       const isCreator = extraData?.isCreator;
       const pollQuestion = extraData?.pollQuestion || "a poll";
@@ -912,7 +1071,6 @@ export const notificationTypesArray: NotificationType[] = [
         ? `Your poll has closed: "${pollQuestion}"`
         : `A poll you voted on has closed: "${pollQuestion}"`;
     },
-    getLink: ({ extraData }) => (extraData?.link as string) || "#",
   }),
 ];
 

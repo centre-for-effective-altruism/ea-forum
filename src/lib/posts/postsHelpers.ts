@@ -9,7 +9,7 @@ import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
 import { filterSettingsSchema } from "../filterSettings";
-import { tagGetUrl } from "../tags/tagHelpers";
+import { tagGetPageUrl } from "../tags/tagHelpers";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -20,11 +20,12 @@ export const postStatuses = {
 };
 
 export const postsListViewSchema = z.object({
-  view: z.enum(["frontpage", "sticky", "orgUpdates"]),
+  view: z.enum(["frontpage", "sticky", "orgUpdates", "userProfile"]),
   offset: z.int().gte(0).optional(),
   limit: z.int().gt(0),
   excludeTagId: z.union([z.string(), z.array(z.string()).max(10)]).optional(),
   onlyTagId: z.string().optional(),
+  userId: z.string().optional(),
   filterSettings: filterSettingsSchema.optional(),
 });
 
@@ -36,8 +37,8 @@ export const postGetPageUrl = ({
   isAbsolute,
 }: {
   post: Pick<Post, "_id" | "slug"> & Partial<Pick<Post, "isEvent" | "groupId">>;
-  isAbsolute?: boolean;
   sequenceId?: string;
+  isAbsolute?: boolean;
 }) => {
   const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
   if (sequenceId) {
@@ -376,7 +377,7 @@ export const postGetStructuredData = (
       .map((tag) => ({
         "@type": "Thing",
         name: tag.name,
-        url: tagGetUrl({ tag, isAbsolute: true }),
+        url: tagGetPageUrl({ tag, isAbsolute: true }),
         description: tag.description,
       })),
     author: [

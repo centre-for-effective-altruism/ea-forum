@@ -490,9 +490,76 @@ export const fetchOrgUpdatesPostsList = async ({
   });
 };
 
+export const fetchUserProfilePosts = async ({
+  currentUserId,
+  userId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  userId: string;
+  offset?: number;
+  limit?: number;
+}) => {
+  return await fetchPostsList({
+    currentUserId,
+    where: {
+      OR: [
+        { userId },
+        {
+          RAW: (postsTable) =>
+            sql<boolean>`${postsTable}."coauthorUserIds" @> ARRAY[${userId}]`,
+        },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    offset,
+    limit,
+  });
+};
+
+export const fetchUserProfileDraftPosts = async ({
+  currentUserId,
+  userId,
+  offset,
+  limit,
+}: {
+  currentUserId: string;
+  userId: string;
+  offset?: number;
+  limit?: number;
+}) => {
+  return await db.query.posts.findMany({
+    ...postsListProjection(currentUserId),
+    where: {
+      OR: [
+        { userId },
+        {
+          RAW: (postsTable) =>
+            sql<boolean>`${postsTable}."coauthorUserIds" @> ARRAY[${userId}]`,
+        },
+        {
+          RAW: (postsTable) =>
+            sql<boolean>`${postsTable}."shareWithUsers"@>ARRAY[${userId}]::VARCHAR[]`,
+        },
+      ],
+      draft: true,
+      deletedDraft: false,
+      hideAuthor: false, // This is from ForumMagnum - not sure why?
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    offset,
+    limit,
+  });
+};
+
 export const fetchPostsListFromView = (
   currentUserId: string | null,
-  { view, ...props }: PostsListView,
+  { view, userId, ...props }: PostsListView,
 ) => {
   switch (view) {
     case "frontpage":
@@ -501,6 +568,11 @@ export const fetchPostsListFromView = (
       return fetchStickyPostsList({ currentUserId, ...props });
     case "orgUpdates":
       return fetchOrgUpdatesPostsList({ currentUserId, ...props });
+    case "userProfile":
+      if (!userId) {
+        throw new Error("User profile view requires user id");
+      }
+      return fetchUserProfilePosts({ currentUserId, userId, ...props });
     default:
       throw new Error("Invalid posts list view");
   }

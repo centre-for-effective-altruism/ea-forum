@@ -27,6 +27,7 @@ export const typeStyles = {
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
   postDescription: "font-sans text-[13px] font-[500]",
   loadMore: "font-sans text-[14px] font-[550]",
+  userProfileName: "font-sans text-[30px] font-[600]",
   onboardingTitle: "font-sans text-[30px] font-[600] tracking-[-0.6px]",
   onboardingTag: "font-sans text-[13px] font-[700] leading-[16px]",
   featuredPostTitle:
@@ -64,6 +65,7 @@ export default function Type({
       style={cssStyle}
       className={`${typeStyles[style]} ${className}`}
       data-component="Type"
+      data-style={style}
     >
       {children}
     </As>

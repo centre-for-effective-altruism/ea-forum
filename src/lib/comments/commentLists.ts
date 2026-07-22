@@ -466,3 +466,56 @@ export const fetchCommentReplies = async ({
     },
   });
 };
+
+export const fetchUserProfileComments = async ({
+  currentUser,
+  userId,
+  limit = 10,
+  offset = 0,
+}: {
+  currentUser: UserPermissions | null;
+  userId: string;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      userId,
+      draft: false,
+      deletedPublic: false,
+    },
+    orderBy: {
+      isPinnedOnProfile: "desc",
+      postedAt: "desc",
+    },
+    limit,
+    offset,
+  });
+};
+
+export const fetchUserProfileDraftComments = async ({
+  currentUser,
+  userId,
+  limit,
+  offset,
+}: {
+  currentUser: UserPermissions;
+  userId: string;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      userId,
+      draft: true,
+      deleted: false,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    limit,
+    offset,
+  });
+};

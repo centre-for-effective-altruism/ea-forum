@@ -6,6 +6,7 @@ import { commentsRouter } from "./comments/commentsRouter";
 import { forumEventsRouter } from "./forumEvents/forumEventsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
+import { messagesRouter } from "./messages/messagesRouter";
 import { postsRouter } from "./posts/postsRouter";
 import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
@@ -27,6 +28,7 @@ export const router = {
   forumEvents: forumEventsRouter,
   lwEvents: lwEventRouter,
   notifications: notificationsRouter,
+  messages: messagesRouter,
   posts: postsRouter,
   readStatuses: readStatusesRouter,
   recentDiscussions: recentDiscussionsRouter,

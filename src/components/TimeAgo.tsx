@@ -33,6 +33,7 @@ export default function TimeAgo({
       <Type style={textStyle} As={As}>
         <time
           dateTime={date.toISOString()}
+          suppressHydrationWarning
           className="cursor-inherit"
           data-component="TimeAgo"
         >
