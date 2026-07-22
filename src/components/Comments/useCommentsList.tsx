@@ -31,6 +31,7 @@ type CommentsListContext = {
   commentIsLoaded: (commentId: string) => boolean;
   collapsedIfRepliedTo: boolean;
   showPostTitle: boolean;
+  showPinned: boolean;
 };
 
 const commentsListContext = createContext<CommentsListContext | null>(null);
@@ -39,11 +40,13 @@ export const CommentsListProvider = ({
   comments,
   collapsedIfRepliedTo = false,
   showPostTitle = false,
+  showPinned = false,
   children,
 }: Readonly<{
   comments: CommentListItem[];
   collapsedIfRepliedTo?: boolean;
   showPostTitle?: boolean;
+  showPinned?: boolean;
   children: ReactNode;
 }>) => {
   const { currentUser } = useCurrentUser();
@@ -113,6 +116,7 @@ export const CommentsListProvider = ({
         commentIsLoaded,
         collapsedIfRepliedTo,
         showPostTitle,
+        showPinned,
       }}
     >
       {children}

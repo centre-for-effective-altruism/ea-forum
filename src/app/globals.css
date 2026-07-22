@@ -72,6 +72,7 @@
   --color-diff-removed-text: #832013;
   --color-moderator-comment: #ecf2ed;
   --color-promoted-comment: #137283;
+  --color-pinned-comment: #9dd3b9;
   --color-karma-star: #ffad08;
   --color-mentions-hover: #e6e6e6;
   --color-mentions-selected: #198cf0;
@@ -245,6 +246,7 @@
   --color-diff-added-text: #72b065;
   --color-diff-removed-text: #e45542;
   --color-moderator-comment: #202719;
+  --color-pinned-comment: #384d43;
   --color-mentions-hover: #333;
   --color-mentions-selected: #0c70c7;
   --color-mentions-selected-hover: #0b62ae;

@@ -52,7 +52,12 @@ export default function UserProfileCommentsList({
       className="flex flex-col items-start gap-2"
     >
       {comments.map((comment) => (
-        <CommentsListProvider key={comment._id} showPostTitle comments={[comment]}>
+        <CommentsListProvider
+          key={comment._id}
+          comments={[comment]}
+          showPostTitle
+          showPinned
+        >
           <CommentsList />
         </CommentsListProvider>
       ))}
