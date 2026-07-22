@@ -11,6 +11,7 @@ const oldSitePatterns = [
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
   /^\/api\/search.*$/,
+  /^\/api\/eafunds-posts$/,
 ];
 
 // Middle precedence: Route these to the new site
