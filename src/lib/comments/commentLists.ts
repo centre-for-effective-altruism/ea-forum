@@ -485,8 +485,10 @@ export const fetchUserProfileComments = async ({
     where: {
       userId,
       draft: false,
+      deletedPublic: false,
     },
     orderBy: {
+      isPinnedOnProfile: "desc",
       postedAt: "desc",
     },
     limit,
