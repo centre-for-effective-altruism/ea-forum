@@ -3,7 +3,7 @@ import { PostListItem } from "@/lib/posts/postLists";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import {
-  getPostSocialImageUrl,
+  getPostSocialImageUrlWithDefaultBackup,
   postGetPageUrl,
   postHasNewUnreadComments,
 } from "@/lib/posts/postsHelpers";
@@ -15,9 +15,6 @@ import LotusIcon from "../Icons/LotusIcon";
 import Image from "next/image";
 import Type from "../Type";
 import Link from "../Link";
-
-const defaultImageUrl =
-  "https://res.cloudinary.com/cea/image/upload/v1582740871/EA_Forum_OG_Image.png";
 
 /**
  * If an image fails to load some browsers show an ugly white border that
@@ -59,7 +56,7 @@ export default function FeaturedPost({
   const isCommunity = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
     ? !!tags?.some(({ _id }) => _id === process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID)
     : false;
-  const imageUrl = getPostSocialImageUrl(post, {
+  const imageUrl = getPostSocialImageUrlWithDefaultBackup(post, {
     width: large ? 700 : 450,
     dpr: "auto",
   });
@@ -91,7 +88,7 @@ export default function FeaturedPost({
           )}
         >
           <Image
-            src={imageUrl || defaultImageUrl}
+            src={imageUrl}
             onError={onImageError}
             alt=""
             fill
