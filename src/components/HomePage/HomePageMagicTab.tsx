@@ -12,8 +12,10 @@ import HomePageCommunitySection from "./HomePageCommunitySection";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FilterSettingsToggle from "./FilterSettingsToggle";
 import FilterSettingsEditor from "./FilterSettingsEditor";
+import HomePageTagBar from "./HomePageTagBar";
 import Spotlight from "../Spotlights/Spotlight";
 import Type from "../Type";
+import PostsList from "../PostsList/PostsList";
 
 export default function HomePageMagicTab({
   coreTags,
@@ -34,20 +36,40 @@ export default function HomePageMagicTab({
   popularCommentsList: ReactNode;
   recentDiscussions: ReactNode;
 }>) {
-  const { currentTab } = useHomePage();
+  const { currentTab, currentTag } = useHomePage();
   if (currentTab !== "magic") {
     return null;
+  }
+
+  if (currentTag) {
+    return (
+      <div data-component="HomePageMagicTab">
+        <HomePageTagBar coreTags={coreTags} className="mb-5" />
+        <PostsList
+          key={currentTag._id}
+          posts={[]}
+          maxOffset={200}
+          loadMoreView={{
+            view: "frontpage",
+            limit: 30,
+            onlyTagId: currentTag._id,
+          }}
+        />
+      </div>
+    );
   }
 
   return (
     <div data-component="HomePageMagicTab">
       {spotlight && <Spotlight spotlight={spotlight} className="mt-6 mb-4" />}
       <FilterSettingsProvider>
-        <div className="mb-2 flex items-center justify-between">
-          <Type style="sectionTitleLarge">New &amp; upvoted</Type>
-          <FilterSettingsToggle />
+        <div className="mb-5">
+          <div className="flex items-center justify-between gap-4">
+            <HomePageTagBar coreTags={coreTags} className="min-w-0" />
+            <FilterSettingsToggle />
+          </div>
+          <FilterSettingsEditor className="mt-2" />
         </div>
-        <FilterSettingsEditor className="mb-2" />
         <div className="mb-2">{stickyPostsList}</div>
         <div className="mb-10">
           <Suspense

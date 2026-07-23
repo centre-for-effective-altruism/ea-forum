@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
-import type { NextSearchParams } from "@/lib/typeHelpers";
 import StructuredData from "@/components/StructuredData";
 import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
@@ -29,18 +28,13 @@ const structuredData = {
   ].join(" "),
 };
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<NextSearchParams>;
-}) {
-  const search = await searchParams;
+export default async function HomePage() {
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
       <Suspense>
-        <HomePageContent search={search} />
+        <HomePageContent />
       </Suspense>
     </HomePageColumns>
   );

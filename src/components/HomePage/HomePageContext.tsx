@@ -9,8 +9,8 @@ import {
   useState,
 } from "react";
 import { captureException } from "@sentry/nextjs";
-import type { NextSearchParams } from "@/lib/typeHelpers";
 import type { PostListItem } from "@/lib/posts/postLists";
+import type { TagBase } from "@/lib/tags/tagQueries";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import { HomePageTabName, homePageTabCookie } from "./homePageHelpers";
 import { useTracking } from "@/lib/analyticsEvents";
@@ -19,6 +19,8 @@ import { rpc } from "@/lib/rpc";
 type HomePageContext = {
   currentTab: HomePageTabName;
   setCurrentTab: (tab: HomePageTabName) => void;
+  currentTag: TagBase | null; // null if viewing the normal magic frontpage
+  setCurrentTag: (tag: TagBase | null) => void;
   featuredPosts: PostListItem[];
   loadingFeaturedPosts: boolean;
   loadMoreFeaturedPosts: () => Promise<void>;
@@ -28,7 +30,6 @@ type HomePageContext = {
 export const homePageContext = createContext<HomePageContext | null>(null);
 
 export const HomePageProvider: FC<{
-  search: NextSearchParams;
   initialTab: HomePageTabName;
   initialFeaturedPosts: PostListItem[];
   curatedPost: PostListItem | null;
@@ -38,6 +39,7 @@ export const HomePageProvider: FC<{
   const [_, setCookie] = useCookiesWithConsent([homePageTabCookie]);
 
   const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
+  const [currentTag, setCurrentTag] = useState<TagBase | null>(null);
 
   const setCurrentTab = useCallback(
     (tab: HomePageTabName) => {
@@ -73,6 +75,8 @@ export const HomePageProvider: FC<{
       value={{
         currentTab,
         setCurrentTab,
+        currentTag,
+        setCurrentTag,
         featuredPosts,
         loadingFeaturedPosts,
         loadMoreFeaturedPosts,

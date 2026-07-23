@@ -1,4 +1,3 @@
-import type { NextSearchParams } from "@/lib/typeHelpers";
 import { cookies } from "next/headers";
 import {
   fetchFeaturedFrontpagePosts,
@@ -19,11 +18,7 @@ import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSecti
 import PopularCommentsList from "./PopularCommentsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 
-export default async function HomePageContent({
-  search,
-}: Readonly<{
-  search: NextSearchParams;
-}>) {
+export default async function HomePageContent() {
   const [cookieStore, currentUser] = await Promise.all([
     cookies(),
     getCurrentUser(),
@@ -40,7 +35,6 @@ export default async function HomePageContent({
   return (
     <div data-component="HomePageContent" className="w-full">
       <HomePageProvider
-        search={search}
         initialTab={initialTab}
         initialFeaturedPosts={featuredPosts}
         curatedPost={curatedPost}
