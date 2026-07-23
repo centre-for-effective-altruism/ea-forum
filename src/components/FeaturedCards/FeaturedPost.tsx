@@ -1,6 +1,7 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { PostListItem } from "@/lib/posts/postLists";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import {
   getPostSocialImageUrlWithDefaultBackup,
@@ -49,8 +50,10 @@ export default function FeaturedPost({
   large?: boolean;
   className?: string;
 }>) {
+  const { currentUser } = useCurrentUser();
   const { _id, title, curatedDate, tags, commentCount } = post;
 
+  const isNew = !!currentUser && !post.readStatus?.[0]?.isRead;
   const hasUnreadComments = postHasNewUnreadComments(post);
   const href = postGetPageUrl({ post });
   const isCommunity = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
@@ -77,10 +80,13 @@ export default function FeaturedPost({
         onClick={onClick}
         className={clsx(
           "cursor-pointer flex flex-col gap-3 p-5 rounded border-1 border-gray-200",
-          "bg-surface-floating hover:bg-surface-floating-hover",
+          "relative bg-surface-floating hover:bg-surface-floating-hover",
           className,
         )}
       >
+        {isNew && (
+          <div className="absolute -inset-y-px -left-px w-1.5 bg-primary rounded-l" />
+        )}
         <div
           className={clsx(
             "relative overflow-hidden rounded relative border-1 border-gray-600",
