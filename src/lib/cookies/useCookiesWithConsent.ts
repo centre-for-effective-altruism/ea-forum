@@ -30,7 +30,7 @@ export const useCookiesWithConsent = <
         return;
       }
 
-      setCookieBase(name, value, options);
+      setCookieBase(name, value, { path: "/", ...options });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(cookiePreferences), setCookieBase],

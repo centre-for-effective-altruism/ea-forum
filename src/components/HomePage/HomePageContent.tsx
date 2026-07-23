@@ -1,13 +1,15 @@
 import type { NextSearchParams } from "@/lib/typeHelpers";
+import { cookies } from "next/headers";
 import {
   fetchFeaturedFrontpagePosts,
   fetchMostRecentlyCuratedPost,
 } from "@/lib/posts/postLists";
 import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
 import { fetchPopularComments } from "@/lib/comments/commentLists";
+import { getCurrentHomePageTab } from "./homePageHelpers";
+import { HomePageProvider } from "./HomePageContext";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
-import { HomePageProvider } from "./HomePageContext";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
 import HomePageMagicTab from "./HomePageMagicTab";
 import HomePageTabs from "./HomePageTabs";
@@ -22,7 +24,11 @@ export default async function HomePageContent({
 }: Readonly<{
   search: NextSearchParams;
 }>) {
-  const currentUser = await getCurrentUser();
+  const [cookieStore, currentUser] = await Promise.all([
+    cookies(),
+    getCurrentUser(),
+  ]);
+  const initialTab = getCurrentHomePageTab(cookieStore);
   const [featuredPosts, curatedPost, popularComments, coreTags, spotlight] =
     await Promise.all([
       fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
@@ -35,6 +41,7 @@ export default async function HomePageContent({
     <div data-component="HomePageContent" className="w-full">
       <HomePageProvider
         search={search}
+        initialTab={initialTab}
         initialFeaturedPosts={featuredPosts}
         curatedPost={curatedPost}
       >

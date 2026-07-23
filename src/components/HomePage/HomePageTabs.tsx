@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { HomePageTabName, homePageTabs, useHomePage } from "./HomePageContext";
+import { HomePageTabName, homePageTabs } from "./homePageHelpers";
+import { useHomePage } from "./HomePageContext";
 import Type from "../Type";
 import clsx from "clsx";
 

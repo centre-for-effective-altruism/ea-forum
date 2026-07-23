@@ -2,10 +2,8 @@
 
 import {
   createContext,
-  Dispatch,
   FC,
   ReactNode,
-  SetStateAction,
   useCallback,
   useContext,
   useState,
@@ -13,24 +11,14 @@ import {
 import { captureException } from "@sentry/nextjs";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import type { PostListItem } from "@/lib/posts/postLists";
+import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
+import { HomePageTabName, homePageTabCookie } from "./homePageHelpers";
+import { useTracking } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
-
-export const homePageTabs = [
-  {
-    label: "Featured",
-    name: "featured",
-  },
-  {
-    label: "New & upvoted",
-    name: "magic",
-  },
-] as const;
-
-export type HomePageTabName = (typeof homePageTabs)[number]["name"];
 
 type HomePageContext = {
   currentTab: HomePageTabName;
-  setCurrentTab: Dispatch<SetStateAction<HomePageTabName>>;
+  setCurrentTab: (tab: HomePageTabName) => void;
   featuredPosts: PostListItem[];
   loadingFeaturedPosts: boolean;
   loadMoreFeaturedPosts: () => Promise<void>;
@@ -41,12 +29,23 @@ export const homePageContext = createContext<HomePageContext | null>(null);
 
 export const HomePageProvider: FC<{
   search: NextSearchParams;
+  initialTab: HomePageTabName;
   initialFeaturedPosts: PostListItem[];
   curatedPost: PostListItem | null;
   children: ReactNode;
-}> = ({ initialFeaturedPosts, curatedPost, children }) => {
-  const [currentTab, setCurrentTab] = useState<HomePageTabName>(
-    homePageTabs[0].name,
+}> = ({ initialTab, initialFeaturedPosts, curatedPost, children }) => {
+  const { captureEvent } = useTracking();
+  const [_, setCookie] = useCookiesWithConsent([homePageTabCookie]);
+
+  const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
+
+  const setCurrentTab = useCallback(
+    (tab: HomePageTabName) => {
+      rawSetCurrentTab(tab);
+      setCookie(homePageTabCookie, tab);
+      captureEvent("setFrontpageTab", { tab });
+    },
+    [setCookie, captureEvent],
   );
 
   const [featuredPosts, setFeaturedPosts] =
@@ -55,17 +54,19 @@ export const HomePageProvider: FC<{
   const loadMoreFeaturedPosts = useCallback(async () => {
     setLoadingFeaturedPosts(true);
     try {
+      const limit = 3;
       const posts = await rpc.posts.listFeatured({
         offset: featuredPosts.length,
-        limit: 3,
+        limit,
       });
       setFeaturedPosts((featuredPosts) => [...featuredPosts, ...posts]);
+      captureEvent("loadMoreFeaturedPosts", { total: featuredPosts.length + limit });
     } catch (e) {
       console.error("Error loading featured posts:", e);
       captureException(e);
     }
     setLoadingFeaturedPosts(false);
-  }, [featuredPosts.length]);
+  }, [featuredPosts.length, captureEvent]);
 
   return (
     <homePageContext.Provider
