@@ -87,6 +87,11 @@ export const forumEventCommentMetadataSchema = z.object({
       answerIdsWhenPublished: z.array(z.string()),
       /** The user's latest selection, if it has changed since publishing */
       latestAnswerIds: z.array(z.string()).nullable().optional(),
+      /**
+       * The content prefilled into the comment box after voting. Read
+       * server-side to reject comments containing only the prefilled prompt.
+       */
+      commentPrompt: z.string().nullable().optional(),
     })
     .nullable()
     .optional(),

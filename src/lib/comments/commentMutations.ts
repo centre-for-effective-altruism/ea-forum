@@ -62,6 +62,38 @@ const validateEditorContents = (
   }
 };
 
+/**
+ * Both poll formats prefill the comment box with the poll question; reject a
+ * comment that is only that prompt (submitted without adding anything). The
+ * prompt is stored on the metadata: slider polls under `poll`, multiple-choice
+ * polls under `mcPoll`.
+ */
+const validatePollResponseNotOnlyPrompt = (
+  editorData: EditorData,
+  forumEventMetadata?: ForumEventCommentMetadata,
+) => {
+  const commentPrompt =
+    forumEventMetadata?.poll?.commentPrompt ??
+    forumEventMetadata?.mcPoll?.commentPrompt;
+  const data = editorData.originalContents.data;
+  if (!commentPrompt || !data) {
+    return;
+  }
+  // commentPrompt is like `<blockquote>${question}</blockquote><p></p>`; when
+  // unedited the editor re-wraps it (e.g. `<blockquote><p>${question}</p>...`).
+  // Strip tags, replace &nbsp;, and collapse whitespace so the two compare equal.
+  const normalize = (html: string) =>
+    html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const normalizedPrompt = normalize(commentPrompt);
+  if (normalizedPrompt && normalize(data) === normalizedPrompt) {
+    throw new Error("Cannot submit only the prefilled text");
+  }
+};
+
 const commentSyncCallbacks = async ({
   txn,
   isFirstPublish,
@@ -160,6 +192,7 @@ export const createPostComment = async ({
     throw new Error("No post provided");
   }
   validateEditorContents(editorData, shortform);
+  validatePollResponseNotOnlyPrompt(editorData, forumEventMetadata);
 
   // eslint-disable-next-line prefer-const
   let [post, parentComment] = await Promise.all([

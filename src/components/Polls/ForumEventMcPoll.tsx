@@ -157,6 +157,7 @@ export default function ForumEventMcPoll({
     mcPoll: {
       answerIdsWhenPublished: submittedAnswerIds,
       latestAnswerIds: null,
+      commentPrompt,
     },
   };
 
