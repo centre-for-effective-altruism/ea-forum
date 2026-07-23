@@ -9,8 +9,13 @@ import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import { HomePageProvider } from "./HomePageContext";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
-import HomePageTabs from "./HomePageTabs";
 import HomePageMagicTab from "./HomePageMagicTab";
+import HomePageTabs from "./HomePageTabs";
+import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
+import FrontpagePostsList from "../PostsList/FrontpagePostsList";
+import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
+import PopularCommentsList from "./PopularCommentsList";
+import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 
 export default async function HomePageContent({
   search,
@@ -35,7 +40,35 @@ export default async function HomePageContent({
       >
         <HomePageTabs className="mb-5" />
         <HomePageFeaturedTab initialPopularComments={popularComments} />
-        <HomePageMagicTab coreTags={coreTags} spotlight={spotlight} />
+        <HomePageMagicTab
+          coreTags={coreTags}
+          spotlight={spotlight}
+          stickyPostsList={
+            <ViewBasedPostsList
+              viewType="list"
+              hideLoadMore
+              view={{
+                view: "sticky",
+                limit: 5,
+              }}
+            />
+          }
+          frontpagePostsList={<FrontpagePostsList />}
+          communityPostsList={
+            <ViewBasedPostsList
+              viewType="fromContext"
+              hideLoadMore
+              view={{
+                view: "frontpage",
+                limit: 5,
+                onlyTagId: process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
+              }}
+            />
+          }
+          quickTakesList={<FrontpageQuickTakesList initialLimit={5} />}
+          popularCommentsList={<PopularCommentsList initialLimit={3} />}
+          recentDiscussions={<RecentDiscussionsSection />}
+        />
       </HomePageProvider>
     </div>
   );

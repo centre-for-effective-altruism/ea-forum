@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { ReactNode, Suspense } from "react";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
@@ -18,16 +18,26 @@ import Type from "../Type";
 export default function HomePageMagicTab({
   coreTags,
   spotlight,
+  stickyPostsList,
+  frontpagePostsList,
+  communityPostsList,
+  quickTakesList,
+  popularCommentsList,
+  recentDiscussions,
 }: Readonly<{
   coreTags: TagBase[];
   spotlight: SpotlightBase | null;
+  stickyPostsList: ReactNode;
+  frontpagePostsList: ReactNode;
+  communityPostsList: ReactNode;
+  quickTakesList: ReactNode;
+  popularCommentsList: ReactNode;
+  recentDiscussions: ReactNode;
 }>) {
   const { currentTab } = useHomePage();
   if (currentTab !== "magic") {
     return null;
   }
-
-  const communityTagId = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID;
 
   return (
     <div data-component="HomePageMagicTab">
@@ -38,62 +48,35 @@ export default function HomePageMagicTab({
           <FilterSettingsToggle />
         </div>
         <FilterSettingsEditor className="mb-2" />
-        <div className="mb-2">
-          Sticky post list
-          {/*
-          <ViewBasedPostsList
-            viewType="list"
-            hideLoadMore
-            view={{
-              view: "sticky",
-              limit: 5,
-            }}
-          />
-            */}
-        </div>
+        <div className="mb-2">{stickyPostsList}</div>
         <div className="mb-10">
           <Suspense
             fallback={<PostsListSkeleton count={12} viewType="fromContext" />}
           >
-            {/*<FrontpagePostsList />*/}
-            Frontpage post list
+            {frontpagePostsList}
           </Suspense>
         </div>
       </FilterSettingsProvider>
-      {communityTagId && (
+      {process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID && (
         <HomePageCommunitySection className="mb-10">
-          Community post list
-          {/*
-          <ViewBasedPostsList
-            viewType="fromContext"
-            hideLoadMore
-            view={{
-              view: "frontpage",
-              limit: 5,
-              onlyTagId: communityTagId,
-            }}
-          />
-            */}
+          {communityPostsList}
         </HomePageCommunitySection>
       )}
       <HomePageQuickTakesSection coreTags={coreTags} className="mb-10">
         <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
-          Quick takes
-          {/* <FrontpageQuickTakesList initialLimit={5} />*/}
+          {quickTakesList}
         </Suspense>
       </HomePageQuickTakesSection>
       <HomePagePopularCommentsSection className="mb-10">
         <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
-          Popular comments
-          {/*<PopularCommentsList initialLimit={3} />*/}
+          {popularCommentsList}
         </Suspense>
       </HomePagePopularCommentsSection>
       <Type className="mb-2" style="sectionTitleLarge">
         Recent discussion
       </Type>
       <Suspense fallback={<div className="bg-gray-200 w-full h-[400px] rounded" />}>
-        Recent discussions
-        {/*<RecentDiscussionsSection />*/}
+        {recentDiscussions}
       </Suspense>
     </div>
   );

@@ -6,11 +6,14 @@ import {
   FC,
   ReactNode,
   SetStateAction,
+  useCallback,
   useContext,
   useState,
 } from "react";
+import { captureException } from "@sentry/nextjs";
 import type { NextSearchParams } from "@/lib/typeHelpers";
 import type { PostListItem } from "@/lib/posts/postLists";
+import { rpc } from "@/lib/rpc";
 
 export const homePageTabs = [
   {
@@ -29,6 +32,8 @@ type HomePageContext = {
   currentTab: HomePageTabName;
   setCurrentTab: Dispatch<SetStateAction<HomePageTabName>>;
   featuredPosts: PostListItem[];
+  loadingFeaturedPosts: boolean;
+  loadMoreFeaturedPosts: () => Promise<void>;
   curatedPost: PostListItem | null;
 };
 
@@ -43,15 +48,33 @@ export const HomePageProvider: FC<{
   const [currentTab, setCurrentTab] = useState<HomePageTabName>(
     homePageTabs[0].name,
   );
+
   const [featuredPosts, setFeaturedPosts] =
     useState<PostListItem[]>(initialFeaturedPosts);
-  void setFeaturedPosts; // TODO: Load more posts
+  const [loadingFeaturedPosts, setLoadingFeaturedPosts] = useState(false);
+  const loadMoreFeaturedPosts = useCallback(async () => {
+    setLoadingFeaturedPosts(true);
+    try {
+      const posts = await rpc.posts.listFeatured({
+        offset: featuredPosts.length,
+        limit: 3,
+      });
+      setFeaturedPosts((featuredPosts) => [...featuredPosts, ...posts]);
+    } catch (e) {
+      console.error("Error loading featured posts:", e);
+      captureException(e);
+    }
+    setLoadingFeaturedPosts(false);
+  }, [featuredPosts.length]);
+
   return (
     <homePageContext.Provider
       value={{
         currentTab,
         setCurrentTab,
         featuredPosts,
+        loadingFeaturedPosts,
+        loadMoreFeaturedPosts,
         curatedPost,
       }}
     >

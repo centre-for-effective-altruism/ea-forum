@@ -622,6 +622,12 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
 };
 
+/**
+ * Posts for the featured front page. This is:
+ *  - all posts marked as being in the on-site digest
+ *  - all non-community posts with >= 100 karma
+ *  - excluding the most recently curated post which is fetched separately
+ */
 export const fetchFeaturedFrontpagePosts = async ({
   currentUser,
   offset = 0,
