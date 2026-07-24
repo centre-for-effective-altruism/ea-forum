@@ -31,7 +31,7 @@ export const typeStyles = {
   onboardingTitle: "font-sans text-[30px] font-[600] tracking-[-0.6px]",
   onboardingTag: "font-sans text-[13px] font-[700] leading-[16px]",
   featuredPostTitle:
-    "font-sans font-[600] text-[22px] leading-[120%] tracking-[0.44px]",
+    "font-sans font-[600] text-[22px] leading-[120%] tracking-[-0.6px]",
   featuredPostTitleLarge:
     "font-sans font-[600] text-[22px] leading-[120%] tracking-[0.44px] xl:text-[32px] xl:leading-[110%] xl:tracking-[0.64px]",
 } as const satisfies Record<string, string>;
