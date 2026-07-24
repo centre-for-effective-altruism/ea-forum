@@ -13,14 +13,34 @@ type ScoredRevision = {
 type PangramClassification = {
   label: string;
   className: string;
-  aiScore: number;
-  assistedScore: number | null;
-  humanScore: number | null;
+  aiScore?: number | null;
+  assistedScore?: number | null;
+  humanScore?: number | null;
 };
+
+const pangramLabels = {
+  "entirely-ai": {
+    label: "~Entirely AI-written",
+    className: "bg-pangram-high-bg text-pangram-high-fg border-pangram-high-hl",
+  },
+  "mostly-ai": {
+    label: "Mostly AI-written",
+    className: "bg-pangram-med-bg text-pangram-med-fg border-pangram-med-hl",
+  },
+  "partly-ai": {
+    label: "Partly AI-written",
+    className: "bg-pangram-low-bg text-pangram-low-fg border-pangram-low-hl",
+  },
+  human: null,
+} as const;
 
 export const classifyPangramScore = (
   revision: ScoredRevision | null,
+  statusOverride?: string | null,
 ): PangramClassification | null => {
+  if (statusOverride && statusOverride in pangramLabels) {
+    return pangramLabels[statusOverride as keyof typeof pangramLabels];
+  }
   if (!revision || typeof revision.pangramAiScore !== "number") {
     return null;
   }
@@ -31,22 +51,19 @@ export const classifyPangramScore = (
   };
   if (scores.aiScore >= 0.99) {
     return {
-      label: "~Entirely AI-written",
-      className: "bg-pangram-high-bg text-pangram-high-fg border-pangram-high-hl",
+      ...pangramLabels["entirely-ai"],
       ...scores,
     };
   }
   if (scores.aiScore > 0.5) {
     return {
-      label: "Mostly AI-written",
-      className: "bg-pangram-med-bg text-pangram-med-fg border-pangram-med-hl",
+      ...pangramLabels["mostly-ai"],
       ...scores,
     };
   }
   if (scores.aiScore > 0.1) {
     return {
-      label: "Partly AI-written",
-      className: "bg-pangram-low-bg text-pangram-low-fg border-pangram-low-hl",
+      ...pangramLabels["partly-ai"],
       ...scores,
     };
   }

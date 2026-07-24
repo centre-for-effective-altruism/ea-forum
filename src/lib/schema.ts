@@ -2074,6 +2074,7 @@ export const posts = pgTable(
     generateDraftJargon: boolean().default(false).notNull(),
     coauthorUserIds: text().array().default([""]).notNull(),
     marginalFundingOrg: text(),
+    pangramStatusOverride: text(),
   },
   (table) => [
     index("idx_Posts_agentFoundationsId").using(
