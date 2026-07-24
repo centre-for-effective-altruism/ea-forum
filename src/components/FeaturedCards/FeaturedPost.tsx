@@ -9,7 +9,8 @@ import {
   postHasNewUnreadComments,
 } from "@/lib/posts/postsHelpers";
 import clsx from "clsx";
-import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import ChatBubbleOutlineIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
+import ChatBubbleSolidIcon from "@heroicons/react/24/solid/ChatBubbleLeftIcon";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
 import PostsItemMeta from "../PostsList/PostsItemMeta";
 import LotusIcon from "../Icons/LotusIcon";
@@ -63,6 +64,8 @@ export default function FeaturedPost({
     width: large ? 700 : 450,
     dpr: "auto",
   });
+
+  const ChatIcon = isNew ? ChatBubbleSolidIcon : ChatBubbleOutlineIcon;
 
   const { onClick } = useClickableCell({
     href,
@@ -123,22 +126,26 @@ export default function FeaturedPost({
         </Type>
         <Type style="bodySmallMedium" className="min-w-0 flex items-center gap-2">
           <PostsItemMeta post={post} hideCuratedDate />
-          <InteractionWrapper>
-            <Link
-              href={href + "#comments"}
-              className="
-                flex items-center gap-1 hover:bg-gray-200 rounded-[3px] px-1 py-0.5
-              "
-            >
-              <ChatBubbleLeftIcon className="w-4" />
-              <Type
-                style="bodySmall"
-                className={clsx(hasUnreadComments && "font-[600]!")}
+          {commentCount > 0 && (
+            <InteractionWrapper>
+              <Link
+                href={href + "#comments"}
+                className={clsx(
+                  "flex items-center gap-1 hover:bg-gray-200",
+                  "rounded-[3px] px-1 py-0.5",
+                  isNew && "text-primary",
+                )}
               >
-                {commentCount}
-              </Type>
-            </Link>
-          </InteractionWrapper>
+                <ChatIcon className="w-4" />
+                <Type
+                  style="bodySmall"
+                  className={clsx(hasUnreadComments && "font-[600]!")}
+                >
+                  {commentCount}
+                </Type>
+              </Link>
+            </InteractionWrapper>
+          )}
         </Type>
       </article>
     </AnalyticsContext>
