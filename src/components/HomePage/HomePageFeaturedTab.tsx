@@ -42,7 +42,7 @@ export default function HomePageFeaturedTab({
           Selected posts to help us answer: How can we do the most good with our
           resources?
         </Type>
-        <section className="grid grid-cols-3 gap-1">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-1">
           {curatedPost && (
             <FeaturedPost post={curatedPost} large className="xl:row-span-2" />
           )}
@@ -59,7 +59,7 @@ export default function HomePageFeaturedTab({
           </Type>
           <ClientPopularCommentsList initialComments={initialPopularComments} />
         </section>
-        <section className="grid grid-cols-3 gap-1">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-1">
           {switchingPosts.map((post) => (
             <FeaturedPost key={post._id} post={post} className="xl:hidden" />
           ))}
