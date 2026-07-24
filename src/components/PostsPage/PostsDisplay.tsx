@@ -64,7 +64,10 @@ export default async function PostDisplay({
     post.readTimeMinutesOverride,
     wordCount,
   );
-  const pangramClassification = classifyPangramScore(post.contents);
+  const pangramClassification = classifyPangramScore(
+    post.contents,
+    post.pangramStatusOverride,
+  );
 
   const showRecommendations =
     !sequence &&
