@@ -2,7 +2,7 @@ import type { FC, ReactNode, SyntheticEvent } from "react";
 import { PostListItem } from "@/lib/posts/postLists";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
+import { useClickableCell } from "@/lib/hooks/useClickableCell";
 import {
   getPostSocialImageUrlWithDefaultBackup,
   postGetPageUrl,
@@ -26,19 +26,22 @@ const onImageError = (ev: SyntheticEvent<HTMLImageElement, Event>) => {
   (ev.target as HTMLImageElement).style.visibility = "hidden";
 };
 
-const Chip: FC<{ className: string; children: ReactNode }> = ({
+const Chip: FC<{ href: string; className: string; children: ReactNode }> = ({
+  href,
   className,
   children,
 }) => (
-  <Type
-    style="bodyHeavy"
-    className={clsx(
-      "border-1 rounded-[3px] text-always-black px-1.5 py-px shadow-sm",
-      "flex items-center gap-1",
-      className,
-    )}
-  >
-    {children}
+  <Type style="bodyHeavy">
+    <Link
+      href={href}
+      className={clsx(
+        "border-1 rounded-[3px] text-always-black px-1.5 py-px shadow-sm",
+        "flex items-center gap-1 hover:scale-104 transition-all",
+        className,
+      )}
+    >
+      {children}
+    </Link>
   </Type>
 );
 
@@ -105,13 +108,19 @@ export default function FeaturedPost({
           />
           <div className="absolute z-1 top-3 right-4 flex flex-col gap-1">
             {curatedDate && (
-              <Chip className="bg-post-curated-bg border-post-curated-border">
+              <Chip
+                href="/recommendations"
+                className="bg-post-curated-bg border-post-curated-border"
+              >
                 <StarIcon className="w-3.5" />
                 Curated
               </Chip>
             )}
             {isCommunity && (
-              <Chip className="bg-post-community-bg border-post-community-border">
+              <Chip
+                href="/topics/community"
+                className="bg-post-community-bg border-post-community-border"
+              >
                 <LotusIcon className="w-3.5" />
                 Community
               </Chip>
@@ -127,24 +136,22 @@ export default function FeaturedPost({
         <Type style="bodySmallMedium" className="min-w-0 flex items-center gap-2">
           <PostsItemMeta post={post} hideCuratedDate />
           {commentCount > 0 && (
-            <InteractionWrapper>
-              <Link
-                href={href + "#comments"}
-                className={clsx(
-                  "flex items-center gap-1 hover:bg-gray-200",
-                  "rounded-[3px] px-1 py-0.5",
-                  isNew && "text-primary",
-                )}
+            <Link
+              href={href + "#comments"}
+              className={clsx(
+                "flex items-center gap-1 hover:bg-gray-200",
+                "rounded-[3px] px-1 py-0.5",
+                isNew && "text-primary",
+              )}
+            >
+              <ChatIcon className="w-4" />
+              <Type
+                style="bodySmall"
+                className={clsx(hasUnreadComments && "font-[600]!")}
               >
-                <ChatIcon className="w-4" />
-                <Type
-                  style="bodySmall"
-                  className={clsx(hasUnreadComments && "font-[600]!")}
-                >
-                  {commentCount}
-                </Type>
-              </Link>
-            </InteractionWrapper>
+                {commentCount}
+              </Type>
+            </Link>
           )}
         </Type>
       </article>

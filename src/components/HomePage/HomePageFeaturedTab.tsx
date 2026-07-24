@@ -38,7 +38,7 @@ export default function HomePageFeaturedTab({
         data-component="HomePageFeaturedTab"
         className="flex flex-col gap-9 pb-20"
       >
-        <Type style="bodyLarge" className="text-gray-600 -mb-3">
+        <Type className="text-gray-600 -mt-4 -mb-3">
           Selected posts to help us answer: How can we do the most good with our
           resources?
         </Type>
