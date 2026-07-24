@@ -12,7 +12,11 @@ import { captureException } from "@sentry/nextjs";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
-import { HomePageTabName, homePageTabCookie } from "./homePageHelpers";
+import {
+  HomePageTabName,
+  getCurrentHomePageTab,
+  homePageTabCookie,
+} from "./homePageHelpers";
 import { useTracking } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
 
@@ -30,13 +34,13 @@ type HomePageContext = {
 export const homePageContext = createContext<HomePageContext | null>(null);
 
 export const HomePageProvider: FC<{
-  initialTab: HomePageTabName;
   initialFeaturedPosts: PostListItem[];
   curatedPost: PostListItem | null;
   children: ReactNode;
-}> = ({ initialTab, initialFeaturedPosts, curatedPost, children }) => {
+}> = ({ initialFeaturedPosts, curatedPost, children }) => {
   const { captureEvent } = useTracking();
-  const [_, setCookie] = useCookiesWithConsent([homePageTabCookie]);
+  const [cookies, setCookie] = useCookiesWithConsent([homePageTabCookie]);
+  const initialTab = getCurrentHomePageTab(cookies);
 
   const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
   const [currentTag, setCurrentTag] = useState<TagBase | null>(null);

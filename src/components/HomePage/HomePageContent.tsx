@@ -24,6 +24,7 @@ export default async function HomePageContent() {
     getCurrentUser(),
   ]);
   const initialTab = getCurrentHomePageTab(cookieStore);
+  void initialTab; // TODO Better loading
   const [featuredPosts, curatedPost, popularComments, coreTags, spotlight] =
     await Promise.all([
       fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
@@ -35,7 +36,6 @@ export default async function HomePageContent() {
   return (
     <div data-component="HomePageContent" className="w-full">
       <HomePageProvider
-        initialTab={initialTab}
         initialFeaturedPosts={featuredPosts}
         curatedPost={curatedPost}
       >

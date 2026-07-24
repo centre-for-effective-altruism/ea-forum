@@ -2,8 +2,6 @@
 
 ### [Effective Altruism Forum](https://forum.effectivealtruism.org)
 
-NOTE: This repository is still in beta.
-
 ## Running
 
 First install dependencies with `npm install`. You'll then need to setup a

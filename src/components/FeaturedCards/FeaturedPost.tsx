@@ -92,8 +92,8 @@ export default function FeaturedPost({
         )}
         <div
           className={clsx(
-            "relative overflow-hidden rounded relative border-1 border-gray-600",
-            "w-full grow min-h-[140px]",
+            "relative overflow-hidden rounded relative w-full grow min-h-[140px]",
+            "border-1 border-gray-600/20",
           )}
         >
           <Image

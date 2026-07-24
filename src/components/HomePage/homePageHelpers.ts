@@ -1,5 +1,5 @@
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-import { cookieName } from "@/lib/cookies/cookies";
+import { CookieName, cookieName } from "@/lib/cookies/cookies";
 
 export const homePageTabs = [
   {
@@ -17,12 +17,15 @@ export type HomePageTabName = (typeof homePageTabs)[number]["name"];
 export const homePageTabCookie = cookieName("last_frontpage_tab");
 
 export const getCurrentHomePageTab = (
-  cookies: ReadonlyRequestCookies,
+  cookies: ReadonlyRequestCookies | Partial<Record<CookieName, string>>,
 ): HomePageTabName => {
-  const cookie = cookies.get(homePageTabCookie);
-  if (cookie?.value) {
+  const cookie =
+    "get" in cookies
+      ? cookies.get(homePageTabCookie)?.value
+      : cookies[homePageTabCookie];
+  if (cookie) {
     for (const { name } of homePageTabs) {
-      if (name === cookie.value) {
+      if (name === cookie) {
         return name;
       }
     }
