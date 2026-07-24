@@ -1,11 +1,14 @@
 "use client";
 
+import { useCallback } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
-import range from "lodash/range";
+import { CommentsListProvider } from "../Comments/useCommentsList";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useHomePage } from "./HomePageContext";
-import ClientPopularCommentsList from "./ClientPopularCommentsList";
+import { rpc } from "@/lib/rpc";
+import range from "lodash/range";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
+import CommentsFeed from "../Comments/CommentsFeed";
 import TextLinkButton from "../TextLinkButton";
 import Type from "../Type";
 
@@ -21,6 +24,13 @@ export default function HomePageFeaturedTab({
     loadMoreFeaturedPosts,
     curatedPost,
   } = useHomePage();
+
+  const loadMorePopularComments = useCallback(
+    async (args: { offset: number; limit: number }) =>
+      rpc.comments.listPopular(args),
+    [],
+  );
+
   if (currentTab !== "featured") {
     return null;
   }
@@ -57,7 +67,14 @@ export default function HomePageFeaturedTab({
           <Type style="sectionTitleLarge" className="mb-4">
             Popular comments and quick takes
           </Type>
-          <ClientPopularCommentsList initialComments={initialPopularComments} />
+          <CommentsListProvider comments={initialPopularComments} showPostTitle>
+            <CommentsFeed
+              comments={initialPopularComments}
+              loadMore={loadMorePopularComments}
+              replaceAllOnLoadMore
+              listClassName="grid grid-cols-2 gap-x-1"
+            />
+          </CommentsListProvider>
         </section>
         <section className="grid grid-cols-1 md:grid-cols-3 gap-1">
           {switchingPosts.map((post) => (

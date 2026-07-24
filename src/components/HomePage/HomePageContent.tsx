@@ -3,8 +3,8 @@ import {
   fetchFeaturedFrontpagePosts,
   fetchMostRecentlyCuratedPost,
 } from "@/lib/posts/postLists";
+import { fetchFrontpagePopularCommentsAndQuickTakes } from "@/lib/comments/commentLists";
 import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
-import { fetchPopularComments } from "@/lib/comments/commentLists";
 import { getCurrentHomePageTab } from "./homePageHelpers";
 import { HomePageProvider } from "./HomePageContext";
 import { getCurrentUser } from "@/lib/users/currentUser";
@@ -29,7 +29,7 @@ export default async function HomePageContent() {
     await Promise.all([
       fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
       fetchMostRecentlyCuratedPost(currentUser),
-      fetchPopularComments({ currentUser, limit: 3 }),
+      fetchFrontpagePopularCommentsAndQuickTakes({ currentUser, limit: 6 }),
       fetchCoreTags(),
       fetchCurrentSpotlight(),
     ]);

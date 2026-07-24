@@ -194,7 +194,8 @@ export default function CommentTripleDotMenu({
         <button
           aria-label="Comment options"
           className={clsx(
-            "text-gray-600 hover:text-gray-900 cursor-pointer flex items-center",
+            "text-gray-600 hover:bg-item-hover rounded cursor-pointer",
+            "flex items-center",
             className,
           )}
         >
