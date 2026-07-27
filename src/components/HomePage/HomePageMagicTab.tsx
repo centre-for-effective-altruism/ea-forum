@@ -5,6 +5,7 @@ import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { useHomePageTab } from "./HomePageTabContext";
 import { useHomePage } from "./HomePageContext";
 import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
@@ -37,7 +38,8 @@ export default function HomePageMagicTab({
   popularCommentsList: ReactNode;
   recentDiscussions: ReactNode;
 }>) {
-  const { currentTab, currentTag } = useHomePage();
+  const { currentTab } = useHomePageTab();
+  const { currentTag } = useHomePage();
   if (currentTab !== "magic") {
     return null;
   }

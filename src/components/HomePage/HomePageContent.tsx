@@ -1,17 +1,14 @@
-import { cookies } from "next/headers";
 import {
   fetchFeaturedFrontpagePosts,
   fetchMostRecentlyCuratedPost,
 } from "@/lib/posts/postLists";
 import { fetchFrontpagePopularCommentsAndQuickTakes } from "@/lib/comments/commentLists";
 import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
-import { getCurrentHomePageTab } from "./homePageHelpers";
 import { HomePageProvider } from "./HomePageContext";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
 import HomePageMagicTab from "./HomePageMagicTab";
-import HomePageTabs from "./HomePageTabs";
 import ViewBasedPostsList from "../PostsList/ViewBasedPostsList";
 import FrontpagePostsList from "../PostsList/FrontpagePostsList";
 import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
@@ -19,12 +16,7 @@ import PopularCommentsList from "./PopularCommentsList";
 import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
 
 export default async function HomePageContent() {
-  const [cookieStore, currentUser] = await Promise.all([
-    cookies(),
-    getCurrentUser(),
-  ]);
-  const initialTab = getCurrentHomePageTab(cookieStore);
-  void initialTab; // TODO Better loading
+  const currentUser = await getCurrentUser();
   const [featuredPosts, curatedPost, popularComments, coreTags, spotlight] =
     await Promise.all([
       fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
@@ -40,7 +32,6 @@ export default async function HomePageContent() {
         curatedPost={curatedPost}
         initialPopularCommentsAndQuickTakes={popularComments}
       >
-        <HomePageTabs className="mb-5" />
         <HomePageFeaturedTab />
         <HomePageMagicTab
           coreTags={coreTags}

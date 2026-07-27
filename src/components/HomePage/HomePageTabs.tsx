@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { HomePageTabName, homePageTabs } from "./homePageHelpers";
-import { useHomePage } from "./HomePageContext";
+import { useHomePageTab } from "./HomePageTabContext";
 import Type from "../Type";
 import clsx from "clsx";
 
@@ -11,7 +11,7 @@ export default function HomePageTabs({
 }: Readonly<{
   className?: string;
 }>) {
-  const { currentTab, setCurrentTab } = useHomePage();
+  const { currentTab, setCurrentTab } = useHomePageTab();
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);

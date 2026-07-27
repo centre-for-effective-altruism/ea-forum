@@ -1,9 +1,14 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
+import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
+import { HomePageTabProvider } from "@/components/HomePage/HomePageTabContext";
 import StructuredData from "@/components/StructuredData";
 import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import HomePageContent from "@/components/HomePage/HomePageContent";
+import HomePageFeaturedTabSkeleton from "@/components/HomePage/HomePageFeaturedTabSkeleton";
+import HomePageTabs from "@/components/HomePage/HomePageTabs";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -29,13 +34,19 @@ const structuredData = {
 };
 
 export default async function HomePage() {
+  const cookieStore = await cookies();
+  const initialTab = getCurrentHomePageTab(cookieStore);
+  void initialTab; // TODO
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
-      <Suspense>
-        <HomePageContent />
-      </Suspense>
+      <HomePageTabProvider>
+        <HomePageTabs className="mb-5" />
+        <Suspense fallback={<HomePageFeaturedTabSkeleton />}>
+          <HomePageContent />
+        </Suspense>
+      </HomePageTabProvider>
     </HomePageColumns>
   );
 }

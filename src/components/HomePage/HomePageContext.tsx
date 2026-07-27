@@ -12,18 +12,10 @@ import { captureException } from "@sentry/nextjs";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { TagBase } from "@/lib/tags/tagQueries";
-import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import { useTracking } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
-import {
-  HomePageTabName,
-  getCurrentHomePageTab,
-  homePageTabCookie,
-} from "./homePageHelpers";
 
 type HomePageContext = {
-  currentTab: HomePageTabName;
-  setCurrentTab: (tab: HomePageTabName) => void;
   currentTag: TagBase | null; // null if viewing the normal magic frontpage
   setCurrentTag: (tag: TagBase | null) => void;
   featuredPosts: PostListItem[];
@@ -47,20 +39,7 @@ export const HomePageProvider: FC<{
   children,
 }) => {
   const { captureEvent } = useTracking();
-  const [cookies, setCookie] = useCookiesWithConsent([homePageTabCookie]);
-  const initialTab = getCurrentHomePageTab(cookies);
-
-  const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
   const [currentTag, setCurrentTag] = useState<TagBase | null>(null);
-
-  const setCurrentTab = useCallback(
-    (tab: HomePageTabName) => {
-      rawSetCurrentTab(tab);
-      setCookie(homePageTabCookie, tab);
-      captureEvent("setFrontpageTab", { tab });
-    },
-    [setCookie, captureEvent],
-  );
 
   const [featuredPosts, setFeaturedPosts] =
     useState<PostListItem[]>(initialFeaturedPosts);
@@ -85,8 +64,6 @@ export const HomePageProvider: FC<{
   return (
     <homePageContext.Provider
       value={{
-        currentTab,
-        setCurrentTab,
         currentTag,
         setCurrentTag,
         featuredPosts,
