@@ -15,7 +15,7 @@ import type { TagBase } from "@/lib/tags/tagQueries";
 import { useTracking } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
 
-type HomePageContext = {
+type HomePageDataContext = {
   currentTag: TagBase | null; // null if viewing the normal magic frontpage
   setCurrentTag: (tag: TagBase | null) => void;
   featuredPosts: PostListItem[];
@@ -25,9 +25,9 @@ type HomePageContext = {
   initialPopularCommentsAndQuickTakes: CommentListItem[];
 };
 
-export const homePageContext = createContext<HomePageContext | null>(null);
+const homePageDataContext = createContext<HomePageDataContext | null>(null);
 
-export const HomePageProvider: FC<{
+export const HomePageDataProvider: FC<{
   initialFeaturedPosts: PostListItem[];
   curatedPost: PostListItem | null;
   initialPopularCommentsAndQuickTakes: CommentListItem[];
@@ -62,7 +62,7 @@ export const HomePageProvider: FC<{
   }, [featuredPosts.length, captureEvent]);
 
   return (
-    <homePageContext.Provider
+    <homePageDataContext.Provider
       value={{
         currentTag,
         setCurrentTag,
@@ -74,14 +74,14 @@ export const HomePageProvider: FC<{
       }}
     >
       {children}
-    </homePageContext.Provider>
+    </homePageDataContext.Provider>
   );
 };
 
-export const useHomePage = () => {
-  const context = useContext(homePageContext);
+export const useHomePageData = () => {
+  const context = useContext(homePageDataContext);
   if (!context) {
-    throw new Error("No home page context found");
+    throw new Error("No home page data context found");
   }
   return context;
 };

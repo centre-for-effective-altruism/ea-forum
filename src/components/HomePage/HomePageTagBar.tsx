@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { sortedHomePageTags } from "@/lib/tags/homepageTags";
-import { useHomePage } from "./HomePageContext";
+import { useHomePageData } from "./HomePageDataContext";
 import clsx from "clsx";
 import Type from "../Type";
 import "./home-page-tag-bar.css";
@@ -22,7 +22,7 @@ export default function HomePageTagBar({
 }>) {
   const tabsWindowRef = useRef<HTMLDivElement>(null);
   const topicsBarRef = useRef<HTMLDivElement>(null);
-  const { currentTag, setCurrentTag } = useHomePage();
+  const { currentTag, setCurrentTag } = useHomePageData();
   const [canScrollToLeft, setCanScrollToLeft] = useState(false);
   const [canScrollToRight, setCanScrollToRight] = useState(true);
   const { captureEvent } = useTracking();

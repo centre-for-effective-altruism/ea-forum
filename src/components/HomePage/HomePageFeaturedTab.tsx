@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { CommentsListProvider } from "../Comments/useCommentsList";
 import { useHomePageTab } from "./HomePageTabContext";
 import { filterNonNull } from "@/lib/typeHelpers";
-import { useHomePage } from "./HomePageContext";
+import { useHomePageData } from "./HomePageDataContext";
 import { rpc } from "@/lib/rpc";
 import range from "lodash/range";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
@@ -21,7 +21,7 @@ export default function HomePageFeaturedTab() {
     loadMoreFeaturedPosts,
     curatedPost,
     initialPopularCommentsAndQuickTakes,
-  } = useHomePage();
+  } = useHomePageData();
 
   const loadMorePopularComments = useCallback(
     async (args: { offset: number; limit: number }) =>

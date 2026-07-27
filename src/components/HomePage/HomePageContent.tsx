@@ -4,7 +4,7 @@ import {
 } from "@/lib/posts/postLists";
 import { fetchFrontpagePopularCommentsAndQuickTakes } from "@/lib/comments/commentLists";
 import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
-import { HomePageProvider } from "./HomePageContext";
+import { HomePageDataProvider } from "./HomePageDataContext";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
@@ -27,7 +27,7 @@ export default async function HomePageContent() {
     ]);
   return (
     <div data-component="HomePageContent">
-      <HomePageProvider
+      <HomePageDataProvider
         initialFeaturedPosts={featuredPosts}
         curatedPost={curatedPost}
         initialPopularCommentsAndQuickTakes={popularComments}
@@ -60,7 +60,7 @@ export default async function HomePageContent() {
           popularCommentsList={<PopularCommentsList initialLimit={3} />}
           recentDiscussions={<RecentDiscussionsSection />}
         />
-      </HomePageProvider>
+      </HomePageDataProvider>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useHomePageTab } from "./HomePageTabContext";
-import { useHomePage } from "./HomePageContext";
+import { useHomePageData } from "./HomePageDataContext";
 import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
@@ -39,7 +39,7 @@ export default function HomePageMagicTab({
   recentDiscussions: ReactNode;
 }>) {
   const { currentTab } = useHomePageTab();
-  const { currentTag } = useHomePage();
+  const { currentTag } = useHomePageData();
   if (currentTab !== "magic") {
     return null;
   }

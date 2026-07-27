@@ -21,7 +21,7 @@ type HomePageTabContext = {
   setCurrentTab: (tab: HomePageTabName) => void;
 };
 
-export const homePageTabContext = createContext<HomePageTabContext | null>(null);
+const homePageTabContext = createContext<HomePageTabContext | null>(null);
 
 export const HomePageTabProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const { captureEvent } = useTracking();
