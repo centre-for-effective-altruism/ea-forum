@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchCommmentsForPost } from "@/lib/comments/commentLists";
 import { CommentsListProvider } from "./useCommentsList";
+import ScrollToAnchor from "../ScrollToAnchor";
 import CommentsList from "./CommentsList";
 import CommentsSort from "./CommentsSort";
 import NewComment from "./NewComment";
@@ -17,6 +18,7 @@ export default async function CommentsSection({
   });
   return (
     <CommentsListProvider comments={comments}>
+      <ScrollToAnchor anchor="comments" />
       <Type style="commentsHeader" className="mt-12 mb-6" id="comments">
         Comments{" "}
         {comments.length > 0 && (
