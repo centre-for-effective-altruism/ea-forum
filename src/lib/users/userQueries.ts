@@ -425,6 +425,7 @@ export const fetchUserProfileCached = cache(
         mapLocation: true,
         programParticipation: true,
         profileTagIds: true,
+        reviewedByUserId: true,
       },
       extras: {
         biographyHtml: (usersTable) =>

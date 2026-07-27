@@ -39,7 +39,10 @@ export async function generateMetadata({
       })
     : undefined;
   const noIndex =
-    (!user.postCount && !user.commentCount) || user.karma <= 0 || user.noindex;
+    (!user.postCount && !user.commentCount) ||
+    user.karma < 10 ||
+    user.noindex ||
+    !user.reviewedByUserId;
   return {
     title: user.displayName,
     description,
