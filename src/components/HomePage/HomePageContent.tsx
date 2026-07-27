@@ -34,7 +34,7 @@ export default async function HomePageContent() {
       fetchCurrentSpotlight(),
     ]);
   return (
-    <div data-component="HomePageContent" className="w-full">
+    <div data-component="HomePageContent">
       <HomePageProvider
         initialFeaturedPosts={featuredPosts}
         curatedPost={curatedPost}

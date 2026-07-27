@@ -278,7 +278,7 @@ export const fetchCommentsForForumEvent = ({
 const frontpageQuickTakesWhere = ({
   currentUser,
   includeCommunity,
-  maxAgeDays = 5,
+  maxAgeDays = 7,
 }: {
   currentUser: UserPermissions | null;
   includeCommunity?: boolean;
@@ -400,7 +400,7 @@ type PopularCommentsConfig = {
 
 export const fetchPopularComments = async ({
   currentUser,
-  minScore = 12,
+  minScore = 10,
   offset = 0,
   limit = 3,
   recencyFactor = 250000,
@@ -413,7 +413,7 @@ export const fetchPopularComments = async ({
       SELECT DISTINCT ON ("postId") "_id"
       FROM "Comments"
       WHERE
-        CURRENT_TIMESTAMP - "postedAt" < '1 week'::INTERVAL
+        CURRENT_TIMESTAMP - "postedAt" < '10 days'::INTERVAL
         AND "shortform" IS NOT TRUE
         AND "baseScore" >= ${minScore}
         AND "retracted" IS NOT TRUE
@@ -489,8 +489,8 @@ export const fetchFrontpagePopularCommentsAndQuickTakes = async ({
   limit: number;
 }) => {
   const [popularComments, quickTakes] = await Promise.all([
-    fetchPopularComments({ currentUser, limit, minScore: 10 }),
-    fetchFrontpageQuickTakes({ currentUser, limit, maxAgeDays: 7 }),
+    fetchPopularComments({ currentUser, limit }),
+    fetchFrontpageQuickTakes({ currentUser, limit }),
   ]);
   return orderBy([...popularComments, ...quickTakes], ["score"], ["desc"]).slice(
     0,
