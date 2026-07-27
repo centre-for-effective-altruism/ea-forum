@@ -216,7 +216,7 @@ export default function CommentItem({
           (depth & 1 ? "bg-comment-odd" : "bg-comment-even"),
         !borderless && moderatorHat && "bg-moderator-comment",
         !borderless && depth === 0 ? "" : "border-r-0",
-        !borderless && isNew && "border-l-primary-light border-l-[4px]",
+        !borderless && isNew && "border-l-primary border-l-[4px]",
         className,
       )}
     >

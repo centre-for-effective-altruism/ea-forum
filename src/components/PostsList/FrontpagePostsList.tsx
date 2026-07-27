@@ -28,7 +28,6 @@ export default async function FrontpagePostsList() {
       <AnalyticsContext listContext="curatedPosts">
         <PostsList
           posts={curatedPosts}
-          viewType="fromContext"
           curatedIconLeft
           className={curatedPosts.length ? "mb-[2px]" : undefined}
         />

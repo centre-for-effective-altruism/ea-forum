@@ -86,16 +86,18 @@ export default function HomePageMagicTab({
             {communityPostsList}
           </HomePageCommunitySection>
         )}
-        <HomePageQuickTakesSection coreTags={coreTags} className="mb-10">
-          <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
-            {quickTakesList}
-          </Suspense>
-        </HomePageQuickTakesSection>
-        <HomePagePopularCommentsSection className="mb-10">
-          <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
-            {popularCommentsList}
-          </Suspense>
-        </HomePagePopularCommentsSection>
+        <div className="flex flex-col-reverse mobile-nav:grid grid-cols-2 gap-x-4">
+          <HomePagePopularCommentsSection className="mb-10">
+            <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
+              {popularCommentsList}
+            </Suspense>
+          </HomePagePopularCommentsSection>
+          <HomePageQuickTakesSection coreTags={coreTags} className="mb-10">
+            <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
+              {quickTakesList}
+            </Suspense>
+          </HomePageQuickTakesSection>
+        </div>
         <Type className="mb-2" style="sectionTitleLarge">
           Recent discussion
         </Type>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import type { CommentListItem } from "@/lib/comments/commentLists";
 import { CommentsListProvider } from "../Comments/useCommentsList";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useHomePage } from "./HomePageContext";
@@ -12,17 +11,14 @@ import CommentsFeed from "../Comments/CommentsFeed";
 import TextLinkButton from "../TextLinkButton";
 import Type from "../Type";
 
-export default function HomePageFeaturedTab({
-  initialPopularComments,
-}: Readonly<{
-  initialPopularComments: CommentListItem[];
-}>) {
+export default function HomePageFeaturedTab() {
   const {
     currentTab,
     featuredPosts,
     loadingFeaturedPosts,
     loadMoreFeaturedPosts,
     curatedPost,
+    initialPopularCommentsAndQuickTakes,
   } = useHomePage();
 
   const loadMorePopularComments = useCallback(
@@ -67,9 +63,12 @@ export default function HomePageFeaturedTab({
           <Type style="sectionTitleLarge" className="mb-4">
             Popular comments and quick takes
           </Type>
-          <CommentsListProvider comments={initialPopularComments} showPostTitle>
+          <CommentsListProvider
+            comments={initialPopularCommentsAndQuickTakes}
+            showPostTitle
+          >
             <CommentsFeed
-              comments={initialPopularComments}
+              comments={initialPopularCommentsAndQuickTakes}
               loadMore={loadMorePopularComments}
               replaceAllOnLoadMore
               listClassName="grid grid-cols-2 gap-x-1"

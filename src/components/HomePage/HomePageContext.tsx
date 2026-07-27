@@ -9,16 +9,17 @@ import {
   useState,
 } from "react";
 import { captureException } from "@sentry/nextjs";
+import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { PostListItem } from "@/lib/posts/postLists";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
+import { useTracking } from "@/lib/analyticsEvents";
+import { rpc } from "@/lib/rpc";
 import {
   HomePageTabName,
   getCurrentHomePageTab,
   homePageTabCookie,
 } from "./homePageHelpers";
-import { useTracking } from "@/lib/analyticsEvents";
-import { rpc } from "@/lib/rpc";
 
 type HomePageContext = {
   currentTab: HomePageTabName;
@@ -29,6 +30,7 @@ type HomePageContext = {
   loadingFeaturedPosts: boolean;
   loadMoreFeaturedPosts: () => Promise<void>;
   curatedPost: PostListItem | null;
+  initialPopularCommentsAndQuickTakes: CommentListItem[];
 };
 
 export const homePageContext = createContext<HomePageContext | null>(null);
@@ -36,8 +38,14 @@ export const homePageContext = createContext<HomePageContext | null>(null);
 export const HomePageProvider: FC<{
   initialFeaturedPosts: PostListItem[];
   curatedPost: PostListItem | null;
+  initialPopularCommentsAndQuickTakes: CommentListItem[];
   children: ReactNode;
-}> = ({ initialFeaturedPosts, curatedPost, children }) => {
+}> = ({
+  initialFeaturedPosts,
+  curatedPost,
+  initialPopularCommentsAndQuickTakes,
+  children,
+}) => {
   const { captureEvent } = useTracking();
   const [cookies, setCookie] = useCookiesWithConsent([homePageTabCookie]);
   const initialTab = getCurrentHomePageTab(cookies);
@@ -85,6 +93,7 @@ export const HomePageProvider: FC<{
         loadingFeaturedPosts,
         loadMoreFeaturedPosts,
         curatedPost,
+        initialPopularCommentsAndQuickTakes,
       }}
     >
       {children}

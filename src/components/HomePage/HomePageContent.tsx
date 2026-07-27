@@ -38,15 +38,15 @@ export default async function HomePageContent() {
       <HomePageProvider
         initialFeaturedPosts={featuredPosts}
         curatedPost={curatedPost}
+        initialPopularCommentsAndQuickTakes={popularComments}
       >
         <HomePageTabs className="mb-5" />
-        <HomePageFeaturedTab initialPopularComments={popularComments} />
+        <HomePageFeaturedTab />
         <HomePageMagicTab
           coreTags={coreTags}
           spotlight={spotlight}
           stickyPostsList={
             <ViewBasedPostsList
-              viewType="list"
               hideLoadMore
               view={{
                 view: "sticky",
@@ -57,7 +57,6 @@ export default async function HomePageContent() {
           frontpagePostsList={<FrontpagePostsList />}
           communityPostsList={
             <ViewBasedPostsList
-              viewType="fromContext"
               hideLoadMore
               view={{
                 view: "frontpage",

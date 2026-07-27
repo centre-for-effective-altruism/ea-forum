@@ -413,7 +413,7 @@ export const fetchPopularComments = async ({
       SELECT DISTINCT ON ("postId") "_id"
       FROM "Comments"
       WHERE
-        CURRENT_TIMESTAMP - "postedAt" < '10 days'::INTERVAL
+        CURRENT_TIMESTAMP - "postedAt" < '2 weeks'::INTERVAL
         AND "shortform" IS NOT TRUE
         AND "baseScore" >= ${minScore}
         AND "retracted" IS NOT TRUE
