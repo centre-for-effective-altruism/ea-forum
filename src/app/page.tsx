@@ -2,13 +2,12 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
-import { HomePageTabProvider } from "@/components/HomePage/HomePageTabContext";
-import StructuredData from "@/components/StructuredData";
-import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
+import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
+import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
-import HomePageContent from "@/components/HomePage/HomePageContent";
-import HomePageFeaturedTabSkeleton from "@/components/HomePage/HomePageFeaturedTabSkeleton";
+import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
 import HomePageTabs from "@/components/HomePage/HomePageTabs";
+import StructuredData from "@/components/StructuredData";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -36,17 +35,18 @@ const structuredData = {
 export default async function HomePage() {
   const cookieStore = await cookies();
   const initialTab = getCurrentHomePageTab(cookieStore);
-  void initialTab; // TODO
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
-      <HomePageTabProvider>
-        <HomePageTabs className="mb-5" />
-        <Suspense fallback={<HomePageFeaturedTabSkeleton />}>
-          <HomePageContent />
-        </Suspense>
-      </HomePageTabProvider>
+      <HomePageTabs
+        initialContent={
+          <Suspense fallback={<HomePageTabSkeleton tab={initialTab} />}>
+            <HomePageTabContent tab={initialTab} />
+          </Suspense>
+        }
+        className="mb-5"
+      />
     </HomePageColumns>
   );
 }

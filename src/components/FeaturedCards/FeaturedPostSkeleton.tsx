@@ -7,7 +7,7 @@ export default function FeaturedPostSkeleton({
     <div
       data-component="FeaturedPostSkeleton"
       className="
-        h-full bg-gray-200 border-1 border-gray-100
+        h-full bg-surface-floating border-1 border-gray-200
         rounded p-5 flex flex-col gap-3
       "
     >

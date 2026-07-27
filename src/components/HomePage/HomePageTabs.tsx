@@ -1,18 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { HomePageTabName, homePageTabs } from "./homePageHelpers";
-import { useHomePageTab } from "./HomePageTabContext";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import {
+  getCurrentHomePageTab,
+  homePageTabCookie,
+  HomePageTabName,
+  homePageTabs,
+} from "./homePageHelpers";
+import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
+import { renderHomePageContentAction } from "./homePageActions";
+import { useTracking } from "@/lib/analyticsEvents";
+import HomePageTabSkeleton from "./HomePageTabSkeleton";
 import Type from "../Type";
 import clsx from "clsx";
 
 export default function HomePageTabs({
+  initialContent,
   className,
 }: Readonly<{
+  initialContent: ReactNode;
   className?: string;
 }>) {
-  const { currentTab, setCurrentTab } = useHomePageTab();
+  const { captureEvent } = useTracking();
+  const [cookies, setCookie] = useCookiesWithConsent([homePageTabCookie]);
+  const initialTab = getCurrentHomePageTab(cookies);
+  const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
+  const [content, setContent] = useState(initialContent);
+  const [pending, startTransition] = useTransition();
+  const requestId = useRef(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Record<HomePageTabName, HTMLElement | null>>({
@@ -46,39 +69,54 @@ export default function HomePageTabs({
     return () => window.removeEventListener("resize", updateUnderline);
   }, [currentTab]);
 
+  const setCurrentTab = useCallback(
+    (tab: HomePageTabName) => {
+      rawSetCurrentTab(tab);
+      setCookie(homePageTabCookie, tab);
+      captureEvent("setFrontpageTab", { tab });
+      const id = ++requestId.current;
+      startTransition(async () => {
+        const result = await renderHomePageContentAction(tab);
+        if (id === requestId.current) {
+          setContent(result);
+        }
+      });
+    },
+    [setCookie, captureEvent],
+  );
+
   return (
-    <div
-      data-component="HomePageTabs"
-      className={clsx("relative flex gap-6", className)}
-      ref={containerRef}
-    >
-      {homePageTabs.map(({ label, name }) => (
-        <Type
-          key={name}
-          As="button"
-          style="homePageTab"
-          onClick={() => setCurrentTab(name)}
-          innerRef={(el: HTMLButtonElement | null) => {
-            tabRefs.current[name] = el;
-          }}
-          className={clsx(
-            "cursor-pointer relative pb-2",
-            name === currentTab
-              ? "text-gray-1000"
-              : "text-gray-400 hover:text-gray-500 transition-all",
-          )}
-        >
-          {label}
-        </Type>
-      ))}
-      <span
-        aria-hidden
-        style={underlineStyle}
-        className="
-          absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
-          transition-all duration-300 ease-in-out
-        "
-      />
+    <div data-component="HomePageTabs">
+      <div className={clsx("relative flex gap-6", className)} ref={containerRef}>
+        {homePageTabs.map(({ label, name }) => (
+          <Type
+            key={name}
+            As="button"
+            style="homePageTab"
+            onClick={() => setCurrentTab(name)}
+            innerRef={(el: HTMLButtonElement | null) => {
+              tabRefs.current[name] = el;
+            }}
+            className={clsx(
+              "cursor-pointer relative pb-2",
+              name === currentTab
+                ? "text-gray-1000"
+                : "text-gray-400 hover:text-gray-500 transition-all",
+            )}
+          >
+            {label}
+          </Type>
+        ))}
+        <span
+          aria-hidden
+          style={underlineStyle}
+          className="
+            absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
+            transition-all duration-300 ease-in-out
+          "
+        />
+      </div>
+      {pending ? <HomePageTabSkeleton tab={currentTab} /> : content}
     </div>
   );
 }

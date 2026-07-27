@@ -2,9 +2,8 @@
 
 import { useCallback } from "react";
 import { CommentsListProvider } from "../Comments/useCommentsList";
-import { useHomePageTab } from "./HomePageTabContext";
-import { filterNonNull } from "@/lib/typeHelpers";
 import { useHomePageData } from "./HomePageDataContext";
+import { filterNonNull } from "@/lib/typeHelpers";
 import { rpc } from "@/lib/rpc";
 import range from "lodash/range";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
@@ -14,7 +13,6 @@ import CommentsFeed from "../Comments/CommentsFeed";
 import TextLinkButton from "../TextLinkButton";
 
 export default function HomePageFeaturedTab() {
-  const { currentTab } = useHomePageTab();
   const {
     featuredPosts,
     loadingFeaturedPosts,
@@ -28,10 +26,6 @@ export default function HomePageFeaturedTab() {
       rpc.comments.listPopular(args),
     [],
   );
-
-  if (currentTab !== "featured") {
-    return null;
-  }
 
   const postNodes = filterNonNull([
     curatedPost ? (

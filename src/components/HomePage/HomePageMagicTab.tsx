@@ -1,12 +1,10 @@
 "use client";
 
-import { ReactNode, Suspense } from "react";
+import { ReactNode, Suspense, useState } from "react";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { useHomePageTab } from "./HomePageTabContext";
-import { useHomePageData } from "./HomePageDataContext";
 import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
@@ -38,15 +36,16 @@ export default function HomePageMagicTab({
   popularCommentsList: ReactNode;
   recentDiscussions: ReactNode;
 }>) {
-  const { currentTab } = useHomePageTab();
-  const { currentTag } = useHomePageData();
-  if (currentTab !== "magic") {
-    return null;
-  }
+  const [currentTag, setCurrentTag] = useState<TagBase | null>(null);
 
   const content = currentTag ? (
     <>
-      <HomePageTagBar coreTags={coreTags} className="mb-5" />
+      <HomePageTagBar
+        coreTags={coreTags}
+        currentTag={currentTag}
+        setCurrentTag={setCurrentTag}
+        className="mb-5"
+      />
       <PostsList
         key={currentTag._id}
         posts={[]}
@@ -64,7 +63,12 @@ export default function HomePageMagicTab({
       <FilterSettingsProvider>
         <div className="mb-5">
           <div className="flex items-center justify-between gap-4">
-            <HomePageTagBar coreTags={coreTags} className="min-w-0" />
+            <HomePageTagBar
+              coreTags={coreTags}
+              currentTag={currentTag}
+              setCurrentTag={setCurrentTag}
+              className="min-w-0"
+            />
             <FilterSettingsToggle />
           </div>
           <FilterSettingsEditor className="mt-2" />
