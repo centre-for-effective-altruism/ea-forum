@@ -1,5 +1,6 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { PostListItem } from "@/lib/posts/postLists";
+import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
@@ -56,9 +57,13 @@ export default function FeaturedPost({
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
+  const { postsRead } = useItemsRead();
   const { _id, title, curatedDate, tags, commentCount } = post;
 
-  const isNew = !!currentUser && !post.readStatus?.[0]?.isRead;
+  const isNew =
+    post._id in postsRead
+      ? !postsRead[post._id]
+      : !!currentUser && !post.readStatus?.[0]?.isRead;
   const hasUnreadComments = postHasNewUnreadComments(post);
   const href = postGetPageUrl({ post });
   const isCommunity = process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID
