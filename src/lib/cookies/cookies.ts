@@ -157,6 +157,11 @@ const allCookies = [
     description: "Whether to display post lists as list items or card items",
   },
   {
+    name: "featured_view_type",
+    type: "necessary",
+    description: "Whether to display the featured posts as list items or card items",
+  },
+  {
     name: "hide_eag_banner",
     type: "necessary",
     description: "Don't show any EAG(x) banners",

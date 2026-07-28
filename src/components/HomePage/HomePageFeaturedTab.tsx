@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 import { CommentsListProvider } from "../Comments/useCommentsList";
 import { captureException } from "@sentry/nextjs";
 import { useTracking } from "@/lib/analyticsEvents";
+import { usePostsListView } from "@/lib/hooks/usePostsListView";
+import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { filterNonNull } from "@/lib/typeHelpers";
 import { rpc } from "@/lib/rpc";
 import type { PostListItem } from "@/lib/posts/postLists";
@@ -12,6 +14,9 @@ import range from "lodash/range";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
+import PostsListViewPicker from "../PostsList/PostsListViewPicker";
+import PostsListSkeleton from "../PostsList/PostsListSkeleton";
+import PostsItem from "../PostsList/PostsItem";
 import CommentsFeed from "../Comments/CommentsFeed";
 import TextLinkButton from "../TextLinkButton";
 
@@ -25,6 +30,7 @@ export default function HomePageFeaturedTab({
   initialPopularCommentsAndQuickTakes: CommentListItem[];
 }>) {
   const { captureEvent } = useTracking();
+  const { view } = usePostsListView();
   const [featuredPosts, setFeaturedPosts] =
     useState<PostListItem[]>(initialFeaturedPosts);
   const [loadingFeaturedPosts, setLoadingFeaturedPosts] = useState(false);
@@ -51,6 +57,9 @@ export default function HomePageFeaturedTab({
     [],
   );
 
+  // The curated post is shown separately (large) at the front of the list.
+  const listPosts = filterNonNull([curatedPost, ...featuredPosts]);
+
   const postNodes = filterNonNull([
     curatedPost ? (
       <FeaturedPost post={curatedPost} large className="h-full" />
@@ -60,8 +69,33 @@ export default function HomePageFeaturedTab({
     )),
   ]);
 
+  const loadMoreButton = (
+    <div className="mt-2">
+      <TextLinkButton variant="primary" onClick={loadMoreFeaturedPosts}>
+        Load more
+      </TextLinkButton>
+    </div>
+  );
+
+  const listSection = (
+    <HideRepeatedPostsProvider>
+      <section className="max-w-full space-y-0.5" data-component="FeaturedPostsList">
+        {listPosts.map((post) => (
+          <PostsItem key={post._id} post={post} viewType="list" />
+        ))}
+        {loadingFeaturedPosts ? (
+          <PostsListSkeleton count={3} viewType="list" />
+        ) : (
+          loadMoreButton
+        )}
+      </section>
+    </HideRepeatedPostsProvider>
+  );
+
   return (
     <HomePageFeaturedTabLayout
+      view={view}
+      viewPicker={<PostsListViewPicker />}
       posts={postNodes}
       loadMorePosts={
         loadingFeaturedPosts ? (
@@ -74,6 +108,7 @@ export default function HomePageFeaturedTab({
           </div>
         )
       }
+      listSection={listSection}
       commentsSection={
         <CommentsListProvider
           comments={initialPopularCommentsAndQuickTakes}
