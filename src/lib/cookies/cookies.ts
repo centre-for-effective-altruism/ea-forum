@@ -148,7 +148,7 @@ const allCookies = [
   },
   {
     name: "last_frontpage_tab",
-    type: "functional",
+    type: "necessary",
     description: "The last frontpage tab that you visited",
   },
   {
