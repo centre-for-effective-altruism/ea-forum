@@ -77,7 +77,7 @@ export default async function PostDisplay({
     (wordCount ?? 0) >= 500;
 
   return (
-    <PostDisplayProvider post={post}>
+    <PostDisplayProvider post={post} sequenceId={sequenceId}>
       <StructuredData data={postGetStructuredData(post)} />
       <ReadProgress post={post} readTimeMinutes={readTimeMinutes}>
         <PostColumn>

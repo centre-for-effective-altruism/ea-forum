@@ -28,8 +28,9 @@ const audioCookie = "show_post_podcast_player";
 
 export const PostDisplayProvider: FC<{
   post: PostDisplay;
+  sequenceId?: string;
   children: ReactNode;
-}> = ({ post, children }) => {
+}> = ({ post, sequenceId, children }) => {
   const { captureEvent } = useTracking();
   const { recordPostView } = useRecordPostView(post);
   const [cookies, setCookie] = useCookiesWithConsent([audioCookie]);
@@ -48,10 +49,7 @@ export const PostDisplayProvider: FC<{
   useEffect(() => {
     void recordPostView({
       post,
-      extraEventProperties: {
-        // TODO: Set sequence ID if viewing from the sequences UI
-        sequenceId: null,
-      },
+      extraEventProperties: sequenceId ? { sequenceId } : {},
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
