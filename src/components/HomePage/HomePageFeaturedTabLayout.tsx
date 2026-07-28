@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import Type from "../Type";
+import Link from "../Link";
 
 export default function HomePageFeaturedTabLayout({
   posts,
@@ -27,9 +28,14 @@ export default function HomePageFeaturedTabLayout({
         data-component="HomePageFeaturedTabLayout"
         className="flex flex-col gap-9 pb-20"
       >
-        <Type className="text-gray-600 -mt-4 -mb-3">
-          Selected posts to help us answer: How can we do the most good with our
-          resources?
+        <Type className="text-gray-600 -my-3">
+          <Link
+            href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
+            className="underline hover:text-gray-1000"
+          >
+            Selected posts
+          </Link>{" "}
+          to help us answer: How can we do the most good with our resources?
         </Type>
         <section className="grid grid-cols-1 md:grid-cols-3 gap-1">
           {mainPost && <div className="xl:row-span-2 h-full">{mainPost}</div>}
