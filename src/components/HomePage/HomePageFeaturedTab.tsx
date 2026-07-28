@@ -83,7 +83,7 @@ export default function HomePageFeaturedTab({
             comments={initialPopularCommentsAndQuickTakes}
             loadMore={loadMorePopularComments}
             replaceAllOnLoadMore
-            listClassName="grid grid-cols-2 gap-x-1"
+            listClassName="grid grid-cols-1 mobile-nav:grid-cols-2 gap-x-1"
           />
         </CommentsListProvider>
       }
