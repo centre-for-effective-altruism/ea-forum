@@ -13,12 +13,12 @@ import type { CommentListItem } from "@/lib/comments/commentLists";
 import range from "lodash/range";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
-import FeaturedPost from "../FeaturedCards/FeaturedPost";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
-import PostsItem from "../PostsList/PostsItem";
+import FeaturedPost from "../FeaturedCards/FeaturedPost";
 import CommentsFeed from "../Comments/CommentsFeed";
 import TextLinkButton from "../TextLinkButton";
+import PostsItem from "../PostsList/PostsItem";
 
 export default function HomePageFeaturedTab({
   curatedPost,
@@ -57,7 +57,6 @@ export default function HomePageFeaturedTab({
     [],
   );
 
-  // The curated post is shown separately (large) at the front of the list.
   const listPosts = filterNonNull([curatedPost, ...featuredPosts]);
 
   const postNodes = filterNonNull([
@@ -75,21 +74,6 @@ export default function HomePageFeaturedTab({
     </TextLinkButton>
   );
 
-  const listSection = (
-    <HideRepeatedPostsProvider>
-      <section className="max-w-full space-y-0.5" data-component="FeaturedPostsList">
-        {listPosts.map((post) => (
-          <PostsItem key={post._id} post={post} viewType="list" />
-        ))}
-        {loadingFeaturedPosts ? (
-          <PostsListSkeleton count={3} viewType="list" />
-        ) : (
-          <div className="mt-2">{loadMoreLink}</div>
-        )}
-      </section>
-    </HideRepeatedPostsProvider>
-  );
-
   return (
     <HomePageFeaturedTabLayout
       view={view}
@@ -102,7 +86,20 @@ export default function HomePageFeaturedTab({
           <div className="py-6">{loadMoreLink}</div>
         )
       }
-      listSection={listSection}
+      listSection={
+        <HideRepeatedPostsProvider>
+          <section className="max-w-full space-y-0.5">
+            {listPosts.map((post) => (
+              <PostsItem key={post._id} post={post} viewType="list" />
+            ))}
+            {loadingFeaturedPosts ? (
+              <PostsListSkeleton count={3} viewType="list" />
+            ) : (
+              <div className="mt-2">{loadMoreLink}</div>
+            )}
+          </section>
+        </HideRepeatedPostsProvider>
+      }
       commentsSection={
         <CommentsListProvider
           comments={initialPopularCommentsAndQuickTakes}

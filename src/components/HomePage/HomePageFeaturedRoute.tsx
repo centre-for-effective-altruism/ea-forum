@@ -6,6 +6,7 @@ import {
 } from "@/lib/posts/postLists";
 import {
   defaultFeaturedViewType,
+  featuredViewTypeCookie,
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
@@ -22,7 +23,7 @@ export default async function HomePageFeaturedRoute() {
       fetchFrontpagePopularCommentsAndQuickTakes({ currentUser, limit: 6 }),
     ]);
 
-  const viewCookie = cookieStore.get("featured_view_type")?.value ?? "";
+  const viewCookie = cookieStore.get(featuredViewTypeCookie)?.value ?? "";
   const ssrView = isPostsListViewType(viewCookie) ? viewCookie : undefined;
 
   return (

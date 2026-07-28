@@ -14,6 +14,7 @@ import {
   defaultPostsViewType,
   isPostsListViewType,
   PostsListViewType,
+  postsListViewTypeCookie,
 } from "../posts/postsListView";
 
 type PostsListViewContext = {
@@ -59,7 +60,7 @@ export const PostsListViewProvider: FC<{
   children: ReactNode;
 }> = ({
   ssrValue,
-  cookieName = "posts_list_view_type",
+  cookieName = postsListViewTypeCookie,
   defaultValue = defaultPostsViewType,
   children,
 }) => {

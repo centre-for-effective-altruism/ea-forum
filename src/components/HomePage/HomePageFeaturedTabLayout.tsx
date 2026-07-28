@@ -4,25 +4,25 @@ import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import {
   defaultFeaturedViewType,
-  type PostsListViewType,
+  PostsListViewType,
 } from "@/lib/posts/postsListView";
 import Type from "../Type";
 import Link from "../Link";
 
 export default function HomePageFeaturedTabLayout({
-  view = defaultFeaturedViewType,
-  viewPicker,
   posts,
   loadMorePosts,
   listSection,
   commentsSection,
+  view = defaultFeaturedViewType,
+  viewPicker,
 }: Readonly<{
-  view?: PostsListViewType;
-  viewPicker?: ReactNode;
   posts: ReactNode[];
   loadMorePosts?: ReactNode;
   listSection?: ReactNode;
   commentsSection: ReactNode;
+  view?: PostsListViewType;
+  viewPicker?: ReactNode;
 }>) {
   // On large screens we show 4 fearured posts at the top. On smaller screens,
   // the last two are moved down, underneath popular comments.

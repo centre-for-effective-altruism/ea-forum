@@ -17,6 +17,7 @@ import {
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import {
   defaultFeaturedViewType,
+  featuredViewTypeCookie,
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
 import { renderHomePageContentAction } from "./homePageActions";
@@ -37,7 +38,7 @@ export default function HomePageTabs({
   const { captureEvent } = useTracking();
   const [cookies, setCookie] = useCookiesWithConsent([
     homePageTabCookie,
-    "featured_view_type",
+    featuredViewTypeCookie,
   ]);
   const initialTab = getCurrentHomePageTab(cookies, testGroup);
   const featuredViewCookie = cookies.featured_view_type ?? "";
