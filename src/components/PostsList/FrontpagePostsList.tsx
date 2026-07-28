@@ -37,7 +37,7 @@ export default async function FrontpagePostsList() {
           posts={posts}
           view={view}
           bottomRightNode={
-            <TextLinkButton variant="primary" href="/allPosts">
+            <TextLinkButton variant="primary" href="/all-posts">
               Advanced sorting & filtering
             </TextLinkButton>
           }
