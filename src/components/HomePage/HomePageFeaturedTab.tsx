@@ -69,12 +69,10 @@ export default function HomePageFeaturedTab({
     )),
   ]);
 
-  const loadMoreButton = (
-    <div className="mt-2">
-      <TextLinkButton variant="primary" onClick={loadMoreFeaturedPosts}>
-        Load more
-      </TextLinkButton>
-    </div>
+  const loadMoreLink = (
+    <TextLinkButton variant="primary" onClick={loadMoreFeaturedPosts}>
+      Load more
+    </TextLinkButton>
   );
 
   const listSection = (
@@ -86,7 +84,7 @@ export default function HomePageFeaturedTab({
         {loadingFeaturedPosts ? (
           <PostsListSkeleton count={3} viewType="list" />
         ) : (
-          loadMoreButton
+          <div className="mt-2">{loadMoreLink}</div>
         )}
       </section>
     </HideRepeatedPostsProvider>
@@ -101,11 +99,7 @@ export default function HomePageFeaturedTab({
         loadingFeaturedPosts ? (
           range(3).map((i) => <FeaturedPostSkeleton key={i} />)
         ) : (
-          <div className="py-6">
-            <TextLinkButton variant="primary" onClick={loadMoreFeaturedPosts}>
-              Load more
-            </TextLinkButton>
-          </div>
+          <div className="py-6">{loadMoreLink}</div>
         )
       }
       listSection={listSection}

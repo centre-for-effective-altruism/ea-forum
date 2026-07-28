@@ -4,7 +4,10 @@ import {
   fetchFeaturedFrontpagePosts,
   fetchMostRecentlyCuratedPost,
 } from "@/lib/posts/postLists";
-import { isPostsListViewType } from "@/lib/posts/postsListView";
+import {
+  defaultFeaturedViewType,
+  isPostsListViewType,
+} from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
@@ -25,7 +28,7 @@ export default async function HomePageFeaturedRoute() {
   return (
     <PostsListViewProvider
       cookieName="featured_view_type"
-      defaultValue="card"
+      defaultValue={defaultFeaturedViewType}
       ssrValue={ssrView}
     >
       <HomePageFeaturedTab

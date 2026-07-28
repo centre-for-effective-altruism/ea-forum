@@ -2,12 +2,15 @@
 
 import type { ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import type { PostsListViewType } from "@/lib/posts/postsListView";
+import {
+  defaultFeaturedViewType,
+  type PostsListViewType,
+} from "@/lib/posts/postsListView";
 import Type from "../Type";
 import Link from "../Link";
 
 export default function HomePageFeaturedTabLayout({
-  view = "card",
+  view = defaultFeaturedViewType,
   viewPicker,
   posts,
   loadMorePosts,
