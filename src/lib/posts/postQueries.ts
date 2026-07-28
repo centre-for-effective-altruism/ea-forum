@@ -47,6 +47,7 @@ export const fetchPostDisplay = async (
       voteCount: true,
       commentCount: true,
       readTimeMinutesOverride: true,
+      pangramStatusOverride: true,
       postedAt: true,
       curatedDate: true,
       frontpageDate: true,

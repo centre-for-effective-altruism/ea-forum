@@ -2076,6 +2076,7 @@ export const posts = pgTable(
     coauthorUserIds: text().array().default([""]).notNull(),
     marginalFundingOrg: text(),
     onsiteDigestAt: timestamp(),
+    pangramStatusOverride: text(),
   },
   (table) => [
     index("idx_Posts_agentFoundationsId").using(
