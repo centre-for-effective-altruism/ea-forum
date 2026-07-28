@@ -115,8 +115,12 @@ export default function HoverPreviewLink({
   return (
     <Tooltip
       As="span"
-      title={<Type style="bodySmall">{href}</Type>}
-      tooltipClassName="max-w-[calc(min(100%,400px))]"
+      title={
+        <Type style="bodySmall" className="line-clamp-2">
+          {href}
+        </Type>
+      }
+      tooltipClassName="max-w-[calc(min(100%,400px))]!"
     >
       {defaultLinkNode}
     </Tooltip>

@@ -36,6 +36,7 @@ import CommentTags from "../Tags/CommentTags";
 import PangramBadge from "../PangramBadge";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
+import PinIcon from "../Icons/PinIcon";
 import NewComment from "./NewComment";
 import UsersName from "../UsersName";
 import Loading from "../Loading";
@@ -96,6 +97,7 @@ export default function CommentItem({
     deleted,
     deletedBy,
     deletedDate,
+    isPinnedOnProfile,
   } = comment;
   const isNew =
     !draft &&
@@ -171,6 +173,7 @@ export default function CommentItem({
   }, [draft]);
 
   const isPostAuthor = userIsPostAuthor(user, post);
+  const showPinned = !!commentsListContext?.showPinned && isPinnedOnProfile;
 
   const canLoadParent =
     !!commentsListContext &&
@@ -203,13 +206,17 @@ export default function CommentItem({
         !borderless && "border pl-3 pt-2 mb-1",
         !borderless && (depth === 0 ? "rounded-sm " : "rounded-s-sm"),
         !borderless &&
-          (promoted ? "border-promoted-comment" : "border-comment-border"),
+          (promoted
+            ? "border-promoted-comment"
+            : showPinned
+              ? "border-pinned-comment"
+              : "border-comment-border"),
         !borderless &&
           !moderatorHat &&
           (depth & 1 ? "bg-comment-odd" : "bg-comment-even"),
         !borderless && moderatorHat && "bg-moderator-comment",
         !borderless && depth === 0 ? "" : "border-r-0",
-        !borderless && isNew && "border-l-primary-light border-l-[4px]",
+        !borderless && isNew && "border-l-primary border-l-[4px]",
         className,
       )}
     >
@@ -220,6 +227,7 @@ export default function CommentItem({
       >
         {commentsListContext?.showPostTitle && comment.post && (
           <div className="flex items-center mb-2">
+            {showPinned && <PinIcon className="w-4 text-gray-600 mr-2" />}
             <LazyPostsTooltip
               postId={comment.post._id}
               className="overflow-hidden truncate mr-2 text-gray-600"

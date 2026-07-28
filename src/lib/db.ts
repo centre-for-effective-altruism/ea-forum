@@ -20,6 +20,7 @@ import {
   commentModeratorActions,
   comments,
   conversations,
+  digestPosts,
   forumEvents,
   images,
   localgroups,
@@ -64,6 +65,7 @@ const relations = defineRelations(
     sequences,
     spotlights,
     subscriptions,
+    digestPosts,
     tags,
     tagRels,
     images,
@@ -136,6 +138,10 @@ const relations = defineRelations(
         where: {
           collectionName: "Posts",
         },
+      }),
+      digestPost: r.many.digestPosts({
+        from: r.posts._id,
+        to: r.digestPosts.postId,
       }),
     },
     sequences: {
@@ -229,6 +235,12 @@ const relations = defineRelations(
       forumEvent: r.one.forumEvents({
         from: r.comments.forumEventId,
         to: r.forumEvents._id,
+      }),
+    },
+    digestPosts: {
+      post: r.one.posts({
+        from: r.digestPosts.postId,
+        to: r.posts._id,
       }),
     },
     tags: {

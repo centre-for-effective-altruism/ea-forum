@@ -1,4 +1,4 @@
-import type { CSSProperties, ElementType, MouseEvent, ReactNode } from "react";
+import type { CSSProperties, ElementType, MouseEvent, ReactNode, Ref } from "react";
 
 export const typeStyles = {
   body: "font-sans text-[14px] font-[450]",
@@ -14,6 +14,7 @@ export const typeStyles = {
     "font-serif text-[19px] font-[430] tracking-tight [&_em]:tracking-[0.02em] [&_i]:tracking-[0.02em]",
   postTitle: "font-sans text-[16px] font-[600]",
   voteScore: "font-sans text-[16px] font-[500]",
+  homePageTab: "font-sans text-[24px] font-[700] leading-[24px] tracking-[-0.5px]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[28px]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
@@ -26,8 +27,13 @@ export const typeStyles = {
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",
   postDescription: "font-sans text-[13px] font-[500]",
   loadMore: "font-sans text-[14px] font-[550]",
+  userProfileName: "font-sans text-[30px] font-[600]",
   onboardingTitle: "font-sans text-[30px] font-[600] tracking-[-0.6px]",
   onboardingTag: "font-sans text-[13px] font-[700] leading-[16px]",
+  featuredPostTitle:
+    "font-sans font-[600] text-[22px] leading-[120%] tracking-[-0.6px]",
+  featuredPostTitleLarge:
+    "font-sans font-[600] text-[22px] leading-[120%] tracking-[0.44px] xl:text-[32px] xl:leading-[110%] xl:tracking-[0.64px]",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof typeStyles;
@@ -37,6 +43,7 @@ export default function Type({
   As = "div",
   className = "",
   cssStyle,
+  innerRef,
   children,
   ...rest
 }: Readonly<{
@@ -47,15 +54,18 @@ export default function Type({
   disabled?: boolean;
   onClick?: (ev: MouseEvent) => void;
   cssStyle?: CSSProperties;
+  innerRef?: Ref<HTMLElement | null>;
   className?: string;
   children: ReactNode;
 }>) {
   return (
     <As
       {...rest}
+      ref={innerRef}
       style={cssStyle}
       className={`${typeStyles[style]} ${className}`}
       data-component="Type"
+      data-style={style}
     >
       {children}
     </As>

@@ -20,20 +20,3 @@
   z-index: 1;
   background: linear-gradient(to left, var(--color-background), transparent);
 }
-.home-page-tag-bar-arrow {
-  position: absolute;
-  top: 0px;
-  width: 28px;
-  height: 30px;
-  color: var(--color-gray-500);
-  padding: 5px 0 0 6px;
-  cursor: pointer;
-}
-.home-page-tag-bar-arrow:hover {
-  color: var(--color-gray-700);
-}
-@media (max-width: 840px) {
-  .home-page-tag-bar-arrow {
-    display: none;
-  }
-}

@@ -9,9 +9,11 @@ import {
   fetchCommentReplies,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
+  fetchFrontpagePopularCommentsAndQuickTakes,
   fetchFrontpageQuickTakes,
   fetchNewComments,
   fetchPopularComments,
+  fetchUserProfileComments,
 } from "./commentLists";
 import {
   createPostComment,
@@ -52,6 +54,23 @@ export const commentsRouter = {
       return await fetchCommentReplies({
         currentUser,
         commentId,
+      });
+    }),
+  listUserProfile: os
+    .input(
+      z.object({
+        userId: z.string().nonempty(),
+        offset: z.int().nonnegative().optional(),
+        limit: z.int().positive().max(50).optional().default(10),
+      }),
+    )
+    .handler(async ({ input: { userId, offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchUserProfileComments({
+        currentUser,
+        userId,
+        offset,
+        limit,
       });
     }),
   create: os
@@ -206,6 +225,19 @@ export const commentsRouter = {
           : countFrontpageQuickTakes({ currentUser, includeCommunity }),
       ]);
       return { items, totalCount };
+    }),
+  listPopularAndQuickTakes: os
+    .input(
+      z.object({
+        limit: z.number().positive().optional().default(6),
+      }),
+    )
+    .handler(async ({ input: { limit } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchFrontpagePopularCommentsAndQuickTakes({
+        currentUser,
+        limit,
+      });
     }),
   updateQuickTakeFrontpage: os
     .input(

@@ -7,6 +7,7 @@ import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
 import { postsListViewSchema } from "./postsHelpers";
 import {
+  fetchFeaturedFrontpagePosts,
   fetchPostsListById,
   fetchPostsListByIds,
   fetchPostsListFromView,
@@ -41,6 +42,21 @@ export const postsRouter = {
     .handler(async ({ input: { postIds } }) => {
       const currentUser = await getCurrentUser();
       return fetchPostsListByIds(currentUser?._id ?? null, postIds);
+    }),
+  listFeatured: os
+    .input(
+      z.object({
+        offset: z.number().nonnegative().max(1000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input: { offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchFeaturedFrontpagePosts({
+        currentUser,
+        offset,
+        limit,
+      });
     }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))

@@ -9,7 +9,8 @@ import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
 import { filterSettingsSchema } from "../filterSettings";
-import { tagGetUrl } from "../tags/tagHelpers";
+import { tagGetPageUrl } from "../tags/tagHelpers";
+import { stringHash } from "../utils/stringHash";
 
 export const postStatuses = {
   STATUS_PENDING: 1, // Unused
@@ -20,11 +21,12 @@ export const postStatuses = {
 };
 
 export const postsListViewSchema = z.object({
-  view: z.enum(["frontpage", "sticky", "orgUpdates"]),
+  view: z.enum(["frontpage", "sticky", "orgUpdates", "userProfile"]),
   offset: z.int().gte(0).optional(),
   limit: z.int().gt(0),
   excludeTagId: z.union([z.string(), z.array(z.string()).max(10)]).optional(),
   onlyTagId: z.string().optional(),
+  userId: z.string().optional(),
   filterSettings: filterSettingsSchema.optional(),
 });
 
@@ -117,7 +119,7 @@ export const getPostReadTimeMinutes = (
 
 type SocialImageOptions = {
   width?: number;
-  dpr?: number;
+  dpr?: number | "auto";
 };
 
 export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
@@ -135,7 +137,7 @@ export type PostWithSocialPreview = Pick<
 export const getPostSocialImageUrl = (
   post: PostWithSocialPreview,
   options?: SocialImageOptions,
-) => {
+): string | null => {
   const manualId =
     post.isEvent && post.eventImageId
       ? post.eventImageId
@@ -144,6 +146,37 @@ export const getPostSocialImageUrl = (
     return getSocialImagePreviewPrefix(options) + manualId;
   }
   return post.socialPreviewImageAutoUrl ?? null;
+};
+
+const defaultBackupImages = [
+  "building",
+  "scale",
+  "leaf",
+  "camera",
+  "clouds",
+  "landscape",
+  "earth",
+  "space",
+  "microscope",
+  "compass",
+  "circuitboard",
+  "chess",
+  "flower2",
+  "gears",
+];
+
+export const getPostSocialImageUrlWithDefaultBackup = (
+  post: PostWithSocialPreview & { _id: string },
+  options?: SocialImageOptions,
+): string => {
+  const postImageUrl = getPostSocialImageUrl(post, options);
+  if (postImageUrl) {
+    return postImageUrl;
+  }
+  const prefix = getSocialImagePreviewPrefix(options);
+  const hash = stringHash(post._id);
+  const backupImage = defaultBackupImages[hash % defaultBackupImages.length];
+  return `${prefix}SocialPreview/defaults/${backupImage}`;
 };
 
 export const getPostPlaintextDescription = (post: PostListItem): string | null => {
@@ -376,7 +409,7 @@ export const postGetStructuredData = (
       .map((tag) => ({
         "@type": "Thing",
         name: tag.name,
-        url: tagGetUrl({ tag, isAbsolute: true }),
+        url: tagGetPageUrl({ tag, isAbsolute: true }),
         description: tag.description,
       })),
     author: [
