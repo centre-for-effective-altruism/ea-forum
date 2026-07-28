@@ -10,6 +10,7 @@ import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import { fetchCommentDescendants } from "./commentQueries";
 import fromPairs from "lodash/fromPairs";
+import orderBy from "lodash/orderBy";
 import sortBy from "lodash/sortBy";
 
 export type CommentRelationalProjection = RelationalProjection<
@@ -277,11 +278,13 @@ export const fetchCommentsForForumEvent = ({
 const frontpageQuickTakesWhere = ({
   currentUser,
   includeCommunity,
+  maxAgeDays = 7,
 }: {
   currentUser: UserPermissions | null;
   includeCommunity?: boolean;
+  maxAgeDays?: number;
 }): CommentsFilter => {
-  const fiveDaysAgo = nDaysAgo(5).toISOString();
+  const fiveDaysAgo = nDaysAgo(maxAgeDays).toISOString();
   const twoHoursAgo = nHoursAgo(2).toISOString();
   return {
     shortform: true,
@@ -326,17 +329,19 @@ const frontpageQuickTakesWhere = ({
 export const fetchFrontpageQuickTakes = ({
   currentUser,
   includeCommunity,
+  maxAgeDays,
   offset,
   limit = 5,
 }: {
   currentUser: UserPermissions | null;
   includeCommunity?: boolean;
+  maxAgeDays?: number;
   offset?: number;
   limit?: number;
 }) => {
   return fetchCommentsList({
     currentUser,
-    where: frontpageQuickTakesWhere({ currentUser, includeCommunity }),
+    where: frontpageQuickTakesWhere({ currentUser, includeCommunity, maxAgeDays }),
     orderBy: {
       score: "desc",
       lastSubthreadActivity: "desc",
@@ -395,7 +400,7 @@ type PopularCommentsConfig = {
 
 export const fetchPopularComments = async ({
   currentUser,
-  minScore = 12,
+  minScore = 10,
   offset = 0,
   limit = 3,
   recencyFactor = 250000,
@@ -408,7 +413,7 @@ export const fetchPopularComments = async ({
       SELECT DISTINCT ON ("postId") "_id"
       FROM "Comments"
       WHERE
-        CURRENT_TIMESTAMP - "postedAt" < '1 week'::INTERVAL
+        CURRENT_TIMESTAMP - "postedAt" < '2 weeks'::INTERVAL
         AND "shortform" IS NOT TRUE
         AND "baseScore" >= ${minScore}
         AND "retracted" IS NOT TRUE
@@ -467,6 +472,30 @@ export const fetchCommentReplies = async ({
       _id: { in: descendants.map(({ _id }) => _id) },
     },
   });
+};
+
+/**
+ * This is really inefficient because it turns out its complicated to merge
+ * these 2 lists with a limit whilst still supporting loading more. For now,
+ * we just always refetch the entire list and replace instead of appending. The
+ * ideal situation would be to fetch both in a single query with UNION, but the
+ * queries are complicated enough that this is non-trivial.
+ */
+export const fetchFrontpagePopularCommentsAndQuickTakes = async ({
+  currentUser,
+  limit,
+}: {
+  currentUser: UserPermissions | null;
+  limit: number;
+}) => {
+  const [popularComments, quickTakes] = await Promise.all([
+    fetchPopularComments({ currentUser, limit }),
+    fetchFrontpageQuickTakes({ currentUser, limit }),
+  ]);
+  return orderBy([...popularComments, ...quickTakes], ["score"], ["desc"]).slice(
+    0,
+    limit,
+  );
 };
 
 export const fetchUserProfileComments = async ({

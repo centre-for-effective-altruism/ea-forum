@@ -17,7 +17,7 @@ export const formatThousands = (amount: number) =>
   new Intl.NumberFormat("en-US").format(amount);
 
 export const formatPostItemHiddenAuthors = (count: number, totalShown: number) =>
-  totalShown === 0 ? `${count} authors` : `+ ${count} more`;
+  totalShown === 0 ? `${count} author${count === 1 ? "" : "s"}` : `+ ${count} more`;
 
 export const formatPercent = (x: number | null | undefined) =>
   typeof x === "number" ? `${Math.round(x * 100)}%` : "–";

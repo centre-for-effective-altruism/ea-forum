@@ -147,9 +147,9 @@ const allCookies = [
     description: "Don't show the AI disclosure warning on the new post page",
   },
   {
-    name: "last_visited_frontpage",
+    name: "last_frontpage_tab",
     type: "functional",
-    description: "Stores the date of the user's last visit to the frontpage",
+    description: "The last frontpage tab that you visited",
   },
   {
     name: "posts_list_view_type",
@@ -291,6 +291,9 @@ const allCookies = [
 ] as const satisfies CookieDefinition[];
 
 export type CookieName = (typeof allCookies)[number]["name"];
+
+/** Helper for enforcing stongly typed cookie names */
+export const cookieName = (name: CookieName): CookieName => name;
 
 export const cookiesTable = keyBy(
   allCookies.map((cookie) => ({

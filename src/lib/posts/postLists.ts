@@ -24,7 +24,6 @@ import {
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
-const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 
 // TODO: Maybe this should be a function that takes the current user and does
 // permission checks
@@ -48,17 +47,6 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
 /** Create a filter to exclude posts with a particular tag */
 export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
-
-// TODO: Remove the onsiteDigestFilter, FEATURED_CUTOFF_DAYS,
-// fetchFeaturedCuratedPostsList, and fetchFeaturedPostsList below along with
-// the /admin/featured page once the featured-page experiment is concluded.
-const onsiteDigestFilter = (postsTable: typeof posts) => sql`
-  EXISTS (
-    SELECT 1 FROM "DigestPosts" dp
-    WHERE dp."postId" = ${postsTable}."_id"
-      AND dp."onsiteDigestStatus" = 'yes'
-  )
-`;
 
 /**
  * New and upvoted sorting: Calculate score from karma with bonuses for
@@ -271,40 +259,6 @@ export const fetchFrontpageCuratedPostsList = async (
   });
 };
 
-const FEATURED_CUTOFF_DAYS = 14;
-
-export const fetchFeaturedCuratedPostsList = async (
-  currentUserId: string | null,
-) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      curatedDate: { gte: nDaysAgo(5).toISOString() },
-      RAW: onsiteDigestFilter,
-    },
-    orderBy: {
-      sticky: "desc",
-      curatedDate: "desc",
-      postedAt: "desc",
-    },
-    limit: currentUserId ? 3 : 2,
-  });
-};
-
-export const fetchFeaturedPostsList = (currentUserId: string | null) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: false,
-      sticky: false,
-      groupId: { isNull: true },
-      postedAt: { gt: nDaysAgo(FEATURED_CUTOFF_DAYS).toISOString() },
-      RAW: onsiteDigestFilter,
-    },
-    orderBy: magicSort(),
-  });
-};
-
 export type PostListItem = Awaited<
   ReturnType<typeof fetchFrontpagePostsList>
 >[number];
@@ -376,47 +330,6 @@ export const fetchPingbackPosts = async (
       baseScore: "desc",
     },
   });
-
-export const fetchSidebarOpportunities = (
-  currentUserId: string | null,
-  limit: number,
-) => {
-  const tagId = process.env.OPPORTUNITIES_TAG_ID;
-  if (!tagId) {
-    console.warn("Opportunities tag ID is not configured");
-    return Promise.resolve([]);
-  }
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: false,
-      sticky: false,
-      groupId: { isNull: true },
-      frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
-      RAW: (postsTable: typeof posts) =>
-        sql`(${postsTable.tagRelevance}->>${tagId})::FLOAT >= 1`,
-    },
-    orderBy: magicSort(),
-    limit,
-  });
-};
-
-export const fetchSidebarEvents = (currentUserId: string | null, limit: number) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: true,
-      startTime: { gt: new Date().toISOString() },
-    },
-    orderBy: {
-      startTime: "asc",
-      baseScore: "desc",
-      _id: "desc",
-    },
-    limit,
-  });
-};
 
 export const fetchMoreFromAuthorPostsList = async ({
   currentUserId,
@@ -707,4 +620,80 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
   });
   const order = new Map(postIds.map((id, i) => [id, i]));
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
+};
+
+/**
+ * Posts for the featured front page. This is:
+ *  - all posts marked as being in the on-site digest
+ *  - all non-community posts with >= 100 karma
+ *  - excluding the most recently curated post which is fetched separately
+ */
+export const fetchFeaturedFrontpagePosts = async ({
+  currentUser,
+  offset = 0,
+  limit = 10,
+}: {
+  currentUser: CurrentUser | null;
+  offset?: number;
+  limit?: number;
+}): Promise<PostListItem[]> => {
+  const excludeCommunity = excludeTagFilter(
+    process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
+  );
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      AND: [
+        {
+          // The most recently curated post is always shown first and that is
+          // fetched separately, so we should skip it here.
+          OR: [
+            { curatedDate: { isNull: true } },
+            {
+              RAW: (postsTable) => sql`
+                ${postsTable}."curatedDate" < (
+                  SELECT MAX("curatedDate")
+                  FROM "Posts"
+                  WHERE "curatedDate" IS NOT NULL
+                )
+              `,
+            },
+          ],
+        },
+        {
+          OR: [
+            {
+              baseScore: { gte: 100 },
+              RAW: (postsTable) => excludeCommunity(postsTable),
+            },
+            {
+              digestPost: {
+                onsiteDigestAt: { isNotNull: true },
+              },
+            },
+          ],
+        },
+      ],
+    },
+    orderBy: (posts, { desc }) =>
+      desc(sql`COALESCE(${posts}."onsiteDigestAt", ${posts}."postedAt")`),
+    offset,
+    limit: Math.min(limit, 50),
+  });
+};
+
+export const fetchMostRecentlyCuratedPost = async (
+  currentUser: CurrentUser | null,
+) => {
+  const result = await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      curatedDate: { isNotNull: true },
+    },
+    orderBy: {
+      curatedDate: "desc",
+    },
+    limit: 1,
+  });
+  return result[0] ?? null;
 };

@@ -1,13 +1,14 @@
 import { Suspense } from "react";
-import type { NextSearchParams } from "@/lib/typeHelpers";
+import { cookies } from "next/headers";
+import { getPostHogClient, getPostHogDistinctId } from "@/lib/posthog-server";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
-import StructuredData from "@/components/StructuredData";
-import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
+import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
+import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
+import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
-import HomePageFeedSkeleton from "@/components/HomePage/HomePageFeedSkeleton";
-import HomePageFeed from "@/components/HomePage/HomePageFeed";
-import HomePageTabBarSkeleton from "@/components/HomePage/HomePageTagBarSkeleton";
-import HomePageTagBar from "@/components/HomePage/HomePageTagBar";
+import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
+import HomePageTabs from "@/components/HomePage/HomePageTabs";
+import StructuredData from "@/components/StructuredData";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -32,27 +33,27 @@ const structuredData = {
   ].join(" "),
 };
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<NextSearchParams>;
-}) {
-  const search = await searchParams;
+export default async function HomePage() {
+  const [cookieStore, posthogDistinctId] = await Promise.all([
+    cookies(),
+    getPostHogDistinctId(),
+  ]);
+  const flags = await getPostHogClient()?.evaluateFlags(posthogDistinctId);
+  const testGroup = flags?.getFlag("default-frontpage-tab") as string | undefined;
+  const initialTab = getCurrentHomePageTab(cookieStore, testGroup);
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
-      <Suspense fallback={<HomePageTabBarSkeleton className="mb-4" />}>
-        <HomePageTagBar className="mb-4" />
-      </Suspense>
-      <Suspense
-        // This key forces react to render the fallback when navigating on the
-        // client instead of waiting for the server response
-        key={typeof search.tab === "string" ? search.tab : "frontpage"}
-        fallback={<HomePageFeedSkeleton postCount={30} />}
-      >
-        <HomePageFeed search={search} />
-      </Suspense>
+      <HomePageTabs
+        testGroup={testGroup}
+        initialContent={
+          <Suspense fallback={<HomePageTabSkeleton tab={initialTab} />}>
+            <HomePageTabContent tab={initialTab} />
+          </Suspense>
+        }
+        className="mb-5"
+      />
     </HomePageColumns>
   );
 }

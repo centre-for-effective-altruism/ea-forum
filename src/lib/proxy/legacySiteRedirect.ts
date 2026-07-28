@@ -38,7 +38,6 @@ const newSitePatterns = [
   /^\/admin$/, // Admin
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
-  /^\/admin\/featured$/, // Admin featured page experiment
   /^\/admin\/spotlights.*/, // Admin spotlights pages
 ];
 // ...

@@ -16,11 +16,19 @@ import TextLinkButton from "../TextLinkButton";
 export default function CommentsFeed({
   comments,
   loadMore,
+  replaceAllOnLoadMore,
   className,
+  listClassName,
 }: Readonly<{
   comments: CommentListItem[];
   loadMore: (props: { offset: number; limit: number }) => Promise<CommentListItem[]>;
+  /**
+   * If true, comments loaded via `loadMore` will replace the current list instead
+   * of appending to it.
+   */
+  replaceAllOnLoadMore?: boolean;
   className?: string;
+  listClassName?: string;
 }>) {
   const [loadMoreLimit] = useState(comments.length || 3);
   const [loading, setLoading] = useState(false);
@@ -34,13 +42,28 @@ export default function CommentsFeed({
     setLoading(true);
 
     try {
-      const data = await loadMore({
-        limit: loadMoreLimit,
-        offset: offset_,
-      });
-      setDisplayedComments((comments) => [...comments, ...data]);
-      if (data.length < loadMoreLimit) {
-        setCanLoadMore(false);
+      if (replaceAllOnLoadMore) {
+        const data = await loadMore({
+          limit: offset_ + loadMoreLimit,
+          offset: 0,
+        });
+        if (data.length) {
+          setDisplayedComments(data);
+        }
+        if (data.length < offset_ + loadMoreLimit) {
+          setCanLoadMore(false);
+        }
+      } else {
+        const data = await loadMore({
+          limit: loadMoreLimit,
+          offset: offset_,
+        });
+        if (data.length) {
+          setDisplayedComments((comments) => [...comments, ...data]);
+        }
+        if (data.length < loadMoreLimit) {
+          setCanLoadMore(false);
+        }
       }
     } catch (e) {
       console.error("Error loading comments:", e);
@@ -49,7 +72,7 @@ export default function CommentsFeed({
     } finally {
       setLoading(false);
     }
-  }, [loadMore, loadMoreLimit, offset]);
+  }, [loadMore, replaceAllOnLoadMore, loadMoreLimit, offset]);
 
   useEffect(() => {
     if (displayedComments.length === 0 && !loading && canLoadMore) {
@@ -59,19 +82,21 @@ export default function CommentsFeed({
 
   return (
     <section data-component="CommentsFeed" className={className}>
-      {displayedComments.map((comment) => (
-        <CommentItem
-          key={comment._id}
-          node={{ comment, depth: 0, children: [], isLocal: false }}
-          showPreviewWhenCollapsed
-          startCollapsed
-          className="bg-comment-even!"
-        />
-      ))}
-      {loading &&
-        range(loadMoreLimit).map((i) => (
-          <div key={i} className="w-full h-[80px] bg-gray-200 rounded mb-1" />
+      <div className={listClassName}>
+        {displayedComments.map((comment) => (
+          <CommentItem
+            key={comment._id}
+            node={{ comment, depth: 0, children: [], isLocal: false }}
+            showPreviewWhenCollapsed
+            startCollapsed
+            className="bg-comment-even!"
+          />
         ))}
+        {loading &&
+          range(loadMoreLimit).map((i) => (
+            <div key={i} className="w-full h-[80px] bg-gray-200 rounded mb-1" />
+          ))}
+      </div>
       {canLoadMore && (
         <TextLinkButton variant="primary" onClick={onLoadMore}>
           Load more
