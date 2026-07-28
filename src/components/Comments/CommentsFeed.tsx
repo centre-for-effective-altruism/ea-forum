@@ -42,17 +42,28 @@ export default function CommentsFeed({
     setLoading(true);
 
     try {
-      const data = await loadMore({
-        limit: loadMoreLimit,
-        offset: offset_,
-      });
-      if (data.length) {
-        setDisplayedComments((comments) =>
-          replaceAllOnLoadMore ? data : [...comments, ...data],
-        );
-      }
-      if (data.length < loadMoreLimit) {
-        setCanLoadMore(false);
+      if (replaceAllOnLoadMore) {
+        const data = await loadMore({
+          limit: offset_ + loadMoreLimit,
+          offset: 0,
+        });
+        if (data.length) {
+          setDisplayedComments(data);
+        }
+        if (data.length < offset_ + loadMoreLimit) {
+          setCanLoadMore(false);
+        }
+      } else {
+        const data = await loadMore({
+          limit: loadMoreLimit,
+          offset: offset_,
+        });
+        if (data.length) {
+          setDisplayedComments((comments) => [...comments, ...data]);
+        }
+        if (data.length < loadMoreLimit) {
+          setCanLoadMore(false);
+        }
       }
     } catch (e) {
       console.error("Error loading comments:", e);

@@ -3,7 +3,6 @@ import {
   fetchFeaturedFrontpagePosts,
   fetchMostRecentlyCuratedPost,
 } from "@/lib/posts/postLists";
-import { HomePageDataProvider } from "./HomePageDataContext";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
 
@@ -15,12 +14,10 @@ export default async function HomePageFeaturedRoute() {
     fetchFrontpagePopularCommentsAndQuickTakes({ currentUser, limit: 6 }),
   ]);
   return (
-    <HomePageDataProvider
-      initialFeaturedPosts={featuredPosts}
+    <HomePageFeaturedTab
       curatedPost={curatedPost}
+      initialFeaturedPosts={featuredPosts}
       initialPopularCommentsAndQuickTakes={popularComments}
-    >
-      <HomePageFeaturedTab />
-    </HomePageDataProvider>
+    />
   );
 }
