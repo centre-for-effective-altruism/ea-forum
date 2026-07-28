@@ -15,6 +15,10 @@ import {
   homePageTabs,
 } from "./homePageHelpers";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
+import {
+  defaultFeaturedViewType,
+  isPostsListViewType,
+} from "@/lib/posts/postsListView";
 import { renderHomePageContentAction } from "./homePageActions";
 import { useTracking } from "@/lib/analyticsEvents";
 import HomePageTabSkeleton from "./HomePageTabSkeleton";
@@ -31,8 +35,15 @@ export default function HomePageTabs({
   className?: string;
 }>) {
   const { captureEvent } = useTracking();
-  const [cookies, setCookie] = useCookiesWithConsent([homePageTabCookie]);
+  const [cookies, setCookie] = useCookiesWithConsent([
+    homePageTabCookie,
+    "featured_view_type",
+  ]);
   const initialTab = getCurrentHomePageTab(cookies, testGroup);
+  const featuredViewCookie = cookies.featured_view_type ?? "";
+  const featuredView = isPostsListViewType(featuredViewCookie)
+    ? featuredViewCookie
+    : defaultFeaturedViewType;
   const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
   const [content, setContent] = useState(initialContent);
@@ -118,7 +129,11 @@ export default function HomePageTabs({
           "
         />
       </div>
-      {pending ? <HomePageTabSkeleton tab={currentTab} /> : content}
+      {pending ? (
+        <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
+      ) : (
+        content
+      )}
     </div>
   );
 }

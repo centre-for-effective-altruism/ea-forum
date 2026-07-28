@@ -1,21 +1,29 @@
 import type { HomePageTabName } from "./homePageHelpers";
 import range from "lodash/range";
+import {
+  defaultFeaturedViewType,
+  type PostsListViewType,
+} from "@/lib/posts/postsListView";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 
 export default function HomePageTabSkeleton({
   tab,
+  featuredView = defaultFeaturedViewType,
 }: Readonly<{
   tab: HomePageTabName;
+  featuredView?: PostsListViewType;
 }>) {
   switch (tab) {
     case "featured":
       return (
         <HomePageFeaturedTabLayout
+          view={featuredView}
           posts={range(11).map((i) => (
             <FeaturedPostSkeleton key={i} large={i === 0} />
           ))}
+          listSection={<PostsListSkeleton count={11} viewType="list" />}
           commentsSection={
             <div className="grid grid-cols-2 gap-1">
               {range(6).map((i) => (
