@@ -13,6 +13,7 @@ import ChatBubbleOutlineIcon from "@heroicons/react/24/outline/ChatBubbleLeftIco
 import ChatBubbleSolidIcon from "@heroicons/react/24/solid/ChatBubbleLeftIcon";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
 import PostsItemMeta from "../PostsList/PostsItemMeta";
+import PostsTooltip from "../PostsTooltip";
 import LotusIcon from "../Icons/LotusIcon";
 import Image from "next/image";
 import Type from "../Type";
@@ -81,80 +82,81 @@ export default function FeaturedPost({
       viewType={large ? "large" : "small"}
       postId={_id}
     >
-      <article
-        data-component="FeaturedPost"
-        onClick={onClick}
-        className={clsx(
-          "cursor-pointer flex flex-col gap-3 p-5 rounded border-1 border-gray-200",
-          "relative bg-surface-floating hover:bg-surface-floating-hover",
-          className,
-        )}
-      >
-        {isNew && (
-          <div className="absolute -inset-y-px -left-px w-1.5 bg-primary rounded-l" />
-        )}
-        <div
-          className={clsx(
-            "relative overflow-hidden rounded relative w-full grow min-h-[140px]",
-            "border-1 border-gray-600/20",
+      <PostsTooltip post={post} placement="right-start" className={className}>
+        <article
+          data-component="FeaturedPost"
+          onClick={onClick}
+          className="
+            cursor-pointer flex flex-col gap-3 p-5 rounded border-1 border-gray-200
+            relative bg-surface-floating hover:bg-surface-floating-hover h-full
+          "
+        >
+          {isNew && (
+            <div className="absolute -inset-y-px -left-px w-1.5 bg-primary rounded-l" />
           )}
-        >
-          <Image
-            src={imageUrl}
-            onError={onImageError}
-            alt=""
-            fill
-            className="object-cover"
-          />
-          <div className="absolute z-1 top-3 right-4 flex flex-col gap-1">
-            {curatedDate && (
-              <Chip
-                href="/recommendations"
-                className="bg-post-curated-bg border-post-curated-border"
-              >
-                <StarIcon className="w-3.5" />
-                Curated
-              </Chip>
+          <div
+            className={clsx(
+              "relative overflow-hidden rounded relative w-full grow min-h-[140px]",
+              "border-1 border-gray-600/20",
             )}
-            {isCommunity && (
-              <Chip
-                href="/topics/community"
-                className="bg-post-community-bg border-post-community-border"
-              >
-                <LotusIcon className="w-3.5" />
-                Community
-              </Chip>
-            )}
-          </div>
-        </div>
-        <Type
-          style={large ? "featuredPostTitleLarge" : "featuredPostTitle"}
-          className="line-clamp-3"
-        >
-          {title}
-        </Type>
-        <Type style="bodySmallMedium" className="min-w-0 flex items-center gap-2">
-          <PostsItemMeta post={post} hideCuratedDate />
-          {commentCount > 0 && (
-            <Link
-              href={href + "#comments"}
-              className={clsx(
-                "flex items-center gap-1 hover:bg-gray-200",
-                "rounded-[3px] px-1 py-0.5",
-                isNew && "text-primary",
+          >
+            <Image
+              src={imageUrl}
+              onError={onImageError}
+              alt=""
+              fill
+              className="object-cover"
+            />
+            <div className="absolute z-1 top-3 right-4 flex flex-col gap-1">
+              {curatedDate && (
+                <Chip
+                  href="/recommendations"
+                  className="bg-post-curated-bg border-post-curated-border"
+                >
+                  <StarIcon className="w-3.5" />
+                  Curated
+                </Chip>
               )}
-            >
-              <ChatIcon className="w-4" />
-              <Type
-                style="bodySmall"
-                className={clsx(hasUnreadComments && "font-[600]!")}
+              {isCommunity && (
+                <Chip
+                  href="/topics/community"
+                  className="bg-post-community-bg border-post-community-border"
+                >
+                  <LotusIcon className="w-3.5" />
+                  Community
+                </Chip>
+              )}
+            </div>
+          </div>
+          <Type
+            style={large ? "featuredPostTitleLarge" : "featuredPostTitle"}
+            className="line-clamp-3"
+          >
+            {title}
+          </Type>
+          <Type style="bodySmallMedium" className="min-w-0 flex items-center gap-2">
+            <PostsItemMeta post={post} hideCuratedDate />
+            {commentCount > 0 && (
+              <Link
+                href={href + "#comments"}
+                className={clsx(
+                  "flex items-center gap-1 hover:bg-gray-200",
+                  "rounded-[3px] px-1 py-0.5",
+                  isNew && "text-primary",
+                )}
               >
-                {commentCount}
-              </Type>
-            </Link>
-          )}
-        </Type>
-      </article>
+                <ChatIcon className="w-4" />
+                <Type
+                  style="bodySmall"
+                  className={clsx(hasUnreadComments && "font-[600]!")}
+                >
+                  {commentCount}
+                </Type>
+              </Link>
+            )}
+          </Type>
+        </article>
+      </PostsTooltip>
     </AnalyticsContext>
   );
 }
