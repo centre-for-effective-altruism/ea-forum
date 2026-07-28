@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
+import { getPostHogClient, getPostHogDistinctId } from "@/lib/posthog-server";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
 import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
@@ -33,13 +34,19 @@ const structuredData = {
 };
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  const initialTab = getCurrentHomePageTab(cookieStore);
+  const [cookieStore, posthogDistinctId] = await Promise.all([
+    cookies(),
+    getPostHogDistinctId(),
+  ]);
+  const flags = await getPostHogClient()?.evaluateFlags(posthogDistinctId);
+  const testGroup = flags?.getFlag("default-frontpage-tab") as string | undefined;
+  const initialTab = getCurrentHomePageTab(cookieStore, testGroup);
   return (
     <HomePageColumns pageContext="homePage">
       <StructuredData data={structuredData} />
       <BotSiteNotice />
       <HomePageTabs
+        testGroup={testGroup}
         initialContent={
           <Suspense fallback={<HomePageTabSkeleton tab={initialTab} />}>
             <HomePageTabContent tab={initialTab} />

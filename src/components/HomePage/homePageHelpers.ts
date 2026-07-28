@@ -16,8 +16,12 @@ export type HomePageTabName = (typeof homePageTabs)[number]["name"];
 
 export const homePageTabCookie = cookieName("last_frontpage_tab");
 
+const isHomePageTabName = (value?: string | null): value is HomePageTabName =>
+  !!value && homePageTabs.some(({ name }) => name === value);
+
 export const getCurrentHomePageTab = (
   cookies: ReadonlyRequestCookies | Partial<Record<CookieName, string>>,
+  testGroup?: string | null,
 ): HomePageTabName => {
   const cookie =
     "get" in cookies
@@ -29,6 +33,9 @@ export const getCurrentHomePageTab = (
         return name;
       }
     }
+  }
+  if (isHomePageTabName(testGroup)) {
+    return testGroup;
   }
   return homePageTabs[0].name;
 };

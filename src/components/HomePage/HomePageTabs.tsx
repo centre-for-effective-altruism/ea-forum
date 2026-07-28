@@ -23,14 +23,16 @@ import clsx from "clsx";
 
 export default function HomePageTabs({
   initialContent,
+  testGroup,
   className,
 }: Readonly<{
   initialContent: ReactNode;
+  testGroup?: string;
   className?: string;
 }>) {
   const { captureEvent } = useTracking();
   const [cookies, setCookie] = useCookiesWithConsent([homePageTabCookie]);
-  const initialTab = getCurrentHomePageTab(cookies);
+  const initialTab = getCurrentHomePageTab(cookies, testGroup);
   const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
   const [content, setContent] = useState(initialContent);

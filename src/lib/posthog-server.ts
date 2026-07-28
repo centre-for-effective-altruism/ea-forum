@@ -1,5 +1,8 @@
+import { cache } from "react";
 import { PostHog } from "posthog-node";
 import { isAnyTest } from "./environment";
+import { getCurrentUser } from "./users/currentUser";
+import { getCurrentClientId } from "./clientIds/currentClientId";
 
 let posthogClient: PostHog | null = null;
 
@@ -19,3 +22,12 @@ export const shutdownPostHog = async () => {
     await posthogClient.shutdown();
   }
 };
+
+/** This matches the logic in `useCurrentUser` when we call `posthog.identify` */
+export const getPostHogDistinctId = cache(async () => {
+  const user = await getCurrentUser();
+  if (user) {
+    return user._id;
+  }
+  return await getCurrentClientId();
+});
