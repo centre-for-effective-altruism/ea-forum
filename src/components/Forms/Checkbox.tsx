@@ -1,5 +1,6 @@
 import { ChangeEvent, useCallback } from "react";
 import Type from "../Type";
+import clsx from "clsx";
 
 type CheckboxLabel = {
   id: string;
@@ -10,10 +11,12 @@ export default function Checkbox({
   label,
   checked,
   onChange,
+  className,
 }: Readonly<{
   label?: CheckboxLabel;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  className?: string;
 }>) {
   const onChange_ = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -22,13 +25,18 @@ export default function Checkbox({
     [onChange],
   );
   return (
-    <div data-component="Checkbox" className="flex items-center gap-2">
+    <div
+      data-component="Checkbox"
+      className={clsx("flex items-center gap-2", className)}
+    >
       <input
         id={label?.id}
         type="checkbox"
         checked={checked}
         onChange={onChange_}
-        className="w-4 h-4 rounded border border-gray-400 accent-primary"
+        className="
+          cursor-pointer w-4 h-4 rounded border border-gray-400 accent-primary
+        "
       />
       {label && (
         <label htmlFor={label.id} className="cursor-pointer select-none">
