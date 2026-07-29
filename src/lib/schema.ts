@@ -1162,6 +1162,8 @@ export const digestPosts = pgTable(
   ],
 );
 
+export type InsertDigestPost = typeof digestPosts.$inferInsert;
+
 export const curationNotices = pgTable(
   "CurationNotices",
   {

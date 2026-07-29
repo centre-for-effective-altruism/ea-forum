@@ -30,6 +30,7 @@ export default async function AdminPage() {
             href: "/admin/election-candidates",
           },
           { title: "Digests", href: "/admin/digests" },
+          { title: "Featured queue", href: "/admin/featured" },
           { title: "Twitter tools", href: "/admin/twitter" },
           { title: "Spotlights", href: "/admin/spotlights" },
           { title: "Forum events", href: "/adminForumEvents" },

@@ -667,9 +667,15 @@ export const fetchFeaturedFrontpagePosts = async ({
               RAW: (postsTable) => excludeCommunity(postsTable),
             },
             {
+              // Featured via the digest tool.
               digestPost: {
                 onsiteDigestAt: { isNotNull: true },
               },
+            },
+            {
+              // Featured via the admin Featured queue, which stamps
+              // `onsiteDigestAt` on the post itself (see featuredQueueMutations).
+              onsiteDigestAt: { isNotNull: true },
             },
           ],
         },
