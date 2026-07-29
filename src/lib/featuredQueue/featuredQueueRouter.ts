@@ -5,14 +5,14 @@ import { getCurrentUser } from "../users/currentUser";
 import { db } from "../db";
 import { dismissPosts, featurePosts } from "./featuredQueueMutations";
 
-const postIdList = z.array(z.string().nonempty()).max(200);
+const postIdList = z.array(z.string().nonempty()).max(200).default([]);
 
 export const featuredQueueRouter = {
   publish: os
     .input(
       z.object({
-        featurePostIds: postIdList.optional(),
-        dismissPostIds: postIdList.optional(),
+        featurePostIds: postIdList,
+        dismissPostIds: postIdList,
       }),
     )
     .handler(async ({ input }) => {
@@ -20,14 +20,10 @@ export const featuredQueueRouter = {
       if (!userIsAdmin(currentUser)) {
         throw new Error("Permission denied");
       }
-      const featurePostIds = input.featurePostIds ?? [];
-      const dismissPostIds = input.dismissPostIds ?? [];
-      if (featurePostIds.length === 0 && dismissPostIds.length === 0) {
-        return { featuredCount: 0, dismissedCount: 0 };
-      }
+      // featurePosts / dismissPosts each no-op on an empty list.
       return db.transaction(async (txn) => ({
-        featuredCount: await featurePosts(featurePostIds, txn),
-        dismissedCount: await dismissPosts(dismissPostIds, txn),
+        featuredCount: await featurePosts(input.featurePostIds, txn),
+        dismissedCount: await dismissPosts(input.dismissPostIds, txn),
       }));
     }),
 };

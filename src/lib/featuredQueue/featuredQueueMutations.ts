@@ -65,27 +65,32 @@ export const dismissPosts = async (
     return 0;
   }
 
-  // Sorted newest-first, so the first digest whose start is at or before a
-  // post's postedAt is the one that covers it.
-  const digests = await dbOrTxn.query.digests.findMany({
-    columns: { _id: true, startDate: true },
-    orderBy: { startDate: "desc" },
-  });
+  // Precompute each digest's start as a timestamp, newest-first, so the first
+  // digest whose start is at or before a post's postedAt is the one that covers
+  // it. Parsing happens once per digest here rather than once per (post,digest).
+  const digestBounds = (
+    await dbOrTxn.query.digests.findMany({
+      columns: { _id: true, startDate: true },
+      orderBy: { startDate: "desc" },
+    })
+  ).flatMap((d) =>
+    d.startDate ? [{ _id: d._id, startMs: new Date(d.startDate).getTime() }] : [],
+  );
   const coveringDigestId = (postedAt: string | null): string | null => {
     if (!postedAt) {
       return null;
     }
     const postedMs = new Date(postedAt).getTime();
-    const digest = digests.find(
-      (d) => d.startDate !== null && new Date(d.startDate).getTime() <= postedMs,
-    );
-    return digest?._id ?? null;
+    return digestBounds.find((d) => d.startMs <= postedMs)?._id ?? null;
   };
 
   const existingRows = await dbOrTxn.query.digestPosts.findMany({
     columns: { _id: true, postId: true, digestId: true },
     where: { postId: { in: dismissable.map((post) => post._id) } },
   });
+  const existingRowId = new Map(
+    existingRows.map((row) => [`${row.postId}:${row.digestId}`, row._id]),
+  );
 
   const now = new Date().toISOString();
   const rowIdsToUpdate: string[] = [];
@@ -97,11 +102,9 @@ export const dismissPosts = async (
       // rather than fabricating a digest.
       continue;
     }
-    const existing = existingRows.find(
-      (row) => row.postId === post._id && row.digestId === digestId,
-    );
-    if (existing) {
-      rowIdsToUpdate.push(existing._id);
+    const existingId = existingRowId.get(`${post._id}:${digestId}`);
+    if (existingId) {
+      rowIdsToUpdate.push(existingId);
     } else {
       rowsToInsert.push({
         _id: randomId(),

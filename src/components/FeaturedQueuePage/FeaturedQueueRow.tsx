@@ -55,9 +55,7 @@ export default function FeaturedQueueRow({
         <div
           className={clsx(
             "absolute top-0 bottom-0 left-0 w-1.5",
-            featured && "bg-primary",
-            dismissed && "bg-gray-400",
-            !featured && !dismissed && "bg-transparent",
+            featured ? "bg-primary" : dismissed ? "bg-gray-400" : "bg-transparent",
           )}
         />
         {featured && (

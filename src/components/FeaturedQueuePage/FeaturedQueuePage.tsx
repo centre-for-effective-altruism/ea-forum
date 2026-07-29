@@ -23,19 +23,21 @@ const openPostInNewTab = (post: FeaturedQueueItem) => {
   window.open(postGetPageUrl({ post }), "_blank", "noopener");
 };
 
-const withToggled = (ids: ReadonlySet<string>, id: string): Set<string> => {
-  const next = new Set(ids);
-  if (next.has(id)) {
+type Decision = "feature" | "dismiss";
+
+// Each post carries at most one decision, so feature and dismiss are mutually
+// exclusive by construction. Toggling the current decision clears it.
+const withDecision = (
+  decisions: ReadonlyMap<string, Decision>,
+  id: string,
+  decision: Decision,
+): Map<string, Decision> => {
+  const next = new Map(decisions);
+  if (next.get(id) === decision) {
     next.delete(id);
   } else {
-    next.add(id);
+    next.set(id, decision);
   }
-  return next;
-};
-
-const without = (ids: ReadonlySet<string>, id: string): Set<string> => {
-  const next = new Set(ids);
-  next.delete(id);
   return next;
 };
 
@@ -45,19 +47,18 @@ export default function FeaturedQueuePage({
   posts: FeaturedQueueItem[];
 }>) {
   const router = useRouter();
-  const [featuredIds, setFeaturedIds] = useState<ReadonlySet<string>>(new Set());
-  const [dismissedIds, setDismissedIds] = useState<ReadonlySet<string>>(new Set());
+  const [decisions, setDecisions] = useState<ReadonlyMap<string, Decision>>(
+    new Map(),
+  );
   const [cursor, setCursor] = useState(0);
   const [publishing, setPublishing] = useState(false);
 
   const toggleFeature = useCallback((id: string) => {
-    setFeaturedIds((ids) => withToggled(ids, id));
-    setDismissedIds((ids) => without(ids, id));
+    setDecisions((d) => withDecision(d, id, "feature"));
   }, []);
 
   const toggleDismiss = useCallback((id: string) => {
-    setDismissedIds((ids) => withToggled(ids, id));
-    setFeaturedIds((ids) => without(ids, id));
+    setDecisions((d) => withDecision(d, id, "dismiss"));
   }, []);
 
   useGlobalKeydown(
@@ -92,9 +93,12 @@ export default function FeaturedQueuePage({
   );
 
   const publish = useCallback(async () => {
-    const featurePostIds = [...featuredIds];
-    const dismissPostIds = [...dismissedIds];
-    if ((featurePostIds.length === 0 && dismissPostIds.length === 0) || publishing) {
+    const featurePostIds: string[] = [];
+    const dismissPostIds: string[] = [];
+    for (const [id, decision] of decisions) {
+      (decision === "feature" ? featurePostIds : dismissPostIds).push(id);
+    }
+    if (decisions.size === 0 || publishing) {
       return;
     }
     setPublishing(true);
@@ -105,8 +109,7 @@ export default function FeaturedQueuePage({
         dismissPostIds,
       });
       toast.success(`Featured ${featuredCount} · dismissed ${dismissedCount}`);
-      setFeaturedIds(new Set());
-      setDismissedIds(new Set());
+      setDecisions(new Map());
       setCursor(0);
       router.refresh();
     } catch (e) {
@@ -117,9 +120,14 @@ export default function FeaturedQueuePage({
       toast.dismiss(toastId);
       setPublishing(false);
     }
-  }, [featuredIds, dismissedIds, publishing, router]);
+  }, [decisions, publishing, router]);
 
-  const decisionCount = featuredIds.size + dismissedIds.size;
+  let featuredCount = 0;
+  for (const decision of decisions.values()) {
+    if (decision === "feature") featuredCount++;
+  }
+  const decisionCount = decisions.size;
+  const dismissedCount = decisionCount - featuredCount;
 
   return (
     <main
@@ -145,7 +153,7 @@ export default function FeaturedQueuePage({
           <div className="text-[12px] font-[500] text-gray-600">
             {decisionCount === 0
               ? "Feature or dismiss at least one post"
-              : `Feature ${featuredIds.size} · dismiss ${dismissedIds.size}`}
+              : `Feature ${featuredCount} · dismiss ${dismissedCount}`}
           </div>
         </div>
       </div>
@@ -174,8 +182,8 @@ export default function FeaturedQueuePage({
           <FeaturedQueueRow
             key={post._id}
             post={post}
-            featured={featuredIds.has(post._id)}
-            dismissed={dismissedIds.has(post._id)}
+            featured={decisions.get(post._id) === "feature"}
+            dismissed={decisions.get(post._id) === "dismiss"}
             selected={cursor === index}
             onSelect={() => setCursor(index)}
             onToggleFeature={() => toggleFeature(post._id)}
