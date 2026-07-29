@@ -3,6 +3,7 @@
 import { MouseEvent } from "react";
 import clsx from "clsx";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowTopRightOnSquareIcon from "@heroicons/react/24/outline/ArrowTopRightOnSquareIcon";
 import Type from "../Type";
 import TagChip from "../Tags/TagChip";
@@ -21,16 +22,20 @@ const stop = (fn: () => void) => (ev: MouseEvent) => {
 export default function FeaturedQueueRow({
   post,
   featured,
+  dismissed,
   selected,
   onSelect,
   onToggleFeature,
+  onToggleDismiss,
   onOpen,
 }: Readonly<{
   post: FeaturedQueueItem;
   featured: boolean;
+  dismissed: boolean;
   selected: boolean;
   onSelect: () => void;
   onToggleFeature: () => void;
+  onToggleDismiss: () => void;
   onOpen: () => void;
 }>) {
   const tags = (post.tags ?? []).slice(0, MAX_TAGS);
@@ -50,7 +55,9 @@ export default function FeaturedQueueRow({
         <div
           className={clsx(
             "absolute top-0 bottom-0 left-0 w-1.5",
-            featured ? "bg-primary" : "bg-transparent",
+            featured && "bg-primary",
+            dismissed && "bg-gray-400",
+            !featured && !dismissed && "bg-transparent",
           )}
         />
         {featured && (
@@ -58,8 +65,19 @@ export default function FeaturedQueueRow({
             Feature
           </span>
         )}
+        {dismissed && (
+          <span className="inline-block shrink-0 rounded border border-gray-400 bg-gray-400 px-[7px] py-0.5 text-[11px] leading-4 font-[700] tracking-[0.02em] text-always-white uppercase">
+            Dismiss
+          </span>
+        )}
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <Type style="postTitle" className="min-w-0 flex-1 truncate text-gray-900">
+          <Type
+            style="postTitle"
+            className={clsx(
+              "min-w-0 flex-1 truncate",
+              dismissed ? "text-gray-500 line-through" : "text-gray-900",
+            )}
+          >
             {post.title}
           </Type>
           {tags.length > 0 && (
@@ -83,6 +101,16 @@ export default function FeaturedQueueRow({
             )}
           >
             <StarIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={stop(onToggleDismiss)}
+            title="Dismiss (X)"
+            className={clsx(
+              iconButtonClass,
+              dismissed ? "text-error" : "text-gray-400",
+            )}
+          >
+            <XMarkIcon className="h-4 w-4" />
           </button>
           <button
             onClick={stop(onOpen)}

@@ -15,11 +15,28 @@ import FeaturedQueueRow from "./FeaturedQueueRow";
 const KEY_HINTS: { key: string; label: string }[] = [
   { key: "J / K", label: "move" },
   { key: "F", label: "feature" },
+  { key: "X", label: "dismiss" },
   { key: "O", label: "open" },
 ];
 
 const openPostInNewTab = (post: FeaturedQueueItem) => {
   window.open(postGetPageUrl({ post }), "_blank", "noopener");
+};
+
+const withToggled = (ids: ReadonlySet<string>, id: string): Set<string> => {
+  const next = new Set(ids);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+};
+
+const without = (ids: ReadonlySet<string>, id: string): Set<string> => {
+  const next = new Set(ids);
+  next.delete(id);
+  return next;
 };
 
 export default function FeaturedQueuePage({
@@ -29,19 +46,18 @@ export default function FeaturedQueuePage({
 }>) {
   const router = useRouter();
   const [featuredIds, setFeaturedIds] = useState<ReadonlySet<string>>(new Set());
+  const [dismissedIds, setDismissedIds] = useState<ReadonlySet<string>>(new Set());
   const [cursor, setCursor] = useState(0);
   const [publishing, setPublishing] = useState(false);
 
   const toggleFeature = useCallback((id: string) => {
-    setFeaturedIds((ids) => {
-      const next = new Set(ids);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setFeaturedIds((ids) => withToggled(ids, id));
+    setDismissedIds((ids) => without(ids, id));
+  }, []);
+
+  const toggleDismiss = useCallback((id: string) => {
+    setDismissedIds((ids) => withToggled(ids, id));
+    setFeaturedIds((ids) => without(ids, id));
   }, []);
 
   useGlobalKeydown(
@@ -63,28 +79,34 @@ export default function FeaturedQueuePage({
         } else if (key === "f") {
           ev.preventDefault();
           if (posts[cursor]) toggleFeature(posts[cursor]._id);
+        } else if (key === "x") {
+          ev.preventDefault();
+          if (posts[cursor]) toggleDismiss(posts[cursor]._id);
         } else if (key === "o") {
           ev.preventDefault();
           if (posts[cursor]) openPostInNewTab(posts[cursor]);
         }
       },
-      [posts, cursor, toggleFeature],
+      [posts, cursor, toggleFeature, toggleDismiss],
     ),
   );
 
   const publish = useCallback(async () => {
-    const postIds = [...featuredIds];
-    if (postIds.length === 0 || publishing) {
+    const featurePostIds = [...featuredIds];
+    const dismissPostIds = [...dismissedIds];
+    if ((featurePostIds.length === 0 && dismissPostIds.length === 0) || publishing) {
       return;
     }
     setPublishing(true);
     const toastId = toast.loading("Publishing to homepage...");
     try {
-      const { featuredCount } = await rpc.featuredQueue.publish({ postIds });
-      toast.success(
-        `Featured ${featuredCount} post${featuredCount === 1 ? "" : "s"}`,
-      );
+      const { featuredCount, dismissedCount } = await rpc.featuredQueue.publish({
+        featurePostIds,
+        dismissPostIds,
+      });
+      toast.success(`Featured ${featuredCount} · dismissed ${dismissedCount}`);
       setFeaturedIds(new Set());
+      setDismissedIds(new Set());
       setCursor(0);
       router.refresh();
     } catch (e) {
@@ -95,7 +117,9 @@ export default function FeaturedQueuePage({
       toast.dismiss(toastId);
       setPublishing(false);
     }
-  }, [featuredIds, publishing, router]);
+  }, [featuredIds, dismissedIds, publishing, router]);
+
+  const decisionCount = featuredIds.size + dismissedIds.size;
 
   return (
     <main
@@ -106,22 +130,22 @@ export default function FeaturedQueuePage({
         <div>
           <Type style="commentsHeader">Featured queue</Type>
           <div className="mt-0.5 text-[13px] font-[450] text-gray-600">
-            Recent posts · mark the ones to feature on the homepage · nothing is
-            featured unless you say so
+            Everything since your last review · feature the ones for the homepage,
+            dismiss the rest · both clear the post from the queue
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 pt-1.5">
           <Button
             onClick={publish}
-            disabled={featuredIds.size === 0 || publishing}
+            disabled={decisionCount === 0 || publishing}
             loading={publishing}
           >
             Publish to homepage
           </Button>
           <div className="text-[12px] font-[500] text-gray-600">
-            {featuredIds.size === 0
-              ? "Mark at least one post to feature"
-              : `Features ${featuredIds.size} post${featuredIds.size === 1 ? "" : "s"}`}
+            {decisionCount === 0
+              ? "Feature or dismiss at least one post"
+              : `Feature ${featuredIds.size} · dismiss ${dismissedIds.size}`}
           </div>
         </div>
       </div>
@@ -151,19 +175,23 @@ export default function FeaturedQueuePage({
             key={post._id}
             post={post}
             featured={featuredIds.has(post._id)}
+            dismissed={dismissedIds.has(post._id)}
             selected={cursor === index}
             onSelect={() => setCursor(index)}
             onToggleFeature={() => toggleFeature(post._id)}
+            onToggleDismiss={() => toggleDismiss(post._id)}
             onOpen={() => openPostInNewTab(post)}
           />
         ))
       )}
 
       <div className="mt-6 text-[12px] font-[500] leading-normal text-gray-600">
-        Admins only. Every post starts unfeatured — you only ever mark the ones you
-        want. Publishing stamps{" "}
-        <span className="font-mono text-[11px]">onsiteDigestAt</span> on your picks,
-        which is what the homepage Featured list reads.
+        Admins only. Featuring stamps{" "}
+        <span className="font-mono text-[11px]">onsiteDigestAt</span> on the post,
+        which is what the homepage Featured list reads. Dismissing records the digest
+        tool&rsquo;s <span className="font-mono text-[11px]">&ldquo;X&rdquo;</span>{" "}
+        (onsite digest status <span className="font-mono text-[11px]">no</span>), so
+        the post won&rsquo;t come back here or into the digest.
       </div>
     </main>
   );

@@ -1,7 +1,6 @@
 import "server-only";
 
 import { db } from "../db";
-import { nDaysAgo } from "../timeUtils";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
   viewablePostFilter,
@@ -9,8 +8,15 @@ import {
   type PostRelationalProjection,
 } from "../posts/postLists";
 
-/** How far back the queue looks for posts awaiting a featuring decision. */
-const RECENT_WINDOW_DAYS = 7;
+/**
+ * The queue only ever surfaces posts published on or after this date, so at
+ * launch we start from "now" rather than every post ever written. After that
+ * the queue is purely "since last review": a post drops out for good once it's
+ * been featured or dismissed, so there's no rolling time window.
+ *
+ * Set this to the go-live date when shipping.
+ */
+export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-29T00:00:00.000Z");
 
 /** Cap on the number of posts loaded into the queue at once. */
 const QUEUE_LIMIT = 100;
@@ -38,21 +44,29 @@ const featuredQueueProjection = {
 export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjection>;
 
 /**
- * Recently posted, viewable posts that haven't been featured yet — neither via
- * this queue (`posts.onsiteDigestAt`) nor via the digest tool
- * (`DigestPosts.onsiteDigestAt`), so already-featured posts don't reappear as
- * awaiting a decision.
+ * Viewable posts (published since launch) that are still awaiting a decision:
+ * neither featured nor dismissed. A post leaves the queue permanently once it's
+ * been featured — via this queue (`posts.onsiteDigestAt`) or the digest tool
+ * (`DigestPosts.onsiteDigestAt`) — or dismissed, which records the digest
+ * tool's "X" (`DigestPosts.onsiteDigestStatus = "no"`). There's no time window
+ * beyond the launch cutoff, so the queue is simply everything since last
+ * review.
  */
 export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
   return db.query.posts.findMany({
     ...featuredQueueProjection,
     where: {
       ...viewablePostFilter,
-      postedAt: { gt: nDaysAgo(RECENT_WINDOW_DAYS).toISOString() },
+      postedAt: { gte: FEATURED_QUEUE_LAUNCH_DATE.toISOString() },
       onsiteDigestAt: { isNull: true },
       NOT: {
         digestPost: {
-          onsiteDigestAt: { isNotNull: true },
+          OR: [
+            // Featured via the digest tool.
+            { onsiteDigestAt: { isNotNull: true } },
+            // Dismissed: the digest tool's "X" / "no" onsite status.
+            { onsiteDigestStatus: "no" },
+          ],
         },
       },
     },
