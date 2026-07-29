@@ -16,7 +16,7 @@ import {
  *
  * Set this to the go-live date when shipping.
  */
-export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-29T00:00:00.000Z");
+export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-28T00:00:00.000Z");
 
 /** Cap on the number of posts loaded into the queue at once. */
 const QUEUE_LIMIT = 100;
