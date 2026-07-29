@@ -8,6 +8,7 @@ import {
 } from "@/lib/posts/postsListView";
 import Type from "../Type";
 import Link from "../Link";
+import clsx from "clsx";
 
 export default function HomePageFeaturedTabLayout({
   posts,
@@ -47,7 +48,12 @@ export default function HomePageFeaturedTabLayout({
     <AnalyticsContext homePageTab="featured">
       <div
         data-component="HomePageFeaturedTabLayout"
-        className="flex flex-col gap-9 pb-20"
+        className={clsx(
+          "flex flex-col gap-9 pb-20",
+          // In list view, match the New & upvoted tab's narrower width. Card
+          // view keeps the full width so the card grid can breathe.
+          isList && "max-w-[1000px]",
+        )}
       >
         <div className="flex items-center justify-between gap-4 -my-3">
           <Type className="text-gray-600">
