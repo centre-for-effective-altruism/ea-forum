@@ -37,16 +37,12 @@ export const featurePosts = async (
 };
 
 /**
- * Dismiss the given posts from the queue by recording the digest tool's "X"
- * decision (`DigestPosts.onsiteDigestStatus = "no"`) on each post's digest row.
- * This is the same signal the digest tool uses, so a dismissal here shows up as
- * an "X" there and vice versa, and the post stops reappearing in the queue.
- *
- * A post's digest row belongs to the digest whose date range covers its
- * `postedAt` (digests partition time into `[startDate, endDate)` ranges). If a
- * row already exists for that digest we update it; otherwise we insert one,
- * mirroring how the digest tool creates rows lazily. Returns the number of
- * posts dismissed.
+ * Dismiss the given posts by recording the digest tool's "X"
+ * (`DigestPosts.onsiteDigestStatus = "no"`) on each post's digest row — the same
+ * signal the digest tool uses, so the decision is shared both ways and the post
+ * stops reappearing in the queue. The row belongs to the digest whose date range
+ * covers the post's `postedAt`; we update it if present, else insert one (as the
+ * digest tool does lazily). Returns the number of posts dismissed.
  */
 export const dismissPosts = async (
   postIds: string[],
@@ -97,9 +93,8 @@ export const dismissPosts = async (
   const rowsToInsert: InsertDigestPost[] = [];
   for (const post of dismissable) {
     const digestId = coveringDigestId(post.postedAt);
+    // Skip posts no digest covers rather than fabricating one.
     if (!digestId) {
-      // No digest covers this post (e.g. it predates every digest); skip it
-      // rather than fabricating a digest.
       continue;
     }
     const existingId = existingRowId.get(`${post._id}:${digestId}`);

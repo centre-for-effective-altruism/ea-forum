@@ -69,6 +69,7 @@ export default function FeaturedQueuePage({
           return;
         }
         const key = ev.key.toLowerCase();
+        const post = posts[cursor];
         const move = (delta: number) =>
           setCursor((c) => Math.max(0, Math.min(posts.length - 1, c + delta)));
         if (key === "j" || key === "arrowdown") {
@@ -79,13 +80,13 @@ export default function FeaturedQueuePage({
           move(-1);
         } else if (key === "f") {
           ev.preventDefault();
-          if (posts[cursor]) toggleFeature(posts[cursor]._id);
+          if (post) toggleFeature(post._id);
         } else if (key === "x") {
           ev.preventDefault();
-          if (posts[cursor]) toggleDismiss(posts[cursor]._id);
+          if (post) toggleDismiss(post._id);
         } else if (key === "o") {
           ev.preventDefault();
-          if (posts[cursor]) openPostInNewTab(posts[cursor]);
+          if (post) openPostInNewTab(post);
         }
       },
       [posts, cursor, toggleFeature, toggleDismiss],
@@ -93,13 +94,13 @@ export default function FeaturedQueuePage({
   );
 
   const publish = useCallback(async () => {
+    if (decisions.size === 0 || publishing) {
+      return;
+    }
     const featurePostIds: string[] = [];
     const dismissPostIds: string[] = [];
     for (const [id, decision] of decisions) {
       (decision === "feature" ? featurePostIds : dismissPostIds).push(id);
-    }
-    if (decisions.size === 0 || publishing) {
-      return;
     }
     setPublishing(true);
     const toastId = toast.loading("Publishing to homepage...");
@@ -122,11 +123,10 @@ export default function FeaturedQueuePage({
     }
   }, [decisions, publishing, router]);
 
-  let featuredCount = 0;
-  for (const decision of decisions.values()) {
-    if (decision === "feature") featuredCount++;
-  }
   const decisionCount = decisions.size;
+  const featuredCount = [...decisions.values()].filter(
+    (d) => d === "feature",
+  ).length;
   const dismissedCount = decisionCount - featuredCount;
 
   return (

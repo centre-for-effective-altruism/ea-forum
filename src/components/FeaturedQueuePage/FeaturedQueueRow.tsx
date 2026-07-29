@@ -39,6 +39,11 @@ export default function FeaturedQueueRow({
   onOpen: () => void;
 }>) {
   const tags = (post.tags ?? []).slice(0, MAX_TAGS);
+  const badge = featured
+    ? { label: "Feature", color: "border-primary bg-primary" }
+    : dismissed
+      ? { label: "Dismiss", color: "border-gray-400 bg-gray-400" }
+      : null;
 
   return (
     <div
@@ -58,14 +63,14 @@ export default function FeaturedQueueRow({
             featured ? "bg-primary" : dismissed ? "bg-gray-400" : "bg-transparent",
           )}
         />
-        {featured && (
-          <span className="inline-block shrink-0 rounded border border-primary bg-primary px-[7px] py-0.5 text-[11px] leading-4 font-[700] tracking-[0.02em] text-always-white uppercase">
-            Feature
-          </span>
-        )}
-        {dismissed && (
-          <span className="inline-block shrink-0 rounded border border-gray-400 bg-gray-400 px-[7px] py-0.5 text-[11px] leading-4 font-[700] tracking-[0.02em] text-always-white uppercase">
-            Dismiss
+        {badge && (
+          <span
+            className={clsx(
+              "inline-block shrink-0 rounded border px-[7px] py-0.5 text-[11px] leading-4 font-[700] tracking-[0.02em] text-always-white uppercase",
+              badge.color,
+            )}
+          >
+            {badge.label}
           </span>
         )}
         <div className="flex min-w-0 flex-1 items-center gap-2">
