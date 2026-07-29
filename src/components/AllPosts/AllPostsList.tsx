@@ -1,16 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { captureException } from "@sentry/nextjs";
 import { useSearchParams } from "next/navigation";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { allPostsSettingsFromQuery } from "@/lib/posts/allPostsSettings";
+import {
+  allPostsSettingsFromQuery,
+  AllPostsTimeblockSettings,
+} from "@/lib/posts/allPostsSettings";
 import type { PostListItem } from "@/lib/posts/postLists";
 import { rpc } from "@/lib/rpc";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
+import TimeframeList from "./TimeframeList";
+import Type from "../Type";
 
 export default function AllPostsList() {
   const [posts, setPosts] = useState<PostListItem[]>([]);
@@ -47,19 +52,36 @@ export default function AllPostsList() {
     void loadMore();
   }, [loadMore]);
 
+  let content: ReactNode;
+  switch (settings.timeframe) {
+    case "allTime":
+      content = (
+        <>
+          {posts.map((post) => (
+            <PostsItem key={post._id} post={post} />
+          ))}
+          {loading && <PostsListSkeleton count={10} />}
+          <TextLinkButton
+            variant="primary"
+            onClick={loadMore.bind(null, posts.length)}
+          >
+            Load more
+          </TextLinkButton>
+        </>
+      );
+      break;
+    case "exponential":
+      // TODO
+      content = <Type>Exponential timeframe not implemented</Type>;
+      break;
+    default:
+      content = <TimeframeList settings={settings as AllPostsTimeblockSettings} />;
+  }
+
   return (
     <AnalyticsContext listContext="allPostsPage" terms={settings}>
       <section data-component="AllPostsList" className="max-w-full space-y-0.5">
-        {posts.map((post) => (
-          <PostsItem key={post._id} post={post} />
-        ))}
-        {loading && <PostsListSkeleton count={10} />}
-        <TextLinkButton
-          variant="primary"
-          onClick={loadMore.bind(null, posts.length)}
-        >
-          Load more
-        </TextLinkButton>
+        {content}
       </section>
     </AnalyticsContext>
   );

@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { isToday } from "../timeUtils";
 
 export const ALL_POSTS_LOW_KARMA_THRESHOLD = -10;
 
@@ -94,4 +95,127 @@ export const allPostsFilters: Record<AllPostsFilter, AllPostsSettingConfig> = {
     label: "Linkposts",
     tooltip: "Repost or links to content from elsewhere on the web",
   },
+};
+
+export type TimeblockTimeframe = "daily" | "weekly" | "monthly" | "yearly";
+
+export type AllPostsTimeblockSettings = Omit<AllPostsSettings, "timeframe"> & {
+  timeframe: TimeblockTimeframe;
+};
+
+const getInitialBlockCount = (timeframe: TimeblockTimeframe) =>
+  timeframe === "daily" ? 10 : 4;
+
+const getCurrentTimeblock = (
+  timeframe: TimeblockTimeframe,
+  now: Date = new Date(),
+): { after: Date; before: Date } => {
+  const after = new Date(now);
+  const before = new Date(now);
+  switch (timeframe) {
+    case "daily":
+      after.setHours(0, 0, 0, 0);
+      before.setHours(23, 59, 59, 999);
+      break;
+    case "weekly": {
+      const day = now.getDay();
+      const daysSinceMonday = (day + 6) % 7;
+      const daysUntilSunday = (7 - day) % 7;
+      after.setDate(after.getDate() - daysSinceMonday);
+      after.setHours(0, 0, 0, 0);
+      before.setDate(before.getDate() + daysUntilSunday);
+      before.setHours(23, 59, 59, 999);
+      break;
+    }
+    case "monthly":
+      after.setDate(1);
+      after.setHours(0, 0, 0, 0);
+      before.setMonth(before.getMonth() + 1, 0);
+      before.setHours(23, 59, 59, 999);
+      break;
+    case "yearly":
+      after.setMonth(0, 1);
+      after.setHours(0, 0, 0, 0);
+      before.setMonth(11, 31);
+      before.setHours(23, 59, 59, 999);
+      break;
+  }
+  return { after, before };
+};
+
+const getPreviousTimeblock = (
+  timeframe: TimeblockTimeframe,
+  range: { after: Date; before: Date },
+): { after: Date; before: Date } => {
+  const after = new Date(range.after);
+  const before = new Date(range.before);
+  switch (timeframe) {
+    case "daily":
+      after.setDate(after.getDate() - 1);
+      before.setDate(before.getDate() - 1);
+      break;
+    case "weekly":
+      after.setDate(after.getDate() - 7);
+      before.setDate(before.getDate() - 7);
+      break;
+    case "monthly":
+      after.setMonth(after.getMonth() - 1);
+      before.setMonth(before.getMonth() - 1);
+      break;
+    case "yearly":
+      after.setFullYear(after.getFullYear() - 1);
+      before.setFullYear(before.getFullYear() - 1);
+      break;
+  }
+  return { after, before };
+};
+
+export const getTimeblockDateRanges = (
+  timeframe: TimeblockTimeframe,
+  numBlocks: number = getInitialBlockCount(timeframe),
+): { after: Date; before: Date }[] => {
+  const ranges: { after: Date; before: Date }[] = [];
+  let range = getCurrentTimeblock(timeframe);
+  for (let i = 0; i < numBlocks; i++) {
+    ranges.push(range);
+    range = getPreviousTimeblock(timeframe, range);
+  }
+  return ranges;
+};
+
+const yearlyFormatter = new Intl.DateTimeFormat("en", { year: "numeric" });
+const monthlyFormatter = new Intl.DateTimeFormat("en", {
+  month: "long",
+  year: "numeric",
+});
+const dayMobileFormatter = new Intl.DateTimeFormat("en", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+const dayDesktopFormatter = new Intl.DateTimeFormat("en", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+export const getTimeblockTitle = (
+  timeframe: TimeblockTimeframe,
+  startDate: Date,
+  size: "mobile" | "desktop",
+) => {
+  if (timeframe === "yearly") {
+    return yearlyFormatter.format(startDate);
+  }
+  if (timeframe === "monthly") {
+    return monthlyFormatter.format(startDate);
+  }
+  const formatter = size === "mobile" ? dayMobileFormatter : dayDesktopFormatter;
+  const result = formatter.format(startDate);
+  if (timeframe === "weekly") {
+    return `Week of ${result}`;
+  }
+  return isToday(startDate) ? result.replace(/^[^,]+,/, "Today,") : result;
 };

@@ -741,7 +741,9 @@ export const fetchAllPosts = async ({
   return await fetchPostsList({
     currentUserId: currentUser?._id ?? null,
     where: {
-      postedAt: { AND: [{ lt: before.toISOString() }, { gt: after.toISOString() }] },
+      postedAt: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
       frontpageDate: filter === "frontpage" ? { isNotNull: true } : undefined,
       curatedDate: filter === "curated" ? { isNotNull: true } : undefined,
       question: filter === "questions" ? true : undefined,
