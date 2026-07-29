@@ -36,6 +36,7 @@ const newSitePatterns = [
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of
   /^\/admin$/, // Admin
+  /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
   /^\/admin\/spotlights.*/, // Admin spotlights pages
