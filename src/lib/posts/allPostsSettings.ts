@@ -12,7 +12,7 @@ const booleanSchema = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
-const allPostsSettingsSchema = z.object({
+export const allPostsSettingsSchema = z.object({
   timeframe: z
     .enum(["allTime", "daily", "weekly", "monthly", "yearly", "exponential"])
     .catch("daily"),
@@ -70,11 +70,11 @@ export const allPostsFilters: Record<AllPostsFilter, AllPostsSettingConfig> = {
   all: {
     label: "All posts",
     tooltip:
-      "Includes personal blogposts as well as frontpage, questions, and community posts.",
+      "Includes personal blogposts as well as frontpage, questions, and community posts",
   },
   frontpage: {
     label: "Frontpage",
-    tooltip: "Posts about research and other work in high-impact cause areas.",
+    tooltip: "Posts about research and other work in high-impact cause areas",
   },
   curated: {
     label: "Curated",
@@ -84,11 +84,11 @@ export const allPostsFilters: Record<AllPostsFilter, AllPostsSettingConfig> = {
   questions: {
     label: "Questions",
     tooltip:
-      "Open questions and answers, ranging from newcomer questions to important unsolved scientific problems.",
+      "Open questions and answers, ranging from newcomer questions to important unsolved scientific problems",
   },
   events: {
     label: "Events",
-    tooltip: "Events from around the world.",
+    tooltip: "Events from around the world",
   },
   linkpost: {
     label: "Linkposts",

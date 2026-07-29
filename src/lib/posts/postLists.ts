@@ -20,6 +20,11 @@ import {
   currentUserSuggestedCurationSelector,
   filterSettingsToSelector,
 } from "./postQueries";
+import {
+  ALL_POSTS_LOW_KARMA_THRESHOLD,
+  AllPostsSettings,
+  AllPostsSortedBy,
+} from "./allPostsSettings";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -696,4 +701,68 @@ export const fetchMostRecentlyCuratedPost = async (
     limit: 1,
   });
   return result[0] ?? null;
+};
+
+const getAllPostsSort = (sortedBy: AllPostsSortedBy) => {
+  switch (sortedBy) {
+    case "magic":
+      return magicSort();
+    case "top":
+      return { baseScore: "desc", postedAt: "desc", _id: "asc" } as const;
+    case "topAdjusted":
+      // TODO: See karmaInflationAdjustedScore
+      throw new Error("Top adjusted not implemented");
+    case "recentComments":
+      return { lastCommentedAt: "desc", postedAt: "desc", _id: "asc" } as const;
+    case "new":
+      return { postedAt: "desc", _id: "asc" } as const;
+    case "old":
+      return { postedAt: "asc", _id: "asc" } as const;
+    default:
+      return { _id: "asc" } as const;
+  }
+};
+
+export const fetchAllPosts = async ({
+  currentUser,
+  settings: { sortedBy, filter, showLowKarma, showEvents, showCommunity },
+  before = new Date(),
+  after = new Date(0),
+  limit,
+  offset,
+}: {
+  currentUser: CurrentUser | null;
+  settings: AllPostsSettings;
+  before?: Date;
+  after?: Date;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      postedAt: { AND: [{ lt: before.toISOString() }, { gt: after.toISOString() }] },
+      frontpageDate: filter === "frontpage" ? { isNotNull: true } : undefined,
+      curatedDate: filter === "curated" ? { isNotNull: true } : undefined,
+      question: filter === "questions" ? true : undefined,
+      isEvent: filter === "events" ? true : showEvents ? undefined : false,
+      baseScore: showLowKarma ? { gte: ALL_POSTS_LOW_KARMA_THRESHOLD } : undefined,
+      AND: [
+        {
+          RAW:
+            filter === "linkpost"
+              ? (postsTable) => sql`LENGTH(TRIM(${postsTable}."url")) > 0`
+              : undefined,
+        },
+        {
+          RAW: showCommunity
+            ? undefined
+            : excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID),
+        },
+      ],
+    },
+    orderBy: getAllPostsSort(sortedBy),
+    offset,
+    limit,
+  });
 };

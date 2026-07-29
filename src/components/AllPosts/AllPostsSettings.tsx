@@ -12,10 +12,10 @@ import {
   AllPostsTimeframe,
   allPostsTimeframes,
 } from "@/lib/posts/allPostsSettings";
-import Tooltip from "./Tooltip";
-import Type from "./Type";
+import Checkbox from "../Forms/Checkbox";
+import Tooltip from "../Tooltip";
+import Type from "../Type";
 import clsx from "clsx";
-import Checkbox from "./Forms/Checkbox";
 
 const ListItem: FC<{
   label: string;
