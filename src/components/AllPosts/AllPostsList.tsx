@@ -4,7 +4,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { captureException } from "@sentry/nextjs";
 import { useSearchParams } from "next/navigation";
-import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import {
   allPostsSettingsFromQuery,
   AllPostsTimeblockSettings,
@@ -18,6 +18,7 @@ import TimeframeList from "./TimeframeList";
 import Type from "../Type";
 
 export default function AllPostsList() {
+  const { captureEvent } = useTracking();
   const [posts, setPosts] = useState<PostListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -27,8 +28,12 @@ export default function AllPostsList() {
     return allPostsSettingsFromQuery(rawSearchParams);
   }, [searchParams]);
 
+  useEffect(() => {
+    captureEvent("allPostsSettingsMounted", { settings });
+  }, [captureEvent, settings]);
+
   const loadMore = useCallback(
-    async (offset?: number) => {
+    async (offset = 0) => {
       setLoading(true);
       try {
         const newPosts = await rpc.posts.listAll({
@@ -43,8 +48,12 @@ export default function AllPostsList() {
         toast.error("Failed to load posts");
       }
       setLoading(false);
+      captureEvent("loadMore", {
+        settings,
+        offset,
+      });
     },
-    [settings],
+    [captureEvent, settings],
   );
 
   useEffect(() => {

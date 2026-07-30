@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
+import { useTracking } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
 import {
   AllPostsTimeblockSettings,
@@ -22,6 +23,7 @@ export default function PostTimeblock({
   before: Date;
   after: Date;
 }>) {
+  const { captureEvent } = useTracking();
   const [posts, setPosts] = useState<PostListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [canLoadMore, setCanLoadMore] = useState(true);
@@ -48,8 +50,16 @@ export default function PostTimeblock({
         setCanLoadMore(false);
       }
       setLoading(false);
+      if (offset > 0) {
+        captureEvent("loadMore", {
+          settings,
+          before: before.toISOString(),
+          after: after.toISOString(),
+          offset,
+        });
+      }
     },
-    [settings, before, after],
+    [captureEvent, settings, before, after],
   );
 
   useEffect(() => {

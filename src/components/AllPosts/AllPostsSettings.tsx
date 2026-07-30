@@ -2,6 +2,7 @@
 
 import { FC, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTracking } from "@/lib/analyticsEvents";
 import {
   ALL_POSTS_LOW_KARMA_THRESHOLD,
   AllPostsFilter,
@@ -50,6 +51,7 @@ const ListItem: FC<{
 };
 
 export default function AllPostsSettings() {
+  const { captureEvent } = useTracking();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -61,8 +63,12 @@ export default function AllPostsSettings() {
       const params = new URLSearchParams(searchParams.toString());
       params.set(param, value);
       router.push(`${pathname}?${params.toString()}`);
+      captureEvent("allPostsSettingsUpdate", {
+        param,
+        value,
+      });
     },
-    [searchParams, router, pathname],
+    [captureEvent, searchParams, router, pathname],
   );
 
   const timeframes = Object.keys(allPostsTimeframes) as AllPostsTimeframe[];
