@@ -59,7 +59,9 @@ export default function PostTimeblock({
         });
       }
     },
-    [captureEvent, settings, before, after],
+    // Convert dates to strings here to ensure stability when loading more blocks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [captureEvent, settings, before.toISOString(), after.toISOString()],
   );
 
   useEffect(() => {

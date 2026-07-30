@@ -103,7 +103,7 @@ export type AllPostsTimeblockSettings = Omit<AllPostsSettings, "timeframe"> & {
   timeframe: TimeblockTimeframe;
 };
 
-const getInitialBlockCount = (timeframe: TimeblockTimeframe) =>
+export const getInitialBlockCount = (timeframe: TimeblockTimeframe) =>
   timeframe === "daily" ? 10 : 4;
 
 const getCurrentTimeblock = (
@@ -218,4 +218,11 @@ export const getTimeblockTitle = (
     return `Week of ${result}`;
   }
   return isToday(startDate) ? result.replace(/^[^,]+,/, "Today,") : result;
+};
+
+export const loadMoreTimeframeStrings: Record<TimeblockTimeframe, string> = {
+  daily: "days",
+  weekly: "weeks",
+  monthly: "months",
+  yearly: "years",
 };
