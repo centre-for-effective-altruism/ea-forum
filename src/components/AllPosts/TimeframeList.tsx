@@ -12,18 +12,21 @@ export default function TimeframeList({
 }: Readonly<{
   settings: AllPostsTimeblockSettings;
 }>) {
-  const [ranges, setRanges] = useState(() =>
-    getTimeblockDateRanges(settings.timeframe),
-  );
+  const [ranges, setRanges] = useState<{ after: Date; before: Date }[]>([]);
 
   useEffect(() => {
     setRanges(getTimeblockDateRanges(settings.timeframe));
-  }, [settings]);
+  }, [settings.timeframe]);
 
   return (
-    <div data-component="TimeframeList" className="flex flex-col gap-4">
-      {ranges.map((range, i) => (
-        <PostTimeblock key={i} settings={settings} {...range} />
+    <div data-component="TimeframeList" className="flex flex-col gap-8">
+      {ranges.map(({ before, after }) => (
+        <PostTimeblock
+          key={`${before.toISOString()}-${after.toISOString()}`}
+          settings={settings}
+          before={before}
+          after={after}
+        />
       ))}
     </div>
   );

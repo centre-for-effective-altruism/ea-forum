@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function AllPostsPage() {
   return (
     <HomePageColumns pageContext="allPostsPage">
-      <div className="max-w-[1000px] mx-auto flex flex-col gap-5 pb-20">
+      <div className="max-w-[1000px] mx-auto flex flex-col gap-8 pb-20">
         <Type style="postsPageTitle">All posts</Type>
         <Suspense fallback={<div className="bg-gray-200 rounded h-42" />}>
           <AllPostsSettings />
