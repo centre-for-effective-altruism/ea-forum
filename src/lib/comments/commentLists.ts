@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import type { User } from "../schema";
+import type { AllPostsSortedBy } from "../posts/allPostsSettings";
 import { userIsAdminOrMod, UserPermissions } from "../users/userHelpers";
 import { nDaysAgo, nHoursAgo } from "@/lib/timeUtils";
 import { userBaseProjection } from "../users/userQueries";
@@ -546,6 +547,49 @@ export const fetchUserProfileDraftComments = async ({
     orderBy: {
       createdAt: "desc",
     },
+    limit,
+    offset,
+  });
+};
+
+const getAllPostsSort = (sortedBy: AllPostsSortedBy) => {
+  switch (sortedBy) {
+    case "new":
+      return { postedAt: "desc", _id: "asc" } as const;
+    case "old":
+      return { postedAt: "asc", _id: "asc" } as const;
+    default:
+      return { baseScore: "desc", postedAt: "desc", _id: "asc" } as const;
+  }
+};
+
+export const fetchAllPostsQuickTakes = async ({
+  currentUser,
+  frontpage,
+  sortedBy,
+  before = new Date(),
+  after = new Date(0),
+  limit,
+  offset,
+}: {
+  currentUser: UserPermissions | null;
+  frontpage?: boolean;
+  sortedBy: AllPostsSortedBy;
+  before?: Date;
+  after?: Date;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      postedAt: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
+      shortform: true,
+      shortformFrontpage: frontpage ? true : undefined,
+    },
+    orderBy: getAllPostsSort(sortedBy),
     limit,
     offset,
   });

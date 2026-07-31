@@ -13,13 +13,15 @@ const booleanSchema = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+export const allPostsSortedBySchema = z
+  .enum(["magic", "top", "topAdjusted", "recentComments", "new", "old"])
+  .catch("magic");
+
 export const allPostsSettingsSchema = z.object({
   timeframe: z
     .enum(["allTime", "daily", "weekly", "monthly", "yearly", "exponential"])
     .catch("daily"),
-  sortedBy: z
-    .enum(["magic", "top", "topAdjusted", "recentComments", "new", "old"])
-    .catch("magic"),
+  sortedBy: allPostsSortedBySchema,
   filter: z
     .enum(["all", "frontpage", "curated", "questions", "events", "linkpost"])
     .catch("all"),

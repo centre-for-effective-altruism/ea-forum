@@ -1,17 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { captureException } from "@sentry/nextjs";
-import { useTracking } from "@/lib/analyticsEvents";
-import { rpc } from "@/lib/rpc";
 import {
   AllPostsTimeblockSettings,
   getTimeblockTitle,
 } from "@/lib/posts/allPostsSettings";
-import type { PostListItem } from "@/lib/posts/postLists";
+import { useLoad } from "@/lib/hooks/useLoad";
+import range from "lodash/range";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
+import QuickTakeItem from "../QuickTakes/QuickTakeItem";
 import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
+import Tooltip from "../Tooltip";
 import Type from "../Type";
 
 export default function PostTimeblock({
@@ -23,52 +22,64 @@ export default function PostTimeblock({
   before: Date;
   after: Date;
 }>) {
-  const { captureEvent } = useTracking();
-  const [posts, setPosts] = useState<PostListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [canLoadMore, setCanLoadMore] = useState(true);
+  // Convert dates to strings to ensure stability when loading more blocks
+  const beforeString = before.toISOString();
+  const afterString = after.toISOString();
 
-  const loadMore = useCallback(
-    async (offset = 0) => {
-      setLoading(true);
-      try {
-        const limit = 16;
-        const newPosts = await rpc.posts.listAll({
-          settings,
-          before,
-          after,
-          limit,
-          offset,
-        });
-        setPosts((posts) => [...posts, ...newPosts]);
-        if (newPosts.length < limit) {
-          setCanLoadMore(false);
-        }
-      } catch (e) {
-        console.error("Error loading timeblock:", e);
-        captureException(e);
-        setCanLoadMore(false);
-      }
-      setLoading(false);
-      if (offset > 0) {
-        captureEvent("loadMore", {
-          settings,
-          before: before.toISOString(),
-          after: after.toISOString(),
-          offset,
-        });
-      }
-    },
-    // Convert dates to strings here to ensure stability when loading more blocks
+  const postPageSize = 14;
+  const {
+    value: posts,
+    loading: loadingPosts,
+    canLoadMore: canLoadMorePosts,
+    loadMore: loadMorePosts,
+  } = useLoad(
+    async ({ rpc, limit, offset }) =>
+      await rpc.posts.listAll({
+        settings,
+        before,
+        after,
+        limit,
+        offset,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [captureEvent, settings, before.toISOString(), after.toISOString()],
+    [settings, beforeString, afterString],
+    {
+      pageSize: postPageSize,
+      eventProps: {
+        settings,
+        before: beforeString,
+        after: afterString,
+      },
+    },
   );
 
-  useEffect(() => {
-    setPosts([]);
-    setCanLoadMore(true);
-    void loadMore();
-  }, [loadMore]);
+  const quickTakePageSize = 5;
+  const {
+    value: quickTakes,
+    loading: loadingQuickTakes,
+    canLoadMore: canLoadMoreQuickTakes,
+    loadMore: loadMoreQuickTakes,
+  } = useLoad(
+    async ({ rpc, limit, offset }) =>
+      await rpc.comments.listAllQuickTakes({
+        frontpage: settings.filter === "frontpage",
+        sortedBy: settings.sortedBy,
+        before,
+        after,
+        limit,
+        offset,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [settings, beforeString, afterString],
+    {
+      pageSize: quickTakePageSize,
+      eventProps: {
+        settings,
+        before: beforeString,
+        after: afterString,
+      },
+    },
+  );
 
   return (
     <section data-component="PostTimeblock">
@@ -78,8 +89,19 @@ export default function PostTimeblock({
       <Type style="sectionTitleLarge" className="md:hidden">
         {getTimeblockTitle(settings.timeframe, after, "mobile")}
       </Type>
-      <div className="max-w-full space-y-0.5 mt-3 mb-0.5">
-        {posts.length === 0 && !loading && (
+      <Tooltip
+        title={
+          <Type style="bodySmall" className="max-w-100">
+            Posts that are relevant to doing good effectively
+          </Type>
+        }
+        placement="right"
+        className="inline-block mt-3 mb-2"
+      >
+        <Type style="sectionTitleSmall">Frontpage posts</Type>
+      </Tooltip>
+      <div className="max-w-full space-y-0.5 mb-0.5">
+        {posts.length === 0 && !loadingPosts && (
           <Type style="bodySmall" className="text-gray-600">
             No posts
           </Type>
@@ -88,15 +110,42 @@ export default function PostTimeblock({
           <PostsItem key={post._id} post={post} />
         ))}
       </div>
-      {canLoadMore && !loading && (
-        <TextLinkButton
-          variant="primary"
-          onClick={loadMore.bind(null, posts.length)}
-        >
-          Load more
-        </TextLinkButton>
+      {loadingPosts && <PostsListSkeleton count={posts.length ? postPageSize : 6} />}
+      {canLoadMorePosts && !loadingPosts && (
+        <div>
+          <TextLinkButton variant="primary" onClick={loadMorePosts}>
+            Load more
+          </TextLinkButton>
+        </div>
       )}
-      {loading && <PostsListSkeleton count={6} />}
+      <Tooltip
+        title={
+          <Type style="bodySmall" className="max-w-100">
+            Writing that is brief, or written very quickly. Perfect for off-the-cuff
+            thoughts, brainstorming, early stage drafts, etc.
+          </Type>
+        }
+        placement="right"
+        className="inline-block mt-6 mb-2"
+      >
+        <Type style="sectionTitleSmall">Quick takes</Type>
+      </Tooltip>
+      <div>
+        {quickTakes.map((quickTake) => (
+          <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
+        ))}
+        {loadingQuickTakes &&
+          range(quickTakePageSize).map((i) => (
+            <div key={i} className="w-full h-20 bg-gray-200 rounded mb-1" />
+          ))}
+        {canLoadMoreQuickTakes && (
+          <div>
+            <TextLinkButton variant="primary" onClick={loadMoreQuickTakes}>
+              Load more
+            </TextLinkButton>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
