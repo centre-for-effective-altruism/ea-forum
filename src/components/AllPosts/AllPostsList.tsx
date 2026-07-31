@@ -15,7 +15,6 @@ import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
 import TimeframeList from "./TimeframeList";
-import Type from "../Type";
 
 export default function AllPostsList() {
   const { captureEvent } = useTracking();
@@ -78,10 +77,6 @@ export default function AllPostsList() {
           </TextLinkButton>
         </>
       );
-      break;
-    case "exponential":
-      // TODO
-      content = <Type>Exponential timeframe not implemented</Type>;
       break;
     default:
       content = <TimeframeList settings={settings as AllPostsTimeblockSettings} />;

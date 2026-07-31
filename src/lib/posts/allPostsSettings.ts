@@ -19,7 +19,7 @@ export const allPostsSortedBySchema = z
 
 export const allPostsSettingsSchema = z.object({
   timeframe: z
-    .enum(["allTime", "daily", "weekly", "monthly", "yearly", "exponential"])
+    .enum(["allTime", "daily", "weekly", "monthly", "yearly"])
     .catch("daily"),
   sortedBy: allPostsSortedBySchema,
   filter: z
@@ -50,7 +50,6 @@ export const allPostsTimeframes: Record<AllPostsTimeframe, AllPostsSettingConfig
   weekly: { label: "Weekly" },
   monthly: { label: "Monthly" },
   yearly: { label: "Yearly" },
-  exponential: { label: "Exponential" },
 };
 
 export const allPostsSortedBys: Record<AllPostsSortedBy, AllPostsSettingConfig> = {
