@@ -25,6 +25,7 @@ import {
   AllPostsSettings,
   AllPostsSortedBy,
 } from "./allPostsSettings";
+import { getKarmaInflationSeries } from "./karmaInflation";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -703,15 +704,30 @@ export const fetchMostRecentlyCuratedPost = async (
   return result[0] ?? null;
 };
 
-const getAllPostsSort = (sortedBy: AllPostsSortedBy) => {
+const getAllPostsSort = async (sortedBy: AllPostsSortedBy) => {
   switch (sortedBy) {
     case "magic":
       return magicSort();
     case "top":
       return { baseScore: "desc", postedAt: "desc", _id: "asc" } as const;
     case "topAdjusted":
-      // TODO: See karmaInflationAdjustedScore
-      throw new Error("Top adjusted not implemented");
+      const { start, interval, values, valuesSql } = await getKarmaInflationSeries();
+      return (postsTable: typeof posts) => sql`
+        ${postsTable}."baseScore" * COALESCE(
+          ${valuesSql}[1 + GREATEST(
+            FLOOR(
+              EXTRACT(EPOCH FROM (
+                ${postsTable}."postedAt" - TO_TIMESTAMP(${start / 1000})
+              )) * 1000 / ${interval}::BIGINT
+            ),
+            0
+          )],
+          ${values[values.length - 1] ?? null},
+          1.0
+        ) DESC,
+        ${postsTable}."postedAt" DESC,
+        ${postsTable}."_id" ASC
+      `;
     case "recentComments":
       return { lastCommentedAt: "desc", postedAt: "desc", _id: "asc" } as const;
     case "new":
@@ -763,7 +779,7 @@ export const fetchAllPosts = async ({
         },
       ],
     },
-    orderBy: getAllPostsSort(sortedBy),
+    orderBy: await getAllPostsSort(sortedBy),
     offset,
     limit,
   });
