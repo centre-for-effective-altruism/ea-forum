@@ -15,7 +15,7 @@ const booleanSchema = z.preprocess((value) => {
 
 export const allPostsSortedBySchema = z
   .enum(["magic", "top", "topAdjusted", "recentComments", "new", "old"])
-  .catch("magic");
+  .catch("top");
 
 export const allPostsSettingsSchema = z.object({
   timeframe: z
@@ -107,6 +107,17 @@ export type AllPostsTimeblockSettings = Omit<AllPostsSettings, "timeframe"> & {
 export const getInitialBlockCount = (timeframe: TimeblockTimeframe) =>
   timeframe === "daily" ? 10 : 4;
 
+const allPostsLimitsSchema = z.object({
+  before: z.coerce.date().optional().catch(undefined),
+  after: z.coerce.date().optional().catch(undefined),
+});
+
+export type AllPostsLimits = z.infer<typeof allPostsLimitsSchema>;
+
+export const allPostsLimitsFromQuery = (
+  query: Record<string, string>,
+): AllPostsLimits => allPostsLimitsSchema.parse(query);
+
 const getCurrentTimeblock = (
   timeframe: TimeblockTimeframe,
   now: Date = new Date(),
@@ -171,15 +182,23 @@ const getPreviousTimeblock = (
   return { after, before };
 };
 
-export const getTimeblockDateRanges = (
-  timeframe: TimeblockTimeframe,
-  numBlocks: number = getInitialBlockCount(timeframe),
-): { after: Date; before: Date }[] => {
+export const getTimeblockDateRanges = ({
+  timeframe,
+  limits,
+  numBlocks = getInitialBlockCount(timeframe),
+}: {
+  timeframe: TimeblockTimeframe;
+  limits?: AllPostsLimits;
+  numBlocks?: number;
+}): { after: Date; before: Date }[] => {
   const ranges: { after: Date; before: Date }[] = [];
-  let range = getCurrentTimeblock(timeframe);
+  let range = getCurrentTimeblock(timeframe, limits?.before);
   for (let i = 0; i < numBlocks; i++) {
     ranges.push(range);
     range = getPreviousTimeblock(timeframe, range);
+    if (limits?.after && range.before < limits.after) {
+      break;
+    }
   }
   return ranges;
 };

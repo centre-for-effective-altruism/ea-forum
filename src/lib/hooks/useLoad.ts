@@ -26,16 +26,18 @@ export const useLoad = <T>(
     pageSize = 10,
     eventName = "loadMore",
     eventProps,
+    disabled,
   }: Readonly<{
     initial?: T[];
     pageSize?: number;
     eventName?: string;
     eventProps?: JsonRecord;
+    disabled?: boolean;
   }> = {},
 ) => {
   const { captureEvent } = useTracking();
   const [value, setValue] = useState<T[]>(initial);
-  const [loading, setLoading] = useState(initial.length === 0);
+  const [loading, setLoading] = useState(initial.length === 0 && !disabled);
   const [canLoadMore, setCanLoadMore] = useState(true);
   const loadingRef = useRef(false);
 
@@ -47,7 +49,7 @@ export const useLoad = <T>(
 
   const loadMoreWithOffset = useCallback(
     async (offset: number) => {
-      if (loadingRef.current) {
+      if (disabled || loadingRef.current) {
         return;
       }
       loadingRef.current = true;
@@ -73,7 +75,7 @@ export const useLoad = <T>(
         setLoading(false);
       }
     },
-    [captureEvent, memoizedLoad, pageSize, eventName, memoizedEventProps],
+    [disabled, captureEvent, memoizedLoad, pageSize, eventName, memoizedEventProps],
   );
 
   const loadMore = useCallback(
@@ -82,13 +84,13 @@ export const useLoad = <T>(
   );
 
   useEffect(() => {
-    if (initial.length === 0) {
+    if (!disabled && initial.length === 0) {
       setValue([]);
       setCanLoadMore(true);
       loadingRef.current = false;
       void loadMoreWithOffset(0);
     }
-  }, [initial.length, loadMoreWithOffset]);
+  }, [disabled, initial.length, loadMoreWithOffset]);
 
   return {
     value,

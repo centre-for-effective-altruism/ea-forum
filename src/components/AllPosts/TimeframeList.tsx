@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTracking } from "@/lib/analyticsEvents";
 import {
+  AllPostsLimits,
   AllPostsTimeblockSettings,
   getInitialBlockCount,
   getTimeblockDateRanges,
@@ -13,24 +14,39 @@ import Button from "../Button";
 
 export default function TimeframeList({
   settings,
+  limits,
 }: Readonly<{
   settings: AllPostsTimeblockSettings;
+  limits?: AllPostsLimits;
 }>) {
   const { captureEvent } = useTracking();
   const [ranges, setRanges] = useState<{ after: Date; before: Date }[]>([]);
 
   useEffect(() => {
-    setRanges(getTimeblockDateRanges(settings.timeframe));
-  }, [settings.timeframe]);
+    setRanges(
+      getTimeblockDateRanges({
+        timeframe: settings.timeframe,
+        limits,
+      }),
+    );
+  }, [settings.timeframe, limits]);
 
   const loadMore = useCallback(() => {
     const newNumBlocks = ranges.length + getInitialBlockCount(settings.timeframe);
-    setRanges(getTimeblockDateRanges(settings.timeframe, newNumBlocks));
+    setRanges(
+      getTimeblockDateRanges({
+        timeframe: settings.timeframe,
+        limits,
+        numBlocks: newNumBlocks,
+      }),
+    );
     captureEvent("loadMoreTimeframes", {
       settings,
       newNumBlocks,
     });
-  }, [captureEvent, settings, ranges.length]);
+  }, [captureEvent, settings, limits, ranges.length]);
+
+  const hideLoadMore = !!limits?.after || !!limits?.before;
 
   return (
     <div data-component="TimeframeList" className="flex flex-col gap-8">
@@ -42,11 +58,13 @@ export default function TimeframeList({
           after={after}
         />
       ))}
-      <div>
-        <Button onClick={loadMore}>
-          Load more {loadMoreTimeframeStrings[settings.timeframe]}
-        </Button>
-      </div>
+      {!hideLoadMore && (
+        <div>
+          <Button onClick={loadMore}>
+            Load more {loadMoreTimeframeStrings[settings.timeframe]}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

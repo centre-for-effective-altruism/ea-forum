@@ -4,24 +4,35 @@ import {
   AllPostsTimeblockSettings,
   getTimeblockTitle,
 } from "@/lib/posts/allPostsSettings";
+import { useSearchParams } from "next/navigation";
 import { useLoad } from "@/lib/hooks/useLoad";
 import range from "lodash/range";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
+import TagRevisionItem from "../UserProfile/TagRevisionItem";
 import QuickTakeItem from "../QuickTakes/QuickTakeItem";
 import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
+import Link from "../Link";
+import { useMemo } from "react";
 
 export default function PostTimeblock({
   settings,
   before,
   after,
+  postsOnly,
 }: Readonly<{
   settings: AllPostsTimeblockSettings;
   before: Date;
   after: Date;
+  postsOnly?: boolean;
 }>) {
+  const searchParams = useSearchParams();
+  const includeQuickTakes = !postsOnly;
+  const includeTags =
+    !postsOnly && settings.timeframe === "daily" && settings.filter === "all";
+
   // Convert dates to strings to ensure stability when loading more blocks
   const beforeString = before.toISOString();
   const afterString = after.toISOString();
@@ -72,6 +83,7 @@ export default function PostTimeblock({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [settings, beforeString, afterString],
     {
+      disabled: !includeQuickTakes,
       pageSize: quickTakePageSize,
       eventProps: {
         settings,
@@ -81,13 +93,52 @@ export default function PostTimeblock({
     },
   );
 
+  const tagPageSize = 5;
+  const {
+    value: tags,
+    loading: loadingTags,
+    canLoadMore: canLoadMoreTags,
+    loadMore: loadMoreTags,
+  } = useLoad(
+    async ({ rpc, limit, offset }) =>
+      await rpc.tags.listAll({
+        before,
+        after,
+        limit,
+        offset,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [beforeString, afterString],
+    {
+      disabled: !includeTags,
+      pageSize: tagPageSize,
+      eventProps: {
+        settings,
+        before: beforeString,
+        after: afterString,
+      },
+    },
+  );
+
+  const link = useMemo(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set("after", after.toISOString());
+    params.set("before", before.toISOString());
+    return `/all-posts?${params.toString()}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, afterString, beforeString]);
+
   return (
     <section data-component="PostTimeblock">
       <Type style="sectionTitleLarge" className="max-md:hidden">
-        {getTimeblockTitle(settings.timeframe, after, "desktop")}
+        <Link href={link}>
+          {getTimeblockTitle(settings.timeframe, after, "desktop")}
+        </Link>
       </Type>
       <Type style="sectionTitleLarge" className="md:hidden">
-        {getTimeblockTitle(settings.timeframe, after, "mobile")}
+        <Link href={link}>
+          {getTimeblockTitle(settings.timeframe, after, "mobile")}
+        </Link>
       </Type>
       <Tooltip
         title={
@@ -96,7 +147,7 @@ export default function PostTimeblock({
           </Type>
         }
         placement="right"
-        className="inline-block mt-3 mb-2"
+        className="inline-block mt-4 mb-3"
       >
         <Type style="sectionTitleSmall">Frontpage posts</Type>
       </Tooltip>
@@ -118,34 +169,70 @@ export default function PostTimeblock({
           </TextLinkButton>
         </div>
       )}
-      <Tooltip
-        title={
-          <Type style="bodySmall" className="max-w-100">
-            Writing that is brief, or written very quickly. Perfect for off-the-cuff
-            thoughts, brainstorming, early stage drafts, etc.
-          </Type>
-        }
-        placement="right"
-        className="inline-block mt-6 mb-2"
-      >
-        <Type style="sectionTitleSmall">Quick takes</Type>
-      </Tooltip>
-      <div>
-        {quickTakes.map((quickTake) => (
-          <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
-        ))}
-        {loadingQuickTakes &&
-          range(quickTakePageSize).map((i) => (
-            <div key={i} className="w-full h-20 bg-gray-200 rounded mb-1" />
-          ))}
-        {canLoadMoreQuickTakes && (
+      {includeQuickTakes && (loadingQuickTakes || quickTakes.length > 0) && (
+        <>
+          <Tooltip
+            title={
+              <Type style="bodySmall" className="max-w-100">
+                Writing that is brief, or written very quickly. Perfect for
+                off-the-cuff thoughts, brainstorming, early stage drafts, etc.
+              </Type>
+            }
+            placement="right"
+            className="inline-block mt-6 mb-3"
+          >
+            <Type style="sectionTitleSmall">Quick takes</Type>
+          </Tooltip>
           <div>
-            <TextLinkButton variant="primary" onClick={loadMoreQuickTakes}>
-              Load more
-            </TextLinkButton>
+            {quickTakes.map((quickTake) => (
+              <QuickTakeItem key={quickTake._id} quickTake={quickTake} />
+            ))}
+            {loadingQuickTakes &&
+              range(quickTakePageSize).map((i) => (
+                <div key={i} className="w-full h-20 bg-gray-200 rounded mb-1" />
+              ))}
+            {canLoadMoreQuickTakes && (
+              <div>
+                <TextLinkButton variant="primary" onClick={loadMoreQuickTakes}>
+                  Load more
+                </TextLinkButton>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
+      {includeTags && (loadingTags || tags.length > 0) && (
+        <>
+          <Tooltip
+            title={
+              <Type style="bodySmall" className="max-w-100">
+                Topic pages, which organize posts and concepts in a more durable
+                format
+              </Type>
+            }
+            placement="right"
+            className="inline-block mt-6 mb-3"
+          >
+            <Type style="sectionTitleSmall">Topic page edits and discussion</Type>
+          </Tooltip>
+          <div>
+            {tags.map((tag) => (
+              <TagRevisionItem key={tag._id} tagRevision={tag} />
+            ))}
+            {loadingTags &&
+              range(tagPageSize).map((i) => (
+                <div key={i} className="w-full h-10 bg-gray-200 rounded mb-1" />
+              ))}
+            {canLoadMoreTags && (
+              <div>
+                <TextLinkButton variant="primary" onClick={loadMoreTags}>
+                  Load more
+                </TextLinkButton>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </section>
   );
 }
