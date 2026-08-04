@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
+import { AllPostsProvider } from "@/components/AllPosts/AllPostsContext";
+import { AnalyticsContext } from "@/lib/analyticsEvents";
+import AllPostsOptionsToggle from "@/components/AllPosts/AllPostsOptionsToggle";
 import DynamicAllPostsList from "@/components/AllPosts/DynamicAllPostsList";
 import PostsListSkeleton from "@/components/PostsList/PostsListSkeleton";
 import AllPostsSettings from "@/components/AllPosts/AllPostsSettings";
@@ -19,16 +22,23 @@ export const metadata: Metadata = {
 export default function AllPostsPage() {
   return (
     <HomePageColumns pageContext="allPostsPage">
-      <div className="max-w-[1000px] mx-auto flex flex-col gap-8 pb-20">
-        <Type style="postsPageTitle">
-          <Link href="/all-posts">All posts</Link>
-        </Type>
-        <Suspense fallback={<div className="bg-gray-200 rounded h-42" />}>
-          <AllPostsSettings />
-        </Suspense>
-        <Suspense fallback={<PostsListSkeleton count={10} />}>
-          <DynamicAllPostsList />
-        </Suspense>
+      <div className="max-w-[1000px] mx-auto flex flex-col gap-6 pb-20">
+        <AnalyticsContext listContext="allPostsPage">
+          <AllPostsProvider>
+            <div className="flex items-center justify-between gap-4">
+              <Type style="postsPageTitle">
+                <Link href="/all-posts">All posts</Link>
+              </Type>
+              <AllPostsOptionsToggle />
+            </div>
+            <Suspense fallback={<div className="bg-gray-200 rounded h-42" />}>
+              <AllPostsSettings />
+            </Suspense>
+            <Suspense fallback={<PostsListSkeleton count={10} />}>
+              <DynamicAllPostsList />
+            </Suspense>
+          </AllPostsProvider>
+        </AnalyticsContext>
       </div>
     </HomePageColumns>
   );

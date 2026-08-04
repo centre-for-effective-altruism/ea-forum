@@ -3,7 +3,7 @@ import { isToday } from "../timeUtils";
 
 export const ALL_POSTS_LOW_KARMA_THRESHOLD = -10;
 
-const booleanSchema = z.preprocess((value) => {
+export const booleanSchema = z.preprocess((value) => {
   if (value === "true") {
     return true;
   }

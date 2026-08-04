@@ -1,13 +1,11 @@
 "use client";
 
-import { FC, useCallback } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTracking } from "@/lib/analyticsEvents";
+import type { FC } from "react";
+import { useAllPosts } from "./AllPostsContext";
 import {
   ALL_POSTS_LOW_KARMA_THRESHOLD,
   AllPostsFilter,
   allPostsFilters,
-  allPostsSettingsFromQuery,
   AllPostsSortedBy,
   allPostsSortedBys,
   AllPostsTimeframe,
@@ -50,26 +48,21 @@ const ListItem: FC<{
   );
 };
 
-export default function AllPostsSettings() {
-  const { captureEvent } = useTracking();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const rawSearchParams = Object.fromEntries(searchParams.entries());
-  const settings = allPostsSettingsFromQuery(rawSearchParams);
+export default function AllPostsSettings({
+  className,
+}: Readonly<{
+  className?: string;
+}>) {
+  const { showOptions, settings, onUpdateSetting } = useAllPosts();
 
-  const onChange = useCallback(
-    (param: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set(param, value);
-      router.push(`${pathname}?${params.toString()}`);
-      captureEvent("allPostsSettingsUpdate", {
-        param,
-        value,
-      });
-    },
-    [captureEvent, searchParams, router, pathname],
-  );
+  if (!showOptions) {
+    return (
+      <hr
+        data-component="AllPostsSettings"
+        className={clsx("border-gray-300", className)}
+      />
+    );
+  }
 
   const timeframes = Object.keys(allPostsTimeframes) as AllPostsTimeframe[];
   const sortedBys = Object.keys(allPostsSortedBys) as AllPostsSortedBy[];
@@ -78,10 +71,11 @@ export default function AllPostsSettings() {
   return (
     <section
       data-component="AllPostsSettings"
-      className="
-        bg-surface-floating rounded px-6 py-4
-        flex gap-4 flex-wrap justify-between
-      "
+      className={clsx(
+        "flex gap-4 flex-wrap justify-between rounded px-6 py-4",
+        "bg-surface-floating border-1 border-comment-border",
+        className,
+      )}
     >
       <div>
         <Type style="sectionTitleSmall" className="mb-1">
@@ -91,7 +85,7 @@ export default function AllPostsSettings() {
           <ListItem
             key={timeframe}
             {...allPostsTimeframes[timeframe]}
-            onClick={() => onChange("timeframe", timeframe)}
+            onClick={() => onUpdateSetting("timeframe", timeframe)}
             active={settings.timeframe === timeframe}
           />
         ))}
@@ -104,7 +98,7 @@ export default function AllPostsSettings() {
           <ListItem
             key={sortedBy}
             {...allPostsSortedBys[sortedBy]}
-            onClick={() => onChange("sortedBy", sortedBy)}
+            onClick={() => onUpdateSetting("sortedBy", sortedBy)}
             active={settings.sortedBy === sortedBy}
           />
         ))}
@@ -117,7 +111,7 @@ export default function AllPostsSettings() {
           <ListItem
             key={filter}
             {...allPostsFilters[filter]}
-            onClick={() => onChange("filter", filter)}
+            onClick={() => onUpdateSetting("filter", filter)}
             active={settings.filter === filter}
           />
         ))}
@@ -138,7 +132,9 @@ export default function AllPostsSettings() {
           <Checkbox
             label={{ id: "showLowKarma", text: "Show low karma" }}
             checked={settings.showLowKarma}
-            onChange={() => onChange("showLowKarma", String(!settings.showLowKarma))}
+            onChange={() =>
+              onUpdateSetting("showLowKarma", String(!settings.showLowKarma))
+            }
             className="text-gray-600"
           />
         </Tooltip>
@@ -154,7 +150,9 @@ export default function AllPostsSettings() {
           <Checkbox
             label={{ id: "showEvents", text: "Show events" }}
             checked={settings.showEvents}
-            onChange={() => onChange("showEvents", String(!settings.showEvents))}
+            onChange={() =>
+              onUpdateSetting("showEvents", String(!settings.showEvents))
+            }
             className="text-gray-600"
           />
         </Tooltip>
@@ -171,7 +169,7 @@ export default function AllPostsSettings() {
             label={{ id: "showCommunity", text: "Show Community" }}
             checked={settings.showCommunity}
             onChange={() =>
-              onChange("showCommunity", String(!settings.showCommunity))
+              onUpdateSetting("showCommunity", String(!settings.showCommunity))
             }
             className="text-gray-600"
           />

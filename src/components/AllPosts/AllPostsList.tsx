@@ -1,26 +1,15 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
-import {
-  allPostsSettingsFromQuery,
-  AllPostsTimeblockSettings,
-  allPostsLimitsFromQuery,
-} from "@/lib/posts/allPostsSettings";
+import { useAllPosts } from "./AllPostsContext";
+import type { AllPostsTimeblockSettings } from "@/lib/posts/allPostsSettings";
 import AllTimePostsList from "./AllTimePostsList";
 import TimeframeList from "./TimeframeList";
 
 export default function AllPostsList() {
   const { captureEvent } = useTracking();
-  const searchParams = useSearchParams();
-
-  const [settings, limits] = useMemo(() => {
-    const rawSearchParams = Object.fromEntries(searchParams.entries());
-    const settings = allPostsSettingsFromQuery(rawSearchParams);
-    const limits = allPostsLimitsFromQuery(rawSearchParams);
-    return [settings, limits];
-  }, [searchParams]);
+  const { settings, limits } = useAllPosts();
 
   useEffect(() => {
     captureEvent("allPostsSettingsMounted", {
@@ -34,7 +23,7 @@ export default function AllPostsList() {
     settings.timeframe === "allTime" ? AllTimePostsList : TimeframeList;
 
   return (
-    <AnalyticsContext listContext="allPostsPage" terms={settings}>
+    <AnalyticsContext terms={settings}>
       <section data-component="AllPostsList" className="max-w-full space-y-0.5">
         <Component
           settings={settings as AllPostsTimeblockSettings}

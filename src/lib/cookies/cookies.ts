@@ -161,6 +161,11 @@ const allCookies = [
     type: "necessary",
     description: "Don't show any EAG(x) banners",
   },
+  {
+    name: "all_posts_settings_open",
+    type: "functional",
+    description: "View settings on the all posts page",
+  },
 
   // Strangler fig migration cookies
   {
