@@ -1,6 +1,7 @@
 "use client";
 
 import type { RecentDiscussionPost } from "@/lib/recentDiscussions/fetchRecentDiscussions";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import RecentDiscussionsItem, {
   RecentDiscussionItemProps,
 } from "./RecentDiscussionsItem";
@@ -61,6 +62,7 @@ export default function RecentDiscussionsPostCommented({
 }: {
   post: RecentDiscussionPost;
 }) {
+  const { currentUser } = useCurrentUser();
   const comments = post.comments ?? [];
   const { title, user, isEvent, commentCount, baseScore, voteCount } = post;
   const postLink = postGetPageUrl({ post });
@@ -119,7 +121,10 @@ export default function RecentDiscussionsPostCommented({
           </Link>
         </Type>
         {comments.length > 0 && (
-          <CommentsListProvider comments={comments} collapsedIfRepliedTo>
+          <CommentsListProvider
+            comments={comments}
+            collapsedIfRepliedTo={!currentUser?.noCollapseCommentsFrontpage}
+          >
             <CommentsList />
           </CommentsListProvider>
         )}

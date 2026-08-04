@@ -37,6 +37,7 @@ export const currentUserProjection = {
     snoozedUntilContentCount: true,
     subscribedToDigest: true,
     hideSubscribePoke: true,
+    noCollapseCommentsFrontpage: true,
     mongoLocation: true,
     karmaChangeNotifierSettings: true,
     karmaChangeLastOpened: true,
