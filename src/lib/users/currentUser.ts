@@ -32,6 +32,7 @@ export const currentUserProjection = {
     mentionsDisabled: true,
     showCommunityInRecentDiscussion: true,
     hideCommunitySection: true,
+    hidePostsRecommendations: true,
     reviewedByUserId: true,
     snoozedUntilContentCount: true,
     subscribedToDigest: true,
