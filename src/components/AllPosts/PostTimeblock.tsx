@@ -1,11 +1,13 @@
 "use client";
 
-import {
-  AllPostsTimeblockSettings,
-  getTimeblockTitle,
-} from "@/lib/posts/allPostsSettings";
+import { Fragment, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLoad } from "@/lib/hooks/useLoad";
+import {
+  AllPostsTimeblockSettings,
+  createPostGroups,
+  getTimeblockTitle,
+} from "@/lib/posts/allPostsSettings";
 import range from "lodash/range";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import TagRevisionItem from "../UserProfile/TagRevisionItem";
@@ -15,7 +17,6 @@ import PostsItem from "../PostsList/PostsItem";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";
-import { useMemo } from "react";
 
 export default function PostTimeblock({
   settings,
@@ -128,6 +129,8 @@ export default function PostTimeblock({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, afterString, beforeString]);
 
+  const postGroups = useMemo(() => createPostGroups(posts), [posts]);
+
   return (
     <section data-component="PostTimeblock">
       <Type style="sectionTitleLarge" className="max-md:hidden">
@@ -140,28 +143,38 @@ export default function PostTimeblock({
           {getTimeblockTitle(settings.timeframe, after, "mobile")}
         </Link>
       </Type>
-      <Tooltip
-        title={
-          <Type style="bodySmall" className="max-w-100">
-            Posts that are relevant to doing good effectively
-          </Type>
-        }
-        placement="right"
-        className="inline-block mt-4 mb-3"
-      >
-        <Type style="sectionTitleSmall">Frontpage posts</Type>
-      </Tooltip>
-      <div className="max-w-full space-y-0.5 mb-0.5">
-        {posts.length === 0 && !loadingPosts && (
-          <Type style="bodySmall" className="text-gray-600">
-            No posts
-          </Type>
-        )}
-        {posts.map((post) => (
-          <PostsItem key={post._id} post={post} />
-        ))}
-      </div>
-      {loadingPosts && <PostsListSkeleton count={posts.length ? postPageSize : 6} />}
+      {postGroups.map(({ title, tooltip, posts }, i) =>
+        i === 0 || posts.length > 0 ? (
+          <Fragment key={title}>
+            <Tooltip
+              title={
+                <Type style="bodySmall" className="max-w-100">
+                  {tooltip}
+                </Type>
+              }
+              placement="right"
+              className="inline-block mt-4 mb-3"
+            >
+              <Type style="sectionTitleSmall">{title}</Type>
+            </Tooltip>
+            <div className="max-w-full space-y-0.5 mb-0.5">
+              {posts.length === 0 && !loadingPosts && (
+                <Type style="bodySmall" className="text-gray-600">
+                  No posts
+                </Type>
+              )}
+              {posts.map((post) => (
+                <PostsItem key={post._id} post={post} />
+              ))}
+            </div>
+            {loadingPosts && (
+              <PostsListSkeleton
+                count={i > 0 ? 3 : posts.length ? postPageSize : 6}
+              />
+            )}
+          </Fragment>
+        ) : null,
+      )}
       {canLoadMorePosts && !loadingPosts && (
         <div>
           <TextLinkButton variant="primary" onClick={loadMorePosts}>

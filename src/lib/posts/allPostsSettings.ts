@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { isToday } from "../timeUtils";
+import type { PostListItem } from "./postLists";
 
 export const ALL_POSTS_LOW_KARMA_THRESHOLD = -10;
 
@@ -246,3 +247,23 @@ export const loadMoreTimeframeStrings: Record<TimeblockTimeframe, string> = {
   monthly: "months",
   yearly: "years",
 };
+
+type PostGroup = {
+  title: string;
+  tooltip: string;
+  posts: PostListItem[];
+};
+
+export const createPostGroups = (posts: PostListItem[]): PostGroup[] => [
+  {
+    title: "Frontpage posts",
+    tooltip: "Posts that are relevant to doing good effectively",
+    posts: posts.filter((post) => !!post.frontpageDate),
+  },
+  {
+    title: "Personal blogposts",
+    tooltip:
+      "Users can write whatever they want on their personal blog. This category is a good fit for topics that aren't closely related to EA, are difficult to discuss rationally, or are of interest to a small fraction of the Forum’s readers (e.g. local events)",
+    posts: posts.filter((post) => !post.frontpageDate),
+  },
+];
