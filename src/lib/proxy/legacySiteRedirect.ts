@@ -12,6 +12,8 @@ const oldSitePatterns = [
   /^\/api\/health$/,
   /^\/api\/search.*$/,
   /^\/api\/eafunds-posts$/,
+  /^\/api\/crosspost.*$/,
+  /^\/api\/v2\/crosspost.*$/,
 ];
 
 // Middle precedence: Route these to the new site
