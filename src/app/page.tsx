@@ -7,6 +7,7 @@ import {
   featuredViewTypeCookie,
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
+import ForumEventHomePageBanner from "@/components/ForumEvents/ForumEventHomePageBanner";
 import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
 import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
@@ -50,7 +51,14 @@ export default async function HomePage() {
     ? featuredViewCookie
     : undefined;
   return (
-    <HomePageColumns pageContext="homePage">
+    <HomePageColumns
+      pageContext="homePage"
+      banner={
+        <Suspense>
+          <ForumEventHomePageBanner />
+        </Suspense>
+      }
+    >
       <StructuredData data={structuredData} />
       <BotSiteNotice />
       <HomePageTabs

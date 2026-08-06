@@ -79,6 +79,14 @@ export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
   return canApprove ? approveNewUser : null;
 };
 
+export const useDeleteDraft = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const deleteDraft = useCallback(() => {}, []);
+  return currentUser && post.user?._id === currentUser._id && post.draft
+    ? deleteDraft
+    : null;
+};
+
 export const useMoveToFrontpage = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
   const [frontpage, setFrontpage] = useState(!!post.frontpageDate);
