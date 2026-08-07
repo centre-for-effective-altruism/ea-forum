@@ -19,6 +19,7 @@ export default async function AdminPage() {
           { title: "Moderator comments", href: "/moderatorComments" },
           { title: "Moderation log", href: "/moderation" },
           { title: "Topics dashboard", href: "/topics/dashboard" },
+          { title: "Swap user emails", href: "/admin/swap-user-emails" },
         ]}
       />
       <AdminPageSection

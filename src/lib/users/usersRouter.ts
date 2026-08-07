@@ -21,6 +21,7 @@ import {
 import {
   approveNewUser,
   completeUserProfile,
+  swapUserEmails,
   userCheckNotifications,
 } from "./userMutations";
 import { themeSchema } from "../themes";
@@ -284,5 +285,19 @@ export const usersRouter = {
         openedAt,
         endDate,
       });
+    }),
+  swapEmails: os
+    .input(
+      z.object({
+        userId1: z.string().nonempty(),
+        userId2: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { userId1, userId2 } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser?.isAdmin) {
+        throw new Error("Permission denied");
+      }
+      await swapUserEmails(userId1, userId2);
     }),
 };
