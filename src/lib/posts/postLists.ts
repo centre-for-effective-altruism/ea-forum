@@ -623,24 +623,9 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
 };
 
 /**
- * Karma at which a non-community post reaches the featured front page on its
- * own, with no admin action. The Featured queue excludes posts that have hit
- * this (see `fetchFeaturedQueue`), so it never offers up a post that is already
- * featured.
- */
-export const FEATURED_KARMA_THRESHOLD = 100;
-
-/**
- * Excludes community posts, which never reach the featured front page on karma
- * alone however high they score.
- */
-export const excludeCommunityFilter = () =>
-  excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID);
-
-/**
  * Posts for the featured front page. This is:
  *  - all posts marked as being in the on-site digest
- *  - all non-community posts with >= FEATURED_KARMA_THRESHOLD karma
+ *  - all non-community posts with >= 100 karma
  *  - excluding the most recently curated post which is fetched separately
  */
 export const fetchFeaturedFrontpagePosts = async ({
@@ -652,7 +637,9 @@ export const fetchFeaturedFrontpagePosts = async ({
   offset?: number;
   limit?: number;
 }): Promise<PostListItem[]> => {
-  const excludeCommunity = excludeCommunityFilter();
+  const excludeCommunity = excludeTagFilter(
+    process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
+  );
   return await fetchPostsList({
     currentUserId: currentUser?._id ?? null,
     where: {
@@ -676,7 +663,7 @@ export const fetchFeaturedFrontpagePosts = async ({
         {
           OR: [
             {
-              baseScore: { gte: FEATURED_KARMA_THRESHOLD },
+              baseScore: { gte: 100 },
               RAW: (postsTable) => excludeCommunity(postsTable),
             },
             {

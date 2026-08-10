@@ -105,11 +105,18 @@ export default function FeaturedQueuePage({
     setPublishing(true);
     const toastId = toast.loading("Publishing to homepage...");
     try {
-      const { featuredCount, dismissedCount } = await rpc.featuredQueue.publish({
-        featurePostIds,
-        dismissPostIds,
-      });
+      const { featuredCount, dismissedCount, skippedPostIds } =
+        await rpc.featuredQueue.publish({
+          featurePostIds,
+          dismissPostIds,
+        });
       toast.success(`Featured ${featuredCount} · dismissed ${dismissedCount}`);
+      if (skippedPostIds.length > 0) {
+        toast.error(
+          `${skippedPostIds.length} couldn't be saved and are still in the queue`,
+          { duration: 8000 },
+        );
+      }
       setDecisions(new Map());
       setCursor(0);
       router.refresh();
@@ -196,14 +203,15 @@ export default function FeaturedQueuePage({
       <div className="mt-6 text-[12px] font-[500] leading-normal text-gray-600">
         Admins only. Featuring stamps{" "}
         <span className="font-mono text-[11px]">onsiteDigestAt</span> on the post,
-        which is what the homepage Featured list reads. Dismissing records the digest
+        which is what the homepage Featured list reads. Dismissing means &ldquo;never
+        show me this again&rdquo; and nothing more: it records the digest
         tool&rsquo;s <span className="font-mono text-[11px]">&ldquo;X&rdquo;</span>{" "}
-        (onsite digest status <span className="font-mono text-[11px]">no</span>), so
-        the post won&rsquo;t come back here or into the digest. Posts that are
-        already featured never appear here — including ones that reached the Featured
-        list on karma alone, which stay out even if they&rsquo;re later edited or
-        voted back down. Personal blogposts are left out too: they&rsquo;ve already
-        been assessed as not frontpage material.
+        (onsite digest status <span className="font-mono text-[11px]">no</span>) and
+        leaves featured status alone, so dismissing a post that is already on the
+        Featured list — including one that got there on karma alone — keeps it there.
+        Posts featured from here or from the digest tool don&rsquo;t come back,
+        whatever happens to them afterwards. Personal blogposts never appear:
+        they&rsquo;ve already been assessed as not frontpage material.
       </div>
     </main>
   );

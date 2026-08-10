@@ -12,13 +12,9 @@ import {
   dismissPosts,
   featurePosts,
 } from "@/lib/featuredQueue/featuredQueueMutations";
-import {
-  FEATURED_KARMA_THRESHOLD,
-  fetchFeaturedFrontpagePosts,
-} from "@/lib/posts/postLists";
+import { fetchFeaturedFrontpagePosts } from "@/lib/posts/postLists";
 
-const COMMUNITY_TAG_ID = "community-test";
-vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", COMMUNITY_TAG_ID);
+vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", "community-test");
 
 // Dates relative to the launch cutoff, so these tests don't depend on the
 // wall clock or the exact value of the constant.
@@ -122,71 +118,100 @@ suite("Featured queue", () => {
     expect(ids).toContain(noStatus);
   });
 
-  test("posts already featured by karma alone never enter the queue", async () => {
+  test("dismissing a karma-featured post keeps it featured and out of the queue", async () => {
+    await createCoveringDigest();
+    // Reaching the karma threshold isn't a decision anyone made, so the post
+    // still comes up for review even though it's already on the Featured list.
     const highKarma = await createTestPost({
       ...queueEligible,
-      baseScore: FEATURED_KARMA_THRESHOLD,
-      maxBaseScore: FEATURED_KARMA_THRESHOLD,
+      baseScore: 150,
+      maxBaseScore: 150,
     });
-    const belowThreshold = await createTestPost({
+    const onFeaturedList = async () =>
+      (await fetchFeaturedFrontpagePosts({ currentUser: null })).map(
+        (post) => post._id,
+      );
+
+    expect(await onFeaturedList()).toContain(highKarma._id);
+    expect(await queueIds()).toContain(highKarma._id);
+
+    const { count } = await dismissPosts([highKarma._id]);
+    expect(count).toBe(1);
+
+    // Dismissal is only "stop showing me this": it stays on the Featured list.
+    expect(await onFeaturedList()).toContain(highKarma._id);
+    expect(await queueIds()).not.toContain(highKarma._id);
+  });
+
+  test("dismissing a featured post does not un-feature it", async () => {
+    const digestId = await createCoveringDigest();
+    const viaQueue = await createTestPost({
       ...queueEligible,
-      baseScore: FEATURED_KARMA_THRESHOLD - 1,
-      maxBaseScore: FEATURED_KARMA_THRESHOLD - 1,
+      onsiteDigestAt: afterLaunch,
+    });
+    const viaDigestTool = await createTestPost({ ...queueEligible });
+    await db.insert(digestPosts).values({
+      _id: randomId(),
+      digestId,
+      postId: viaDigestTool._id,
+      onsiteDigestAt: afterLaunch,
     });
 
-    // The high-karma post reaches the homepage Featured list with no admin
-    // action at all, so offering it up for featuring would re-feature it.
+    const { count } = await dismissPosts([viaQueue._id, viaDigestTool._id]);
+    expect(count).toBe(2);
+
+    // Both featured stamps survive untouched.
+    const queueStamp = await db.query.posts.findFirst({
+      columns: { onsiteDigestAt: true },
+      where: { _id: viaQueue._id },
+    });
+    expect(queueStamp?.onsiteDigestAt).not.toBeNull();
+
+    const digestRow = await db.query.digestPosts.findFirst({
+      where: { postId: viaDigestTool._id },
+    });
+    expect(digestRow?.onsiteDigestAt).not.toBeNull();
+    expect(digestRow?.onsiteDigestStatus).toBe("no");
+
     const featuredIds = (
       await fetchFeaturedFrontpagePosts({ currentUser: null })
     ).map((post) => post._id);
-    expect(featuredIds).toContain(highKarma._id);
-    expect(featuredIds).not.toContain(belowThreshold._id);
-
-    const ids = await queueIds();
-    expect(ids).not.toContain(highKarma._id);
-    expect(ids).toContain(belowThreshold._id);
+    expect(featuredIds).toContain(viaQueue._id);
+    expect(featuredIds).toContain(viaDigestTool._id);
   });
 
-  test("a karma-featured post stays out of the queue once its score falls back", async () => {
-    // `maxBaseScore` is a high-water mark, so being featured sticks even if the
-    // post is later edited or voted back below the threshold.
-    const dipped = await createTestPost({
-      ...queueEligible,
-      baseScore: 12,
-      maxBaseScore: FEATURED_KARMA_THRESHOLD + 50,
-    });
-
-    expect(await queueIds()).not.toContain(dipped._id);
-  });
-
-  test("an old karma-featured post re-published after launch stays out", async () => {
-    // Re-publishing can move `postedAt` forward, past the launch cutoff. The
-    // post was already featured long before that, so it must not come back.
-    const republished = await createTestPost({
+  test("dismissal falls back to the newest digest for a post no digest covers", async () => {
+    // Otherwise the dismissal is silently dropped and the post returns forever.
+    const digestId = await createCoveringDigest();
+    const oldPost = await createTestPost({
       createdAt: beforeLaunch,
-      postedAt: afterLaunch,
+      postedAt: beforeLaunch,
       frontpageDate: beforeLaunch,
-      baseScore: FEATURED_KARMA_THRESHOLD + 50,
-      maxBaseScore: FEATURED_KARMA_THRESHOLD + 50,
     });
 
-    expect(await queueIds()).not.toContain(republished._id);
+    const { count, skippedPostIds } = await dismissPosts([oldPost._id]);
+    expect(count).toBe(1);
+    expect(skippedPostIds).toEqual([]);
+
+    const row = await db.query.digestPosts.findFirst({
+      where: { postId: oldPost._id },
+    });
+    expect(row?.digestId).toBe(digestId);
+    expect(row?.onsiteDigestStatus).toBe("no");
   });
 
-  test("high-karma community posts are not karma-featured, so they stay queued", async () => {
-    const community = await createTestPost({
-      ...queueEligible,
-      baseScore: FEATURED_KARMA_THRESHOLD + 50,
-      maxBaseScore: FEATURED_KARMA_THRESHOLD + 50,
-      tagRelevance: { [COMMUNITY_TAG_ID]: 1 },
-    });
+  test("writes report anything they could not record", async () => {
+    const draft = await createTestPost({ ...queueEligible, draft: true });
+    const featured = await featurePosts([draft._id]);
+    expect(featured.count).toBe(0);
+    expect(featured.skippedPostIds).toEqual([draft._id]);
 
-    const featuredIds = (
-      await fetchFeaturedFrontpagePosts({ currentUser: null })
-    ).map((post) => post._id);
-    expect(featuredIds).not.toContain(community._id);
-
-    expect(await queueIds()).toContain(community._id);
+    // No digests exist at all, so there's nowhere to record a dismissal.
+    const post = await createTestPost({ ...queueEligible });
+    const dismissed = await dismissPosts([post._id]);
+    expect(dismissed.count).toBe(0);
+    expect(dismissed.skippedPostIds).toEqual([post._id]);
+    expect(await queueIds()).toContain(post._id);
   });
 
   test("personal blogposts are excluded from the queue", async () => {
@@ -205,8 +230,9 @@ suite("Featured queue", () => {
     const toFeature = await createTestPost({ ...queueEligible });
     const draft = await createTestPost({ ...queueEligible, draft: true });
 
-    const count = await featurePosts([toFeature._id, draft._id]);
+    const { count, skippedPostIds } = await featurePosts([toFeature._id, draft._id]);
     expect(count).toBe(1);
+    expect(skippedPostIds).toEqual([draft._id]);
 
     const stamped = await db.query.posts.findFirst({
       columns: { onsiteDigestAt: true },
@@ -230,7 +256,7 @@ suite("Featured queue", () => {
 
     expect(await queueIds()).toContain(toDismiss._id);
 
-    const count = await dismissPosts([toDismiss._id]);
+    const { count } = await dismissPosts([toDismiss._id]);
     expect(count).toBe(1);
 
     const row = await db.query.digestPosts.findFirst({
@@ -253,7 +279,7 @@ suite("Featured queue", () => {
       emailDigestStatus: "yes",
     });
 
-    const count = await dismissPosts([post._id]);
+    const { count } = await dismissPosts([post._id]);
     expect(count).toBe(1);
 
     const rows = await db.query.digestPosts.findMany({

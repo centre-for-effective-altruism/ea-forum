@@ -3,8 +3,6 @@ import "server-only";
 import { db } from "../db";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
-  excludeCommunityFilter,
-  FEATURED_KARMA_THRESHOLD,
   viewablePostFilter,
   type PostFromProjection,
   type PostRelationalProjection,
@@ -46,31 +44,40 @@ const featuredQueueProjection = {
 export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjection>;
 
 /**
- * Frontpage posts (published since launch) that are still awaiting a decision:
- * neither already featured nor dismissed. There's no time window beyond the
- * launch cutoff, so the queue is simply everything since last review.
+ * Frontpage posts (published since launch) that you haven't ruled on yet.
+ * There's no time window beyond the launch cutoff, so the queue is simply
+ * everything since last review.
  *
- * A post leaves the queue permanently once it has been featured by any of the
- * three routes onto the homepage Featured list (see
- * `fetchFeaturedFrontpagePosts`): this queue (`posts.onsiteDigestAt`), the
- * digest tool (`DigestPosts.onsiteDigestAt`, or an `onsiteDigestStatus` of
- * "yes"), or reaching `FEATURED_KARMA_THRESHOLD` karma as a non-community post,
- * which features it with no admin action at all. It also leaves once dismissed,
- * which records the digest tool's "X" (`onsiteDigestStatus = "no"`).
+ * A post leaves the queue for good once it carries a decision, and a decision is
+ * exactly one of two things:
  *
- * Each of those signals is durable: none of them is reset by an author editing
- * or re-publishing a post, and the karma one reads `maxBaseScore` (a
- * monotonic high-water mark) rather than the current `baseScore`, so a post
- * that has been featured stays featured for queue purposes even if it's since
- * been edited or voted back below the threshold. Re-serving an already-featured
- * post is worse than missing one: re-featuring it re-stamps `onsiteDigestAt`
- * with the current time, which jumps it above posts featured more recently.
+ *  - Featured, meaning someone deliberately put it on the homepage Featured
+ *    list: this queue (`posts.onsiteDigestAt`) or the digest tool
+ *    (`DigestPosts.onsiteDigestAt`, or an `onsiteDigestStatus` of "yes"). Note
+ *    `DigestPosts` shipped with only the status columns and gained
+ *    `onsiteDigestAt` later, so a post the digest tool featured can carry the
+ *    status and no timestamp at all.
+ *  - Dismissed (`onsiteDigestStatus = "no"`), meaning "never show me this
+ *    again". Dismissal is deliberately independent of whether the post is
+ *    featured: dismissing never un-features anything, and a post that is
+ *    featured by some other route — reaching the karma threshold on its own, say
+ *    — stays on the Featured list once dismissed. It just stops appearing here.
  *
- * Personal blogposts (no `frontpageDate`) are excluded outright: a moderator has
- * already assessed them as not frontpage material, let alone featured.
+ * Reaching the karma threshold is not a decision, so those posts do keep
+ * appearing until you feature or dismiss them. That's deliberate: they're on the
+ * Featured list without anyone choosing to put them there, so you still get the
+ * chance to rule on them, and dismissing one leaves it featured.
+ *
+ * Both signals are durable — neither is reset by an author editing or
+ * re-publishing a post, nor by karma moving — which is what stops a post you've
+ * already ruled on coming back. Re-serving a post you already featured is worse
+ * than missing one: featuring it again re-stamps `onsiteDigestAt` with the
+ * current time, which jumps it above posts featured more recently.
+ *
+ * Personal blogposts (no `frontpageDate`) never appear: a moderator has already
+ * assessed them as not frontpage material, let alone featured.
  */
 export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
-  const excludeCommunity = excludeCommunityFilter();
   return db.query.posts.findMany({
     ...featuredQueueProjection,
     where: {
@@ -80,34 +87,20 @@ export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
       frontpageDate: { isNotNull: true },
       // Featured via this queue.
       onsiteDigestAt: { isNull: true },
-      AND: [
-        {
-          NOT: {
-            digestPost: {
-              OR: [
-                // Featured via the digest tool, which stamps a time...
-                { onsiteDigestAt: { isNotNull: true } },
-                // ...but the status is where the digest tool has always
-                // recorded the decision: `DigestPosts` shipped with only the
-                // status columns and gained `onsiteDigestAt` later, so a post
-                // it featured can carry the status and no timestamp at all.
-                // Any decided status counts, "yes" (featured) as much as "no"
-                // (the digest tool's "X"). "maybe" is a shortlist rather than a
-                // decision, so those posts stay in the queue — as do posts with
-                // no status at all, since `notIn` never matches NULL.
-                { onsiteDigestStatus: { notIn: ["maybe"] } },
-              ],
-            },
-          },
+      NOT: {
+        digestPost: {
+          OR: [
+            // Featured via the digest tool, which stamps a time...
+            { onsiteDigestAt: { isNotNull: true } },
+            // ...but the status is where it has always recorded the decision.
+            // Any decided status counts, "yes" (featured) as much as "no"
+            // (dismissed). "maybe" is a shortlist rather than a decision, so
+            // those posts stay in the queue — as do posts with no status at
+            // all, since `notIn` never matches NULL.
+            { onsiteDigestStatus: { notIn: ["maybe"] } },
+          ],
         },
-        {
-          // Featured by karma alone, now or at any point in the past.
-          NOT: {
-            maxBaseScore: { gte: FEATURED_KARMA_THRESHOLD },
-            RAW: (postsTable) => excludeCommunity(postsTable),
-          },
-        },
-      ],
+      },
     },
     orderBy: { postedAt: "desc" },
     limit: QUEUE_LIMIT,
