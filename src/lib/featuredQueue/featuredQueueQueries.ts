@@ -3,6 +3,8 @@ import "server-only";
 import { db } from "../db";
 import { postTagsProjection } from "../tags/tagQueries";
 import {
+  excludeCommunityFilter,
+  FEATURED_KARMA_THRESHOLD,
   viewablePostFilter,
   type PostFromProjection,
   type PostRelationalProjection,
@@ -44,31 +46,61 @@ const featuredQueueProjection = {
 export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjection>;
 
 /**
- * Viewable posts (published since launch) that are still awaiting a decision:
- * neither featured nor dismissed. A post leaves the queue permanently once it's
- * been featured — via this queue (`posts.onsiteDigestAt`) or the digest tool
- * (`DigestPosts.onsiteDigestAt`) — or dismissed, which records the digest
- * tool's "X" (`DigestPosts.onsiteDigestStatus = "no"`). There's no time window
- * beyond the launch cutoff, so the queue is simply everything since last
- * review.
+ * Frontpage posts (published since launch) that are still awaiting a decision:
+ * neither already featured nor dismissed. There's no time window beyond the
+ * launch cutoff, so the queue is simply everything since last review.
+ *
+ * A post leaves the queue permanently once it has been featured by any of the
+ * three routes onto the homepage Featured list (see
+ * `fetchFeaturedFrontpagePosts`): this queue (`posts.onsiteDigestAt`), the
+ * digest tool (`DigestPosts.onsiteDigestAt`), or reaching
+ * `FEATURED_KARMA_THRESHOLD` karma as a non-community post, which features it
+ * with no admin action at all. It also leaves once dismissed, which records the
+ * digest tool's "X" (`DigestPosts.onsiteDigestStatus = "no"`).
+ *
+ * Each of those signals is durable: none of them is reset by an author editing
+ * or re-publishing a post, and the karma one reads `maxBaseScore` (a
+ * monotonic high-water mark) rather than the current `baseScore`, so a post
+ * that has been featured stays featured for queue purposes even if it's since
+ * been edited or voted back below the threshold. Re-serving an already-featured
+ * post is worse than missing one: re-featuring it re-stamps `onsiteDigestAt`
+ * with the current time, which jumps it above posts featured more recently.
+ *
+ * Personal blogposts (no `frontpageDate`) are excluded outright: a moderator has
+ * already assessed them as not frontpage material, let alone featured.
  */
 export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
+  const excludeCommunity = excludeCommunityFilter();
   return db.query.posts.findMany({
     ...featuredQueueProjection,
     where: {
       ...viewablePostFilter,
       postedAt: { gte: FEATURED_QUEUE_LAUNCH_DATE.toISOString() },
+      // Personal blogposts have already been judged off the frontpage.
+      frontpageDate: { isNotNull: true },
+      // Featured via this queue.
       onsiteDigestAt: { isNull: true },
-      NOT: {
-        digestPost: {
-          OR: [
-            // Featured via the digest tool.
-            { onsiteDigestAt: { isNotNull: true } },
-            // Dismissed: the digest tool's "X" / "no" onsite status.
-            { onsiteDigestStatus: "no" },
-          ],
+      AND: [
+        {
+          NOT: {
+            digestPost: {
+              OR: [
+                // Featured via the digest tool.
+                { onsiteDigestAt: { isNotNull: true } },
+                // Dismissed: the digest tool's "X" / "no" onsite status.
+                { onsiteDigestStatus: "no" },
+              ],
+            },
+          },
         },
-      },
+        {
+          // Featured by karma alone, now or at any point in the past.
+          NOT: {
+            maxBaseScore: { gte: FEATURED_KARMA_THRESHOLD },
+            RAW: (postsTable) => excludeCommunity(postsTable),
+          },
+        },
+      ],
     },
     orderBy: { postedAt: "desc" },
     limit: QUEUE_LIMIT,

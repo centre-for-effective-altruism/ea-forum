@@ -138,8 +138,8 @@ export default function FeaturedQueuePage({
         <div>
           <Type style="commentsHeader">Featured queue</Type>
           <div className="mt-0.5 text-[13px] font-[450] text-gray-600">
-            Everything since your last review · feature the ones for the homepage,
-            dismiss the rest · both clear the post from the queue
+            Frontpage posts since your last review · feature the ones for the
+            homepage, dismiss the rest · both clear the post from the queue
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 pt-1.5">
@@ -199,7 +199,11 @@ export default function FeaturedQueuePage({
         which is what the homepage Featured list reads. Dismissing records the digest
         tool&rsquo;s <span className="font-mono text-[11px]">&ldquo;X&rdquo;</span>{" "}
         (onsite digest status <span className="font-mono text-[11px]">no</span>), so
-        the post won&rsquo;t come back here or into the digest.
+        the post won&rsquo;t come back here or into the digest. Posts that are
+        already featured never appear here — including ones that reached the Featured
+        list on karma alone, which stay out even if they&rsquo;re later edited or
+        voted back down. Personal blogposts are left out too: they&rsquo;ve already
+        been assessed as not frontpage material.
       </div>
     </main>
   );

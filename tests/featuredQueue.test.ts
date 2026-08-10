@@ -12,9 +12,13 @@ import {
   dismissPosts,
   featurePosts,
 } from "@/lib/featuredQueue/featuredQueueMutations";
-import { fetchFeaturedFrontpagePosts } from "@/lib/posts/postLists";
+import {
+  FEATURED_KARMA_THRESHOLD,
+  fetchFeaturedFrontpagePosts,
+} from "@/lib/posts/postLists";
 
-vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", "community-test");
+const COMMUNITY_TAG_ID = "community-test";
+vi.stubEnv("NEXT_PUBLIC_COMMUNITY_TAG_ID", COMMUNITY_TAG_ID);
 
 // Dates relative to the launch cutoff, so these tests don't depend on the
 // wall clock or the exact value of the constant.
@@ -24,6 +28,14 @@ const afterLaunch = new Date(
 const beforeLaunch = new Date(
   FEATURED_QUEUE_LAUNCH_DATE.getTime() - 24 * 60 * 60 * 1000,
 ).toISOString();
+
+/** A post that qualifies for the queue: on the frontpage, published since launch. */
+const queueEligible = {
+  postedAt: afterLaunch,
+  frontpageDate: afterLaunch,
+};
+
+const queueIds = async () => (await fetchFeaturedQueue()).map((post) => post._id);
 
 /** A digest whose range covers `afterLaunch`. */
 const createCoveringDigest = async (): Promise<string> => {
@@ -46,15 +58,18 @@ suite("Featured queue", () => {
   });
 
   test("queue shows since-launch, viewable, undecided posts", async () => {
-    const undecided = await createTestPost({ postedAt: afterLaunch });
-    const preLaunch = await createTestPost({ postedAt: beforeLaunch });
-    const draft = await createTestPost({ postedAt: afterLaunch, draft: true });
+    const undecided = await createTestPost({ ...queueEligible });
+    const preLaunch = await createTestPost({
+      ...queueEligible,
+      postedAt: beforeLaunch,
+    });
+    const draft = await createTestPost({ ...queueEligible, draft: true });
     const featuredViaQueue = await createTestPost({
-      postedAt: afterLaunch,
+      ...queueEligible,
       onsiteDigestAt: afterLaunch,
     });
 
-    const featuredViaDigestTool = await createTestPost({ postedAt: afterLaunch });
+    const featuredViaDigestTool = await createTestPost({ ...queueEligible });
     await db.insert(digestPosts).values({
       _id: randomId(),
       digestId: randomId(),
@@ -62,7 +77,7 @@ suite("Featured queue", () => {
       onsiteDigestAt: afterLaunch,
     });
 
-    const dismissed = await createTestPost({ postedAt: afterLaunch });
+    const dismissed = await createTestPost({ ...queueEligible });
     await db.insert(digestPosts).values({
       _id: randomId(),
       digestId: randomId(),
@@ -70,7 +85,7 @@ suite("Featured queue", () => {
       onsiteDigestStatus: "no",
     });
 
-    const ids = (await fetchFeaturedQueue()).map((post) => post._id);
+    const ids = await queueIds();
 
     expect(ids).toContain(undecided._id);
     expect(ids).not.toContain(preLaunch._id);
@@ -80,9 +95,88 @@ suite("Featured queue", () => {
     expect(ids).not.toContain(dismissed._id);
   });
 
+  test("posts already featured by karma alone never enter the queue", async () => {
+    const highKarma = await createTestPost({
+      ...queueEligible,
+      baseScore: FEATURED_KARMA_THRESHOLD,
+      maxBaseScore: FEATURED_KARMA_THRESHOLD,
+    });
+    const belowThreshold = await createTestPost({
+      ...queueEligible,
+      baseScore: FEATURED_KARMA_THRESHOLD - 1,
+      maxBaseScore: FEATURED_KARMA_THRESHOLD - 1,
+    });
+
+    // The high-karma post reaches the homepage Featured list with no admin
+    // action at all, so offering it up for featuring would re-feature it.
+    const featuredIds = (
+      await fetchFeaturedFrontpagePosts({ currentUser: null })
+    ).map((post) => post._id);
+    expect(featuredIds).toContain(highKarma._id);
+    expect(featuredIds).not.toContain(belowThreshold._id);
+
+    const ids = await queueIds();
+    expect(ids).not.toContain(highKarma._id);
+    expect(ids).toContain(belowThreshold._id);
+  });
+
+  test("a karma-featured post stays out of the queue once its score falls back", async () => {
+    // `maxBaseScore` is a high-water mark, so being featured sticks even if the
+    // post is later edited or voted back below the threshold.
+    const dipped = await createTestPost({
+      ...queueEligible,
+      baseScore: 12,
+      maxBaseScore: FEATURED_KARMA_THRESHOLD + 50,
+    });
+
+    expect(await queueIds()).not.toContain(dipped._id);
+  });
+
+  test("an old karma-featured post re-published after launch stays out", async () => {
+    // Re-publishing can move `postedAt` forward, past the launch cutoff. The
+    // post was already featured long before that, so it must not come back.
+    const republished = await createTestPost({
+      createdAt: beforeLaunch,
+      postedAt: afterLaunch,
+      frontpageDate: beforeLaunch,
+      baseScore: FEATURED_KARMA_THRESHOLD + 50,
+      maxBaseScore: FEATURED_KARMA_THRESHOLD + 50,
+    });
+
+    expect(await queueIds()).not.toContain(republished._id);
+  });
+
+  test("high-karma community posts are not karma-featured, so they stay queued", async () => {
+    const community = await createTestPost({
+      ...queueEligible,
+      baseScore: FEATURED_KARMA_THRESHOLD + 50,
+      maxBaseScore: FEATURED_KARMA_THRESHOLD + 50,
+      tagRelevance: { [COMMUNITY_TAG_ID]: 1 },
+    });
+
+    const featuredIds = (
+      await fetchFeaturedFrontpagePosts({ currentUser: null })
+    ).map((post) => post._id);
+    expect(featuredIds).not.toContain(community._id);
+
+    expect(await queueIds()).toContain(community._id);
+  });
+
+  test("personal blogposts are excluded from the queue", async () => {
+    const personalBlog = await createTestPost({
+      ...queueEligible,
+      frontpageDate: null,
+    });
+    const frontpage = await createTestPost({ ...queueEligible });
+
+    const ids = await queueIds();
+    expect(ids).not.toContain(personalBlog._id);
+    expect(ids).toContain(frontpage._id);
+  });
+
   test("featurePosts stamps onsiteDigestAt and skips non-viewable posts", async () => {
-    const toFeature = await createTestPost({ postedAt: afterLaunch });
-    const draft = await createTestPost({ postedAt: afterLaunch, draft: true });
+    const toFeature = await createTestPost({ ...queueEligible });
+    const draft = await createTestPost({ ...queueEligible, draft: true });
 
     const count = await featurePosts([toFeature._id, draft._id]);
     expect(count).toBe(1);
@@ -100,16 +194,14 @@ suite("Featured queue", () => {
     expect(draftRow?.onsiteDigestAt ?? null).toBeNull();
 
     // Featured posts drop out of the queue.
-    expect((await fetchFeaturedQueue()).map((p) => p._id)).not.toContain(
-      toFeature._id,
-    );
+    expect(await queueIds()).not.toContain(toFeature._id);
   });
 
   test("dismissPosts records the digest 'no' status and drops the post from the queue", async () => {
     const digestId = await createCoveringDigest();
-    const toDismiss = await createTestPost({ postedAt: afterLaunch });
+    const toDismiss = await createTestPost({ ...queueEligible });
 
-    expect((await fetchFeaturedQueue()).map((p) => p._id)).toContain(toDismiss._id);
+    expect(await queueIds()).toContain(toDismiss._id);
 
     const count = await dismissPosts([toDismiss._id]);
     expect(count).toBe(1);
@@ -120,14 +212,12 @@ suite("Featured queue", () => {
     expect(row?.digestId).toBe(digestId);
     expect(row?.onsiteDigestStatus).toBe("no");
 
-    expect((await fetchFeaturedQueue()).map((p) => p._id)).not.toContain(
-      toDismiss._id,
-    );
+    expect(await queueIds()).not.toContain(toDismiss._id);
   });
 
   test("dismissPosts updates an existing digest row without duplicating it", async () => {
     const digestId = await createCoveringDigest();
-    const post = await createTestPost({ postedAt: afterLaunch });
+    const post = await createTestPost({ ...queueEligible });
     const rowId = randomId();
     await db.insert(digestPosts).values({
       _id: rowId,
