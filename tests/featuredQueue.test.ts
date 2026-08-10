@@ -34,6 +34,9 @@ const queueEligible = {
 
 const queueIds = async () => (await fetchFeaturedQueue()).map((post) => post._id);
 
+const featuredListIds = async () =>
+  (await fetchFeaturedFrontpagePosts({ currentUser: null })).map((post) => post._id);
+
 /** A digest whose range covers `afterLaunch`. */
 const createCoveringDigest = async (): Promise<string> => {
   const digestId = randomId();
@@ -88,7 +91,7 @@ suite("Featured queue", () => {
   });
 
   test("queue shows since-launch, viewable, undecided posts", async () => {
-    const undecided = await createTestPost({ ...queueEligible });
+    const undecided = await createTestPost(queueEligible);
     const preLaunch = await createTestPost({
       ...queueEligible,
       postedAt: beforeLaunch,
@@ -99,12 +102,12 @@ suite("Featured queue", () => {
       onsiteDigestAt: afterLaunch,
     });
 
-    const featuredViaDigestTool = await createTestPost({ ...queueEligible });
+    const featuredViaDigestTool = await createTestPost(queueEligible);
     await createTestDigestPost(featuredViaDigestTool._id, {
       onsiteDigestAt: afterLaunch,
     });
 
-    const dismissed = await createTestPost({ ...queueEligible });
+    const dismissed = await createTestPost(queueEligible);
     await createTestDigestPost(dismissed._id, { onsiteDigestStatus: "no" });
 
     const ids = await queueIds();
@@ -126,19 +129,14 @@ suite("Featured queue", () => {
       baseScore: 150,
       maxBaseScore: 150,
     });
-    const onFeaturedList = async () =>
-      (await fetchFeaturedFrontpagePosts({ currentUser: null })).map(
-        (post) => post._id,
-      );
-
-    expect(await onFeaturedList()).toContain(highKarma._id);
+    expect(await featuredListIds()).toContain(highKarma._id);
     expect(await queueIds()).toContain(highKarma._id);
 
     const count = await dismissPosts([highKarma._id]);
     expect(count).toBe(1);
 
     // Dismissal is only "stop showing me this": it stays on the Featured list.
-    expect(await onFeaturedList()).toContain(highKarma._id);
+    expect(await featuredListIds()).toContain(highKarma._id);
     expect(await queueIds()).not.toContain(highKarma._id);
   });
 
@@ -148,7 +146,7 @@ suite("Featured queue", () => {
       ...queueEligible,
       onsiteDigestAt: afterLaunch,
     });
-    const viaDigestTool = await createTestPost({ ...queueEligible });
+    const viaDigestTool = await createTestPost(queueEligible);
     await createTestDigestPost(viaDigestTool._id, {
       digestId,
       onsiteDigestStatus: "yes",
@@ -172,11 +170,9 @@ suite("Featured queue", () => {
     expect(digestRow?.onsiteDigestStatus).toBe("yes");
     expect(digestRow?.onsiteDigestAt).not.toBeNull();
 
-    const featuredIds = (
-      await fetchFeaturedFrontpagePosts({ currentUser: null })
-    ).map((post) => post._id);
-    expect(featuredIds).toContain(viaQueue._id);
-    expect(featuredIds).toContain(viaDigestTool._id);
+    const featured = await featuredListIds();
+    expect(featured).toContain(viaQueue._id);
+    expect(featured).toContain(viaDigestTool._id);
 
     const ids = await queueIds();
     expect(ids).not.toContain(viaQueue._id);
@@ -185,7 +181,7 @@ suite("Featured queue", () => {
 
   test("featuring marks the post 'yes' in the digest tool", async () => {
     const digestId = await createCoveringDigest();
-    const post = await createTestPost({ ...queueEligible });
+    const post = await createTestPost(queueEligible);
 
     await featurePosts([post._id]);
 
@@ -199,7 +195,7 @@ suite("Featured queue", () => {
 
   test("a featured post survives the digest tool's recompute", async () => {
     await createCoveringDigest();
-    const post = await createTestPost({ ...queueEligible });
+    const post = await createTestPost(queueEligible);
     await featurePosts([post._id]);
 
     // Anyone touching this post in the digest tool triggers the recompute —
@@ -212,9 +208,7 @@ suite("Featured queue", () => {
     });
     expect(stamped?.onsiteDigestAt).not.toBeNull();
 
-    expect(
-      (await fetchFeaturedFrontpagePosts({ currentUser: null })).map((p) => p._id),
-    ).toContain(post._id);
+    expect(await featuredListIds()).toContain(post._id);
     expect(await queueIds()).not.toContain(post._id);
   });
 
@@ -241,7 +235,7 @@ suite("Featured queue", () => {
     expect(await featurePosts([draft._id])).toBe(0);
 
     // No digests exist at all, so there's nowhere to record a dismissal.
-    const post = await createTestPost({ ...queueEligible });
+    const post = await createTestPost(queueEligible);
     expect(await dismissPosts([post._id])).toBe(0);
     expect(await queueIds()).toContain(post._id);
   });
@@ -251,7 +245,7 @@ suite("Featured queue", () => {
       ...queueEligible,
       frontpageDate: null,
     });
-    const frontpage = await createTestPost({ ...queueEligible });
+    const frontpage = await createTestPost(queueEligible);
 
     const ids = await queueIds();
     expect(ids).not.toContain(personalBlog._id);
@@ -259,7 +253,7 @@ suite("Featured queue", () => {
   });
 
   test("featurePosts stamps onsiteDigestAt and skips non-viewable posts", async () => {
-    const toFeature = await createTestPost({ ...queueEligible });
+    const toFeature = await createTestPost(queueEligible);
     const draft = await createTestPost({ ...queueEligible, draft: true });
 
     expect(await featurePosts([toFeature._id, draft._id])).toBe(1);
@@ -282,7 +276,7 @@ suite("Featured queue", () => {
 
   test("dismissPosts records the digest 'no' status and drops the post from the queue", async () => {
     const digestId = await createCoveringDigest();
-    const toDismiss = await createTestPost({ ...queueEligible });
+    const toDismiss = await createTestPost(queueEligible);
 
     expect(await queueIds()).toContain(toDismiss._id);
 
@@ -300,7 +294,7 @@ suite("Featured queue", () => {
 
   test("dismissPosts updates an existing digest row without duplicating it", async () => {
     const digestId = await createCoveringDigest();
-    const post = await createTestPost({ ...queueEligible });
+    const post = await createTestPost(queueEligible);
     const rowId = await createTestDigestPost(post._id, {
       digestId,
       emailDigestStatus: "yes",
@@ -340,9 +334,7 @@ suite("Featured queue", () => {
       postedAt: nHoursAgo(1).toISOString(),
     });
 
-    const ids = (await fetchFeaturedFrontpagePosts({ currentUser: null })).map(
-      (post) => post._id,
-    );
+    const ids = await featuredListIds();
 
     expect(ids).toContain(viaQueue._id);
     expect(ids).toContain(viaDigestTool._id);

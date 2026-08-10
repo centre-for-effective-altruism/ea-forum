@@ -30,9 +30,10 @@ export const featuredQueueRouter = {
           // Anything that couldn't be recorded stays in the queue, so say so
           // rather than reporting a clean run.
           skippedCount:
-            input.featurePostIds.length -
-            featuredCount +
-            (input.dismissPostIds.length - dismissedCount),
+            input.featurePostIds.length +
+            input.dismissPostIds.length -
+            featuredCount -
+            dismissedCount,
         };
       });
     }),

@@ -2,14 +2,12 @@ import "server-only";
 
 import { inArray } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
-import { digestPosts, posts, type InsertDigestPost } from "../schema";
+import { digestPosts, posts, type InsertDigestPost, type Post } from "../schema";
 import { randomId } from "../utils/random";
 import { viewablePostFilter } from "../posts/postLists";
+import { deliberatelyFeaturedFilter } from "./featuredQueueQueries";
 
-interface DecidablePost {
-  _id: string;
-  postedAt: string | null;
-}
+type DecidablePost = Pick<Post, "_id" | "postedAt">;
 
 type OnsiteDigestDecision = Pick<
   InsertDigestPost,
@@ -56,8 +54,10 @@ const recordOnsiteDigestDecision = async (
     return 0;
   }
   const coveringDigestId = (postedAt: string | null): string => {
-    // No postedAt matches no digest start, so it lands on the same fallback.
-    const postedMs = postedAt ? new Date(postedAt).getTime() : -Infinity;
+    if (!postedAt) {
+      return newestDigestId;
+    }
+    const postedMs = new Date(postedAt).getTime();
     return digestBounds.find((d) => d.startMs <= postedMs)?._id ?? newestDigestId;
   };
 
@@ -103,10 +103,9 @@ const recordOnsiteDigestDecision = async (
 
 /**
  * Feature the given posts on the homepage by stamping `posts.onsiteDigestAt`,
- * which the homepage Featured list reads. Only posts that are still genuinely
- * featurable are stamped, so a stale client can't feature a post that has since
- * been withdrawn. Returns how many were featured, so the caller can tell you
- * about any that weren't rather than quietly doing nothing.
+ * which the homepage Featured list both reads and sorts on. Only posts that are
+ * still genuinely featurable are stamped, so a stale client can't feature a post
+ * that has since been withdrawn. Returns how many were featured.
  *
  * The post is also marked "yes" in the digest tool, which is what keeps the
  * featuring alive. That tool recomputes `posts.onsiteDigestAt` from its own rows
@@ -133,22 +132,27 @@ export const featurePosts = async (
       _id: { in: postIds },
     },
   });
-  const featurableIds = featurable.map((post) => post._id);
-  if (featurableIds.length > 0) {
-    // The same timestamp on both, so the digest tool's recompute is a no-op
-    // rather than something that shuffles the Featured list's order.
-    const now = new Date().toISOString();
-    await dbOrTxn
-      .update(posts)
-      .set({ onsiteDigestAt: now })
-      .where(inArray(posts._id, featurableIds));
-    await recordOnsiteDigestDecision(
-      featurable,
-      { onsiteDigestStatus: "yes", onsiteDigestAt: now },
-      dbOrTxn,
-    );
+  if (featurable.length === 0) {
+    return 0;
   }
-  return featurableIds.length;
+  // The same timestamp on both, so the digest tool's recompute is a no-op
+  // rather than something that shuffles the Featured list's order.
+  const now = new Date().toISOString();
+  await dbOrTxn
+    .update(posts)
+    .set({ onsiteDigestAt: now })
+    .where(
+      inArray(
+        posts._id,
+        featurable.map((post) => post._id),
+      ),
+    );
+  await recordOnsiteDigestDecision(
+    featurable,
+    { onsiteDigestStatus: "yes", onsiteDigestAt: now },
+    dbOrTxn,
+  );
+  return featurable.length;
 };
 
 /**
@@ -162,8 +166,7 @@ export const featurePosts = async (
  * (`onsiteDigestStatus = "no"`), which takes it out of the queue without
  * touching how the homepage treats it.
  *
- * Returns how many were dismissed, so the caller can tell you about any that
- * weren't rather than leaving them to reappear unexplained.
+ * Returns how many were dismissed.
  */
 export const dismissPosts = async (
   postIds: string[],
@@ -173,25 +176,23 @@ export const dismissPosts = async (
     return 0;
   }
 
-  // Only act on real posts, and grab what we need to place the digest row and
-  // to tell whether the post is already featured.
+  // Only act on real posts, and pick out the ones that still need a "no": a
+  // featured post is already out of the queue, so there's nothing to record —
+  // and writing "no" over the digest tool's "yes" would un-feature it.
   const dismissable = await dbOrTxn.query.posts.findMany({
-    columns: { _id: true, postedAt: true, onsiteDigestAt: true },
+    columns: { _id: true },
     where: { _id: { in: postIds } },
-    with: { digestPost: { columns: { onsiteDigestAt: true } } },
+  });
+  const unfeatured = await dbOrTxn.query.posts.findMany({
+    columns: { _id: true, postedAt: true },
+    where: { _id: { in: postIds }, NOT: deliberatelyFeaturedFilter },
   });
 
-  // A featured post is already out of the queue, so there's nothing to record —
-  // and writing "no" over the digest tool's "yes" would un-feature it.
-  const unfeatured = dismissable.filter(
-    (post) =>
-      post.onsiteDigestAt === null &&
-      post.digestPost.every((row) => row.onsiteDigestAt === null),
-  );
+  const alreadyFeatured = dismissable.length - unfeatured.length;
   const recorded = await recordOnsiteDigestDecision(
     unfeatured,
     { onsiteDigestStatus: "no" },
     dbOrTxn,
   );
-  return dismissable.length - unfeatured.length + recorded;
+  return alreadyFeatured + recorded;
 };

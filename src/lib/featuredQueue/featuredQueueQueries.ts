@@ -6,6 +6,7 @@ import {
   viewablePostFilter,
   type PostFromProjection,
   type PostRelationalProjection,
+  type PostsFilter,
 } from "../posts/postLists";
 
 /**
@@ -20,6 +21,23 @@ export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-28T00:00:00.000Z");
 
 /** Cap on the number of posts loaded into the queue at once. */
 const QUEUE_LIMIT = 100;
+
+/**
+ * A post someone deliberately put on the homepage Featured list, from this queue
+ * or from the digest tool. Both stamp `onsiteDigestAt` — the digest tool sets it
+ * alongside a "yes" status, and the migration that added the column backfilled
+ * the rows that predated it — so the timestamp alone catches every one.
+ *
+ * Reaching the karma threshold is deliberately not included: the homepage
+ * features those posts (see `fetchFeaturedFrontpagePosts`) without anyone
+ * choosing to, so they're still up for review here.
+ */
+export const deliberatelyFeaturedFilter = {
+  OR: [
+    { onsiteDigestAt: { isNotNull: true } },
+    { digestPost: { onsiteDigestAt: { isNotNull: true } } },
+  ],
+} as const satisfies PostsFilter;
 
 const featuredQueueProjection = {
   columns: {
@@ -73,19 +91,12 @@ export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
       postedAt: { gte: FEATURED_QUEUE_LAUNCH_DATE.toISOString() },
       // Personal blogposts have already been judged off the frontpage.
       frontpageDate: { isNotNull: true },
-      // Not yet featured from this queue.
-      onsiteDigestAt: { isNull: true },
       NOT: {
-        digestPost: {
-          OR: [
-            // Featured, from here or from the digest tool. Every "yes" row
-            // carries this timestamp: the digest tool sets it alongside the
-            // status, and the migration that added the column backfilled it.
-            { onsiteDigestAt: { isNotNull: true } },
-            // Dismissed: the digest tool's "X".
-            { onsiteDigestStatus: "no" },
-          ],
-        },
+        OR: [
+          deliberatelyFeaturedFilter,
+          // Dismissed: the digest tool's "X".
+          { digestPost: { onsiteDigestStatus: "no" } },
+        ],
       },
     },
     orderBy: { postedAt: "desc" },
