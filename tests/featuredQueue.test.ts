@@ -95,6 +95,33 @@ suite("Featured queue", () => {
     expect(ids).not.toContain(dismissed._id);
   });
 
+  test("the digest tool's onsite statuses keep a post out, except 'maybe'", async () => {
+    // `DigestPosts` shipped with only the status columns and gained
+    // `onsiteDigestAt` later, so a post the digest tool featured can carry
+    // `onsiteDigestStatus: "yes"` and no timestamp at all.
+    const withStatus = async (onsiteDigestStatus: string | null) => {
+      const post = await createTestPost({ ...queueEligible });
+      await db.insert(digestPosts).values({
+        _id: randomId(),
+        digestId: randomId(),
+        postId: post._id,
+        onsiteDigestStatus,
+      });
+      return post._id;
+    };
+    const featuredNoTimestamp = await withStatus("yes");
+    const passedOver = await withStatus("no");
+    const shortlisted = await withStatus("maybe");
+    const noStatus = await withStatus(null);
+
+    const ids = await queueIds();
+    expect(ids).not.toContain(featuredNoTimestamp);
+    expect(ids).not.toContain(passedOver);
+    // Not yet a decision, so these stay up for review.
+    expect(ids).toContain(shortlisted);
+    expect(ids).toContain(noStatus);
+  });
+
   test("posts already featured by karma alone never enter the queue", async () => {
     const highKarma = await createTestPost({
       ...queueEligible,

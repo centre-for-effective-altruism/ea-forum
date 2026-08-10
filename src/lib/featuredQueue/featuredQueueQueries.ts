@@ -53,10 +53,10 @@ export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjectio
  * A post leaves the queue permanently once it has been featured by any of the
  * three routes onto the homepage Featured list (see
  * `fetchFeaturedFrontpagePosts`): this queue (`posts.onsiteDigestAt`), the
- * digest tool (`DigestPosts.onsiteDigestAt`), or reaching
- * `FEATURED_KARMA_THRESHOLD` karma as a non-community post, which features it
- * with no admin action at all. It also leaves once dismissed, which records the
- * digest tool's "X" (`DigestPosts.onsiteDigestStatus = "no"`).
+ * digest tool (`DigestPosts.onsiteDigestAt`, or an `onsiteDigestStatus` of
+ * "yes"), or reaching `FEATURED_KARMA_THRESHOLD` karma as a non-community post,
+ * which features it with no admin action at all. It also leaves once dismissed,
+ * which records the digest tool's "X" (`onsiteDigestStatus = "no"`).
  *
  * Each of those signals is durable: none of them is reset by an author editing
  * or re-publishing a post, and the karma one reads `maxBaseScore` (a
@@ -85,10 +85,17 @@ export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
           NOT: {
             digestPost: {
               OR: [
-                // Featured via the digest tool.
+                // Featured via the digest tool, which stamps a time...
                 { onsiteDigestAt: { isNotNull: true } },
-                // Dismissed: the digest tool's "X" / "no" onsite status.
-                { onsiteDigestStatus: "no" },
+                // ...but the status is where the digest tool has always
+                // recorded the decision: `DigestPosts` shipped with only the
+                // status columns and gained `onsiteDigestAt` later, so a post
+                // it featured can carry the status and no timestamp at all.
+                // Any decided status counts, "yes" (featured) as much as "no"
+                // (the digest tool's "X"). "maybe" is a shortlist rather than a
+                // decision, so those posts stay in the queue — as do posts with
+                // no status at all, since `notIn` never matches NULL.
+                { onsiteDigestStatus: { notIn: ["maybe"] } },
               ],
             },
           },
