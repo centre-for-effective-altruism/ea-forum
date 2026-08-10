@@ -201,17 +201,11 @@ export default function FeaturedQueuePage({
       )}
 
       <div className="mt-6 text-[12px] font-[500] leading-normal text-gray-600">
-        Admins only. Featuring stamps{" "}
-        <span className="font-mono text-[11px]">onsiteDigestAt</span> on the post,
-        which is what the homepage Featured list reads. Dismissing means &ldquo;never
-        show me this again&rdquo; and nothing more: it records the digest
-        tool&rsquo;s <span className="font-mono text-[11px]">&ldquo;X&rdquo;</span>{" "}
-        (onsite digest status <span className="font-mono text-[11px]">no</span>) and
-        leaves featured status alone, so dismissing a post that is already on the
-        Featured list — including one that got there on karma alone — keeps it there.
-        Posts featured from here or from the digest tool don&rsquo;t come back,
-        whatever happens to them afterwards. Personal blogposts never appear:
-        they&rsquo;ve already been assessed as not frontpage material.
+        Admins only. Featuring puts a post on the homepage Featured list, at the top.
+        Dismissing means &ldquo;never show me this again&rdquo; and nothing more — it
+        doesn&rsquo;t change whether a post is featured, so dismissing one
+        that&rsquo;s already on the Featured list keeps it there. Personal blogposts
+        never appear here.
       </div>
     </main>
   );

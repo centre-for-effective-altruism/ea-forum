@@ -1,6 +1,7 @@
 import "server-only";
 
 import { inArray } from "drizzle-orm";
+import difference from "lodash/difference";
 import { db, DbOrTransaction } from "../db";
 import { digestPosts, posts, type InsertDigestPost } from "../schema";
 import { randomId } from "../utils/random";
@@ -16,11 +17,6 @@ export interface FeaturedQueueWriteResult {
   count: number;
   skippedPostIds: string[];
 }
-
-const skipped = (postIds: string[], handledIds: string[]): string[] => {
-  const handled = new Set(handledIds);
-  return postIds.filter((id) => !handled.has(id));
-};
 
 /**
  * Feature the given posts on the homepage by stamping `posts.onsiteDigestAt`
@@ -51,7 +47,7 @@ export const featurePosts = async (
   }
   return {
     count: featurableIds.length,
-    skippedPostIds: skipped(postIds, featurableIds),
+    skippedPostIds: difference(postIds, featurableIds),
   };
 };
 
@@ -102,13 +98,15 @@ export const dismissPosts = async (
   );
   // The newest digest is the fallback for a post older than every digest: the
   // row is only somewhere to keep the decision, and refusing to record one
-  // would leave the post coming back forever.
-  const newestDigestId = digestBounds[0]?._id ?? null;
-  const coveringDigestId = (postedAt: string | null): string | null => {
-    if (!postedAt) {
-      return newestDigestId;
-    }
-    const postedMs = new Date(postedAt).getTime();
+  // would leave the post coming back forever. With no digests at all there's
+  // nowhere to put it, so report the posts back instead.
+  const newestDigestId = digestBounds[0]?._id;
+  if (!newestDigestId) {
+    return { count: 0, skippedPostIds: postIds };
+  }
+  const coveringDigestId = (postedAt: string | null): string => {
+    // No postedAt matches no digest start, so it lands on the same fallback.
+    const postedMs = postedAt ? new Date(postedAt).getTime() : -Infinity;
     return digestBounds.find((d) => d.startMs <= postedMs)?._id ?? newestDigestId;
   };
 
@@ -121,17 +119,10 @@ export const dismissPosts = async (
   );
 
   const now = new Date().toISOString();
-  const dismissedIds: string[] = [];
   const rowIdsToUpdate: string[] = [];
   const rowsToInsert: InsertDigestPost[] = [];
   for (const post of dismissable) {
     const digestId = coveringDigestId(post.postedAt);
-    // Only reachable when no digest exists at all, so there's nowhere to keep
-    // the decision. Reported back rather than silently dropped.
-    if (!digestId) {
-      continue;
-    }
-    dismissedIds.push(post._id);
     const existingId = existingRowId.get(`${post._id}:${digestId}`);
     if (existingId) {
       rowIdsToUpdate.push(existingId);
@@ -159,7 +150,10 @@ export const dismissPosts = async (
   }
 
   return {
-    count: dismissedIds.length,
-    skippedPostIds: skipped(postIds, dismissedIds),
+    count: dismissable.length,
+    skippedPostIds: difference(
+      postIds,
+      dismissable.map((post) => post._id),
+    ),
   };
 };

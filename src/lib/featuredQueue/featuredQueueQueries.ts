@@ -21,6 +21,14 @@ export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-28T00:00:00.000Z");
 /** Cap on the number of posts loaded into the queue at once. */
 const QUEUE_LIMIT = 100;
 
+/**
+ * The digest tool's onsite statuses that amount to a decision. It cycles a post
+ * through "yes", "maybe", "no" and back to no status at all; "maybe" is a
+ * shortlist and no status means untouched, so neither takes a post out of the
+ * queue.
+ */
+const DECIDED_ONSITE_DIGEST_STATUSES = ["yes", "no"];
+
 const featuredQueueProjection = {
   columns: {
     _id: true,
@@ -48,34 +56,23 @@ export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjectio
  * There's no time window beyond the launch cutoff, so the queue is simply
  * everything since last review.
  *
- * A post leaves the queue for good once it carries a decision, and a decision is
- * exactly one of two things:
+ * A post leaves the queue for good once it carries a decision — featured or
+ * dismissed.
  *
- *  - Featured, meaning someone deliberately put it on the homepage Featured
- *    list: this queue (`posts.onsiteDigestAt`) or the digest tool
- *    (`DigestPosts.onsiteDigestAt`, or an `onsiteDigestStatus` of "yes"). Note
- *    `DigestPosts` shipped with only the status columns and gained
- *    `onsiteDigestAt` later, so a post the digest tool featured can carry the
- *    status and no timestamp at all.
- *  - Dismissed (`onsiteDigestStatus = "no"`), meaning "never show me this
- *    again". Dismissal is deliberately independent of whether the post is
- *    featured: dismissing never un-features anything, and a post that is
- *    featured by some other route — reaching the karma threshold on its own, say
- *    — stays on the Featured list once dismissed. It just stops appearing here.
+ * Featured means someone deliberately put it on the homepage Featured list,
+ * from this queue (`posts.onsiteDigestAt`) or from the digest tool
+ * (`DigestPosts.onsiteDigestAt`, or a "yes" status on rows old enough to predate
+ * that column). Dismissed is the digest tool's "X"; see `dismissPosts` for what
+ * it does and doesn't change.
  *
- * Reaching the karma threshold is not a decision, so those posts do keep
- * appearing until you feature or dismiss them. That's deliberate: they're on the
- * Featured list without anyone choosing to put them there, so you still get the
- * chance to rule on them, and dismissing one leaves it featured.
+ * Reaching the karma threshold is not a decision, so posts the homepage features
+ * on karma alone (see `fetchFeaturedFrontpagePosts`) keep appearing here until
+ * they're ruled on. Personal blogposts (no `frontpageDate`) never appear: a
+ * moderator has already assessed them as not frontpage material.
  *
- * Both signals are durable — neither is reset by an author editing or
- * re-publishing a post, nor by karma moving — which is what stops a post you've
- * already ruled on coming back. Re-serving a post you already featured is worse
- * than missing one: featuring it again re-stamps `onsiteDigestAt` with the
- * current time, which jumps it above posts featured more recently.
- *
- * Personal blogposts (no `frontpageDate`) never appear: a moderator has already
- * assessed them as not frontpage material, let alone featured.
+ * Re-serving a post that was already featured is worse than missing one:
+ * featuring it again re-stamps `onsiteDigestAt` with the current time, which
+ * jumps it above posts featured more recently.
  */
 export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
   return db.query.posts.findMany({
@@ -85,19 +82,16 @@ export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
       postedAt: { gte: FEATURED_QUEUE_LAUNCH_DATE.toISOString() },
       // Personal blogposts have already been judged off the frontpage.
       frontpageDate: { isNotNull: true },
-      // Featured via this queue.
+      // Not yet featured from this queue.
       onsiteDigestAt: { isNull: true },
       NOT: {
         digestPost: {
           OR: [
             // Featured via the digest tool, which stamps a time...
             { onsiteDigestAt: { isNotNull: true } },
-            // ...but the status is where it has always recorded the decision.
-            // Any decided status counts, "yes" (featured) as much as "no"
-            // (dismissed). "maybe" is a shortlist rather than a decision, so
-            // those posts stay in the queue — as do posts with no status at
-            // all, since `notIn` never matches NULL.
-            { onsiteDigestStatus: { notIn: ["maybe"] } },
+            // ...though the status is where it records the decision, and rows
+            // predating that column carry only the status.
+            { onsiteDigestStatus: { in: DECIDED_ONSITE_DIGEST_STATUSES } },
           ],
         },
       },

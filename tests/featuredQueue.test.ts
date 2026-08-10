@@ -1,6 +1,6 @@
 import { beforeEach, expect, suite, test, vi } from "vitest";
 import { db } from "@/lib/db";
-import { digestPosts, digests, posts } from "@/lib/schema";
+import { digestPosts, digests, posts, type InsertDigestPost } from "@/lib/schema";
 import { randomId } from "@/lib/utils/random";
 import { nHoursAgo } from "@/lib/timeUtils";
 import { createTestPost } from "./testHelpers";
@@ -44,6 +44,21 @@ const createCoveringDigest = async (): Promise<string> => {
   return digestId;
 };
 
+/** A digest row for `postId`, in a digest of its own unless one is given. */
+const createTestDigestPost = async (
+  postId: string,
+  fields: Partial<InsertDigestPost> = {},
+): Promise<string> => {
+  const values: InsertDigestPost = {
+    _id: randomId(),
+    digestId: randomId(),
+    postId,
+    ...fields,
+  };
+  await db.insert(digestPosts).values(values);
+  return values._id;
+};
+
 suite("Featured queue", () => {
   beforeEach(async () => {
     await Promise.all([
@@ -66,20 +81,12 @@ suite("Featured queue", () => {
     });
 
     const featuredViaDigestTool = await createTestPost({ ...queueEligible });
-    await db.insert(digestPosts).values({
-      _id: randomId(),
-      digestId: randomId(),
-      postId: featuredViaDigestTool._id,
+    await createTestDigestPost(featuredViaDigestTool._id, {
       onsiteDigestAt: afterLaunch,
     });
 
     const dismissed = await createTestPost({ ...queueEligible });
-    await db.insert(digestPosts).values({
-      _id: randomId(),
-      digestId: randomId(),
-      postId: dismissed._id,
-      onsiteDigestStatus: "no",
-    });
+    await createTestDigestPost(dismissed._id, { onsiteDigestStatus: "no" });
 
     const ids = await queueIds();
 
@@ -97,12 +104,7 @@ suite("Featured queue", () => {
     // `onsiteDigestStatus: "yes"` and no timestamp at all.
     const withStatus = async (onsiteDigestStatus: string | null) => {
       const post = await createTestPost({ ...queueEligible });
-      await db.insert(digestPosts).values({
-        _id: randomId(),
-        digestId: randomId(),
-        postId: post._id,
-        onsiteDigestStatus,
-      });
+      await createTestDigestPost(post._id, { onsiteDigestStatus });
       return post._id;
     };
     const featuredNoTimestamp = await withStatus("yes");
@@ -150,10 +152,8 @@ suite("Featured queue", () => {
       onsiteDigestAt: afterLaunch,
     });
     const viaDigestTool = await createTestPost({ ...queueEligible });
-    await db.insert(digestPosts).values({
-      _id: randomId(),
+    await createTestDigestPost(viaDigestTool._id, {
       digestId,
-      postId: viaDigestTool._id,
       onsiteDigestAt: afterLaunch,
     });
 
@@ -271,11 +271,8 @@ suite("Featured queue", () => {
   test("dismissPosts updates an existing digest row without duplicating it", async () => {
     const digestId = await createCoveringDigest();
     const post = await createTestPost({ ...queueEligible });
-    const rowId = randomId();
-    await db.insert(digestPosts).values({
-      _id: rowId,
+    const rowId = await createTestDigestPost(post._id, {
       digestId,
-      postId: post._id,
       emailDigestStatus: "yes",
     });
 
