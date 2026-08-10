@@ -117,28 +117,6 @@ suite("Featured queue", () => {
     expect(ids).not.toContain(dismissed._id);
   });
 
-  test("the digest tool's onsite statuses keep a post out, except 'maybe'", async () => {
-    // `DigestPosts` shipped with only the status columns and gained
-    // `onsiteDigestAt` later, so a post the digest tool featured can carry
-    // `onsiteDigestStatus: "yes"` and no timestamp at all.
-    const withStatus = async (onsiteDigestStatus: string | null) => {
-      const post = await createTestPost({ ...queueEligible });
-      await createTestDigestPost(post._id, { onsiteDigestStatus });
-      return post._id;
-    };
-    const featuredNoTimestamp = await withStatus("yes");
-    const passedOver = await withStatus("no");
-    const shortlisted = await withStatus("maybe");
-    const noStatus = await withStatus(null);
-
-    const ids = await queueIds();
-    expect(ids).not.toContain(featuredNoTimestamp);
-    expect(ids).not.toContain(passedOver);
-    // Not yet a decision, so these stay up for review.
-    expect(ids).toContain(shortlisted);
-    expect(ids).toContain(noStatus);
-  });
-
   test("dismissing a karma-featured post keeps it featured and out of the queue", async () => {
     await createCoveringDigest();
     // Reaching the karma threshold isn't a decision anyone made, so the post
@@ -156,7 +134,7 @@ suite("Featured queue", () => {
     expect(await onFeaturedList()).toContain(highKarma._id);
     expect(await queueIds()).toContain(highKarma._id);
 
-    const { count } = await dismissPosts([highKarma._id]);
+    const count = await dismissPosts([highKarma._id]);
     expect(count).toBe(1);
 
     // Dismissal is only "stop showing me this": it stays on the Featured list.
@@ -177,7 +155,7 @@ suite("Featured queue", () => {
       onsiteDigestAt: afterLaunch,
     });
 
-    const { count } = await dismissPosts([viaQueue._id, viaDigestTool._id]);
+    const count = await dismissPosts([viaQueue._id, viaDigestTool._id]);
     expect(count).toBe(2);
 
     // Being featured already keeps them out of the queue, so there is nothing
@@ -249,9 +227,7 @@ suite("Featured queue", () => {
       frontpageDate: beforeLaunch,
     });
 
-    const { count, skippedPostIds } = await dismissPosts([oldPost._id]);
-    expect(count).toBe(1);
-    expect(skippedPostIds).toEqual([]);
+    expect(await dismissPosts([oldPost._id])).toBe(1);
 
     const row = await db.query.digestPosts.findFirst({
       where: { postId: oldPost._id },
@@ -262,15 +238,11 @@ suite("Featured queue", () => {
 
   test("writes report anything they could not record", async () => {
     const draft = await createTestPost({ ...queueEligible, draft: true });
-    const featured = await featurePosts([draft._id]);
-    expect(featured.count).toBe(0);
-    expect(featured.skippedPostIds).toEqual([draft._id]);
+    expect(await featurePosts([draft._id])).toBe(0);
 
     // No digests exist at all, so there's nowhere to record a dismissal.
     const post = await createTestPost({ ...queueEligible });
-    const dismissed = await dismissPosts([post._id]);
-    expect(dismissed.count).toBe(0);
-    expect(dismissed.skippedPostIds).toEqual([post._id]);
+    expect(await dismissPosts([post._id])).toBe(0);
     expect(await queueIds()).toContain(post._id);
   });
 
@@ -290,9 +262,7 @@ suite("Featured queue", () => {
     const toFeature = await createTestPost({ ...queueEligible });
     const draft = await createTestPost({ ...queueEligible, draft: true });
 
-    const { count, skippedPostIds } = await featurePosts([toFeature._id, draft._id]);
-    expect(count).toBe(1);
-    expect(skippedPostIds).toEqual([draft._id]);
+    expect(await featurePosts([toFeature._id, draft._id])).toBe(1);
 
     const stamped = await db.query.posts.findFirst({
       columns: { onsiteDigestAt: true },
@@ -316,7 +286,7 @@ suite("Featured queue", () => {
 
     expect(await queueIds()).toContain(toDismiss._id);
 
-    const { count } = await dismissPosts([toDismiss._id]);
+    const count = await dismissPosts([toDismiss._id]);
     expect(count).toBe(1);
 
     const row = await db.query.digestPosts.findFirst({
@@ -336,7 +306,7 @@ suite("Featured queue", () => {
       emailDigestStatus: "yes",
     });
 
-    const { count } = await dismissPosts([post._id]);
+    const count = await dismissPosts([post._id]);
     expect(count).toBe(1);
 
     const rows = await db.query.digestPosts.findMany({

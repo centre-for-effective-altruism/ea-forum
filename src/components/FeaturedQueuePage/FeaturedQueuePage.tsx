@@ -105,17 +105,16 @@ export default function FeaturedQueuePage({
     setPublishing(true);
     const toastId = toast.loading("Publishing to homepage...");
     try {
-      const { featuredCount, dismissedCount, skippedPostIds } =
+      const { featuredCount, dismissedCount, skippedCount } =
         await rpc.featuredQueue.publish({
           featurePostIds,
           dismissPostIds,
         });
       toast.success(`Featured ${featuredCount} · dismissed ${dismissedCount}`);
-      if (skippedPostIds.length > 0) {
-        toast.error(
-          `${skippedPostIds.length} couldn't be saved and are still in the queue`,
-          { duration: 8000 },
-        );
+      if (skippedCount > 0) {
+        toast.error(`${skippedCount} couldn't be saved and are still in the queue`, {
+          duration: 8000,
+        });
       }
       setDecisions(new Map());
       setCursor(0);

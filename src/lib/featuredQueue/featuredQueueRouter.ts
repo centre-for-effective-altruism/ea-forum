@@ -22,14 +22,17 @@ export const featuredQueueRouter = {
       }
       // featurePosts / dismissPosts each no-op on an empty list.
       return db.transaction(async (txn) => {
-        const featured = await featurePosts(input.featurePostIds, txn);
-        const dismissed = await dismissPosts(input.dismissPostIds, txn);
+        const featuredCount = await featurePosts(input.featurePostIds, txn);
+        const dismissedCount = await dismissPosts(input.dismissPostIds, txn);
         return {
-          featuredCount: featured.count,
-          dismissedCount: dismissed.count,
+          featuredCount,
+          dismissedCount,
           // Anything that couldn't be recorded stays in the queue, so say so
           // rather than reporting a clean run.
-          skippedPostIds: [...featured.skippedPostIds, ...dismissed.skippedPostIds],
+          skippedCount:
+            input.featurePostIds.length -
+            featuredCount +
+            (input.dismissPostIds.length - dismissedCount),
         };
       });
     }),

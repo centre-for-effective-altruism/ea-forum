@@ -21,14 +21,6 @@ export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-28T00:00:00.000Z");
 /** Cap on the number of posts loaded into the queue at once. */
 const QUEUE_LIMIT = 100;
 
-/**
- * The digest tool's onsite statuses that amount to a decision. It cycles a post
- * through "yes", "maybe", "no" and back to no status at all; "maybe" is a
- * shortlist and no status means untouched, so neither takes a post out of the
- * queue.
- */
-const DECIDED_ONSITE_DIGEST_STATUSES = ["yes", "no"];
-
 const featuredQueueProjection = {
   columns: {
     _id: true,
@@ -60,10 +52,9 @@ export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjectio
  * dismissed.
  *
  * Featured means someone deliberately put it on the homepage Featured list,
- * from this queue (`posts.onsiteDigestAt`) or from the digest tool
- * (`DigestPosts.onsiteDigestAt`, or a "yes" status on rows old enough to predate
- * that column). Dismissed is the digest tool's "X"; see `dismissPosts` for what
- * it does and doesn't change.
+ * from this queue or from the digest tool — both stamp `onsiteDigestAt`.
+ * Dismissed is the digest tool's "X"; see `dismissPosts` for what it does and
+ * doesn't change.
  *
  * Reaching the karma threshold is not a decision, so posts the homepage features
  * on karma alone (see `fetchFeaturedFrontpagePosts`) keep appearing here until
@@ -87,11 +78,12 @@ export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
       NOT: {
         digestPost: {
           OR: [
-            // Featured via the digest tool, which stamps a time...
+            // Featured, from here or from the digest tool. Every "yes" row
+            // carries this timestamp: the digest tool sets it alongside the
+            // status, and the migration that added the column backfilled it.
             { onsiteDigestAt: { isNotNull: true } },
-            // ...though the status is where it records the decision, and rows
-            // predating that column carry only the status.
-            { onsiteDigestStatus: { in: DECIDED_ONSITE_DIGEST_STATUSES } },
+            // Dismissed: the digest tool's "X".
+            { onsiteDigestStatus: "no" },
           ],
         },
       },

@@ -1,22 +1,10 @@
 import "server-only";
 
 import { inArray } from "drizzle-orm";
-import difference from "lodash/difference";
 import { db, DbOrTransaction } from "../db";
 import { digestPosts, posts, type InsertDigestPost } from "../schema";
 import { randomId } from "../utils/random";
 import { viewablePostFilter } from "../posts/postLists";
-
-/**
- * The outcome of a queue write. `skippedPostIds` are posts the write could not
- * record, which stay in the queue and so would come back next time. They're
- * reported rather than swallowed: a silent no-op here looks exactly like a post
- * re-appearing for no reason.
- */
-export interface FeaturedQueueWriteResult {
-  count: number;
-  skippedPostIds: string[];
-}
 
 interface DecidablePost {
   _id: string;
@@ -35,17 +23,17 @@ type OnsiteDigestDecision = Pick<
  * it if present, else insert one (as the digest tool does lazily).
  *
  * Only the given fields are written, so a decision that omits `onsiteDigestAt`
- * leaves any existing timestamp alone. Returns the ids actually recorded, which
- * is every post passed in unless there are no digests at all and so nowhere to
- * put the decision.
+ * leaves any existing timestamp alone. Returns how many posts were recorded,
+ * which is all of them unless there are no digests at all and so nowhere to put
+ * the decision.
  */
 const recordOnsiteDigestDecision = async (
   decidable: DecidablePost[],
   decision: OnsiteDigestDecision,
   dbOrTxn: DbOrTransaction,
-): Promise<string[]> => {
+): Promise<number> => {
   if (decidable.length === 0) {
-    return [];
+    return 0;
   }
 
   // Precompute each digest's start as a timestamp, newest-first, so the first
@@ -65,7 +53,7 @@ const recordOnsiteDigestDecision = async (
   // nowhere to put it, so record nothing and let the caller report it.
   const newestDigestId = digestBounds[0]?._id;
   if (!newestDigestId) {
-    return [];
+    return 0;
   }
   const coveringDigestId = (postedAt: string | null): string => {
     // No postedAt matches no digest start, so it lands on the same fallback.
@@ -110,14 +98,15 @@ const recordOnsiteDigestDecision = async (
     await dbOrTxn.insert(digestPosts).values(rowsToInsert);
   }
 
-  return decidable.map((post) => post._id);
+  return decidable.length;
 };
 
 /**
  * Feature the given posts on the homepage by stamping `posts.onsiteDigestAt`,
  * which the homepage Featured list reads. Only posts that are still genuinely
  * featurable are stamped, so a stale client can't feature a post that has since
- * been withdrawn; anything skipped is reported back.
+ * been withdrawn. Returns how many were featured, so the caller can tell you
+ * about any that weren't rather than quietly doing nothing.
  *
  * The post is also marked "yes" in the digest tool, which is what keeps the
  * featuring alive. That tool recomputes `posts.onsiteDigestAt` from its own rows
@@ -133,9 +122,9 @@ const recordOnsiteDigestDecision = async (
 export const featurePosts = async (
   postIds: string[],
   dbOrTxn: DbOrTransaction = db,
-): Promise<FeaturedQueueWriteResult> => {
+): Promise<number> => {
   if (postIds.length === 0) {
-    return { count: 0, skippedPostIds: [] };
+    return 0;
   }
   const featurable = await dbOrTxn.query.posts.findMany({
     columns: { _id: true, postedAt: true },
@@ -159,10 +148,7 @@ export const featurePosts = async (
       dbOrTxn,
     );
   }
-  return {
-    count: featurableIds.length,
-    skippedPostIds: difference(postIds, featurableIds),
-  };
+  return featurableIds.length;
 };
 
 /**
@@ -176,15 +162,15 @@ export const featurePosts = async (
  * (`onsiteDigestStatus = "no"`), which takes it out of the queue without
  * touching how the homepage treats it.
  *
- * Posts that couldn't be recorded at all are reported back rather than silently
- * dropped, since those would reappear in the queue.
+ * Returns how many were dismissed, so the caller can tell you about any that
+ * weren't rather than leaving them to reappear unexplained.
  */
 export const dismissPosts = async (
   postIds: string[],
   dbOrTxn: DbOrTransaction = db,
-): Promise<FeaturedQueueWriteResult> => {
+): Promise<number> => {
   if (postIds.length === 0) {
-    return { count: 0, skippedPostIds: [] };
+    return 0;
   }
 
   // Only act on real posts, and grab what we need to place the digest row and
@@ -192,30 +178,20 @@ export const dismissPosts = async (
   const dismissable = await dbOrTxn.query.posts.findMany({
     columns: { _id: true, postedAt: true, onsiteDigestAt: true },
     where: { _id: { in: postIds } },
-    with: {
-      digestPost: {
-        columns: { onsiteDigestStatus: true, onsiteDigestAt: true },
-      },
-    },
+    with: { digestPost: { columns: { onsiteDigestAt: true } } },
   });
 
-  const featured = dismissable.filter(
+  // A featured post is already out of the queue, so there's nothing to record —
+  // and writing "no" over the digest tool's "yes" would un-feature it.
+  const unfeatured = dismissable.filter(
     (post) =>
-      post.onsiteDigestAt !== null ||
-      post.digestPost.some(
-        (row) => row.onsiteDigestAt !== null || row.onsiteDigestStatus === "yes",
-      ),
+      post.onsiteDigestAt === null &&
+      post.digestPost.every((row) => row.onsiteDigestAt === null),
   );
-  const featuredIds = featured.map((post) => post._id);
-  const recordedIds = await recordOnsiteDigestDecision(
-    dismissable.filter((post) => !featuredIds.includes(post._id)),
+  const recorded = await recordOnsiteDigestDecision(
+    unfeatured,
     { onsiteDigestStatus: "no" },
     dbOrTxn,
   );
-
-  const dismissedIds = [...featuredIds, ...recordedIds];
-  return {
-    count: dismissedIds.length,
-    skippedPostIds: difference(postIds, dismissedIds),
-  };
+  return dismissable.length - unfeatured.length + recorded;
 };
