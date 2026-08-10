@@ -1,4 +1,5 @@
 import { beforeEach, expect, suite, test, vi } from "vitest";
+import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { digestPosts, digests, posts, type InsertDigestPost } from "@/lib/schema";
 import { randomId } from "@/lib/utils/random";
@@ -42,6 +43,24 @@ const createCoveringDigest = async (): Promise<string> => {
     startDate: FEATURED_QUEUE_LAUNCH_DATE.toISOString(),
   });
   return digestId;
+};
+
+/**
+ * What the legacy digest tool does to a post whenever any of its digest rows
+ * change (ForumMagnum's `PostsRepo.updateOnsiteDigestAt`): it recomputes the
+ * post's featured stamp from that post's "yes" rows, nulling it when there are
+ * none. This is what used to wipe featurings made from this queue.
+ */
+const runDigestToolRecompute = async (postId: string) => {
+  await db.execute(sql`
+    UPDATE "Posts"
+    SET "onsiteDigestAt" = (
+      SELECT MAX("onsiteDigestAt")
+      FROM "DigestPosts"
+      WHERE "postId" = ${postId} AND "onsiteDigestStatus" = 'yes'
+    )
+    WHERE "_id" = ${postId}
+  `);
 };
 
 /** A digest row for `postId`, in a digest of its own unless one is given. */
@@ -145,7 +164,7 @@ suite("Featured queue", () => {
     expect(await queueIds()).not.toContain(highKarma._id);
   });
 
-  test("dismissing a featured post does not un-feature it", async () => {
+  test("dismissing a featured post leaves it alone entirely", async () => {
     const digestId = await createCoveringDigest();
     const viaQueue = await createTestPost({
       ...queueEligible,
@@ -154,13 +173,15 @@ suite("Featured queue", () => {
     const viaDigestTool = await createTestPost({ ...queueEligible });
     await createTestDigestPost(viaDigestTool._id, {
       digestId,
+      onsiteDigestStatus: "yes",
       onsiteDigestAt: afterLaunch,
     });
 
     const { count } = await dismissPosts([viaQueue._id, viaDigestTool._id]);
     expect(count).toBe(2);
 
-    // Both featured stamps survive untouched.
+    // Being featured already keeps them out of the queue, so there is nothing
+    // to record — and writing "no" over the "yes" would un-feature them.
     const queueStamp = await db.query.posts.findFirst({
       columns: { onsiteDigestAt: true },
       where: { _id: viaQueue._id },
@@ -170,14 +191,53 @@ suite("Featured queue", () => {
     const digestRow = await db.query.digestPosts.findFirst({
       where: { postId: viaDigestTool._id },
     });
+    expect(digestRow?.onsiteDigestStatus).toBe("yes");
     expect(digestRow?.onsiteDigestAt).not.toBeNull();
-    expect(digestRow?.onsiteDigestStatus).toBe("no");
 
     const featuredIds = (
       await fetchFeaturedFrontpagePosts({ currentUser: null })
     ).map((post) => post._id);
     expect(featuredIds).toContain(viaQueue._id);
     expect(featuredIds).toContain(viaDigestTool._id);
+
+    const ids = await queueIds();
+    expect(ids).not.toContain(viaQueue._id);
+    expect(ids).not.toContain(viaDigestTool._id);
+  });
+
+  test("featuring marks the post 'yes' in the digest tool", async () => {
+    const digestId = await createCoveringDigest();
+    const post = await createTestPost({ ...queueEligible });
+
+    await featurePosts([post._id]);
+
+    const row = await db.query.digestPosts.findFirst({
+      where: { postId: post._id },
+    });
+    expect(row?.digestId).toBe(digestId);
+    expect(row?.onsiteDigestStatus).toBe("yes");
+    expect(row?.onsiteDigestAt).not.toBeNull();
+  });
+
+  test("a featured post survives the digest tool's recompute", async () => {
+    await createCoveringDigest();
+    const post = await createTestPost({ ...queueEligible });
+    await featurePosts([post._id]);
+
+    // Anyone touching this post in the digest tool triggers the recompute —
+    // including editing only its email digest status.
+    await runDigestToolRecompute(post._id);
+
+    const stamped = await db.query.posts.findFirst({
+      columns: { onsiteDigestAt: true },
+      where: { _id: post._id },
+    });
+    expect(stamped?.onsiteDigestAt).not.toBeNull();
+
+    expect(
+      (await fetchFeaturedFrontpagePosts({ currentUser: null })).map((p) => p._id),
+    ).toContain(post._id);
+    expect(await queueIds()).not.toContain(post._id);
   });
 
   test("dismissal falls back to the newest digest for a post no digest covers", async () => {
