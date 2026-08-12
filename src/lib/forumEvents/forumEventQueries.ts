@@ -38,7 +38,9 @@ export const forumEventBaseProjection = {
     publicData: true,
     pollAgreeWording: true,
     pollDisagreeWording: true,
+    startDate: true,
     endDate: true,
+    hideBanner: true,
   },
   with: {
     pollQuestion: {
@@ -66,6 +68,12 @@ export const forumEventBaseProjection = {
         slug: true,
       },
     },
+  },
+  extras: {
+    frontpageDescriptionHtml: (posts, { sql }) =>
+      sql<string | null>`${posts}."frontpageDescription"->>'html'`,
+    frontpageDescriptionMobileHtml: (posts, { sql }) =>
+      sql<string | null>`${posts}."frontpageDescriptionMobile"->>'html'`,
   },
 } as const satisfies ForumEventRelationalProjection;
 
@@ -300,4 +308,21 @@ export const setLatestPollVote = async (
         eq(comments.userId, currentUser._id),
       ),
     );
+};
+
+export const fetchCurrentForumEvent = async (): Promise<ForumEventBase | null> => {
+  const now = new Date().toISOString();
+  const result = await db.query.forumEvents.findFirst({
+    ...forumEventBaseProjection,
+    where: {
+      startDate: { lte: now },
+      endDate: { gt: now },
+      isGlobal: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+      _id: "asc",
+    },
+  });
+  return result ?? null;
 };
