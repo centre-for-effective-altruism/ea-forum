@@ -21,9 +21,20 @@ export const featuredQueueRouter = {
         throw new Error("Permission denied");
       }
       // featurePosts / dismissPosts each no-op on an empty list.
-      return db.transaction(async (txn) => ({
-        featuredCount: await featurePosts(input.featurePostIds, txn),
-        dismissedCount: await dismissPosts(input.dismissPostIds, txn),
-      }));
+      return db.transaction(async (txn) => {
+        const featuredCount = await featurePosts(input.featurePostIds, txn);
+        const dismissedCount = await dismissPosts(input.dismissPostIds, txn);
+        return {
+          featuredCount,
+          dismissedCount,
+          // Anything that couldn't be recorded stays in the queue, so say so
+          // rather than reporting a clean run.
+          skippedCount:
+            input.featurePostIds.length +
+            input.dismissPostIds.length -
+            featuredCount -
+            dismissedCount,
+        };
+      });
     }),
 };

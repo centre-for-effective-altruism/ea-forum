@@ -663,18 +663,22 @@ export const fetchFeaturedFrontpagePosts = async ({
         {
           OR: [
             {
+              // Featured on karma alone, with no admin action. The Featured
+              // queue deliberately still offers these up for review — see
+              // `fetchFeaturedQueue`.
               baseScore: { gte: 100 },
               RAW: (postsTable) => excludeCommunity(postsTable),
             },
             {
-              // Featured via the digest tool.
+              // Deliberately featured, from the digest tool or the admin
+              // Featured queue — both write these two together, see
+              // `featurePosts`. The post's own column is also what the sort
+              // below reads, so it's what puts a new pick at the top.
               digestPost: {
                 onsiteDigestAt: { isNotNull: true },
               },
             },
             {
-              // Featured via the admin Featured queue, which stamps
-              // `onsiteDigestAt` on the post itself (see featuredQueueMutations).
               onsiteDigestAt: { isNotNull: true },
             },
           ],

@@ -107,7 +107,7 @@ export default function FeaturedQueueRow({
           </button>
           <button
             onClick={stop(onToggleDismiss)}
-            title="Dismiss (X)"
+            title="Dismiss — never show again, keeps featured status (X)"
             className={clsx(
               iconButtonClass,
               dismissed ? "text-error" : "text-gray-400",

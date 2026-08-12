@@ -105,11 +105,17 @@ export default function FeaturedQueuePage({
     setPublishing(true);
     const toastId = toast.loading("Publishing to homepage...");
     try {
-      const { featuredCount, dismissedCount } = await rpc.featuredQueue.publish({
-        featurePostIds,
-        dismissPostIds,
-      });
+      const { featuredCount, dismissedCount, skippedCount } =
+        await rpc.featuredQueue.publish({
+          featurePostIds,
+          dismissPostIds,
+        });
       toast.success(`Featured ${featuredCount} · dismissed ${dismissedCount}`);
+      if (skippedCount > 0) {
+        toast.error(`${skippedCount} couldn't be saved and are still in the queue`, {
+          duration: 8000,
+        });
+      }
       setDecisions(new Map());
       setCursor(0);
       router.refresh();
@@ -138,8 +144,8 @@ export default function FeaturedQueuePage({
         <div>
           <Type style="commentsHeader">Featured queue</Type>
           <div className="mt-0.5 text-[13px] font-[450] text-gray-600">
-            Everything since your last review · feature the ones for the homepage,
-            dismiss the rest · both clear the post from the queue
+            Frontpage posts since your last review · feature the ones for the
+            homepage, dismiss the rest · both clear the post from the queue
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 pt-1.5">
@@ -194,12 +200,11 @@ export default function FeaturedQueuePage({
       )}
 
       <div className="mt-6 text-[12px] font-[500] leading-normal text-gray-600">
-        Admins only. Featuring stamps{" "}
-        <span className="font-mono text-[11px]">onsiteDigestAt</span> on the post,
-        which is what the homepage Featured list reads. Dismissing records the digest
-        tool&rsquo;s <span className="font-mono text-[11px]">&ldquo;X&rdquo;</span>{" "}
-        (onsite digest status <span className="font-mono text-[11px]">no</span>), so
-        the post won&rsquo;t come back here or into the digest.
+        Admins only. Featuring puts a post on the homepage Featured list, at the top.
+        Dismissing means &ldquo;never show me this again&rdquo; and nothing more — it
+        doesn&rsquo;t change whether a post is featured, so dismissing one
+        that&rsquo;s already on the Featured list keeps it there. Personal blogposts
+        never appear here.
       </div>
     </main>
   );

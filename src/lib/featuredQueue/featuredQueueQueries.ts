@@ -6,6 +6,7 @@ import {
   viewablePostFilter,
   type PostFromProjection,
   type PostRelationalProjection,
+  type PostsFilter,
 } from "../posts/postLists";
 
 /**
@@ -20,6 +21,23 @@ export const FEATURED_QUEUE_LAUNCH_DATE = new Date("2026-07-28T00:00:00.000Z");
 
 /** Cap on the number of posts loaded into the queue at once. */
 const QUEUE_LIMIT = 100;
+
+/**
+ * A post someone deliberately put on the homepage Featured list, from this queue
+ * or from the digest tool. Both stamp `onsiteDigestAt` — the digest tool sets it
+ * alongside a "yes" status, and the migration that added the column backfilled
+ * the rows that predated it — so the timestamp alone catches every one.
+ *
+ * Reaching the karma threshold is deliberately not included: the homepage
+ * features those posts (see `fetchFeaturedFrontpagePosts`) without anyone
+ * choosing to, so they're still up for review here.
+ */
+export const deliberatelyFeaturedFilter = {
+  OR: [
+    { onsiteDigestAt: { isNotNull: true } },
+    { digestPost: { onsiteDigestAt: { isNotNull: true } } },
+  ],
+} as const satisfies PostsFilter;
 
 const featuredQueueProjection = {
   columns: {
@@ -44,13 +62,26 @@ const featuredQueueProjection = {
 export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjection>;
 
 /**
- * Viewable posts (published since launch) that are still awaiting a decision:
- * neither featured nor dismissed. A post leaves the queue permanently once it's
- * been featured — via this queue (`posts.onsiteDigestAt`) or the digest tool
- * (`DigestPosts.onsiteDigestAt`) — or dismissed, which records the digest
- * tool's "X" (`DigestPosts.onsiteDigestStatus = "no"`). There's no time window
- * beyond the launch cutoff, so the queue is simply everything since last
- * review.
+ * Frontpage posts (published since launch) that you haven't ruled on yet.
+ * There's no time window beyond the launch cutoff, so the queue is simply
+ * everything since last review.
+ *
+ * A post leaves the queue for good once it carries a decision — featured or
+ * dismissed.
+ *
+ * Featured means someone deliberately put it on the homepage Featured list,
+ * from this queue or from the digest tool — both stamp `onsiteDigestAt`.
+ * Dismissed is the digest tool's "X"; see `dismissPosts` for what it does and
+ * doesn't change.
+ *
+ * Reaching the karma threshold is not a decision, so posts the homepage features
+ * on karma alone (see `fetchFeaturedFrontpagePosts`) keep appearing here until
+ * they're ruled on. Personal blogposts (no `frontpageDate`) never appear: a
+ * moderator has already assessed them as not frontpage material.
+ *
+ * Re-serving a post that was already featured is worse than missing one:
+ * featuring it again re-stamps `onsiteDigestAt` with the current time, which
+ * jumps it above posts featured more recently.
  */
 export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
   return db.query.posts.findMany({
@@ -58,16 +89,14 @@ export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
     where: {
       ...viewablePostFilter,
       postedAt: { gte: FEATURED_QUEUE_LAUNCH_DATE.toISOString() },
-      onsiteDigestAt: { isNull: true },
+      // Personal blogposts have already been judged off the frontpage.
+      frontpageDate: { isNotNull: true },
       NOT: {
-        digestPost: {
-          OR: [
-            // Featured via the digest tool.
-            { onsiteDigestAt: { isNotNull: true } },
-            // Dismissed: the digest tool's "X" / "no" onsite status.
-            { onsiteDigestStatus: "no" },
-          ],
-        },
+        OR: [
+          deliberatelyFeaturedFilter,
+          // Dismissed: the digest tool's "X".
+          { digestPost: { onsiteDigestStatus: "no" } },
+        ],
       },
     },
     orderBy: { postedAt: "desc" },
