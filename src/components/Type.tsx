@@ -36,11 +36,11 @@ export const typeStyles = {
   featuredPostTitleLarge:
     "font-sans font-[600] text-[22px] leading-[120%] tracking-[0.44px] xl:text-[32px] xl:leading-[110%] xl:tracking-[0.64px]",
   editorialPageTitle:
-    "font-serif text-[48px] min-[600px]:text-[56px] min-[960px]:text-[72px] font-[600] tracking-[-0.05em] leading-[110%]",
+    "font-sans text-[48px] min-[600px]:text-[56px] min-[960px]:text-[72px] font-[600] tracking-[-0.07em] leading-[110%]",
   editorialPageDescription:
     "font-sans text-[19px] font-[500] tracking-[-0.02em] leading-[140%]",
-  editorialPageCardTitle: "font-serif text-[28px] font-[600] tracking-[-0.02em]",
-  editorialPageListTitle: "font-serif text-[30px] font-[600] tracking-[-0.02em]",
+  editorialPageCardTitle: "font-sans text-[28px] font-[600] tracking-[-0.02em]",
+  editorialPageListTitle: "font-sans text-[30px] font-[600] tracking-[-0.02em]",
   editorialPageAuthors:
     "font-sans text-[14px] font-[600] tracking-[-0.01em] leading-[140%]",
 } as const satisfies Record<string, string>;
