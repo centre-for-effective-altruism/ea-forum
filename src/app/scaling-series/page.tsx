@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchSequenceEvent } from "@/lib/sequences/sequenceEventQueries";
+import { fetchEditorialPageContent } from "@/lib/sequences/editorialPageContentQueries";
 import {
-  scalingSeriesEvent,
-  sequenceEventMetadata,
-} from "@/lib/sequences/sequenceEvents";
-import SequenceEventPage from "@/components/SequenceEventPage/SequenceEventPage";
+  editorialPageMetadata,
+  scalingSeriesPage,
+} from "@/lib/sequences/editorialPages";
+import EditorialPageDisplay from "@/components/EditorialPage/EditorialPageDisplay";
 
-export const metadata: Metadata = sequenceEventMetadata(scalingSeriesEvent);
+export const metadata: Metadata = editorialPageMetadata(scalingSeriesPage);
 
 export default async function ScalingSeriesPage() {
   const currentUser = await getCurrentUser();
-  const data = await fetchSequenceEvent({
+  const content = await fetchEditorialPageContent({
     currentUser,
-    config: scalingSeriesEvent,
+    config: scalingSeriesPage,
   });
-  if (!data) {
+  if (!content) {
     notFound();
   }
-  return <SequenceEventPage config={scalingSeriesEvent} {...data} />;
+  return <EditorialPageDisplay config={scalingSeriesPage} {...content} />;
 }

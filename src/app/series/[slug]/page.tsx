@@ -1,45 +1,50 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchSequenceEvent } from "@/lib/sequences/sequenceEventQueries";
-import { fetchSequenceEventPageBySlug } from "@/lib/sequences/sequenceEventPageQueries";
+import { fetchEditorialPageContent } from "@/lib/sequences/editorialPageContentQueries";
+import { fetchEditorialPageBySlug } from "@/lib/sequences/editorialPageQueries";
 import {
-  sequenceEventConfigFromPage,
-  sequenceEventMetadata,
-} from "@/lib/sequences/sequenceEvents";
-import SequenceEventPage from "@/components/SequenceEventPage/SequenceEventPage";
+  editorialPageConfig,
+  editorialPageMetadata,
+} from "@/lib/sequences/editorialPages";
+import EditorialPageDisplay from "@/components/EditorialPage/EditorialPageDisplay";
 
+/**
+ * Admin-created editorial pages. Readers reach these at `/<slug>`, which the
+ * proxy rewrites here — see `@/lib/proxy/legacySiteRedirect`. Admins also use
+ * this path directly to check a page before it's published.
+ */
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const page = await fetchSequenceEventPageBySlug(slug);
+  const page = await fetchEditorialPageBySlug(slug);
   if (!page) {
     return {};
   }
   return {
-    ...sequenceEventMetadata(sequenceEventConfigFromPage(page)),
+    ...editorialPageMetadata(editorialPageConfig(page)),
     robots: page.published ? undefined : "noindex",
   };
 }
 
-export default async function SeriesPage({ params }: PageProps) {
+export default async function EditorialPageRoute({ params }: PageProps) {
   const { slug } = await params;
   const [currentUser, page] = await Promise.all([
     getCurrentUser(),
-    fetchSequenceEventPageBySlug(slug),
+    fetchEditorialPageBySlug(slug),
   ]);
   // Unpublished pages are visible to admins so that they can be checked before
   // being shown to everybody else
   if (!page || (!page.published && !currentUser?.isAdmin)) {
     notFound();
   }
-  const config = sequenceEventConfigFromPage(page);
-  const data = await fetchSequenceEvent({ currentUser, config });
-  if (!data) {
+  const config = editorialPageConfig(page);
+  const content = await fetchEditorialPageContent({ currentUser, config });
+  if (!content) {
     notFound();
   }
-  return <SequenceEventPage config={config} {...data} />;
+  return <EditorialPageDisplay config={config} {...content} />;
 }

@@ -170,7 +170,10 @@ export const getPostSocialImageUrlWithDefaultBackup = (
   return `${prefix}SocialPreview/defaults/${backupImage}`;
 };
 
-export const getPostPlaintextDescription = (post: PostListItem): string | null => {
+export const getPostPlaintextDescription = (post: {
+  customHtmlHighlight?: string | null;
+  contents?: { htmlHighlight?: string | null } | null;
+}): string | null => {
   const highlightHtml = post.customHtmlHighlight || post.contents?.htmlHighlight;
   if (!highlightHtml) {
     return null;

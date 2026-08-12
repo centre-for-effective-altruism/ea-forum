@@ -10,7 +10,7 @@ import BellIcon from "@heroicons/react/24/solid/BellIcon";
 import BellOutlineIcon from "@heroicons/react/24/outline/BellIcon";
 import Loading from "../Loading";
 
-export default function SequenceEventSubscribeButton({
+export default function EditorialPageSubscribeButton({
   sequenceId,
   className,
 }: Readonly<{

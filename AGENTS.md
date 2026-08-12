@@ -108,6 +108,12 @@ Routes and the legacy proxy:
 - The owned-routes payload is shipped to the legacy site as a cookie; the file has a
   static check that throws in dev if `newSitePatterns` approaches the 4KB limit. If
   it fires, prune or group patterns rather than relaxing the threshold.
+- One exception to the static list: editorial pages (`src/lib/sequences/editorialPages.ts`)
+  are created by admins at runtime and served from a top level URL, so the proxy looks
+  their slugs up in the database (cached in memory) and rewrites to the
+  `/series/<slug>` route. Slugs are validated against a reserved list in
+  `editorialPagePaths.ts` so a page can't shadow a route on either site. Don't copy
+  this for ordinary routes - use `newSitePatterns`.
 
 Utilities and abstractions:
 

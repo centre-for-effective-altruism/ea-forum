@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import type { Placement } from "@floating-ui/react";
 import { useTracking } from "@/lib/analyticsEvents";
 import { isMobile } from "@/lib/environment";
 import { appendQueryParams } from "@/lib/routeHelpers";
@@ -21,6 +22,7 @@ export default function ShareButton({
   shareEventName = "share",
   campaign = "share",
   label,
+  placement = "bottom-end",
   className,
 }: Readonly<{
   title: string;
@@ -30,6 +32,7 @@ export default function ShareButton({
   campaign?: string;
   /** When set, the trigger is a labelled button rather than a tooltipped icon */
   label?: string;
+  placement?: Placement;
   /** Classes for the trigger button, replacing the default icon button styling */
   className?: string;
 }>) {
@@ -106,7 +109,7 @@ export default function ShareButton({
 
   return (
     <DropdownMenu
-      placement={label ? "bottom-start" : "bottom-end"}
+      placement={placement}
       className="text-gray-900"
       dismissRef={dismissRef}
       items={[

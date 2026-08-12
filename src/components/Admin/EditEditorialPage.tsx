@@ -1,39 +1,51 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { ReactNode, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { captureException } from "@sentry/nextjs";
 import { rpc } from "@/lib/rpc";
 import toast from "react-hot-toast";
 import {
-  sequenceEventPagePath,
-  sequenceEventPageSchema,
-  type SequenceEventPage,
-} from "@/lib/sequences/sequenceEvents";
+  editorialPageSchema,
+  type EditorialPage,
+} from "@/lib/sequences/editorialPages";
+import {
+  ADMIN_EDITORIAL_PAGES_PATH,
+  editorialPagePath,
+  editorialPageRoutePath,
+} from "@/lib/sequences/editorialPagePaths";
+import { sequenceGetSequencePageUrl } from "@/lib/sequences/sequenceHelpers";
 import DocumentSelect from "../Forms/DocumentSelect";
 import ImageUpload from "../Forms/ImageUpload";
 import ColorPicker from "../Forms/ColorPicker";
 import ToggleSwitch from "../Forms/ToggleSwitch";
 import Select from "../Forms/Select";
 import Input from "../Forms/Input";
+import Label from "../Forms/Label";
 import Button from "../Button";
 import Link from "../Link";
 import Type from "../Type";
-
-const ADMIN_PATH = "/admin/sequence-events";
 
 /** Colours are required by the schema, so they're never cleared to null */
 const setColor = (setValue: (value: string) => void) => (value: string | null) =>
   setValue(value ?? "#000000");
 
-export default function EditSequenceEventPage({
+const Hint = ({ children }: { children: ReactNode }) => (
+  <Type style="bodySmall" className="text-gray-600 -mt-2">
+    {children}
+  </Type>
+);
+
+export default function EditEditorialPage({
   page,
-  isNew,
+  previousSlug,
 }: Readonly<{
-  page: SequenceEventPage;
-  isNew: boolean;
+  page: EditorialPage;
+  /** The slug this page is stored under, absent when creating a new one */
+  previousSlug?: string;
 }>) {
   const router = useRouter();
+  const publishedId = useId();
   const [saving, setSaving] = useState(false);
   const [slug, setSlug] = useState(page.slug);
   const [sequenceId, setSequenceId] = useState(page.sequenceId);
@@ -47,8 +59,23 @@ export default function EditSequenceEventPage({
   const [postOrder, setPostOrder] = useState(page.postOrder);
   const [published, setPublished] = useState(page.published);
 
-  const onSave = useCallback(async () => {
-    const parsed = sequenceEventPageSchema.safeParse({
+  const run = async (loading: string, action: () => Promise<unknown>) => {
+    setSaving(true);
+    const toastId = toast.loading(loading);
+    try {
+      await action();
+      router.push(ADMIN_EDITORIAL_PAGES_PATH);
+    } catch (e) {
+      console.error(e);
+      captureException(e);
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    }
+    toast.dismiss(toastId);
+    setSaving(false);
+  };
+
+  const onSave = async () => {
+    const parsed = editorialPageSchema.safeParse({
       slug,
       sequenceId,
       title,
@@ -66,72 +93,39 @@ export default function EditSequenceEventPage({
       toast.error(`${path.join(".") || "Page"}: ${message}`);
       return;
     }
-    setSaving(true);
-    const toastId = toast.loading("Saving...");
-    try {
-      await rpc.sequenceEventPages.save({
-        page: parsed.data,
-        previousSlug: isNew ? undefined : page.slug,
-      });
-      router.push(ADMIN_PATH);
-    } catch (e) {
-      console.error(e);
-      captureException(e);
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    }
-    toast.dismiss(toastId);
-    setSaving(false);
-  }, [
-    router,
-    isNew,
-    page.slug,
-    slug,
-    sequenceId,
-    title,
-    description,
-    socialImageId,
-    listenUrl,
-    themeColor,
-    hoverColor,
-    textColor,
-    postOrder,
-    published,
-  ]);
+    await run("Saving...", () =>
+      rpc.editorialPages.save({ page: parsed.data, previousSlug }),
+    );
+  };
 
-  const onDelete = useCallback(async () => {
-    if (!window.confirm(`Delete "${page.title || page.slug}"?`)) {
+  const onDelete = async () => {
+    if (
+      !previousSlug ||
+      !window.confirm(`Delete "${page.title || previousSlug}"?`)
+    ) {
       return;
     }
-    setSaving(true);
-    const toastId = toast.loading("Deleting...");
-    try {
-      await rpc.sequenceEventPages.delete({ slug: page.slug });
-      router.push(ADMIN_PATH);
-    } catch (e) {
-      console.error(e);
-      captureException(e);
-      toast.error(e instanceof Error ? e.message : "Something went wrong");
-    }
-    toast.dismiss(toastId);
-    setSaving(false);
-  }, [router, page.slug, page.title]);
+    await run("Deleting...", () =>
+      rpc.editorialPages.delete({ slug: previousSlug }),
+    );
+  };
 
   return (
-    <form data-component="EditSequenceEventPage" className="flex flex-col gap-4">
+    <form data-component="EditEditorialPage" className="flex flex-col gap-4">
       <Type style="sectionTitleLarge">
-        {isNew ? "New series page" : `Edit ${page.title || page.slug}`}
+        {previousSlug ? `Edit ${page.title || previousSlug}` : "New editorial page"}
       </Type>
       <Input
         value={slug}
         setValue={setSlug}
-        label="URL slug"
+        label="URL"
         placeholder="e.g. scaling-series"
       />
-      <Type style="bodySmall" className="text-gray-600 -mt-2">
-        The page will live at <code>{sequenceEventPagePath(slug || "<slug>")}</code>
-        {". "}
-        Lowercase letters, numbers and single hyphens only.
-      </Type>
+      <Hint>
+        The page will live at <code>{editorialPagePath(slug || "<url>")}</code>.
+        Lowercase letters, numbers and single hyphens only, and it can&apos;t be a
+        URL something on the Forum already uses.
+      </Hint>
       <DocumentSelect
         value={sequenceId}
         setValue={setSequenceId}
@@ -141,7 +135,7 @@ export default function EditSequenceEventPage({
       <Type style="bodyHeavy" className="text-right">
         {sequenceId ? (
           <Link
-            href={`/s/${sequenceId}`}
+            href={sequenceGetSequencePageUrl({ sequence: { _id: sequenceId } })}
             className="text-primary-dark hover:text-primary"
             openInNewTab
           >
@@ -181,10 +175,10 @@ export default function EditSequenceEventPage({
           label="Font colour"
         />
       </div>
-      <Type style="bodySmall" className="text-gray-600 -mt-2">
+      <Hint>
         The background colour fills the header and posts that have been read. The
         hover colour fills a post when the mouse is over it.
-      </Type>
+      </Hint>
       <Select
         value={postOrder}
         setValue={setPostOrder}
@@ -207,26 +201,27 @@ export default function EditSequenceEventPage({
         label="Sharing image (optional)"
       />
       <div>
-        <Type style="bodySmall" className="text-[12px] font-[400] text-primary">
-          Published
-        </Type>
-        <div className="flex items-center gap-3 mt-1">
-          <ToggleSwitch value={published} setValue={setPublished} />
+        <Label htmlFor={publishedId}>Published</Label>
+        <div className="flex items-center gap-3">
+          <ToggleSwitch id={publishedId} value={published} setValue={setPublished} />
           <Type style="bodySmall" className="text-gray-600">
             {published
               ? "Anybody can see this page"
-              : "Only admins can see this page"}
+              : "Only admins can see it, at " + editorialPageRoutePath(slug)}
           </Type>
         </div>
       </div>
+      <Hint>
+        A published page can take up to a minute to start answering at its URL.
+      </Hint>
       <div className="flex items-center gap-2 mt-4">
-        {!isNew && (
+        {previousSlug && (
           <Button variant="greyOutlined" onClick={onDelete} disabled={saving}>
             Delete
           </Button>
         )}
         <div className="grow" />
-        <Button variant="greyFilled" href={ADMIN_PATH}>
+        <Button variant="greyFilled" href={ADMIN_EDITORIAL_PAGES_PATH}>
           Cancel
         </Button>
         <Button variant="primaryFilled" onClick={onSave} loading={saving}>

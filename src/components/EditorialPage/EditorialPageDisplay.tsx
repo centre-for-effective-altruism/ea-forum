@@ -3,13 +3,14 @@
 import { CSSProperties, useCallback } from "react";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import type { SequenceEventConfig } from "@/lib/sequences/sequenceEvents";
-import { sequenceEventUrl } from "@/lib/sequences/sequenceEvents";
-import type { SequenceEventData } from "@/lib/sequences/sequenceEventQueries";
+import type { EditorialPageConfig } from "@/lib/sequences/editorialPages";
+import { editorialPageUrl } from "@/lib/sequences/editorialPages";
+import type { EditorialPageContent } from "@/lib/sequences/editorialPageContentQueries";
+import { sequenceGetSequencePageUrl } from "@/lib/sequences/sequenceHelpers";
 import clsx from "clsx";
-import SequenceEventSubscribeButton from "./SequenceEventSubscribeButton";
-import SequenceEventListItem from "./SequenceEventListItem";
-import SequenceEventCard from "./SequenceEventCard";
+import EditorialPageSubscribeButton from "./EditorialPageSubscribeButton";
+import EditorialPageListItem from "./EditorialPageListItem";
+import EditorialPageCard from "./EditorialPageCard";
 import ShareButton from "../ShareButton";
 import Link from "../Link";
 import Type, { typeStyles } from "../Type";
@@ -29,14 +30,14 @@ const optionClasses = clsx(
   `,
 );
 
-export default function SequenceEventPage({
+export default function EditorialPageDisplay({
   config,
   sequence,
   posts,
 }: Readonly<
   {
-    config: SequenceEventConfig;
-  } & SequenceEventData
+    config: EditorialPageConfig;
+  } & EditorialPageContent
 >) {
   const { currentUser } = useCurrentUser();
   const { captureEvent } = useTracking();
@@ -49,16 +50,16 @@ export default function SequenceEventPage({
   return (
     <AnalyticsContext pageContext={config.analyticsPageContext}>
       <div
-        data-component="SequenceEventPage"
+        data-component="EditorialPageDisplay"
         style={
           {
-            "--sequence-theme": config.themeColor,
-            "--sequence-hover": config.hoverColor,
-            "--sequence-text": config.textColor ?? "var(--color-always-black)",
+            "--editorial-theme": config.themeColor,
+            "--editorial-hover": config.hoverColor,
+            "--editorial-text": config.textColor,
           } as CSSProperties
         }
         className="
-          font-sans bg-always-white text-[var(--sequence-text)]
+          font-sans bg-always-white text-[var(--editorial-text)]
           w-full min-h-screen
         "
       >
@@ -71,7 +72,7 @@ export default function SequenceEventPage({
           >
             <div
               className="
-                bg-[var(--sequence-theme)] col-span-2 max-[700px]:col-span-1
+                bg-[var(--editorial-theme)] col-span-2 max-[700px]:col-span-1
                 flex flex-col gap-[50px] px-15 py-[65px]
                 max-[700px]:p-10 max-[600px]:px-5 max-[600px]:py-10
                 [&>*]:max-w-[min(700px,100%)]
@@ -88,21 +89,22 @@ export default function SequenceEventPage({
                     <SpeakerWaveIcon /> Listen to the posts
                   </Link>
                 )}
-                <SequenceEventSubscribeButton
+                <EditorialPageSubscribeButton
                   sequenceId={sequence._id}
                   className={optionClasses}
                 />
                 <ShareButton
                   title={config.title}
-                  url={sequenceEventUrl(config)}
+                  url={editorialPageUrl(config)}
                   clickEventName="shareClick"
                   campaign={config.shareCampaign}
                   label="Share"
+                  placement="bottom-start"
                   className={optionClasses}
                 />
                 {currentUser?.isAdmin && (
                   <Link
-                    href={`/s/${sequence._id}`}
+                    href={sequenceGetSequencePageUrl({ sequence })}
                     onClick={onEdit}
                     className={optionClasses}
                   >
@@ -110,7 +112,7 @@ export default function SequenceEventPage({
                   </Link>
                 )}
               </div>
-              <Type As="h1" style="sequenceEventTitle">
+              <Type As="h1" style="editorialPageTitle">
                 {sequence.title}
               </Type>
               {sequence.contentsRevision?.html && (
@@ -119,19 +121,19 @@ export default function SequenceEventPage({
                     __html: sequence.contentsRevision.html,
                   }}
                   className={clsx(
-                    typeStyles.sequenceEventDescription,
+                    typeStyles.editorialPageDescription,
                     "[&_a]:underline [&_a]:font-[600] [&_a]:underline-offset-[3px]",
                   )}
                 />
               )}
             </div>
             {cardPosts.map((post) => (
-              <SequenceEventCard post={post} key={post._id} />
+              <EditorialPageCard post={post} key={post._id} />
             ))}
           </div>
-          <div className="w-full grid grid-cols-1 gap-px mt-px">
+          <div className="flex flex-col gap-px mt-px">
             {listPosts.map((post) => (
-              <SequenceEventListItem post={post} key={post._id} />
+              <EditorialPageListItem post={post} key={post._id} />
             ))}
           </div>
         </div>

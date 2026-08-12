@@ -4,22 +4,22 @@ import { db } from "@/lib/db";
 import { databaseMetadata } from "@/lib/schema";
 import { createTestUser } from "./testHelpers";
 import {
-  newSequenceEventPage,
-  sequenceEventConfigFromPage,
-  sequenceEventPageSchema,
-  type SequenceEventPage,
-} from "@/lib/sequences/sequenceEvents";
+  editorialPageConfig,
+  editorialPageSchema,
+  newEditorialPage,
+  type EditorialPage,
+} from "@/lib/sequences/editorialPages";
 import {
-  fetchSequenceEventPageBySlug,
-  fetchSequenceEventPages,
-  SEQUENCE_EVENT_PAGES_METADATA_NAME,
-  writeSequenceEventPages,
-} from "@/lib/sequences/sequenceEventPageQueries";
+  EDITORIAL_PAGES_METADATA_NAME,
+  fetchEditorialPageBySlug,
+  fetchEditorialPages,
+  writeEditorialPages,
+} from "@/lib/sequences/editorialPageQueries";
 import {
-  deleteSequenceEventPage,
-  saveSequenceEventPage,
-} from "@/lib/sequences/sequenceEventPageMutations";
-import { sequenceEventPagesRouter } from "@/lib/sequences/sequenceEventPagesRouter";
+  deleteEditorialPage,
+  saveEditorialPage,
+} from "@/lib/sequences/editorialPageMutations";
+import { editorialPagesRouter } from "@/lib/sequences/editorialPagesRouter";
 import { currentUserProjection, getCurrentUser } from "@/lib/users/currentUser";
 
 // The router reads the logged in user from the request's cookies, which don't
@@ -44,101 +44,101 @@ const loginAs = async (userId: string | null) => {
   vi.mocked(getCurrentUser).mockResolvedValue(user);
 };
 
-const makePage = (data?: Partial<SequenceEventPage>): SequenceEventPage => ({
-  ...newSequenceEventPage(),
+const makePage = (data?: Partial<EditorialPage>): EditorialPage => ({
+  ...newEditorialPage(),
   slug: "test-series",
   sequenceId: "someSequenceId",
   title: "Test series",
   ...data,
 });
 
-suite("sequence event pages", () => {
+suite("editorial pages", () => {
   beforeEach(async () => {
     await db.delete(databaseMetadata);
   });
 
   test("returns no pages when nothing has been saved", async () => {
-    expect(await fetchSequenceEventPages()).toEqual([]);
-    expect(await fetchSequenceEventPageBySlug("test-series")).toBeNull();
+    expect(await fetchEditorialPages()).toEqual([]);
+    expect(await fetchEditorialPageBySlug("test-series")).toBeNull();
   });
 
   test("saves, updates and deletes a page", async () => {
-    await saveSequenceEventPage({ page: makePage() });
-    expect(await fetchSequenceEventPages()).toHaveLength(1);
+    await saveEditorialPage({ page: makePage() });
+    expect(await fetchEditorialPages()).toHaveLength(1);
 
-    await saveSequenceEventPage({
+    await saveEditorialPage({
       page: makePage({ title: "Renamed", published: true }),
       previousSlug: "test-series",
     });
-    const page = await fetchSequenceEventPageBySlug("test-series");
+    const page = await fetchEditorialPageBySlug("test-series");
     expect(page?.title).toBe("Renamed");
     expect(page?.published).toBe(true);
-    expect(await fetchSequenceEventPages()).toHaveLength(1);
+    expect(await fetchEditorialPages()).toHaveLength(1);
 
-    await deleteSequenceEventPage("test-series");
-    expect(await fetchSequenceEventPages()).toEqual([]);
+    await deleteEditorialPage("test-series");
+    expect(await fetchEditorialPages()).toEqual([]);
   });
 
   test("can change a page's slug", async () => {
-    await saveSequenceEventPage({ page: makePage() });
-    await saveSequenceEventPage({
+    await saveEditorialPage({ page: makePage() });
+    await saveEditorialPage({
       page: makePage({ slug: "new-slug" }),
       previousSlug: "test-series",
     });
-    expect(await fetchSequenceEventPageBySlug("test-series")).toBeNull();
-    expect(await fetchSequenceEventPageBySlug("new-slug")).not.toBeNull();
+    expect(await fetchEditorialPageBySlug("test-series")).toBeNull();
+    expect(await fetchEditorialPageBySlug("new-slug")).not.toBeNull();
   });
 
   test("rejects a slug that's already taken", async () => {
-    await saveSequenceEventPage({ page: makePage() });
+    await saveEditorialPage({ page: makePage() });
     await expect(
-      saveSequenceEventPage({ page: makePage({ title: "Another" }) }),
+      saveEditorialPage({ page: makePage({ title: "Another" }) }),
     ).rejects.toThrow(/already exists/);
     await expect(
-      saveSequenceEventPage({
+      saveEditorialPage({
         page: makePage({ slug: "other-series" }),
         previousSlug: "does-not-exist",
       }),
     ).rejects.toThrow(/No page with slug/);
-    expect(await fetchSequenceEventPages()).toHaveLength(1);
+    expect(await fetchEditorialPages()).toHaveLength(1);
   });
 
   test("skips stored pages that are no longer valid", async () => {
     await db.insert(databaseMetadata).values({
       _id: "invalidPagesRow",
-      name: SEQUENCE_EVENT_PAGES_METADATA_NAME,
+      name: EDITORIAL_PAGES_METADATA_NAME,
       value: [makePage(), { slug: "broken" }],
     });
-    const pages = await fetchSequenceEventPages();
+    const pages = await fetchEditorialPages();
     expect(pages).toHaveLength(1);
     expect(pages[0].slug).toBe("test-series");
   });
 
   test("doesn't let logged out users save or delete", async () => {
-    await writeSequenceEventPages(db, [makePage()]);
+    await writeEditorialPages(db, [makePage()]);
     await loginAs(null);
     await expect(
-      call(sequenceEventPagesRouter.save, { page: makePage({ title: "Hacked" }) }),
+      call(editorialPagesRouter.save, { page: makePage({ title: "Hacked" }) }),
     ).rejects.toThrow(/Permission denied/);
     await expect(
-      call(sequenceEventPagesRouter.delete, { slug: "test-series" }),
+      call(editorialPagesRouter.delete, { slug: "test-series" }),
     ).rejects.toThrow(/Permission denied/);
-    expect((await fetchSequenceEventPageBySlug("test-series"))?.title).toBe(
+    expect((await fetchEditorialPageBySlug("test-series"))?.title).toBe(
       "Test series",
     );
   });
 
   test("doesn't let non-admins save or delete", async () => {
-    await writeSequenceEventPages(db, [makePage()]);
+    await writeEditorialPages(db, [makePage()]);
     const user = await createTestUser();
     await loginAs(user._id);
     await expect(
-      call(sequenceEventPagesRouter.save, { page: makePage({ title: "Hacked" }) }),
+      call(editorialPagesRouter.save, { page: makePage({ title: "Hacked" }) }),
     ).rejects.toThrow(/Permission denied/);
     await expect(
-      call(sequenceEventPagesRouter.delete, { slug: "test-series" }),
+      call(editorialPagesRouter.delete, { slug: "test-series" }),
     ).rejects.toThrow(/Permission denied/);
-    expect((await fetchSequenceEventPageBySlug("test-series"))?.title).toBe(
+    expect((await fetchEditorialPageBySlug("test-series"))?.title).toBe(
       "Test series",
     );
   });
@@ -146,23 +146,32 @@ suite("sequence event pages", () => {
   test("lets admins save and delete", async () => {
     const admin = await createTestUser({ isAdmin: true });
     await loginAs(admin._id);
-    await call(sequenceEventPagesRouter.save, {
+    await call(editorialPagesRouter.save, {
       page: makePage({ published: true }),
     });
-    expect((await fetchSequenceEventPageBySlug("test-series"))?.published).toBe(
-      true,
-    );
-    await call(sequenceEventPagesRouter.delete, { slug: "test-series" });
-    expect(await fetchSequenceEventPages()).toEqual([]);
+    expect((await fetchEditorialPageBySlug("test-series"))?.published).toBe(true);
+    await call(editorialPagesRouter.delete, { slug: "test-series" });
+    expect(await fetchEditorialPages()).toEqual([]);
   });
 });
 
-suite("sequenceEventPageSchema", () => {
+suite("editorialPageSchema", () => {
   test("accepts valid slugs", () => {
-    for (const slug of ["scaling-series", "series2", "a-b-c"]) {
-      expect(sequenceEventPageSchema.safeParse(makePage({ slug })).success).toBe(
-        true,
-      );
+    for (const slug of ["toby-ord-on-scaling", "series2", "a-b-c"]) {
+      expect(editorialPageSchema.safeParse(makePage({ slug })).success).toBe(true);
+    }
+  });
+  test("rejects slugs that something on the Forum already answers at", () => {
+    // A top level slug becomes the page's URL, so it mustn't shadow a page on
+    // either site: a route here, a legacy route, or a page built in code
+    for (const slug of [
+      "about",
+      "allposts",
+      "editPost",
+      "posts",
+      "scaling-series",
+    ]) {
+      expect(editorialPageSchema.safeParse(makePage({ slug })).success).toBe(false);
     }
   });
   test("rejects slugs that wouldn't be reachable", () => {
@@ -174,45 +183,42 @@ suite("sequenceEventPageSchema", () => {
       "double--hyphen",
       "a/b",
     ]) {
-      expect(sequenceEventPageSchema.safeParse(makePage({ slug })).success).toBe(
-        false,
-      );
+      expect(editorialPageSchema.safeParse(makePage({ slug })).success).toBe(false);
     }
   });
   test("rejects colours that aren't hex", () => {
     expect(
-      sequenceEventPageSchema.safeParse(makePage({ themeColor: "red" })).success,
+      editorialPageSchema.safeParse(makePage({ themeColor: "red" })).success,
     ).toBe(false);
   });
   test("allows an empty listen url but not a malformed one", () => {
+    expect(editorialPageSchema.safeParse(makePage({ listenUrl: "" })).success).toBe(
+      true,
+    );
     expect(
-      sequenceEventPageSchema.safeParse(makePage({ listenUrl: "" })).success,
-    ).toBe(true);
-    expect(
-      sequenceEventPageSchema.safeParse(makePage({ listenUrl: "not a url" }))
-        .success,
+      editorialPageSchema.safeParse(makePage({ listenUrl: "not a url" })).success,
     ).toBe(false);
   });
 });
 
-suite("sequenceEventConfigFromPage", () => {
+suite("editorialPageConfig", () => {
   beforeEach(() => {
     // Needed to build cloudinary urls for the sharing image
     vi.stubEnv("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME", "cea");
   });
   test("derives the page's path, share campaign and sharing image", () => {
-    const config = sequenceEventConfigFromPage(
+    const config = editorialPageConfig(
       makePage({ slug: "my-great-series", socialImageId: "some/image" }),
     );
-    expect(config.path).toBe("/series/my-great-series");
+    expect(config.path).toBe("/my-great-series");
     expect(config.shareCampaign).toBe("my_great_series");
     expect(config.socialImageUrl).toContain("some/image");
   });
   test("falls back to the site's sharing image", () => {
-    const config = sequenceEventConfigFromPage(makePage({ socialImageId: null }));
+    const config = editorialPageConfig(makePage({ socialImageId: null }));
     expect(config.socialImageUrl).toMatch(/^https:\/\//);
   });
-  test("treats an empty listen url as no listen link", () => {
-    expect(sequenceEventConfigFromPage(makePage()).listenUrl).toBeUndefined();
+  test("carries the listen link through", () => {
+    expect(editorialPageConfig(makePage({ listenUrl: "" })).listenUrl).toBe("");
   });
 });

@@ -15,7 +15,7 @@ import { recommendationsRouter } from "./recommendations/recommendationsRouter";
 import { reportsRouter } from "./reports/reportsRouter";
 import { revisionsRouter } from "./revisions/revisionsRouter";
 import { searchRouter } from "./search/searchRouter";
-import { sequenceEventPagesRouter } from "./sequences/sequenceEventPagesRouter";
+import { editorialPagesRouter } from "./sequences/editorialPagesRouter";
 import { sequencesRouter } from "./sequences/sequencesRouter";
 import { spotlightsRouter } from "./spotlights/spotlightsRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
@@ -27,6 +27,7 @@ export const router = {
   bookmarks: bookmarksRouter,
   collections: collectionsRouter,
   comments: commentsRouter,
+  editorialPages: editorialPagesRouter,
   featuredQueue: featuredQueueRouter,
   forumEvents: forumEventsRouter,
   lwEvents: lwEventRouter,
@@ -39,7 +40,6 @@ export const router = {
   reports: reportsRouter,
   revisions: revisionsRouter,
   search: searchRouter,
-  sequenceEventPages: sequenceEventPagesRouter,
   sequences: sequencesRouter,
   spotlights: spotlightsRouter,
   subscriptions: subscriptionsRouter,
