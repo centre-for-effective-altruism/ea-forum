@@ -258,12 +258,17 @@ export const createPostGroups = (posts: PostListItem[]): PostGroup[] => [
   {
     title: "Frontpage posts",
     tooltip: "Posts that are relevant to doing good effectively",
-    posts: posts.filter((post) => !!post.frontpageDate),
+    posts: posts.filter((post) => !!post.frontpageDate && !post.isEvent),
   },
   {
     title: "Personal blogposts",
     tooltip:
-      "Users can write whatever they want on their personal blog. This category is a good fit for topics that aren't closely related to EA, are difficult to discuss rationally, or are of interest to a small fraction of the Forum’s readers (e.g. local events)",
-    posts: posts.filter((post) => !post.frontpageDate),
+      "Users can write whatever they want on their personal blog. This category is a good fit for topics that aren't closely related to EA, are difficult to discuss rationally, or are of interest to a small fraction of the Forum’s readers",
+    posts: posts.filter((post) => !post.frontpageDate && !post.isEvent),
+  },
+  {
+    title: "Events",
+    tooltip: "In-person or online events",
+    posts: posts.filter((post) => post.isEvent),
   },
 ];
