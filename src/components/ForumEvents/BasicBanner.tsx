@@ -1,9 +1,11 @@
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { formatDateRange } from "@/lib/formatHelpers";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import BannerDescription from "./BannerDescription";
 import CloudinaryImage from "../CloudinaryImage";
+import MaybeLink from "../MaybeLink";
 import Type from "../Type";
 
 export default function BasicBanner({
@@ -13,7 +15,7 @@ export default function BasicBanner({
   event: ForumEventBase;
   onDismiss?: () => void;
 }>) {
-  const { title, startDate, endDate, bannerImageId } = event;
+  const { title, post, startDate, endDate, bannerImageId } = event;
   const date = endDate ? formatDateRange(startDate, endDate) : null;
   return (
     <AnalyticsContext pageSectionContext="forumEventFrontpageBannerBasic">
@@ -46,7 +48,11 @@ export default function BasicBanner({
         )}
         <div className="relative z-2 max-w-120 p-8 flex flex-col gap-1">
           {date && <Type style="bodyMedium">{date}</Type>}
-          <Type style="bannerTitle">{title}</Type>
+          <Type style="bannerTitle">
+            <MaybeLink href={post ? postGetPageUrl({ post }) : null}>
+              {title}
+            </MaybeLink>
+          </Type>
           <BannerDescription event={event} />
         </div>
         {onDismiss && (
