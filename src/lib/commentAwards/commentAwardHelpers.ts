@@ -10,8 +10,9 @@ export const commentAwardPostHref = "#"; // TODO: Add post link
 export const commentAwardAmountDollars = 100;
 
 const commentAwardUsers = [
-  "D5tAFjN5axTcp9mGL", // Ollie Etherington - just for testing
+  "D5tAFjN5axTcp9mGL", // Ollie Etherington (for testing)
   "CF3HuBjWBDXgeTp9p", // Toby Tremlett
+  "yAwYojBPFmdvhtxzA", // Toby Tremlett (staging)
   "oZa9wz3nG2wgW98az", // Will Aldred
   "TMeHPKbbgoh6i9yvC", // Anthony DiGiovanni
 ];
