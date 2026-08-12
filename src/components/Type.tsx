@@ -30,6 +30,7 @@ export const typeStyles = {
   userProfileName: "font-sans text-[30px] font-[600]",
   onboardingTitle: "font-sans text-[30px] font-[600] tracking-[-0.6px]",
   onboardingTag: "font-sans text-[13px] font-[700] leading-[16px]",
+  bannerTitle: "font-sans font-[700] text-[34px] leading-[1.15]",
   featuredPostTitle:
     "font-sans font-[600] text-[22px] leading-[120%] tracking-[-0.6px]",
   featuredPostTitleLarge:

@@ -46,7 +46,7 @@ export default function BasicBanner({
         )}
         <div className="relative z-2 max-w-120 p-8 flex flex-col gap-1">
           {date && <Type style="bodyMedium">{date}</Type>}
-          <Type style="postsPageTitle">{title}</Type>
+          <Type style="bannerTitle">{title}</Type>
           <BannerDescription event={event} />
         </div>
         {onDismiss && (
