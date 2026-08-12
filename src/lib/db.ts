@@ -20,6 +20,7 @@ import {
   commentModeratorActions,
   comments,
   conversations,
+  databaseMetadata,
   digestPosts,
   digests,
   forumEvents,
@@ -81,6 +82,7 @@ const relations = defineRelations(
     userRateLimits,
     userTagRels,
     userLoginTokens,
+    databaseMetadata,
   },
   (r) => ({
     posts: {

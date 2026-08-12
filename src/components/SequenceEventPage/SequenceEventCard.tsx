@@ -101,7 +101,7 @@ export default function SequenceEventCard({
             style="sequenceEventOrg"
             className="
               whitespace-nowrap [writing-mode:vertical-rl] [text-orientation:mixed]
-              border border-always-black rounded-[26px] px-0.5 py-1.5
+              border border-[var(--sequence-text)] rounded-[26px] px-0.5 py-1.5
               pointer-fine:group-hover:border-[var(--sequence-theme)]
             "
           >

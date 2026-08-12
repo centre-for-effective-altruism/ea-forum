@@ -38,11 +38,13 @@ const newSitePatterns = [
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of
   /^\/scaling-series$/, // The Scaling Series sequence event page
+  /^\/series\/[a-z0-9-]+$/, // Admin-created sequence event pages
   /^\/admin$/, // Admin
   /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
   /^\/admin\/spotlights.*/, // Admin spotlights pages
+  /^\/admin\/sequence-events(\/[a-z0-9-]+)?$/, // Admin series pages
   /^\/admin\/swap-user-emails$/, // Admin swap user emails page
 ];
 // ...

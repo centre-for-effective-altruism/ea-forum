@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
+import { z } from "zod/v4";
 import { combineUrls, getSiteUrl } from "../routeHelpers";
+import {
+  getSiteOgImageUrl,
+  getSocialImagePreviewPrefix,
+} from "../cloudinary/cloudinaryHelpers";
 
 /**
  * A "sequence event" is a standalone landing page for a single sequence, with
  * its own URL and colour scheme, rendered by
  * `@/components/SequenceEventPage/SequenceEventPage`.
  *
- * Adding a page means adding a config here, adding a `page.tsx` under
- * `src/app/<path>` that renders it, and registering the path in
- * `newSitePatterns` in `@/lib/proxy/legacySiteRedirect`.
+ * Pages come from two places:
+ * - Pages with a vanity URL are defined in code below, with their own route
+ *   under `src/app` and their path registered in `newSitePatterns` in
+ *   `@/lib/proxy/legacySiteRedirect`.
+ * - Pages created by admins at `/admin/sequence-events` are stored in the
+ *   database and served from `/series/<slug>`.
  */
 export interface SequenceEventConfig {
   /** Path of the standalone page, with a leading slash */
@@ -28,6 +36,8 @@ export interface SequenceEventConfig {
   themeColor: string;
   /** Hover background, exposed as `--sequence-hover` */
   hoverColor: string;
+  /** Text colour, exposed as `--sequence-text`. Defaults to black */
+  textColor?: string;
   /**
    * "score" keeps the first post of the sequence pinned first and orders the
    * rest by karma, "sequence" keeps the order the posts have in the sequence.
@@ -52,16 +62,87 @@ export const scalingSeriesEvent: SequenceEventConfig = {
   postOrder: "score",
 };
 
-const sequenceEvents: SequenceEventConfig[] = [scalingSeriesEvent];
+/** Pages defined in code, each with their own route and vanity URL */
+const codeSequenceEvents: SequenceEventConfig[] = [scalingSeriesEvent];
+
+const colorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex colour");
+
+export const SEQUENCE_EVENT_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /**
- * Sequences with their own landing page are linked to by that page's path
- * rather than by `/s/<id>`.
+ * An admin-created page, as stored in the database. Slugs are restricted to
+ * lowercase words separated by single hyphens, both because they're part of a
+ * URL and because `newSitePatterns` matches `/series/<slug>` with a regex.
+ */
+export const sequenceEventPageSchema = z.object({
+  slug: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(
+      SEQUENCE_EVENT_SLUG_PATTERN,
+      "Use lowercase letters, numbers and single hyphens",
+    ),
+  sequenceId: z.string().min(1).max(27),
+  title: z.string().min(1).max(300),
+  description: z.string().max(1000),
+  /** Cloudinary id of the social preview image, if one was uploaded */
+  socialImageId: z.string().max(300).nullable(),
+  listenUrl: z.union([z.literal(""), z.url().max(1000)]),
+  themeColor: colorSchema,
+  hoverColor: colorSchema,
+  textColor: colorSchema,
+  postOrder: z.enum(["score", "sequence"]),
+  /** Unpublished pages are only visible to admins */
+  published: z.boolean(),
+});
+
+export type SequenceEventPage = z.infer<typeof sequenceEventPageSchema>;
+
+export const sequenceEventPagePath = (slug: string) => `/series/${slug}`;
+
+export const newSequenceEventPage = (): SequenceEventPage => ({
+  slug: "",
+  sequenceId: "",
+  title: "",
+  description: "",
+  socialImageId: null,
+  listenUrl: "",
+  themeColor: "#b8a0ff",
+  hoverColor: "#f8f5ff",
+  textColor: "#000000",
+  postOrder: "score",
+  published: false,
+});
+
+export const sequenceEventConfigFromPage = (
+  page: SequenceEventPage,
+): SequenceEventConfig => ({
+  path: sequenceEventPagePath(page.slug),
+  sequenceId: page.sequenceId,
+  title: page.title,
+  description: page.description,
+  socialImageUrl: page.socialImageId
+    ? getSocialImagePreviewPrefix() + page.socialImageId
+    : getSiteOgImageUrl(),
+  analyticsPageContext: "sequenceEvent",
+  shareCampaign: page.slug.replace(/-/g, "_"),
+  listenUrl: page.listenUrl || undefined,
+  themeColor: page.themeColor,
+  hoverColor: page.hoverColor,
+  textColor: page.textColor,
+  postOrder: page.postOrder,
+});
+
+/**
+ * Sequences with a vanity landing page are linked to by that page's path. This
+ * is deliberately limited to pages defined in code, so that linking to a
+ * sequence stays synchronous.
  */
 export const getSequenceEventBySequenceId = (
   sequenceId: string,
 ): SequenceEventConfig | null =>
-  sequenceEvents.find((event) => event.sequenceId === sequenceId) ?? null;
+  codeSequenceEvents.find((event) => event.sequenceId === sequenceId) ?? null;
 
 export const sequenceEventUrl = (config: SequenceEventConfig) =>
   combineUrls(getSiteUrl(), config.path);

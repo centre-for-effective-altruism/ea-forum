@@ -51,7 +51,7 @@ export default function SequenceEventListItem({
             <Type
               style="sequenceEventOrg"
               className="
-                inline-block whitespace-nowrap border border-always-black
+                inline-block whitespace-nowrap border border-[var(--sequence-text)]
                 rounded-[26px] px-1.5 py-0.5
                 pointer-fine:group-hover:border-[var(--sequence-theme)]
               "

@@ -22,7 +22,7 @@ const CARD_COUNT = 10;
 const optionClasses = clsx(
   typeStyles.bodyMedium,
   `
-    text-always-black tracking-[-0.02em] leading-[140%] cursor-pointer
+    tracking-[-0.02em] leading-[140%] cursor-pointer
     flex items-center gap-2 rounded-sm px-2 py-1
     transition-colors duration-200
     hover:bg-always-black/10 [&_svg]:w-5 [&_svg]:h-5
@@ -54,9 +54,13 @@ export default function SequenceEventPage({
           {
             "--sequence-theme": config.themeColor,
             "--sequence-hover": config.hoverColor,
+            "--sequence-text": config.textColor ?? "var(--color-always-black)",
           } as CSSProperties
         }
-        className="font-sans bg-always-white text-always-black w-full min-h-screen"
+        className="
+          font-sans bg-always-white text-[var(--sequence-text)]
+          w-full min-h-screen
+        "
       >
         <div className="max-w-[1800px] mx-auto bg-always-black border-x border-always-black">
           <div

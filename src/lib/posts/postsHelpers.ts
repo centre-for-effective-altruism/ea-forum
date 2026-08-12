@@ -5,7 +5,10 @@ import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
-import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
+import {
+  getSocialImagePreviewPrefix,
+  type SocialImageOptions,
+} from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
 import { filterSettingsSchema } from "../filterSettings";
@@ -115,18 +118,6 @@ export const getPostReadTimeMinutes = (
     return Math.max(1, Math.round(wordCount / 250));
   }
   return 1;
-};
-
-type SocialImageOptions = {
-  width?: number;
-  dpr?: number | "auto";
-};
-
-export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
-  const cloudName = getCloudinaryCloudName();
-  const width = options?.width ? `,w_${options.width}` : "";
-  const dpr = options?.dpr ? `,dpr_${options.dpr}` : "";
-  return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_lfill,ar_1.91,g_auto${width}${dpr}/`;
 };
 
 export type PostWithSocialPreview = Pick<
