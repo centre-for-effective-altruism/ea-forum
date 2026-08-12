@@ -1,6 +1,3 @@
-"use client";
-
-import { useCallback } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { formatDateRange } from "@/lib/formatHelpers";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
@@ -11,14 +8,13 @@ import Type from "../Type";
 
 export default function BasicBanner({
   event,
+  onDismiss,
 }: Readonly<{
   event: ForumEventBase;
+  onDismiss?: () => void;
 }>) {
   const { title, startDate, endDate, bannerImageId } = event;
   const date = endDate ? formatDateRange(startDate, endDate) : null;
-
-  const onDismiss = useCallback(() => {}, []);
-
   return (
     <AnalyticsContext pageSectionContext="forumEventFrontpageBannerBasic">
       <div
@@ -53,14 +49,16 @@ export default function BasicBanner({
           <Type style="postsPageTitle">{title}</Type>
           <BannerDescription event={event} />
         </div>
-        <button
-          onClick={onDismiss}
-          className="
-            absolute z-2 top-2 right-2 cursor-pointer opacity-70 hover:opacity-100
-          "
-        >
-          <XMarkIcon className="w-4" />
-        </button>
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            className="
+              absolute z-2 top-2 right-2 cursor-pointer opacity-70 hover:opacity-100
+            "
+          >
+            <XMarkIcon className="w-4" />
+          </button>
+        )}
       </div>
     </AnalyticsContext>
   );
