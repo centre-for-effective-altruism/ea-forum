@@ -10,7 +10,7 @@ export default function BannerDescription({
     return null;
   }
   return (
-    <div data-component="BannerDescription">
+    <div data-component="BannerDescription" className="[&_*]:text-(--event-text)">
       <CommentBody html={frontpageDescriptionHtml} className="w-fit max-md:hidden" />
       <CommentBody
         html={frontpageDescriptionMobileHtml}

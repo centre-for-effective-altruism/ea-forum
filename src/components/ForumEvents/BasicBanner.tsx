@@ -1,6 +1,10 @@
-import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
+"use client";
+
+import { useCallback } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { formatDateRange } from "@/lib/formatHelpers";
+import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
+import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import BannerDescription from "./BannerDescription";
 import CloudinaryImage from "../CloudinaryImage";
 import Type from "../Type";
@@ -12,31 +16,51 @@ export default function BasicBanner({
 }>) {
   const { title, startDate, endDate, bannerImageId } = event;
   const date = endDate ? formatDateRange(startDate, endDate) : null;
+
+  const onDismiss = useCallback(() => {}, []);
+
   return (
     <AnalyticsContext pageSectionContext="forumEventFrontpageBannerBasic">
       <div
         data-component="BasicBanner"
         className="
-          h-45 flex flex-col justify-center
-          bg-[linear-gradient(90deg,var(--event-bg)_0%,var(--event-bg)_30%,black_50%)]
+          relative h-45 flex flex-col justify-center
         "
       >
-        <div className="max-w-120 p-8">
-          {date && <Type>{date}</Type>}
-          <Type>{title}</Type>
+        {bannerImageId && (
+          <div
+            aria-hidden
+            className="
+              absolute z-0 inset-0 w-full h-full hidden md:block pointer-events-none
+            "
+          >
+            <CloudinaryImage
+              publicId={bannerImageId}
+              className="
+                absolute z-0 inset-0 w-full min-w-125 h-full object-cover object-top
+              "
+            />
+            <div
+              className="
+                absolute z-1 inset-0 w-full h-full
+                bg-[linear-gradient(90deg,var(--event-bg)_0%,var(--event-bg)_30%,transparent_50%)]
+              "
+            />
+          </div>
+        )}
+        <div className="relative z-2 max-w-120 p-8 flex flex-col gap-1">
+          {date && <Type style="bodyMedium">{date}</Type>}
+          <Type style="postsPageTitle">{title}</Type>
           <BannerDescription event={event} />
         </div>
-        {bannerImageId && (
-          <CloudinaryImage
-            publicId={bannerImageId}
-            className="
-              absolute z-[-1] inset-0 w-full min-w-125 h-full object-cover object-top
-            "
-          />
-        )}
-        {/*
-        <ForumIcon icon="Close" onClick={dismiss} className={classes.hideButton} />
-          */}
+        <button
+          onClick={onDismiss}
+          className="
+            absolute z-2 top-2 right-2 cursor-pointer opacity-70 hover:opacity-100
+          "
+        >
+          <XMarkIcon className="w-4" />
+        </button>
       </div>
     </AnalyticsContext>
   );
