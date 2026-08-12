@@ -628,13 +628,8 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
  *  - all non-community posts with >= 100 karma
  *  - excluding the most recently curated post which is fetched separately
  *
- * Ordered by when each post was published, not when it was featured. Featuring
- * is a judgement that a post belongs on this list, not a claim that it is new,
- * so the list reads as "the best of what's recent" in the order readers already
- * expect. Sorting on the featuring time instead meant that picking up an older
- * post — during a quiet week, or after catching up on a backlog — planted it
- * above genuinely newer posts, and that re-featuring a post (from the queue or
- * the digest tool) silently reshuffled the page by re-stamping its time.
+ * Ordered by publication date, not by when a post was featured: featuring is a
+ * judgement that a post belongs on this list, not a claim that it is new.
  */
 export const fetchFeaturedFrontpagePosts = async ({
   currentUser,
