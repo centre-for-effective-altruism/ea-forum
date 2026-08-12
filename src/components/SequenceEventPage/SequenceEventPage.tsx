@@ -129,12 +129,7 @@ export default function SequenceEventPage({
               <SequenceEventCard post={post} key={post._id} />
             ))}
           </div>
-          <div
-            className="
-              w-full grid grid-cols-[min-content_1fr] max-[960px]:grid-cols-1
-              gap-0 gap-y-px mt-px
-            "
-          >
+          <div className="w-full grid grid-cols-1 gap-px mt-px">
             {listPosts.map((post) => (
               <SequenceEventListItem post={post} key={post._id} />
             ))}

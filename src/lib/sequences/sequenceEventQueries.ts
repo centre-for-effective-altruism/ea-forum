@@ -5,7 +5,7 @@ import {
   type SequenceFromProjection,
   type SequenceRelationalProjection,
 } from "./sequenceQueries";
-import { fetchSequenceEventPosts, type SequenceEventPost } from "../posts/postLists";
+import { fetchPostsListByIds, type PostListItem } from "../posts/postLists";
 import { db } from "../db";
 import orderBy from "lodash/orderBy";
 import sortBy from "lodash/sortBy";
@@ -40,9 +40,9 @@ export type SequenceEventSequence = SequenceFromProjection<
  * popular posts rise.
  */
 const orderSequenceEventPosts = (
-  posts: SequenceEventPost[],
+  posts: PostListItem[],
   postOrder: SequenceEventConfig["postOrder"],
-): SequenceEventPost[] => {
+): PostListItem[] => {
   if (postOrder === "sequence" || posts.length === 0) {
     return posts;
   }
@@ -74,7 +74,9 @@ export const fetchSequenceEvent = async ({
   const postIds = sortBy(sequence.chapters, "number").flatMap(
     ({ postIds }) => postIds,
   );
-  const posts = await fetchSequenceEventPosts(currentUser?._id ?? null, postIds);
+  const posts = postIds.length
+    ? await fetchPostsListByIds(currentUser?._id ?? null, postIds)
+    : [];
   return {
     sequence,
     posts: orderSequenceEventPosts(posts, config.postOrder),

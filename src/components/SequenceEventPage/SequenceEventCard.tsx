@@ -2,7 +2,7 @@
 
 import { Fragment, SyntheticEvent } from "react";
 import Image from "next/image";
-import type { SequenceEventPost } from "@/lib/posts/postLists";
+import type { PostListItem } from "@/lib/posts/postLists";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import {
@@ -29,7 +29,7 @@ const onImageError = (ev: SyntheticEvent<HTMLImageElement, Event>) => {
 export default function SequenceEventCard({
   post,
 }: Readonly<{
-  post: SequenceEventPost;
+  post: PostListItem;
 }>) {
   const { postsRead } = useItemsRead();
   const href = postGetPageUrl({ post });
@@ -47,68 +47,52 @@ export default function SequenceEventCard({
       onClick={onClick}
       className={clsx(
         `
-          group p-10 max-[600px]:p-5 flex gap-8 cursor-pointer
+          group flex flex-col gap-4 p-10 max-[600px]:p-5 cursor-pointer
           pointer-fine:hover:bg-[var(--sequence-hover)]!
           pointer-fine:hover:text-[var(--sequence-theme)]
         `,
         isRead ? "bg-[var(--sequence-theme)]" : "bg-always-white",
       )}
     >
-      <div className="flex flex-col gap-4">
-        <Image
-          src={imageUrl}
-          onError={onImageError}
-          alt={post.title}
-          width={500}
-          height={216}
-          className="
-            w-full h-[216px] max-[700px]:h-auto object-cover
-            transition-transform duration-200 ease-in-out
-            pointer-fine:group-hover:scale-[1.02]
-          "
-        />
-        <InteractionWrapper>
-          <Type As="h2" style="sequenceEventCardTitle">
-            <Link href={href} className="hover:opacity-100">
-              {post.title}
-            </Link>
-          </Type>
+      <Image
+        src={imageUrl}
+        onError={onImageError}
+        alt={post.title}
+        width={500}
+        height={216}
+        className="
+          w-full h-[216px] max-[700px]:h-auto object-cover
+          transition-transform duration-200 ease-in-out
+          pointer-fine:group-hover:scale-[1.02]
+        "
+      />
+      <InteractionWrapper>
+        <Type As="h2" style="sequenceEventCardTitle">
+          <Link href={href} className="hover:opacity-100">
+            {post.title}
+          </Link>
+        </Type>
+      </InteractionWrapper>
+      <Type
+        style="bodyLarge"
+        className="tracking-[-0.01em] leading-[140%] line-clamp-3"
+      >
+        {getPostPlaintextDescription(post)}
+      </Type>
+      <Type style="sequenceEventAuthors">
+        by{" "}
+        <InteractionWrapper className="inline">
+          <UsersName user={post.user} tooltipPlacement="bottom-start" />
         </InteractionWrapper>
-        <Type
-          style="bodyLarge"
-          className="tracking-[-0.01em] leading-[140%] line-clamp-3"
-        >
-          {getPostPlaintextDescription(post)}
-        </Type>
-        <Type style="sequenceEventAuthors">
-          by{" "}
-          <InteractionWrapper className="inline">
-            <UsersName user={post.user} tooltipPlacement="bottom-start" />
-          </InteractionWrapper>
-          {post.coauthors?.map((user) => (
-            <Fragment key={user._id}>
-              {", "}
-              <InteractionWrapper className="inline">
-                <UsersName user={user} tooltipPlacement="bottom-start" />
-              </InteractionWrapper>
-            </Fragment>
-          ))}
-        </Type>
-      </div>
-      {post.marginalFundingOrg && (
-        <div>
-          <Type
-            style="sequenceEventOrg"
-            className="
-              whitespace-nowrap [writing-mode:vertical-rl] [text-orientation:mixed]
-              border border-[var(--sequence-text)] rounded-[26px] px-0.5 py-1.5
-              pointer-fine:group-hover:border-[var(--sequence-theme)]
-            "
-          >
-            {post.marginalFundingOrg}
-          </Type>
-        </div>
-      )}
+        {post.coauthors?.map((user) => (
+          <Fragment key={user._id}>
+            {", "}
+            <InteractionWrapper className="inline">
+              <UsersName user={user} tooltipPlacement="bottom-start" />
+            </InteractionWrapper>
+          </Fragment>
+        ))}
+      </Type>
     </article>
   );
 }

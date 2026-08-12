@@ -43,8 +43,6 @@ export const typeStyles = {
   sequenceEventListTitle: "font-serif text-[30px] font-[600] tracking-[-0.02em]",
   sequenceEventAuthors:
     "font-sans text-[14px] font-[600] tracking-[-0.01em] leading-[140%]",
-  sequenceEventOrg:
-    "font-sans text-[13px] font-[500] tracking-[-0.01em] leading-[140%] uppercase",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof typeStyles;
