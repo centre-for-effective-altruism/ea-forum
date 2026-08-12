@@ -147,6 +147,12 @@ const relations = defineRelations(
       }),
     },
     sequences: {
+      // Named `contentsRevision` rather than `contents` because the sequences
+      // table has a denormalized `contents` column
+      contentsRevision: r.one.revisions({
+        from: r.sequences.contentsLatest,
+        to: r.revisions._id,
+      }),
       user: r.one.users({
         from: r.sequences.userId,
         to: r.users._id,

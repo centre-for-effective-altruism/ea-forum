@@ -100,7 +100,7 @@ Server boundaries and data access:
 Routes and the legacy proxy:
 
 - New public-facing routes under `src/app/**` must be registered in
-  `src/lib/legacySiteRedirect.ts` under `newSitePatterns`. Routes not in that list
+  `src/lib/proxy/legacySiteRedirect.ts` under `newSitePatterns`. Routes not in that list
   are proxied to the legacy v2 site, which won't have them and will 404. This failure
   mode is invisible to typecheck and lint.
 - Use a strict regex anchored with `^` and `$` (e.g. `/^\/admin\/org-updates-test$/`)

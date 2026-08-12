@@ -33,7 +33,7 @@ export const sequenceBaseProjection = {
 
 export type SequenceBase = SequenceFromProjection<typeof sequenceBaseProjection>;
 
-const sequencePermissionFilter = (currentUser: CurrentUser | null) => {
+export const sequencePermissionFilter = (currentUser: CurrentUser | null) => {
   if (currentUser?.isAdmin) {
     return {};
   }

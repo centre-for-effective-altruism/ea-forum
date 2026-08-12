@@ -315,6 +315,43 @@ export const fetchPostsListByIds = async (
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
 };
 
+/**
+ * Sequence event pages show the sponsoring org on each post, which isn't part
+ * of the normal post list projection.
+ */
+const sequenceEventPostsProjection = (currentUserId: string | null) => {
+  const projection = postsListProjection(currentUserId);
+  return {
+    ...projection,
+    columns: {
+      ...projection.columns,
+      marginalFundingOrg: true,
+    },
+  } as const satisfies PostRelationalProjection;
+};
+
+export type SequenceEventPost = PostFromProjection<
+  ReturnType<typeof sequenceEventPostsProjection>
+>;
+
+export const fetchSequenceEventPosts = async (
+  currentUserId: string | null,
+  postIds: string[],
+): Promise<SequenceEventPost[]> => {
+  if (!postIds.length) {
+    return [];
+  }
+  const posts = await db.query.posts.findMany({
+    ...sequenceEventPostsProjection(currentUserId),
+    where: {
+      ...viewablePostFilter,
+      _id: { in: postIds },
+    },
+  });
+  const order = new Map(postIds.map((id, i) => [id, i]));
+  return sortBy(posts, (post) => order.get(post._id) ?? Infinity);
+};
+
 export const fetchPingbackPosts = async (
   currentUserId: string | null,
   postId: string,

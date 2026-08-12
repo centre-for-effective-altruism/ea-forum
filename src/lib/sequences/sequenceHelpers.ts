@@ -1,5 +1,6 @@
 import sum from "lodash/sum";
 import { getSiteUrl } from "../routeHelpers";
+import { getSequenceEventBySequenceId } from "./sequenceEvents";
 import { SequenceBase, SequencePost } from "./sequenceQueries";
 import { getPostReadTimeMinutes } from "../posts/postsHelpers";
 
@@ -11,6 +12,11 @@ export const sequenceGetPageUrl = ({
   isAbsolute?: boolean;
 }) => {
   const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+  // Sequences with their own landing page are linked to by that page's path
+  const sequenceEvent = getSequenceEventBySequenceId(sequence._id);
+  if (sequenceEvent) {
+    return `${prefix}${sequenceEvent.path}`;
+  }
   return `${prefix}/s/${sequence._id}`;
 };
 
