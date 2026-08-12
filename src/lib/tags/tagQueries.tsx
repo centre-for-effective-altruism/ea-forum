@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
 import { db } from "@/lib/db";
 import { filterNonNull } from "../typeHelpers";
+import { userBaseProjection } from "../users/userQueries";
 import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
 import type { VoteType } from "../votes/voteHelpers";
@@ -187,6 +188,7 @@ const tagRevisionProjection = {
     createdAt: true,
   },
   with: {
+    user: userBaseProjection,
     tag: {
       columns: {
         _id: true,

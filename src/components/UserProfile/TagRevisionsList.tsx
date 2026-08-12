@@ -48,7 +48,7 @@ export default function TagRevisionsList({
   return (
     <div data-component="TagRevisionsList">
       {revisions.map((revision) => (
-        <TagRevisionItem key={revision._id} tagRevision={revision} />
+        <TagRevisionItem key={revision._id} tagRevision={revision} hideAuthor />
       ))}
       {canLoadMore && (
         <div className="mt-1">
