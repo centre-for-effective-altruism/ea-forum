@@ -340,4 +340,48 @@ suite("Featured queue", () => {
     expect(ids).toContain(viaDigestTool._id);
     expect(ids).not.toContain(notFeatured._id);
   });
+
+  test("homepage Featured list is ordered by when posts were published", async () => {
+    await createCoveringDigest();
+    const newest = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(1).toISOString(),
+    });
+    const middle = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(2).toISOString(),
+    });
+    const oldest = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(3).toISOString(),
+    });
+
+    // Featured in the opposite order to the one they were published in, and the
+    // oldest picked up last of all — as happens when someone works through a
+    // backlog. None of that should affect where they land.
+    await featurePosts([middle._id]);
+    await featurePosts([newest._id]);
+    await featurePosts([oldest._id]);
+
+    expect(await featuredListIds()).toEqual([newest._id, middle._id, oldest._id]);
+  });
+
+  test("re-featuring a post leaves the order alone", async () => {
+    await createCoveringDigest();
+    const older = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(2).toISOString(),
+    });
+    const newer = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(1).toISOString(),
+    });
+    await featurePosts([older._id, newer._id]);
+
+    expect(await featuredListIds()).toEqual([newer._id, older._id]);
+
+    await featurePosts([older._id]);
+
+    expect(await featuredListIds()).toEqual([newer._id, older._id]);
+  });
 });

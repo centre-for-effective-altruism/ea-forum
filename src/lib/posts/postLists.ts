@@ -627,6 +627,14 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
  *  - all posts marked as being in the on-site digest
  *  - all non-community posts with >= 100 karma
  *  - excluding the most recently curated post which is fetched separately
+ *
+ * Ordered by when each post was published, not when it was featured. Featuring
+ * is a judgement that a post belongs on this list, not a claim that it is new,
+ * so the list reads as "the best of what's recent" in the order readers already
+ * expect. Sorting on the featuring time instead meant that picking up an older
+ * post — during a quiet week, or after catching up on a backlog — planted it
+ * above genuinely newer posts, and that re-featuring a post (from the queue or
+ * the digest tool) silently reshuffled the page by re-stamping its time.
  */
 export const fetchFeaturedFrontpagePosts = async ({
   currentUser,
@@ -672,8 +680,7 @@ export const fetchFeaturedFrontpagePosts = async ({
             {
               // Deliberately featured, from the digest tool or the admin
               // Featured queue — both write these two together, see
-              // `featurePosts`. The post's own column is also what the sort
-              // below reads, so it's what puts a new pick at the top.
+              // `featurePosts`.
               digestPost: {
                 onsiteDigestAt: { isNotNull: true },
               },
@@ -685,8 +692,7 @@ export const fetchFeaturedFrontpagePosts = async ({
         },
       ],
     },
-    orderBy: (posts, { desc }) =>
-      desc(sql`COALESCE(${posts}."onsiteDigestAt", ${posts}."postedAt")`),
+    orderBy: { postedAt: "desc" },
     offset,
     limit: Math.min(limit, 50),
   });

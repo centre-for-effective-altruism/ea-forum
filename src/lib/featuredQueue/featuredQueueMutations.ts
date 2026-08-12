@@ -103,9 +103,11 @@ const recordOnsiteDigestDecision = async (
 
 /**
  * Feature the given posts on the homepage by stamping `posts.onsiteDigestAt`,
- * which the homepage Featured list both reads and sorts on. Only posts that are
- * still genuinely featurable are stamped, so a stale client can't feature a post
- * that has since been withdrawn. Returns how many were featured.
+ * which is what the homepage Featured list reads to decide membership. That list
+ * is ordered by publication date, so when a post is featured has no bearing on
+ * where it lands. Only posts that are still genuinely featurable are stamped, so
+ * a stale client can't feature a post that has since been withdrawn. Returns how
+ * many were featured.
  *
  * The post is also marked "yes" in the digest tool, which is what keeps the
  * featuring alive. That tool recomputes `posts.onsiteDigestAt` from its own rows
@@ -135,8 +137,8 @@ export const featurePosts = async (
   if (featurable.length === 0) {
     return 0;
   }
-  // The same timestamp on both, so the digest tool's recompute is a no-op
-  // rather than something that shuffles the Featured list's order.
+  // The same timestamp on both, so the digest tool's recompute writes back
+  // exactly what's already on the post.
   const now = new Date().toISOString();
   await dbOrTxn
     .update(posts)
