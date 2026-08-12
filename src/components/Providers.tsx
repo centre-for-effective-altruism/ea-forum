@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
+import { CommentAwardsUsedProvider } from "@/lib/commentAwards/useCommentAwardsUsed";
 import { ClientIdProvider } from "@/lib/hooks/useClientId";
 import { ThemeProvider } from "@/lib/hooks/useTheme";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
@@ -35,7 +36,9 @@ export default async function Providers({
                   <SubscriptionProvider>
                     <ItemsReadProvider>
                       <LoginPopoverContextProvider>
-                        {children}
+                        <CommentAwardsUsedProvider>
+                          {children}
+                        </CommentAwardsUsedProvider>
                       </LoginPopoverContextProvider>
                     </ItemsReadProvider>
                   </SubscriptionProvider>

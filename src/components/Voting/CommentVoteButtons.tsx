@@ -5,6 +5,7 @@ import ReactButtons from "./ReactButtons";
 import VoteButton from "./VoteButton";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
+import CommentAwardButton from "./CommentAwardButton";
 
 export default function CommentVoteButtons({
   comment,
@@ -56,6 +57,7 @@ export default function CommentVoteButtons({
           className="text-gray-400"
         />
       </div>
+      <CommentAwardButton comment={comment} />
       <ReactButtons
         reactors={comment.reactors}
         extendedScore={extendedScore}

@@ -32,6 +32,7 @@ export type DropdownItemProps = {
   submenu?: DropdownMenuItem[];
   afterNode?: ReactNode;
   loading?: boolean;
+  disabled?: boolean;
 };
 
 const SubmenuItemWrapper: FC<{
@@ -115,6 +116,7 @@ export default function DropdownItem({
   submenu,
   afterNode,
   loading,
+  disabled,
   className,
 }: Readonly<DropdownItemProps & { className?: string }>) {
   return (
@@ -123,8 +125,11 @@ export default function DropdownItem({
       onClick={onClick}
       submenu={submenu}
       className={clsx(
-        "rounded p-2 cursor-pointer hover:bg-surface-floating-hover outline-none w-full",
-        "flex items-center justify-start gap-3 text-left",
+        "rounded p-2 outline-none w-full text-left",
+        "flex items-center justify-start gap-3",
+        disabled
+          ? "opacity-50 pointer-events-none"
+          : "cursor-pointer hover:bg-surface-floating-hover",
         className,
       )}
     >
