@@ -78,10 +78,6 @@ export type FeaturedQueueItem = PostFromProjection<typeof featuredQueueProjectio
  * on karma alone (see `fetchFeaturedFrontpagePosts`) keep appearing here until
  * they're ruled on. Personal blogposts (no `frontpageDate`) never appear: a
  * moderator has already assessed them as not frontpage material.
- *
- * Re-serving a post that was already featured is worse than missing one:
- * featuring it again re-stamps `onsiteDigestAt` with the current time, which
- * jumps it above posts featured more recently.
  */
 export const fetchFeaturedQueue = async (): Promise<FeaturedQueueItem[]> => {
   return db.query.posts.findMany({

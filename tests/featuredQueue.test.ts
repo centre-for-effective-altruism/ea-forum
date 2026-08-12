@@ -340,4 +340,33 @@ suite("Featured queue", () => {
     expect(ids).toContain(viaDigestTool._id);
     expect(ids).not.toContain(notFeatured._id);
   });
+
+  test("homepage Featured list is ordered by when posts were published", async () => {
+    const newest = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(1).toISOString(),
+    });
+    const middle = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(2).toISOString(),
+    });
+    const oldest = await createTestPost({
+      baseScore: 1,
+      postedAt: nHoursAgo(3).toISOString(),
+    });
+
+    // One at a time, in the opposite order to the one they were published in —
+    // as happens when someone works through a backlog. Each call stamps a later
+    // featuring time than the last, and none of that should matter.
+    await featurePosts([middle._id]);
+    await featurePosts([newest._id]);
+    await featurePosts([oldest._id]);
+
+    expect(await featuredListIds()).toEqual([newest._id, middle._id, oldest._id]);
+
+    // Re-featuring writes a fresh stamp, which is equally irrelevant.
+    await featurePosts([oldest._id]);
+
+    expect(await featuredListIds()).toEqual([newest._id, middle._id, oldest._id]);
+  });
 });

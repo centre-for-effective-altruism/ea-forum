@@ -200,11 +200,11 @@ export default function FeaturedQueuePage({
       )}
 
       <div className="mt-6 text-[12px] font-[500] leading-normal text-gray-600">
-        Admins only. Featuring puts a post on the homepage Featured list, at the top.
-        Dismissing means &ldquo;never show me this again&rdquo; and nothing more — it
-        doesn&rsquo;t change whether a post is featured, so dismissing one
-        that&rsquo;s already on the Featured list keeps it there. Personal blogposts
-        never appear here.
+        Admins only. Featuring puts a post on the homepage Featured list, in
+        publication order rather than at the top. Dismissing means &ldquo;never show
+        me this again&rdquo; and nothing more — it doesn&rsquo;t change whether a
+        post is featured, so dismissing one that&rsquo;s already on the Featured list
+        keeps it there. Personal blogposts never appear here.
       </div>
     </main>
   );

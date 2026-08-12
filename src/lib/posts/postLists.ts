@@ -627,6 +627,9 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
  *  - all posts marked as being in the on-site digest
  *  - all non-community posts with >= 100 karma
  *  - excluding the most recently curated post which is fetched separately
+ *
+ * Ordered by publication date, not by when a post was featured: featuring is a
+ * judgement that a post belongs on this list, not a claim that it is new.
  */
 export const fetchFeaturedFrontpagePosts = async ({
   currentUser,
@@ -672,8 +675,7 @@ export const fetchFeaturedFrontpagePosts = async ({
             {
               // Deliberately featured, from the digest tool or the admin
               // Featured queue — both write these two together, see
-              // `featurePosts`. The post's own column is also what the sort
-              // below reads, so it's what puts a new pick at the top.
+              // `featurePosts`.
               digestPost: {
                 onsiteDigestAt: { isNotNull: true },
               },
@@ -685,8 +687,7 @@ export const fetchFeaturedFrontpagePosts = async ({
         },
       ],
     },
-    orderBy: (posts, { desc }) =>
-      desc(sql`COALESCE(${posts}."onsiteDigestAt", ${posts}."postedAt")`),
+    orderBy: { postedAt: "desc" },
     offset,
     limit: Math.min(limit, 50),
   });
