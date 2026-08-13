@@ -5,7 +5,8 @@ import type { CommentListItem } from "../comments/commentLists";
 
 export const commentAwardsEnabled = true;
 
-export const commentAwardPostHref = "#"; // TODO: Add post link
+export const commentAwardPostHref =
+  "/posts/ZQhThndgHNXEKFdSx/cluelessness-critiques-week-discussion-thread";
 
 export const commentAwardAmountDollars = 100;
 
