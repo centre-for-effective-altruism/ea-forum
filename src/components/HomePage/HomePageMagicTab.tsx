@@ -5,6 +5,7 @@ import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
+import { HighlightTagProvider } from "../PostsList/useHighlightTag";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
@@ -118,9 +119,11 @@ export default function HomePageMagicTab({
 
   return (
     <AnalyticsContext homePageTab="magic">
-      <div data-component="HomePageMagicTab" className="max-w-[1000px]">
-        {content}
-      </div>
+      <HighlightTagProvider highlightTag={forumEvent?.tag ?? null}>
+        <div data-component="HomePageMagicTab" className="max-w-[1000px]">
+          {content}
+        </div>
+      </HighlightTagProvider>
     </AnalyticsContext>
   );
 }
