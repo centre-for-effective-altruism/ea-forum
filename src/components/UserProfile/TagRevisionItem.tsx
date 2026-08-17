@@ -15,15 +15,18 @@ import ClockIcon from "@heroicons/react/24/outline/ClockIcon";
 import TagDiffBody from "../ContentStyles/TagDiffBody";
 import TextLinkButton from "../TextLinkButton";
 import ChangeMetrics from "../ChangeMetrics";
+import UsersName from "../UsersName";
 import TimeAgo from "../TimeAgo";
 import Loading from "../Loading";
 import Type from "../Type";
 import Link from "../Link";
 
 export default function TagRevisionItem({
-  tagRevision: { _id, changeMetrics, editedAt, createdAt, tag },
+  tagRevision: { _id, changeMetrics, editedAt, createdAt, tag, user },
+  hideAuthor,
 }: Readonly<{
   tagRevision: TagRevision;
+  hideAuthor?: boolean;
 }>) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -74,6 +77,11 @@ export default function TagRevisionItem({
             {name}
           </Link>
         </Type>
+        {!hideAuthor && user && (
+          <Type className="hidden md:block">
+            <UsersName user={user} />
+          </Type>
+        )}
         <TimeAgo time={editedAt || createdAt} />
         <Type>
           <ChangeMetrics changeMetrics={changeMetrics} />

@@ -34,6 +34,8 @@ const newSitePatterns = [
   /^\/copyright$/, // Copyright page
   /^\/cookie-policy$/, // Cookie policy
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
+  /^\/all-posts$/, // All posts page
+  /^\/allPosts$/, // All posts page (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of

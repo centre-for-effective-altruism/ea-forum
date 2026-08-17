@@ -20,6 +20,12 @@ const eslintConfig = [
       },
     },
     rules: {
+      "react-hooks/exhaustive-deps": [
+        "error",
+        {
+          additionalHooks: "(useLoad)",
+        },
+      ],
       "@typescript-eslint/no-floating-promises": "error",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",

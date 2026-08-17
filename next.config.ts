@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
   },
   redirects: async () => [
     {
+      source: "/allPosts",
+      destination: "/all-posts",
+      permanent: true,
+    },
+    {
       source: "/cookiePolicy",
       destination: "/cookie-policy",
       permanent: true,
