@@ -4,6 +4,7 @@ import type { CommentListItem } from "@/lib/comments/commentLists";
 import { CommentsListProvider } from "./Comments/useCommentsList";
 import CommentsList from "./Comments/CommentsList";
 import Tooltip from "./Tooltip";
+import Type from "./Type";
 
 export default function CommentsTooltip({
   comment,
@@ -30,8 +31,13 @@ export default function CommentsTooltip({
       tooltipClassName="px-3! py-2! w-[360px]"
       title={
         <div data-component="CommentsTooltip">
+          {comment.post?.title && (
+            <Type style="postTitle" className="mb-2">
+              {comment.post.title}
+            </Type>
+          )}
           <CommentsListProvider comments={[comment]}>
-            <CommentsList borderless />
+            <CommentsList />
           </CommentsListProvider>
         </div>
       }

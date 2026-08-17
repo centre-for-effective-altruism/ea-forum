@@ -1,4 +1,5 @@
-import type { NotificationDisplay } from "@/lib/notifications/notificationDisplayTypes";
+import { FC, ReactNode } from "react";
+import type { NotificationDisplay as NotificationDisplayType } from "@/lib/notifications/notificationDisplayTypes";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import {
   formatNotificationType,
@@ -9,12 +10,13 @@ import ChatBubbleLeftIcon from "@heroicons/react/16/solid/ChatBubbleLeftIcon";
 import DocumentIcon from "@heroicons/react/16/solid/DocumentIcon";
 import TrophyIcon from "@heroicons/react/24/solid/TrophyIcon";
 import GiftIcon from "@heroicons/react/16/solid/GiftIcon";
+import LazyCommentsTooltip from "../LazyCommentsTooltip";
 import PostsTooltip from "../PostsTooltip";
 import TimeAgo from "../TimeAgo";
 import Type from "../Type";
 import Link from "../Link";
 
-const chooseIcon = (notification: NotificationDisplay) => {
+const chooseIcon = (notification: NotificationDisplayType) => {
   if (notification.type === "wrapped") {
     return {
       Icon: GiftIcon,
@@ -39,16 +41,37 @@ const chooseIcon = (notification: NotificationDisplay) => {
   };
 };
 
+const NotificationTooltip: FC<{
+  notification: NotificationDisplayType;
+  children: ReactNode;
+}> = ({ notification: { post, comment }, children }) => {
+  if (comment) {
+    return (
+      <LazyCommentsTooltip commentId={comment._id} placement="left-start">
+        {children}
+      </LazyCommentsTooltip>
+    );
+  }
+  if (post) {
+    return (
+      <PostsTooltip post={post} placement="left-start">
+        {children}
+      </PostsTooltip>
+    );
+  }
+  return <>{children}</>;
+};
+
 export default function NotificationDisplay({
   notification,
 }: Readonly<{
-  notification: NotificationDisplay;
+  notification: NotificationDisplayType;
 }>) {
-  const { message, type, post, comment, viewed, createdAt } = notification;
+  const { message, type, viewed, createdAt } = notification;
   const icon = chooseIcon(notification);
   return (
     <AnalyticsContext pageSubSectionContext="notificationsPageItem">
-      <PostsTooltip post={post ?? comment?.post} placement="left-start">
+      <NotificationTooltip notification={notification}>
         <Link
           data-component="NotificationDisplay"
           href={getNotificationLink(notification)}
@@ -89,7 +112,7 @@ export default function NotificationDisplay({
             </div>
           </div>
         </Link>
-      </PostsTooltip>
+      </NotificationTooltip>
     </AnalyticsContext>
   );
 }
