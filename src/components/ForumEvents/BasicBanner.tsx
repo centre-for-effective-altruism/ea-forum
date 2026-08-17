@@ -22,7 +22,7 @@ export default function BasicBanner({
       <div
         data-component="BasicBanner"
         className="
-          relative h-45 flex flex-col justify-center
+          relative min-h-45 flex flex-col justify-center
         "
       >
         {bannerImageId && (
@@ -35,13 +35,13 @@ export default function BasicBanner({
             <CloudinaryImage
               publicId={bannerImageId}
               className="
-                absolute z-0 inset-0 w-full min-w-125 h-full object-cover object-top
+                absolute z-0 inset-0 w-full min-w-125 h-full object-cover object-top-right
               "
             />
             <div
               className="
                 absolute z-1 inset-0 w-full h-full
-                bg-[linear-gradient(90deg,var(--event-bg)_0%,var(--event-bg)_30%,transparent_50%)]
+                bg-[linear-gradient(90deg,var(--event-bg)_0%,var(--event-bg)_300px,transparent_580px)]
               "
             />
           </div>
