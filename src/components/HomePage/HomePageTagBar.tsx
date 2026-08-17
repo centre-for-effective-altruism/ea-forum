@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { sortedHomePageTags } from "@/lib/tags/homepageTags";
@@ -14,11 +22,13 @@ import "./home-page-tag-bar.css";
  */
 export default function HomePageTagBar({
   coreTags,
+  forumEvent,
   currentTag,
   setCurrentTag,
   className,
 }: Readonly<{
   coreTags: TagBase[];
+  forumEvent: ForumEventBase | null;
   currentTag: TagBase | null;
   setCurrentTag: (tag: TagBase | null) => void;
   className?: string;
@@ -52,8 +62,12 @@ export default function HomePageTagBar({
   }, [tabsWindowRef, topicsBarRef]);
 
   const sortedTags = useMemo(
-    () => [null, ...sortedHomePageTags(coreTags)],
-    [coreTags],
+    () => [
+      null,
+      ...(forumEvent?.tag ? [forumEvent.tag] : []),
+      ...sortedHomePageTags(coreTags),
+    ],
+    [forumEvent, coreTags],
   );
 
   const onScroll = useCallback(() => {
@@ -88,6 +102,12 @@ export default function HomePageTagBar({
       <section
         data-component="HomePageTagBar"
         className={clsx("relative max-w-full", className)}
+        style={
+          {
+            "--event-bg": forumEvent?.lightColor,
+            "--event-fg": forumEvent?.darkColor,
+          } as CSSProperties
+        }
       >
         <div
           className={clsx(
@@ -108,9 +128,13 @@ export default function HomePageTagBar({
                   onClick={onClick.bind(null, tag)}
                   className={clsx(
                     "cursor-pointer rounded whitespace-nowrap px-2 py-1",
-                    tag === currentTag
-                      ? "bg-gray-1000 text-gray-0"
-                      : "bg-gray-200 text-gray-900 hover:bg-gray-300",
+                    forumEvent?.tag && tag === forumEvent.tag
+                      ? tag === currentTag
+                        ? "bg-(--event-fg) text-(--event-bg)"
+                        : "bg-(--event-bg) text-(--event-fg) hover:opacity-90"
+                      : tag === currentTag
+                        ? "bg-gray-1000 text-gray-0"
+                        : "bg-gray-200 text-gray-900 hover:bg-gray-300",
                   )}
                 >
                   <Type className="max-md:text-[12px]">

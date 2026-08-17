@@ -1,9 +1,11 @@
 "use client";
 
 import { ReactNode, Suspense, useState } from "react";
+import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
+import { HighlightTagProvider } from "../PostsList/useHighlightTag";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
@@ -20,6 +22,7 @@ import Type from "../Type";
 
 export default function HomePageMagicTab({
   coreTags,
+  forumEvent,
   spotlight,
   stickyPostsList,
   frontpagePostsList,
@@ -29,6 +32,7 @@ export default function HomePageMagicTab({
   recentDiscussions,
 }: Readonly<{
   coreTags: TagBase[];
+  forumEvent: ForumEventBase | null;
   spotlight: SpotlightBase | null;
   stickyPostsList: ReactNode;
   frontpagePostsList: ReactNode;
@@ -44,6 +48,7 @@ export default function HomePageMagicTab({
     <>
       <HomePageTagBar
         coreTags={coreTags}
+        forumEvent={forumEvent}
         currentTag={currentTag}
         setCurrentTag={setCurrentTag}
         className="mb-5"
@@ -67,6 +72,7 @@ export default function HomePageMagicTab({
           <div className="flex items-center justify-between gap-4">
             <HomePageTagBar
               coreTags={coreTags}
+              forumEvent={forumEvent}
               currentTag={currentTag}
               setCurrentTag={setCurrentTag}
               className="min-w-0"
@@ -113,9 +119,11 @@ export default function HomePageMagicTab({
 
   return (
     <AnalyticsContext homePageTab="magic">
-      <div data-component="HomePageMagicTab" className="max-w-[1000px]">
-        {content}
-      </div>
+      <HighlightTagProvider highlightTag={forumEvent?.tag ?? null}>
+        <div data-component="HomePageMagicTab" className="max-w-[1000px]">
+          {content}
+        </div>
+      </HighlightTagProvider>
     </AnalyticsContext>
   );
 }

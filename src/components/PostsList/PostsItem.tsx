@@ -2,12 +2,13 @@
 
 import { ReactNode, SyntheticEvent, useCallback, useState } from "react";
 import Image from "next/image";
-import type { PostListItem } from "@/lib/posts/postLists";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
+import type { PostListItem } from "@/lib/posts/postLists";
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import { useHideRepeatedPosts } from "@/lib/hooks/useHideRepeatedPosts";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useItemsRead } from "@/lib/hooks/useItemsRead";
+import { useHighlightTag } from "./useHighlightTag";
 import {
   getPostPlaintextDescription,
   getPostSocialImageUrl,
@@ -20,6 +21,7 @@ import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
 import PostsItemNewComments from "./PostsItemNewComments";
 import PostsItemMeta from "./PostsItemMeta";
 import PostsTooltip from "../PostsTooltip";
+import TagChip from "../Tags/TagChip";
 import PostIcons from "./PostIcons";
 import Score from "../Score";
 import Type from "../Type";
@@ -53,6 +55,7 @@ export default function PostsItem({
     post;
   const postLink = postGetPageUrl({ post });
   const { postsRead } = useItemsRead();
+  const { highlightTag } = useHighlightTag();
   const isRead = !!(post._id in postsRead
     ? postsRead[post._id]
     : readStatus?.[0]?.isRead);
@@ -133,43 +136,55 @@ export default function PostsItem({
             className={clsx("min-w-[24px] sm:min-w-[33px]", cardView && "mt-4")}
           />
           <div className={clsx("min-w-0 grow", cardView && "mt-1")}>
-            <Type
-              style="postTitle"
-              className={clsx(
-                "mb-0 min-w-0",
-                // On mobile the default 1.5 line-height looked loose / clipped
-                // descenders inside the line-clamp, so tighten it (keeping the
-                // postitem font size unchanged).
-                "max-sm:leading-[1.3]",
-                isRead ? "text-gray-700" : "text-gray-900",
-                cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
-              )}
-            >
-              <InteractionWrapper As="span">
-                <PostIcons
-                  post={post}
-                  side="left"
-                  curatedIconLeft={curatedIconLeft}
-                  className="mr-1 translate-y-1"
-                />
-              </InteractionWrapper>
-              <PostsTooltip As="span" post={post}>
-                <Link
-                  href={postLink}
-                  className="align-middle visited:text-gray-600 hover:opacity-70"
-                >
-                  {title}
-                </Link>
-              </PostsTooltip>
-              <InteractionWrapper As="span" className="max-sm:hidden">
-                <PostIcons
-                  post={post}
-                  side="right"
-                  curatedIconLeft={curatedIconLeft}
-                  className="ml-1 translate-y-1"
-                />
-              </InteractionWrapper>
-            </Type>
+            <div className="min-w-0 flex gap-1">
+              <Type
+                style="postTitle"
+                className={clsx(
+                  "mb-0 min-w-0",
+                  // On mobile the default 1.5 line-height looked loose / clipped
+                  // descenders inside the line-clamp, so tighten it (keeping the
+                  // postitem font size unchanged).
+                  "max-sm:leading-[1.3]",
+                  isRead ? "text-gray-700" : "text-gray-900",
+                  cardView ? "line-clamp-2" : "max-sm:line-clamp-3 sm:truncate",
+                )}
+              >
+                <InteractionWrapper As="span">
+                  <PostIcons
+                    post={post}
+                    side="left"
+                    curatedIconLeft={curatedIconLeft}
+                    className="mr-1 translate-y-1"
+                  />
+                </InteractionWrapper>
+                <PostsTooltip As="span" post={post}>
+                  <Link
+                    href={postLink}
+                    className="align-middle visited:text-gray-600 hover:opacity-70"
+                  >
+                    {title}
+                  </Link>
+                </PostsTooltip>
+                <InteractionWrapper As="span" className="max-sm:hidden">
+                  <PostIcons
+                    post={post}
+                    side="right"
+                    curatedIconLeft={curatedIconLeft}
+                    className="ml-1 translate-y-1"
+                  />
+                </InteractionWrapper>
+              </Type>
+              {!!highlightTag &&
+                post.tags?.some((tag) => tag._id === highlightTag._id) && (
+                  <InteractionWrapper As="span" className="max-sm:hidden">
+                    <TagChip
+                      tag={highlightTag}
+                      variant="small"
+                      className="inline-block"
+                    />
+                  </InteractionWrapper>
+                )}
+            </div>
             <Type style="bodySmallMedium" className="min-w-0 flex">
               <PostsItemMeta post={post} />
               <InteractionWrapper className="sm:hidden">
