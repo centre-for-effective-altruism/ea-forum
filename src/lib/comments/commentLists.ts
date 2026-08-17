@@ -156,6 +156,13 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
           slug: true,
         },
       },
+      awards: {
+        columns: {
+          _id: true,
+          userId: true,
+          count: true,
+        },
+      },
       ...(currentUser
         ? {
             bookmarks: {

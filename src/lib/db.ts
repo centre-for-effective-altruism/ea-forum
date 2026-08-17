@@ -19,6 +19,7 @@ import {
   collections,
   commentModeratorActions,
   comments,
+  commentAwards,
   conversations,
   digestPosts,
   digests,
@@ -57,6 +58,7 @@ const relations = defineRelations(
     collections,
     books,
     comments,
+    commentAwards,
     conversations,
     revisions,
     votes,
@@ -218,6 +220,13 @@ const relations = defineRelations(
           collectionName: "Comments",
           cancelled: false,
           isUnvote: false,
+        },
+      }),
+      awards: r.many.commentAwards({
+        from: r.comments._id,
+        to: r.commentAwards.commentId,
+        where: {
+          isDeleted: false,
         },
       }),
       topLevelComment: r.one.comments({

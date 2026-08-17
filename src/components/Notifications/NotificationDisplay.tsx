@@ -7,25 +7,36 @@ import {
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/16/solid/ChatBubbleLeftIcon";
 import DocumentIcon from "@heroicons/react/16/solid/DocumentIcon";
+import TrophyIcon from "@heroicons/react/24/solid/TrophyIcon";
 import GiftIcon from "@heroicons/react/16/solid/GiftIcon";
 import PostsTooltip from "../PostsTooltip";
 import TimeAgo from "../TimeAgo";
 import Type from "../Type";
 import Link from "../Link";
 
-const icons = {
-  post: {
+const chooseIcon = (notification: NotificationDisplay) => {
+  if (notification.type === "wrapped") {
+    return {
+      Icon: GiftIcon,
+      className: "wrapped-notification",
+    };
+  }
+  if (notification.type === "commentAwarded") {
+    return {
+      Icon: TrophyIcon,
+      className: "bg-always-black text-karma-star",
+    };
+  }
+  if (notification.comment) {
+    return {
+      Icon: ChatBubbleLeftIcon,
+      className: "bg-gray-600",
+    };
+  }
+  return {
     Icon: DocumentIcon,
     className: "bg-(--color-primary)",
-  },
-  comment: {
-    Icon: ChatBubbleLeftIcon,
-    className: "bg-gray-600",
-  },
-  wrapped: {
-    Icon: GiftIcon,
-    className: "wrapped-notification",
-  },
+  };
 };
 
 export default function NotificationDisplay({
@@ -34,7 +45,7 @@ export default function NotificationDisplay({
   notification: NotificationDisplay;
 }>) {
   const { message, type, post, comment, viewed, createdAt } = notification;
-  const icon = icons[type === "wrapped" ? "wrapped" : comment ? "comment" : "post"];
+  const icon = chooseIcon(notification);
   return (
     <AnalyticsContext pageSubSectionContext="notificationsPageItem">
       <PostsTooltip post={post ?? comment?.post} placement="left-start">

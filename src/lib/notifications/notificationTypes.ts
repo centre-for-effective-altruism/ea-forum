@@ -1072,6 +1072,18 @@ export const notificationTypesArray: NotificationType[] = [
         : `A poll you voted on has closed: "${pollQuestion}"`;
     },
   }),
+  createNotificationType({
+    name: "commentAwarded",
+    userSettingField: "notificationRepliesToMyComments",
+    getLink: getCommentLink,
+    getMessage: async ({ extraData }) => {
+      const count = extraData?.count as number | undefined;
+      const dollarsPerPrize = extraData?.dollarsPerPrize as number | undefined;
+      const amount =
+        count && dollarsPerPrize ? ` of $${count * dollarsPerPrize}` : "";
+      return `Your comment received an award${amount}`;
+    },
+  }),
 ];
 
 const notificationTypes: Record<string, NotificationType> = keyBy(

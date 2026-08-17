@@ -1068,6 +1068,38 @@ export const comments = pgTable(
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = typeof comments.$inferInsert;
 
+export const commentAwards = pgTable(
+  "CommentAwards",
+  {
+    ...universalFields,
+    userId: varchar({ length: 27 }).notNull(),
+    commentId: varchar({ length: 27 }).notNull(),
+    isDeleted: boolean().default(false).notNull(),
+    count: doublePrecision().default(1).notNull(),
+  },
+  (table) => [
+    index("idx_CommentAwards_schemaVersion").using(
+      "btree",
+      table.schemaVersion.asc().nullsLast(),
+    ),
+    index("idx_CommentAwards_commentId").using(
+      "btree",
+      table.commentId.asc().nullsLast(),
+    ),
+    index("idx_CommentAwards_commentId_deleted").using(
+      "btree",
+      table.commentId.asc().nullsLast(),
+      table.isDeleted.asc().nullsLast(),
+    ),
+    index("idx_CommentAwards_userId").using("btree", table.userId.asc().nullsLast()),
+    index("idx_CommentAwards_userId_deleted").using(
+      "btree",
+      table.userId.asc().nullsLast(),
+      table.isDeleted.asc().nullsLast(),
+    ),
+  ],
+);
+
 export const clientIds = pgTable(
   "ClientIds",
   {
