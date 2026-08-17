@@ -12,6 +12,8 @@ const oldSitePatterns = [
   /^\/api\/health$/,
   /^\/api\/search.*$/,
   /^\/api\/eafunds-posts$/,
+  /^\/api\/crosspost.*$/,
+  /^\/api\/v2\/crosspost.*$/,
 ];
 
 // Middle precedence: Route these to the new site
@@ -32,13 +34,18 @@ const newSitePatterns = [
   /^\/copyright$/, // Copyright page
   /^\/cookie-policy$/, // Cookie policy
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
+  /^\/all-posts$/, // All posts page
+  /^\/allPosts$/, // All posts page (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of
   /^\/admin$/, // Admin
+  /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
   /^\/admin\/spotlights.*/, // Admin spotlights pages
+  /^\/admin\/swap-user-emails$/, // Admin swap user emails page
+  /^\/robots.txt$/, // robots.txt
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match

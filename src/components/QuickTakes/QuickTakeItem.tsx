@@ -12,6 +12,7 @@ import { CommentsListProvider, useCommentsList } from "../Comments/useCommentsLi
 import { InteractionWrapper, useClickableCell } from "@/lib/hooks/useClickableCell";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import CommentTripleDotMenu from "../Comments/CommentTripleDotMenu";
+import CommentAwardButton from "../Voting/CommentAwardButton";
 import CommentBody from "../ContentStyles/CommentBody";
 import CommentsList from "../Comments/CommentsList";
 import CommentDate from "../Comments/CommentDate";
@@ -103,6 +104,7 @@ const QuickTakeItemInner: FC<{
         <div className="grow">
           <CommentTags comment={quickTake} />
         </div>
+        <CommentAwardButton comment={quickTake} />
         {descendentCount > 0 && (
           <Type
             style="body"

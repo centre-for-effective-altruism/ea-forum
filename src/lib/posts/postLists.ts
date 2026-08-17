@@ -20,6 +20,12 @@ import {
   currentUserSuggestedCurationSelector,
   filterSettingsToSelector,
 } from "./postQueries";
+import {
+  ALL_POSTS_LOW_KARMA_THRESHOLD,
+  AllPostsSettings,
+  AllPostsSortedBy,
+} from "./allPostsSettings";
+import { getKarmaInflationSeries } from "./karmaInflation";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -627,6 +633,9 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
  *  - all posts marked as being in the on-site digest
  *  - all non-community posts with >= 100 karma
  *  - excluding the most recently curated post which is fetched separately
+ *
+ * Ordered by publication date, not by when a post was featured: featuring is a
+ * judgement that a post belongs on this list, not a claim that it is new.
  */
 export const fetchFeaturedFrontpagePosts = async ({
   currentUser,
@@ -663,20 +672,28 @@ export const fetchFeaturedFrontpagePosts = async ({
         {
           OR: [
             {
+              // Featured on karma alone, with no admin action. The Featured
+              // queue deliberately still offers these up for review — see
+              // `fetchFeaturedQueue`.
               baseScore: { gte: 100 },
               RAW: (postsTable) => excludeCommunity(postsTable),
             },
             {
+              // Deliberately featured, from the digest tool or the admin
+              // Featured queue — both write these two together, see
+              // `featurePosts`.
               digestPost: {
                 onsiteDigestAt: { isNotNull: true },
               },
+            },
+            {
+              onsiteDigestAt: { isNotNull: true },
             },
           ],
         },
       ],
     },
-    orderBy: (posts, { desc }) =>
-      desc(sql`COALESCE(${posts}."onsiteDigestAt", ${posts}."postedAt")`),
+    orderBy: { postedAt: "desc" },
     offset,
     limit: Math.min(limit, 50),
   });
@@ -696,4 +713,85 @@ export const fetchMostRecentlyCuratedPost = async (
     limit: 1,
   });
   return result[0] ?? null;
+};
+
+const getAllPostsSort = async (sortedBy: AllPostsSortedBy) => {
+  switch (sortedBy) {
+    case "magic":
+      return magicSort();
+    case "top":
+      return { baseScore: "desc", postedAt: "desc", _id: "asc" } as const;
+    case "topAdjusted":
+      const { start, interval, values, valuesSql } = await getKarmaInflationSeries();
+      return (postsTable: typeof posts) => sql`
+        ${postsTable}."baseScore" * COALESCE(
+          ${valuesSql}[1 + GREATEST(
+            FLOOR(
+              EXTRACT(EPOCH FROM (
+                ${postsTable}."postedAt" - TO_TIMESTAMP(${start / 1000})
+              )) * 1000 / ${interval}::BIGINT
+            ),
+            0
+          )],
+          ${values[values.length - 1] ?? null},
+          1.0
+        ) DESC,
+        ${postsTable}."postedAt" DESC,
+        ${postsTable}."_id" ASC
+      `;
+    case "recentComments":
+      return { lastCommentedAt: "desc", postedAt: "desc", _id: "asc" } as const;
+    case "new":
+      return { postedAt: "desc", _id: "asc" } as const;
+    case "old":
+      return { postedAt: "asc", _id: "asc" } as const;
+    default:
+      return { _id: "asc" } as const;
+  }
+};
+
+export const fetchAllPosts = async ({
+  currentUser,
+  settings: { sortedBy, filter, showLowKarma, showEvents, showCommunity },
+  before = new Date(),
+  after = new Date(0),
+  limit,
+  offset,
+}: {
+  currentUser: CurrentUser | null;
+  settings: AllPostsSettings;
+  before?: Date;
+  after?: Date;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      postedAt: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
+      frontpageDate: filter === "frontpage" ? { isNotNull: true } : undefined,
+      curatedDate: filter === "curated" ? { isNotNull: true } : undefined,
+      question: filter === "questions" ? true : undefined,
+      isEvent: filter === "events" ? true : showEvents ? undefined : false,
+      baseScore: showLowKarma ? { gte: ALL_POSTS_LOW_KARMA_THRESHOLD } : undefined,
+      AND: [
+        {
+          RAW:
+            filter === "linkpost"
+              ? (postsTable) => sql`LENGTH(TRIM(${postsTable}."url")) > 0`
+              : undefined,
+        },
+        {
+          RAW: showCommunity
+            ? undefined
+            : excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID),
+        },
+      ],
+    },
+    orderBy: await getAllPostsSort(sortedBy),
+    offset,
+    limit,
+  });
 };

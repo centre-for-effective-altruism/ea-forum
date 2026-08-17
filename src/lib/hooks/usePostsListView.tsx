@@ -9,10 +9,12 @@ import {
   useState,
 } from "react";
 import { useCookiesWithConsent } from "../cookies/useCookiesWithConsent";
+import type { CookieName } from "../cookies/cookies";
 import {
   defaultPostsViewType,
   isPostsListViewType,
   PostsListViewType,
+  postsListViewTypeCookie,
 } from "../posts/postsListView";
 
 type PostsListViewContext = {
@@ -25,18 +27,20 @@ const postsListViewContext = createContext<PostsListViewContext>({
   setView: () => console.error("Can't set view outside of PostsListViewProvider"),
 });
 
-const useCookieValue = (): {
+const useCookieValue = (
+  cookieName: CookieName,
+): {
   cookieValue: PostsListViewType | null;
   setCookieValue: (value: PostsListViewType) => void;
 } => {
-  const [cookies, setCookie] = useCookiesWithConsent(["posts_list_view_type"]);
+  const [cookies, setCookie] = useCookiesWithConsent([cookieName]);
   const setCookieValue = useCallback(
     (newValue: PostsListViewType) => {
-      setCookie("posts_list_view_type", newValue, { path: "/" });
+      setCookie(cookieName, newValue, { path: "/" });
     },
-    [setCookie],
+    [setCookie, cookieName],
   );
-  const value = cookies.posts_list_view_type ?? "";
+  const value = cookies[cookieName] ?? "";
   return {
     cookieValue: isPostsListViewType(value) ? value : null,
     setCookieValue,
@@ -45,11 +49,24 @@ const useCookieValue = (): {
 
 export const PostsListViewProvider: FC<{
   ssrValue?: PostsListViewType;
+  /**
+   * The cookie used to persist the choice. Defaults to the shared
+   * `posts_list_view_type` cookie, but a distinct cookie can be passed so that
+   * a particular list's view preference is isolated from other lists.
+   */
+  cookieName?: CookieName;
+  /** The view to use when neither `ssrValue` nor a stored cookie is set. */
+  defaultValue?: PostsListViewType;
   children: ReactNode;
-}> = ({ ssrValue, children }) => {
-  const { cookieValue, setCookieValue } = useCookieValue();
+}> = ({
+  ssrValue,
+  cookieName = postsListViewTypeCookie,
+  defaultValue = defaultPostsViewType,
+  children,
+}) => {
+  const { cookieValue, setCookieValue } = useCookieValue(cookieName);
   const [view, setView_] = useState<PostsListViewType>(
-    ssrValue ?? cookieValue ?? defaultPostsViewType,
+    ssrValue ?? cookieValue ?? defaultValue,
   );
 
   const setView = useCallback(

@@ -1,11 +1,13 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
+import { editorDataSchema } from "../ckeditor/editorHelpers";
+import { allPostsSortedBySchema } from "../posts/allPostsSettings";
 import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
   countFrontpageQuickTakes,
+  fetchAllPostsQuickTakes,
   fetchCommentReplies,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
@@ -72,6 +74,21 @@ export const commentsRouter = {
         offset,
         limit,
       });
+    }),
+  listAllQuickTakes: os
+    .input(
+      z.object({
+        frontpage: z.boolean().optional(),
+        sortedBy: allPostsSortedBySchema,
+        before: z.coerce.date().optional(),
+        after: z.coerce.date().optional(),
+        offset: z.number().nonnegative().max(5000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchAllPostsQuickTakes({ currentUser, ...input });
     }),
   create: os
     .input(

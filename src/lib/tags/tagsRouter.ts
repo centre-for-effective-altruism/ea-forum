@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { db } from "../db";
 import {
+  fetchAllPostsTags,
   fetchCoreTags,
   fetchOnboardingTags,
   fetchTagBySlug,
@@ -36,6 +37,18 @@ export const tagsRouter = {
         offset,
         limit,
       });
+    }),
+  listAll: os
+    .input(
+      z.object({
+        before: z.coerce.date().optional(),
+        after: z.coerce.date().optional(),
+        offset: z.number().nonnegative().max(5000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      return await fetchAllPostsTags(input);
     }),
   diff: os
     .input(z.object({ revisionId: z.string().nonempty() }))

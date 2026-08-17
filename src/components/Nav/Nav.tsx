@@ -41,7 +41,7 @@ const items = [
   },
   {
     title: "All posts",
-    href: "/allPosts",
+    href: "/all-posts",
     UnselectedIcon: ArchiveBoxIcon,
     SelectedIcon: ArchiveBoxSelectedIcon,
   },

@@ -3,9 +3,14 @@ import { sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
 import { db } from "@/lib/db";
 import { filterNonNull } from "../typeHelpers";
+import { userBaseProjection } from "../users/userQueries";
 import { htmlSubstring, RelationalProjection } from "../utils/queryHelpers";
 import type { comments, posts, Tag } from "../schema";
 import type { VoteType } from "../votes/voteHelpers";
+import type {
+  RevisionFromProjection,
+  RevisionRelationalProjection,
+} from "../revisions/revisionQueries";
 
 export type TagRelationalProjection = RelationalProjection<typeof db.query.tags>;
 
@@ -13,7 +18,7 @@ export type TagFromProjection<TConfig extends TagRelationalProjection> = Awaited
   ReturnType<typeof db.query.tags.findMany<TConfig>>
 >[number];
 
-const tagBaseProjection = {
+export const tagBaseProjection = {
   columns: {
     _id: true,
     name: true,
@@ -175,6 +180,27 @@ export const fetchOnboardingTags = async () => {
 
 export type OnboardingTag = Awaited<ReturnType<typeof fetchOnboardingTags>>[number];
 
+const tagRevisionProjection = {
+  columns: {
+    _id: true,
+    changeMetrics: true,
+    editedAt: true,
+    createdAt: true,
+  },
+  with: {
+    user: userBaseProjection,
+    tag: {
+      columns: {
+        _id: true,
+        name: true,
+        slug: true,
+      },
+    },
+  },
+} satisfies RevisionRelationalProjection;
+
+export type TagRevision = RevisionFromProjection<typeof tagRevisionProjection>;
+
 export const fetchUserProfileTagRevisions = async ({
   userId,
   limit = 10,
@@ -185,21 +211,7 @@ export const fetchUserProfileTagRevisions = async ({
   offset?: number;
 }) => {
   return await db.query.revisions.findMany({
-    columns: {
-      _id: true,
-      changeMetrics: true,
-      editedAt: true,
-      createdAt: true,
-    },
-    with: {
-      tag: {
-        columns: {
-          _id: true,
-          name: true,
-          slug: true,
-        },
-      },
-    },
+    ...tagRevisionProjection,
     where: {
       tag: {
         _id: { isNotNull: true },
@@ -218,6 +230,35 @@ export const fetchUserProfileTagRevisions = async ({
   });
 };
 
-export type TagRevision = Awaited<
-  ReturnType<typeof fetchUserProfileTagRevisions>
->[number];
+export const fetchAllPostsTags = async ({
+  before = new Date(),
+  after = new Date(0),
+  offset = 0,
+  limit = 10,
+}: {
+  before?: Date;
+  after?: Date;
+  offset?: number;
+  limit?: number;
+}) => {
+  return await db.query.revisions.findMany({
+    ...tagRevisionProjection,
+    where: {
+      createdAt: {
+        AND: [{ gte: after.toISOString() }, { lt: before.toISOString() }],
+      },
+      tag: {
+        _id: { isNotNull: true },
+      },
+      collectionName: "Tags",
+      fieldName: "description",
+    },
+    orderBy: {
+      editedAt: "desc",
+      createdAt: "desc",
+      _id: "asc",
+    },
+    limit,
+    offset,
+  });
+};

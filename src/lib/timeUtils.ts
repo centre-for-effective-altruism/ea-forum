@@ -176,3 +176,13 @@ export const subtractTime = (date: Date, length: number, unit: TimeInterval): Da
   addTime(date, -length, unit);
 
 export const earliest = (a: Date, b: Date) => (a < b ? a : b);
+
+export const isToday = (date: Date): boolean => {
+  const today = new Date();
+
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+};

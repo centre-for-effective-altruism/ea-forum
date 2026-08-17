@@ -70,6 +70,7 @@ export default async function PostDisplay({
   );
 
   const showRecommendations =
+    !currentUser?.hidePostsRecommendations &&
     !sequence &&
     !post.shortform &&
     !post.draft &&

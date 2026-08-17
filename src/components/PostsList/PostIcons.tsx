@@ -105,7 +105,7 @@ export default function PostIcons({
         </PostIcon>
       )}
       {showQuestion && (
-        <PostIcon href="/questions" Icon={QIcon}>
+        <PostIcon href="/questions" Icon={QIcon} className="-translate-y-[3px]">
           Question
           <br />
           <em>(click to view all questions)</em>

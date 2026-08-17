@@ -3,6 +3,11 @@ import { cookies } from "next/headers";
 import { getPostHogClient, getPostHogDistinctId } from "@/lib/posthog-server";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
+import {
+  featuredViewTypeCookie,
+  isPostsListViewType,
+} from "@/lib/posts/postsListView";
+import ForumEventHomePageBanner from "@/components/ForumEvents/ForumEventHomePageBanner";
 import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
 import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
@@ -41,14 +46,29 @@ export default async function HomePage() {
   const flags = await getPostHogClient()?.evaluateFlags(posthogDistinctId);
   const testGroup = flags?.getFlag("default-frontpage-tab") as string | undefined;
   const initialTab = getCurrentHomePageTab(cookieStore, testGroup);
+  const featuredViewCookie = cookieStore.get(featuredViewTypeCookie)?.value ?? "";
+  const featuredView = isPostsListViewType(featuredViewCookie)
+    ? featuredViewCookie
+    : undefined;
   return (
-    <HomePageColumns pageContext="homePage">
+    <HomePageColumns
+      pageContext="homePage"
+      banner={
+        <Suspense>
+          <ForumEventHomePageBanner />
+        </Suspense>
+      }
+    >
       <StructuredData data={structuredData} />
       <BotSiteNotice />
       <HomePageTabs
         testGroup={testGroup}
         initialContent={
-          <Suspense fallback={<HomePageTabSkeleton tab={initialTab} />}>
+          <Suspense
+            fallback={
+              <HomePageTabSkeleton tab={initialTab} featuredView={featuredView} />
+            }
+          >
             <HomePageTabContent tab={initialTab} />
           </Suspense>
         }

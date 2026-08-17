@@ -1,9 +1,12 @@
 "use client";
 
 import { ReactNode, Suspense, useState } from "react";
+import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
+import { HighlightTagProvider } from "../PostsList/useHighlightTag";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
@@ -19,6 +22,7 @@ import Type from "../Type";
 
 export default function HomePageMagicTab({
   coreTags,
+  forumEvent,
   spotlight,
   stickyPostsList,
   frontpagePostsList,
@@ -28,6 +32,7 @@ export default function HomePageMagicTab({
   recentDiscussions,
 }: Readonly<{
   coreTags: TagBase[];
+  forumEvent: ForumEventBase | null;
   spotlight: SpotlightBase | null;
   stickyPostsList: ReactNode;
   frontpagePostsList: ReactNode;
@@ -36,12 +41,14 @@ export default function HomePageMagicTab({
   popularCommentsList: ReactNode;
   recentDiscussions: ReactNode;
 }>) {
+  const { currentUser } = useCurrentUser();
   const [currentTag, setCurrentTag] = useState<TagBase | null>(null);
 
   const content = currentTag ? (
     <>
       <HomePageTagBar
         coreTags={coreTags}
+        forumEvent={forumEvent}
         currentTag={currentTag}
         setCurrentTag={setCurrentTag}
         className="mb-5"
@@ -65,6 +72,7 @@ export default function HomePageMagicTab({
           <div className="flex items-center justify-between gap-4">
             <HomePageTagBar
               coreTags={coreTags}
+              forumEvent={forumEvent}
               currentTag={currentTag}
               setCurrentTag={setCurrentTag}
               className="min-w-0"
@@ -82,11 +90,12 @@ export default function HomePageMagicTab({
           </Suspense>
         </div>
       </FilterSettingsProvider>
-      {process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID && (
-        <HomePageCommunitySection className="mb-10">
-          {communityPostsList}
-        </HomePageCommunitySection>
-      )}
+      {process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID &&
+        !currentUser?.hideCommunitySection && (
+          <HomePageCommunitySection className="mb-10">
+            {communityPostsList}
+          </HomePageCommunitySection>
+        )}
       <div className="flex flex-col-reverse mobile-nav:grid grid-cols-2 gap-x-4">
         <HomePagePopularCommentsSection className="mb-10">
           <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
@@ -110,9 +119,11 @@ export default function HomePageMagicTab({
 
   return (
     <AnalyticsContext homePageTab="magic">
-      <div data-component="HomePageMagicTab" className="max-w-[1000px]">
-        {content}
-      </div>
+      <HighlightTagProvider highlightTag={forumEvent?.tag ?? null}>
+        <div data-component="HomePageMagicTab" className="max-w-[1000px]">
+          {content}
+        </div>
+      </HighlightTagProvider>
     </AnalyticsContext>
   );
 }
