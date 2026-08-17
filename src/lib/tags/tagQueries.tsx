@@ -18,7 +18,7 @@ export type TagFromProjection<TConfig extends TagRelationalProjection> = Awaited
   ReturnType<typeof db.query.tags.findMany<TConfig>>
 >[number];
 
-const tagBaseProjection = {
+export const tagBaseProjection = {
   columns: {
     _id: true,
     name: true,

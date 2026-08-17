@@ -1,8 +1,10 @@
+import { cache } from "react";
 import { and, eq, sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { RelationalProjection } from "../utils/queryHelpers";
 import { forumEvents, ForumEvent, InsertForumEvent, comments } from "../schema";
+import { tagBaseProjection } from "../tags/tagQueries";
 import { db, DbOrTransaction } from "../db";
 import {
   createRevisionForDenormalizedEditableField,
@@ -62,12 +64,7 @@ export const forumEventBaseProjection = {
         _id: true,
       },
     },
-    tag: {
-      columns: {
-        _id: true,
-        slug: true,
-      },
-    },
+    tag: tagBaseProjection,
   },
   extras: {
     frontpageDescriptionHtml: (posts, { sql }) =>
@@ -310,19 +307,21 @@ export const setLatestPollVote = async (
     );
 };
 
-export const fetchCurrentForumEvent = async (): Promise<ForumEventBase | null> => {
-  const now = new Date().toISOString();
-  const result = await db.query.forumEvents.findFirst({
-    ...forumEventBaseProjection,
-    where: {
-      startDate: { lte: now },
-      endDate: { gt: now },
-      isGlobal: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-      _id: "asc",
-    },
-  });
-  return result ?? null;
-};
+export const fetchCurrentForumEvent = cache(
+  async (): Promise<ForumEventBase | null> => {
+    const now = new Date().toISOString();
+    const result = await db.query.forumEvents.findFirst({
+      ...forumEventBaseProjection,
+      where: {
+        startDate: { lte: now },
+        endDate: { gt: now },
+        isGlobal: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+        _id: "asc",
+      },
+    });
+    return result ?? null;
+  },
+);

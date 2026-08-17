@@ -1,3 +1,4 @@
+import { fetchCurrentForumEvent } from "@/lib/forumEvents/forumEventQueries";
 import { fetchCurrentSpotlight } from "@/lib/spotlights/spotlightQueries";
 import { fetchCoreTags } from "@/lib/tags/tagQueries";
 import RecentDiscussionsSection from "./RecentDiscussions/RecentDiscussionsSection";
@@ -8,13 +9,15 @@ import PopularCommentsList from "./PopularCommentsList";
 import HomePageMagicTab from "./HomePageMagicTab";
 
 export default async function HomePageMagicRoute() {
-  const [coreTags, spotlight] = await Promise.all([
+  const [coreTags, spotlight, forumEvent] = await Promise.all([
     fetchCoreTags(),
     fetchCurrentSpotlight(),
+    fetchCurrentForumEvent(),
   ]);
   return (
     <HomePageMagicTab
       coreTags={coreTags}
+      forumEvent={forumEvent}
       spotlight={spotlight}
       stickyPostsList={
         <ViewBasedPostsList

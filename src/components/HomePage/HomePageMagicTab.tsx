@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, Suspense, useState } from "react";
+import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
 import type { SpotlightBase } from "@/lib/spotlights/spotlightQueries";
 import type { TagBase } from "@/lib/tags/tagQueries";
 import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
@@ -20,6 +21,7 @@ import Type from "../Type";
 
 export default function HomePageMagicTab({
   coreTags,
+  forumEvent,
   spotlight,
   stickyPostsList,
   frontpagePostsList,
@@ -29,6 +31,7 @@ export default function HomePageMagicTab({
   recentDiscussions,
 }: Readonly<{
   coreTags: TagBase[];
+  forumEvent: ForumEventBase | null;
   spotlight: SpotlightBase | null;
   stickyPostsList: ReactNode;
   frontpagePostsList: ReactNode;
@@ -44,6 +47,7 @@ export default function HomePageMagicTab({
     <>
       <HomePageTagBar
         coreTags={coreTags}
+        forumEvent={forumEvent}
         currentTag={currentTag}
         setCurrentTag={setCurrentTag}
         className="mb-5"
@@ -67,6 +71,7 @@ export default function HomePageMagicTab({
           <div className="flex items-center justify-between gap-4">
             <HomePageTagBar
               coreTags={coreTags}
+              forumEvent={forumEvent}
               currentTag={currentTag}
               setCurrentTag={setCurrentTag}
               className="min-w-0"
