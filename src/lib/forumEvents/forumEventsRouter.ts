@@ -1,11 +1,7 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import {
-  addPollVote,
-  removePollVote,
-  addMcPollVote,
-} from "./forumEventMutations";
+import { addPollVote, removePollVote, addMcPollVote } from "./forumEventMutations";
 import { fetchForumEventById } from "./forumEventQueries";
 
 export const forumEventsRouter = {

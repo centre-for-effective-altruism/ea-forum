@@ -761,8 +761,7 @@ export default class PollForm extends Plugin {
     this.formView.answersView.element.value = (pollProps.answers ?? [])
       .map((answer) => answer.text)
       .join("\n");
-    const checkbox =
-      this.formView.multiSelectView.element?.querySelector("input");
+    const checkbox = this.formView.multiSelectView.element?.querySelector("input");
     if (checkbox) {
       checkbox.checked = !!pollProps.multiSelect;
     }

@@ -275,16 +275,15 @@ export const aggregateMcPollVotes = ({
   const { answers, votes } = getMcPollPublicData(event);
   const votersById = new Map((voters ?? []).map((voter) => [voter._id, voter]));
   const commentsByUserId = new Map(
-    (comments ?? [])
-      .filter((c) => c.user?._id)
-      .map((c) => [c.user!._id, c]),
+    (comments ?? []).filter((c) => c.user?._id).map((c) => [c.user!._id, c]),
   );
 
   // `count` intentionally tracks every selection (including voters whose user
   // record wasn't loaded), while `voters` only holds the loaded avatars.
-  const tallies = new Map<string, { count: number; voters: ForumEventVoteDisplay[] }>(
-    answers.map((answer) => [answer._id, { count: 0, voters: [] }]),
-  );
+  const tallies = new Map<
+    string,
+    { count: number; voters: ForumEventVoteDisplay[] }
+  >(answers.map((answer) => [answer._id, { count: 0, voters: [] }]));
 
   for (const [userId, vote] of Object.entries(votes)) {
     const user = votersById.get(userId);

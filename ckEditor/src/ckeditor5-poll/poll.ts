@@ -56,7 +56,10 @@ function insertMcPollChildren(
     viewWriter.createPositionAt(questionContainer, 0),
     viewWriter.createText(props.question),
   );
-  viewWriter.insert(viewWriter.createPositionAt(container, "end"), questionContainer);
+  viewWriter.insert(
+    viewWriter.createPositionAt(container, "end"),
+    questionContainer,
+  );
 
   const optionsContainer = viewWriter.createContainerElement("div", {
     class: `${POLL_CLASS}-mc-options`,

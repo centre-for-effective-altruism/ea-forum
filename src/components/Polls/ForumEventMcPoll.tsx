@@ -302,35 +302,35 @@ export default function ForumEventMcPoll({
             auto-opens the prompt (see handleSelect), so it only needs an
             invisible anchor for the popover. */}
         <div className="flex justify-end mt-4">
-        <PollCommentForm
-          event={event}
-          isOpen={commentFormOpen}
-          setIsOpen={setCommentFormOpen}
-          currentUserComment={currentUserComment}
-          commentPrompt={commentPrompt}
-          forumEventMetadata={forumEventMetadata}
-          refetchComments={refetchComments}
-          className="inline-block"
-        >
-          {multiSelect && votingOpen ? (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitDisabled}
-              className={clsx(
-                `px-4 py-1.5 rounded-md text-sm font-semibold
+          <PollCommentForm
+            event={event}
+            isOpen={commentFormOpen}
+            setIsOpen={setCommentFormOpen}
+            currentUserComment={currentUserComment}
+            commentPrompt={commentPrompt}
+            forumEventMetadata={forumEventMetadata}
+            refetchComments={refetchComments}
+            className="inline-block"
+          >
+            {multiSelect && votingOpen ? (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitDisabled}
+                className={clsx(
+                  `px-4 py-1.5 rounded-md text-sm font-semibold
                  bg-(--forum-event-foreground) text-(--forum-event-background)`,
-                submitDisabled
-                  ? "opacity-50 cursor-default"
-                  : "cursor-pointer hover:opacity-90",
-              )}
-            >
-              Submit vote
-            </button>
-          ) : (
-            <span className="block" />
-          )}
-        </PollCommentForm>
+                  submitDisabled
+                    ? "opacity-50 cursor-default"
+                    : "cursor-pointer hover:opacity-90",
+                )}
+              >
+                Submit vote
+              </button>
+            ) : (
+              <span className="block" />
+            )}
+          </PollCommentForm>
         </div>
       </section>
     </AnalyticsContext>

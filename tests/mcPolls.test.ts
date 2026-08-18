@@ -1,15 +1,8 @@
 import { suite, test, expect, beforeEach } from "vitest";
-import {
-  createTestUser,
-  createTestPost,
-  createTestRevision,
-} from "./testHelpers";
+import { createTestUser, createTestPost, createTestRevision } from "./testHelpers";
 import { forumEvents } from "@/lib/schema";
 import { db } from "@/lib/db";
-import {
-  upsertPolls,
-  addMcPollVote,
-} from "@/lib/forumEvents/forumEventMutations";
+import { upsertPolls, addMcPollVote } from "@/lib/forumEvents/forumEventMutations";
 import {
   forumEventIsMcPoll,
   getMcPollPublicData,
@@ -187,10 +180,7 @@ suite("Multiple-choice polls", () => {
         forumEventId: "mc-multi",
         answerIds: ["a1", "a2"],
       });
-      expect((await voteIdsFor("mc-multi", user._id))?.sort()).toEqual([
-        "a1",
-        "a2",
-      ]);
+      expect((await voteIdsFor("mc-multi", user._id))?.sort()).toEqual(["a1", "a2"]);
 
       // Re-submitting a smaller set replaces the previous one
       await addMcPollVote({

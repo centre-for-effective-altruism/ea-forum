@@ -227,14 +227,16 @@
   padding: 12px 14px;
   border-radius: 6px;
   text-align: left;
-  border: 1px solid color-mix(in oklab, var(--forum-event-foreground) 22%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--forum-event-foreground) 22%, transparent);
 }
 .ck-poll-mc-bullet {
   flex: none;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid color-mix(in oklab, var(--forum-event-foreground) 60%, transparent);
+  border: 2px solid
+    color-mix(in oklab, var(--forum-event-foreground) 60%, transparent);
 }
 .ck-poll-mc-bullet-square {
   border-radius: 4px;

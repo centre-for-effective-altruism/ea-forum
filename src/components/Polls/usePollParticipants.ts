@@ -31,9 +31,7 @@ export function usePollParticipants({
   const refetchVoters = useCallback(async () => {
     try {
       const ids = voterIdsKey ? voterIdsKey.split(",") : [];
-      const result = ids.length
-        ? await rpc.users.listByIds({ userIds: ids })
-        : {};
+      const result = ids.length ? await rpc.users.listByIds({ userIds: ids }) : {};
       setVoters(Object.values(result));
     } catch (e) {
       console.error("Error fetching poll voters:", e);
@@ -47,9 +45,7 @@ export function usePollParticipants({
 
   const refetchComments = useCallback(async () => {
     try {
-      setComments(
-        await rpc.comments.listByForumEvent({ forumEventId: eventId }),
-      );
+      setComments(await rpc.comments.listByForumEvent({ forumEventId: eventId }));
     } catch (e) {
       console.error("Error fetching poll comments:", e);
       captureException(e);
@@ -64,7 +60,9 @@ export function usePollParticipants({
     if (!currentUser) {
       return null;
     }
-    return comments?.find((comment) => comment.user?._id === currentUser._id) || null;
+    return (
+      comments?.find((comment) => comment.user?._id === currentUser._id) || null
+    );
   }, [comments, currentUser]);
 
   return {

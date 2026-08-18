@@ -77,9 +77,7 @@ export default function PollCommentForm({
           ) : (
             "this post"
           )}
-          {showAvatarNote
-            ? ", and show next to your avatar in the results."
-            : "."}
+          {showAvatarNote ? ", and show next to your avatar in the results." : "."}
         </div>
       )}
     >

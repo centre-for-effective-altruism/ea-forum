@@ -142,8 +142,7 @@ export type PollProps = z.infer<typeof pollPropsSchema>;
 
 export const pollPropsIsMultipleChoice = (
   props: PollProps,
-): props is PollProps & { answers: McPollAnswer[] } =>
-  Array.isArray(props.answers);
+): props is PollProps & { answers: McPollAnswer[] } => Array.isArray(props.answers);
 
 const ONE_MINUTE_MS = 60 * 1000;
 const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
@@ -176,9 +175,7 @@ export const getForumEventVoteForUser = (
  */
 const MC_POLL_RESERVED_KEYS = new Set(["answers", "multiSelect"]);
 
-export const getForumEventVoteCount = (
-  event: Pick<ForumEventBase, "publicData">,
-) =>
+export const getForumEventVoteCount = (event: Pick<ForumEventBase, "publicData">) =>
   Object.keys(event.publicData ?? {}).filter(
     (key) => !MC_POLL_RESERVED_KEYS.has(key),
   ).length;
