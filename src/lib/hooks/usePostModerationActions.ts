@@ -81,7 +81,14 @@ export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
 
 export const useDeleteDraft = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
-  const deleteDraft = useCallback(() => {}, []);
+  const deleteDraft = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    toast.promise(rpc.posts.deleteDraft({ postId: post._id }), {
+      loading: "Deleting draft...",
+      success: "Draft deleted",
+      error: "Something went wrong",
+    });
+  }, [post._id]);
   return currentUser && post.user?._id === currentUser._id && post.draft
     ? deleteDraft
     : null;
