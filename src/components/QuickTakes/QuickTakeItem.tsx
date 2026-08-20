@@ -120,7 +120,7 @@ const QuickTakeItemInner: FC<{
           </InteractionWrapper>
         )}
       </div>
-      <CommentBody html={html} className="line-clamp-2" />
+      <CommentBody html={html} className="line-clamp-2 [&_img]:hidden" />
     </article>
   );
 };
