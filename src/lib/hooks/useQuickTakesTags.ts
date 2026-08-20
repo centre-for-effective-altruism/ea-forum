@@ -59,3 +59,5 @@ export const useQuickTakesTags = (
     onTagRemoved,
   };
 };
+
+export type QuickTakesTagsProps = ReturnType<typeof useQuickTakesTags>;
