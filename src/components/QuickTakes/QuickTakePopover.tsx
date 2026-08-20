@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
-import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
-import toast from "react-hot-toast";
+import { useNewQuickTake } from "./useNewQuickTake";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
+import QuickTakeTags from "./QuickTakeTags";
 import Editor from "../Editor/Editor";
 import Popover from "../Popover";
 import Button from "../Button";
@@ -16,15 +15,10 @@ export default function QuickTakePopover({
   open: boolean;
   onClose: () => void;
 }>) {
-  const onSuccess = useCallback(() => {
-    toast.success("Quick take published");
-    onClose();
-  }, [onClose]);
-  const { loading, editorRef, contents, onSubmit, onKeyDown, onChange } =
-    useCommentEditor({
-      shortform: true,
-      onSuccess,
-    });
+  const {
+    tagProps,
+    editorProps: { loading, editorRef, contents, onSubmit, onKeyDown, onChange },
+  } = useNewQuickTake({ onSuccess: onClose });
   return (
     <Popover open={open} onClose={onClose} noPadding>
       <div data-component="QuickTakePopover" className="w-[750px] max-w-full">
@@ -34,8 +28,8 @@ export default function QuickTakePopover({
             <XMarkIcon className="w-5" />
           </button>
         </div>
-        <form onSubmit={onSubmit} onKeyDown={onKeyDown}>
-          <div className="flex flex-col gap-1 [&_.ck.ck-content]:min-h-[100px]">
+        <form onSubmit={onSubmit} onKeyDown={onKeyDown} className="w-full">
+          <div className="flex flex-col gap-1 [&_.ck.ck-content]:min-h-[100px] w-full">
             <Editor
               formType="new"
               collectionName="Comments"
@@ -47,9 +41,9 @@ export default function QuickTakePopover({
               commentEditor
               hideControls
               ref={editorRef}
-              className="w-full grow mx-8"
+              className="w-full grow px-8"
             />
-            {/* TODO: Add topics to quick takes */}
+            <QuickTakeTags {...tagProps} className="px-8" />
             <hr className="border-t-gray-200 my-4" />
             <div className="flex items-center justify-end gap-2 mx-8 mb-6">
               <Button variant="greyFilled" onClick={onClose}>
