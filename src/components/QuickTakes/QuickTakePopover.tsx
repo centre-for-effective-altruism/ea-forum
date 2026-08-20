@@ -34,8 +34,8 @@ export default function QuickTakePopover({
             <XMarkIcon className="w-5" />
           </button>
         </div>
-        <form onSubmit={onSubmit} onKeyDown={onKeyDown}>
-          <div className="flex flex-col gap-1 [&_.ck.ck-content]:min-h-[100px]">
+        <form onSubmit={onSubmit} onKeyDown={onKeyDown} className="w-full">
+          <div className="flex flex-col gap-1 [&_.ck.ck-content]:min-h-[100px] w-full">
             <Editor
               formType="new"
               collectionName="Comments"
@@ -47,7 +47,7 @@ export default function QuickTakePopover({
               commentEditor
               hideControls
               ref={editorRef}
-              className="w-full grow mx-8"
+              className="w-full grow px-8"
             />
             {/* TODO: Add topics to quick takes */}
             <hr className="border-t-gray-200 my-4" />
