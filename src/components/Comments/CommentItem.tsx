@@ -368,7 +368,7 @@ export default function CommentItem({
         </div>
         {!isExpanded && showPreviewWhenCollapsed && !deleted && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
-            <CommentBody html={html} />
+            <CommentBody html={html} hideImages />
           </div>
         )}
         {isExpanded &&
