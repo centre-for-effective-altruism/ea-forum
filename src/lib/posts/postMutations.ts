@@ -213,3 +213,25 @@ export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
   await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
   void elasticSyncDocument("Posts", postId);
 };
+
+export const deleteDraft = async (currentUser: CurrentUser, postId: string) => {
+  const post = await db.query.posts.findFirst({
+    columns: {
+      userId: true,
+    },
+    where: {
+      _id: postId,
+    },
+  });
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  if (currentUser._id !== post.userId) {
+    throw new Error("Permission denied");
+  }
+  await updateWithFieldChanges(db, currentUser, posts, postId, {
+    draft: true,
+    deletedDraft: true,
+  });
+  void elasticSyncDocument("Posts", postId);
+};
