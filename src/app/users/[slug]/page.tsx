@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { fetchUserProfileCached } from "@/lib/users/userQueries";
-import { userGetProfileUrl } from "@/lib/users/userHelpers";
+import { userGetProfileUrl, userIsBanned } from "@/lib/users/userHelpers";
 import { makeCloudinaryImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import UserProfileBiography from "@/components/UserProfile/UserProfileBiography";
 import UserProfileSequences from "@/components/UserProfile/UserProfileSequences";
@@ -42,7 +42,8 @@ export async function generateMetadata({
     (!user.postCount && !user.commentCount) ||
     user.karma < 10 ||
     user.noindex ||
-    !user.reviewedByUserId;
+    !user.reviewedByUserId ||
+    userIsBanned(user);
   return {
     title: user.displayName,
     description,

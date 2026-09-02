@@ -503,7 +503,7 @@ export const getSignatureWithNote = (name: string, note: string) =>
  * create new conversations.
  */
 export const userHasMessagingDisabled = (user: CurrentUser | null) =>
-  !!(user?.banned || user?.conversationsDisabled);
+  !!((user && userIsBanned(user)) || user?.conversationsDisabled);
 
 /**
  * A user who can create new message chains with users. Note also the function
