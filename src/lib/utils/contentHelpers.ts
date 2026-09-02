@@ -214,11 +214,11 @@ export const parseLinkContentType = (
     if (match) {
       return { type: "post", postId: match };
     }
-    match = matchPath(/^\/users\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    match = matchPath(/^\/users\/([a-zA-Z0-9-_.]+).*$/, onsiteUrl);
     if (match) {
       return { type: "user", userSlug: match };
     }
-    match = matchPath(/^\/topics\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    match = matchPath(/^\/topics\/([a-zA-Z0-9-_.]+).*$/, onsiteUrl);
     if (match) {
       return { type: "tag", tagSlug: match };
     }
