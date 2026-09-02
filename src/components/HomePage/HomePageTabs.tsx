@@ -28,11 +28,9 @@ import clsx from "clsx";
 
 export default function HomePageTabs({
   initialContent,
-  testGroup,
   className,
 }: Readonly<{
   initialContent: ReactNode;
-  testGroup?: string;
   className?: string;
 }>) {
   const { captureEvent } = useTracking();
@@ -40,7 +38,7 @@ export default function HomePageTabs({
     homePageTabCookie,
     featuredViewTypeCookie,
   ]);
-  const initialTab = getCurrentHomePageTab(cookies, testGroup);
+  const initialTab = getCurrentHomePageTab(cookies);
   const featuredViewCookie = cookies.featured_view_type ?? "";
   const featuredView = isPostsListViewType(featuredViewCookie)
     ? featuredViewCookie
