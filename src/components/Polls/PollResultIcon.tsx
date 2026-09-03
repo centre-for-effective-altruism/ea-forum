@@ -72,7 +72,7 @@ export default function PollResultIcon({
             responsive
             className="
               w-full! h-[unset]!
-              [outline:2px_solid_color-mix(in_oklab,_var(--forum-event-foreground)_50%,_var(--forum-event-background)_50%)]
+              [outline:2px_solid_color-mix(in_srgb,_var(--forum-event-banner-text)_20%,_transparent)]
             "
           />
         </Tooltip>

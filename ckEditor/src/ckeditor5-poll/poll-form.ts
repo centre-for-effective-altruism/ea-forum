@@ -20,15 +20,27 @@ import type Writer from "@ckeditor/ckeditor5-engine/src/model/writer";
 import submitHandler from "@ckeditor/ckeditor5-ui/src/bindings/submithandler";
 
 import "./poll.css";
-import { PollProps } from "./constants";
+import {
+  PollProps,
+  PollAnswer,
+  MAX_POLL_ANSWERS,
+  isMultipleChoicePoll,
+} from "./constants";
+import { randomId } from "../random";
 
 export const DEFAULT_POLL_DURATION = { days: 7, hours: 0, minutes: 0 };
 
+// Poll colour schemes (v2). Each is a light card background (`darkColor` ->
+// --forum-event-background) with a saturated accent used for the text, slider
+// line, bars and avatar outlines (`lightColor`/`bannerTextColor` ->
+// --forum-event-foreground / --forum-event-banner-text). Order matches the
+// colour picker in the design (neutral, orange, teal, blue, green).
 export const POLL_COLOR_SCHEMES: PollProps["colorScheme"][] = [
-  { darkColor: "#06005C", lightColor: "#FFFFFF", bannerTextColor: "#FFFFFF" },
-  { darkColor: "#1D2A17", lightColor: "#FFFFFF", bannerTextColor: "#FFFFFF" },
-  { darkColor: "#7B3402", lightColor: "#FFFFFF", bannerTextColor: "#FFFFFF" },
-  { darkColor: "#F3F3E1", lightColor: "#222222", bannerTextColor: "#222222" },
+  { darkColor: "#F5F5F5", lightColor: "#000000", bannerTextColor: "#000000" },
+  { darkColor: "#FEF2EE", lightColor: "#D94300", bannerTextColor: "#D94300" },
+  { darkColor: "#EDF6F7", lightColor: "#007584", bannerTextColor: "#007584" },
+  { darkColor: "#EEF5F6", lightColor: "#004A83", bannerTextColor: "#004A83" },
+  { darkColor: "#EEF6F0", lightColor: "#007311", bannerTextColor: "#007311" },
 ];
 
 class MainFormView extends View {
@@ -37,6 +49,8 @@ class MainFormView extends View {
   questionView: InputTextView;
   agreeWordingView: InputTextView;
   disagreeWordingView: InputTextView;
+  answersView: InputTextView;
+  multiSelectView: View;
   colorSchemeButtons: ButtonView[];
   daysInputView: InputTextView;
   hoursInputView: InputTextView;
@@ -59,6 +73,8 @@ class MainFormView extends View {
       questionView,
       agreeWordingView,
       disagreeWordingView,
+      answersView,
+      multiSelectView,
       colorSchemeButtons,
       daysInputView,
       hoursInputView,
@@ -67,6 +83,8 @@ class MainFormView extends View {
     this.questionView = questionView;
     this.agreeWordingView = agreeWordingView;
     this.disagreeWordingView = disagreeWordingView;
+    this.answersView = answersView;
+    this.multiSelectView = multiSelectView;
     this.colorSchemeButtons = colorSchemeButtons;
     this.daysInputView = daysInputView;
     this.hoursInputView = hoursInputView;
@@ -89,9 +107,11 @@ class MainFormView extends View {
             {
               tag: "div",
               attributes: {
-                class: ["ck-poll-form-label"],
+                // Label text is switched between "Statement" (slider) and
+                // "Question" (multiple-choice) in `_syncMultipleChoiceFields`.
+                class: ["ck-poll-form-label", "ck-poll-question-label"],
               },
-              children: ["Question"],
+              children: ["Statement"],
             },
             questionView,
           ],
@@ -99,7 +119,7 @@ class MainFormView extends View {
         {
           tag: "div",
           attributes: {
-            class: ["ck-poll-form-row"],
+            class: ["ck-poll-form-row", "ck-poll-form-slider-group"],
           },
           children: [
             {
@@ -134,6 +154,23 @@ class MainFormView extends View {
                 agreeWordingView,
               ],
             },
+          ],
+        },
+        {
+          tag: "div",
+          attributes: {
+            class: ["ck-poll-form-group", "ck-poll-form-mc-group"],
+          },
+          children: [
+            {
+              tag: "div",
+              attributes: {
+                class: ["ck-poll-form-label"],
+              },
+              children: [`Answers (one per line, up to ${MAX_POLL_ANSWERS})`],
+            },
+            answersView,
+            multiSelectView,
           ],
         },
         {
@@ -226,6 +263,9 @@ class MainFormView extends View {
       this.questionView,
       this.disagreeWordingView,
       this.agreeWordingView,
+      this.answersView,
+      // multiSelectView is a plain checkbox View without a focus() method, so
+      // it's not part of the focus cycler; the native <input> is still tabbable.
       ...this.colorSchemeButtons,
       this.daysInputView,
       this.hoursInputView,
@@ -380,6 +420,81 @@ class MainFormView extends View {
       });
     });
 
+    // Create answers textarea (multiple-choice polls). One answer per line;
+    // empty lines are ignored and the list is capped at MAX_POLL_ANSWERS.
+    const answersView = new InputTextView(this.locale);
+    const answersBind = answersView.bindTemplate;
+    answersView.setTemplate({
+      tag: "textarea",
+      attributes: {
+        type: "text",
+        class: ["ck-poll-form-input", "ck-poll-answers-input"],
+        id: answersBind.to("id"),
+        rows: "5",
+        readonly: false,
+      },
+      on: {
+        input: answersBind.to("input"),
+      },
+    });
+    (answersView as AnyBecauseTodo).label = "Answers";
+    answersView.on("input", () => {
+      const model = this.editor.model;
+      const selectedElement = this.selectedElement;
+      if (!selectedElement) return;
+
+      model.change((writer: Writer) => {
+        const props = selectedElement.getAttribute("props") as PollProps;
+        // Preserve existing answer ids by position so edits to a published
+        // poll's wording don't orphan votes that reference those ids.
+        const previousAnswers = props.answers ?? [];
+        const answers: PollAnswer[] = answersView.element.value
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .slice(0, MAX_POLL_ANSWERS)
+          .map((text, index) => ({
+            _id: previousAnswers[index]?._id ?? randomId(),
+            text,
+          }));
+
+        writer.setAttribute("props", { ...props, answers }, selectedElement);
+      });
+    });
+
+    // Create the single/multi-select checkbox (multiple-choice polls)
+    const multiSelectView = new View(this.locale);
+    multiSelectView.setTemplate({
+      tag: "label",
+      attributes: { class: ["ck-poll-multiselect-toggle"] },
+      children: [
+        {
+          tag: "input",
+          attributes: {
+            type: "checkbox",
+            class: ["ck-poll-multiselect-checkbox"],
+          },
+          on: {
+            change: multiSelectView.bindTemplate.to("change"),
+          },
+        },
+        {
+          tag: "span",
+          children: ["Allow selecting multiple answers"],
+        },
+      ],
+    });
+    multiSelectView.on("change", () => {
+      const selectedElement = this.selectedElement;
+      if (!selectedElement) return;
+      const checkbox = multiSelectView.element?.querySelector("input");
+      const multiSelect = !!checkbox?.checked;
+      this.editor.model.change((writer: Writer) => {
+        const props = selectedElement.getAttribute("props") as PollProps;
+        writer.setAttribute("props", { ...props, multiSelect }, selectedElement);
+      });
+    });
+
     // Create color scheme buttons
     const colorSchemeButtons = POLL_COLOR_SCHEMES.map((colorScheme, index) => {
       const buttonView = new ButtonView(this.locale);
@@ -485,6 +600,8 @@ class MainFormView extends View {
       questionView,
       agreeWordingView,
       disagreeWordingView,
+      answersView,
+      multiSelectView,
       colorSchemeButtons,
       daysInputView,
       hoursInputView,
@@ -584,6 +701,8 @@ export default class PollForm extends Plugin {
         btn.isOn = currentIndex === btnIndex;
       });
 
+      this._syncMultipleChoiceFields(pollProps);
+
       return; // Don't add the view again
     }
 
@@ -620,6 +739,32 @@ export default class PollForm extends Plugin {
     this.formView.colorSchemeButtons.forEach((btn, btnIndex) => {
       btn.isOn = currentIndex === btnIndex;
     });
+
+    this._syncMultipleChoiceFields(pollProps);
+  }
+
+  /**
+   * Reflect a poll's multiple-choice state into the form: toggle which fields
+   * are shown (via a root class) and fill the answers textarea + multi-select
+   * toggle.
+   */
+  _syncMultipleChoiceFields(pollProps: PollProps) {
+    const isMc = isMultipleChoicePoll(pollProps);
+    this.formView.element.classList.toggle("ck-poll-form--mc", isMc);
+    const questionLabel = this.formView.element?.querySelector(
+      ".ck-poll-question-label",
+    );
+    if (questionLabel) {
+      // The slider is an agree/disagree statement; multiple-choice is a question.
+      questionLabel.textContent = isMc ? "Question" : "Statement";
+    }
+    this.formView.answersView.element.value = (pollProps.answers ?? [])
+      .map((answer) => answer.text)
+      .join("\n");
+    const checkbox = this.formView.multiSelectView.element?.querySelector("input");
+    if (checkbox) {
+      checkbox.checked = !!pollProps.multiSelect;
+    }
   }
 
   _closeFormView() {
