@@ -478,6 +478,9 @@ export const chapters = pgTable(
   ],
 );
 
+export type Chapter = typeof chapters.$inferSelect;
+export type InsertChapter = typeof chapters.$inferInsert;
+
 export const books = pgTable(
   "Books",
   {
@@ -3168,6 +3171,7 @@ export const sequences = pgTable(
 );
 
 export type Sequence = typeof sequences.$inferSelect;
+export type InsertSequence = typeof sequences.$inferInsert;
 
 export const spotlights = pgTable(
   "Spotlights",

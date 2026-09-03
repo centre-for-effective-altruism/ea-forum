@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import type { Placement } from "@floating-ui/react";
 import { useTracking } from "@/lib/analyticsEvents";
 import { isMobile } from "@/lib/environment";
 import { appendQueryParams } from "@/lib/routeHelpers";
@@ -20,12 +21,20 @@ export default function ShareButton({
   clickEventName = "shareButtonClicked",
   shareEventName = "share",
   campaign = "share",
+  label,
+  placement = "bottom-end",
+  className,
 }: Readonly<{
   title: string;
   url: string;
   clickEventName?: string;
   shareEventName?: string;
   campaign?: string;
+  /** When set, the trigger is a labelled button rather than a tooltipped icon */
+  label?: string;
+  placement?: Placement;
+  /** Classes for the trigger button, replacing the default icon button styling */
+  className?: string;
 }>) {
   const { captureEvent } = useTracking();
   const dismissRef = useRef<() => void>(null);
@@ -85,9 +94,22 @@ export default function ShareButton({
     );
   }, [captureEvent, shareEventName, urlWithSource]);
 
+  const trigger = (
+    <button
+      onClick={onClick}
+      className={
+        className ??
+        "cursor-pointer text-gray-600 flex items-center rounded p-1.5 hover:bg-item-hover hover:text-gray-800"
+      }
+    >
+      <ArrowUpTrayIcon className="w-5" />
+      {label}
+    </button>
+  );
+
   return (
     <DropdownMenu
-      placement="bottom-end"
+      placement={placement}
       className="text-gray-900"
       dismissRef={dismissRef}
       items={[
@@ -114,14 +136,13 @@ export default function ShareButton({
         },
       ]}
     >
-      <Tooltip title={<Type style="bodySmall">Share</Type>} offsetPx={8}>
-        <button
-          onClick={onClick}
-          className="cursor-pointer text-gray-600 flex items-center rounded p-1.5 hover:bg-item-hover hover:text-gray-800"
-        >
-          <ArrowUpTrayIcon className="w-5" />
-        </button>
-      </Tooltip>
+      {label ? (
+        trigger
+      ) : (
+        <Tooltip title={<Type style="bodySmall">Share</Type>} offsetPx={8}>
+          {trigger}
+        </Tooltip>
+      )}
     </DropdownMenu>
   );
 }

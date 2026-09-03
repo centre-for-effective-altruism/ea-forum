@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getPublishedEditorialPageSlugs } from "../sequences/editorialPageQueries";
+import {
+  ADMIN_EDITORIAL_PAGES_PATH,
+  EDITORIAL_PAGE_ROUTE_PREFIX,
+  EDITORIAL_PAGE_SLUG_BODY,
+  editorialPageRoutePath,
+} from "../sequences/editorialPagePaths";
 
 const legacySiteUrl = process.env.LEGACY_SITE_URL
   ? new URL(process.env.LEGACY_SITE_URL)
@@ -39,11 +46,18 @@ const newSitePatterns = [
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of
+  /^\/scaling-series$/, // The Scaling Series editorial page
+  // The route admin-created editorial pages are rewritten to. Their public top
+  // level URLs are matched separately, in editorialPageRewrite below, because
+  // they're created at runtime and so can't be listed here.
+  new RegExp(`^${EDITORIAL_PAGE_ROUTE_PREFIX}/${EDITORIAL_PAGE_SLUG_BODY}$`),
   /^\/admin$/, // Admin
   /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
   /^\/admin\/spotlights.*/, // Admin spotlights pages
+  // Admin editorial pages, including the editor for one page
+  new RegExp(`^${ADMIN_EDITORIAL_PAGES_PATH}(?:/${EDITORIAL_PAGE_SLUG_BODY})?$`),
   /^\/admin\/swap-user-emails$/, // Admin swap user emails page
   /^\/robots.txt$/, // robots.txt
 ];
@@ -52,9 +66,18 @@ const newSitePatterns = [
 
 // Cookie payload for the old site to know which routes are owned by the new site
 const OWNED_ROUTES_COOKIE_NAME = "ea_forum_v3_owned_routes";
-const ownedRoutesPayload = JSON.stringify({
-  patterns: newSitePatterns.map((r) => r.source),
-});
+const staticPatternSources = newSitePatterns.map((r) => r.source);
+const ownedRoutesPayload = JSON.stringify({ patterns: staticPatternSources });
+
+const getOwnedRoutesPayload = (editorialSlugs: string[]) =>
+  editorialSlugs.length === 0
+    ? ownedRoutesPayload
+    : JSON.stringify({
+        patterns: [
+          ...staticPatternSources,
+          ...editorialSlugs.map((slug) => `^/${slug}$`),
+        ],
+      });
 
 const DEFAULT_PREFERS_NEW_SITE = true;
 
@@ -72,6 +95,18 @@ if (cookieSize > COOKIE_SIZE_LIMIT * 0.9) {
     throw new Error(message);
   }
 }
+
+/**
+ * Editorial pages are created at runtime and served from a top level URL, so
+ * the proxy has to ask the database whether a path is one of them (see
+ * `getPublishedEditorialPageSlugs`, which caches the answer). Unpublished pages
+ * are reachable only at their `/series/<slug>` route, which admins get sent to
+ * from the admin page.
+ */
+const editorialPageRewritePath = (pathname: string, editorialSlugs: string[]) => {
+  const slug = pathname.slice(1);
+  return editorialSlugs.includes(slug) ? editorialPageRoutePath(slug) : null;
+};
 
 const isNewSiteAllowed = (pathname: string): boolean => {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
@@ -98,7 +133,7 @@ const getUserPrefersNewSite = (request: NextRequest): boolean => {
   return DEFAULT_PREFERS_NEW_SITE;
 };
 
-export const createLegacySiteRedirectResponse = (request: NextRequest) => {
+export const createLegacySiteRedirectResponse = async (request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
@@ -112,6 +147,24 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   // patterns, or if the proxy is not configured
   if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
     return NextResponse.next();
+  }
+
+  // Only paths that would otherwise go to the legacy site get this far, so the
+  // lookup (which is cached) is off the path of everything this site owns
+  const editorialSlugs = prefersNewSite
+    ? await getPublishedEditorialPageSlugs()
+    : [];
+  if (prefersNewSite) {
+    const rewritePath = editorialPageRewritePath(pathname, editorialSlugs);
+    if (rewritePath) {
+      const response = NextResponse.rewrite(new URL(rewritePath, request.url));
+      response.cookies.set(
+        OWNED_ROUTES_COOKIE_NAME,
+        getOwnedRoutesPayload(editorialSlugs),
+        { path: "/", httpOnly: false, sameSite: "lax" },
+      );
+      return response;
+    }
   }
 
   // Proxy to the legacy site
@@ -137,11 +190,15 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   // If user prefers new site, attach the ea_forum_v3_owned_routes cookie as a
   // hint for SPA navigation
   if (prefersNewSite) {
-    response.cookies.set(OWNED_ROUTES_COOKIE_NAME, ownedRoutesPayload, {
-      path: "/",
-      httpOnly: false, // Needs to be readable by client JS
-      sameSite: "lax",
-    });
+    response.cookies.set(
+      OWNED_ROUTES_COOKIE_NAME,
+      getOwnedRoutesPayload(editorialSlugs),
+      {
+        path: "/",
+        httpOnly: false, // Needs to be readable by client JS
+        sameSite: "lax",
+      },
+    );
   }
 
   return response;

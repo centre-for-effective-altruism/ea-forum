@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
 import { slugify } from "@/lib/slugs/slugify";
 import {
+  Chapter,
+  chapters,
   Comment,
   comments,
   ForumEvent,
@@ -9,8 +11,10 @@ import {
   InsertComment,
   InsertForumEvent,
   InsertLocalgroup,
+  InsertChapter,
   InsertPost,
   InsertRevision,
+  InsertSequence,
   InsertTag,
   InsertTagRel,
   InsertUser,
@@ -21,6 +25,8 @@ import {
   posts,
   Revision,
   revisions,
+  Sequence,
+  sequences,
   Tag,
   TagRel,
   tagRels,
@@ -215,5 +221,31 @@ export const createTestGroup = async (
     ...data,
   };
   const result = await db.insert(localgroups).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestSequence = async (
+  data?: Partial<InsertSequence>,
+): Promise<Sequence> => {
+  const insertValues: InsertSequence = {
+    _id: randomId(),
+    userId: data?.userId ?? (await createTestUser())._id,
+    title: randomId(),
+    lastUpdated: new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(sequences).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestChapter = async (
+  data: Partial<InsertChapter>,
+): Promise<Chapter> => {
+  const insertValues: InsertChapter = {
+    _id: randomId(),
+    postIds: [],
+    ...data,
+  };
+  const result = await db.insert(chapters).values(insertValues).returning();
   return result[0];
 };
