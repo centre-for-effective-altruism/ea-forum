@@ -67,6 +67,7 @@ declare namespace NodeJS {
     SENTRY_AUTH_TOKEN?: string;
     INTERCOM_TOKEN: string;
     PANGRAM_API_KEY: string;
+    HUNTER_API_KEY: string;
 
     // Site config
     START_HERE_POST_ID: string;
