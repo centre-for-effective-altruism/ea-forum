@@ -11,6 +11,7 @@ import { getCurrentClientId } from "./clientIds/currentClientId";
 import { isProduction } from "./environment";
 import { captureServerEvent } from "./analytics/captureServerEvent";
 import { userIsBanned } from "./users/userHelpers";
+import { isBannedEmailDomain } from "./users/bannedEmailDomains";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -258,6 +259,11 @@ export const signupWithPassword = async (
   const existingUsers = await getAllUsersByEmail(email);
   if (existingUsers.length) {
     throw new Error("A user with this email already exists");
+  }
+
+  const invalidEmail = await isBannedEmailDomain(email);
+  if (invalidEmail) {
+    throw new Error("Invalid email address");
   }
 
   try {
