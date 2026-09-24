@@ -2,7 +2,15 @@ import { captureServerEvent } from "../analytics/captureServerEvent";
 
 export const isBannedEmailDomain = async (emailAddress: string) => {
   const hostname = emailAddress.trim().split("@")[1];
-  if (hostname && bannedEmailDomains.has(hostname)) {
+  if (hostname && emailHostWhitelist.has(hostname)) {
+    captureServerEvent("validEmailDomain", {
+      emailAddress,
+      method: "static-list",
+      hostname,
+    });
+    return false;
+  }
+  if (hostname && emailHostBlacklist.has(hostname)) {
     captureServerEvent("bannedEmailDomain", {
       emailAddress,
       method: "static-list",
@@ -46,9 +54,35 @@ export const isBannedEmailDomain = async (emailAddress: string) => {
   return false;
 };
 
+const emailHostWhitelist = new Set([
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "msn.com",
+  "yahoo.com",
+  "ymail.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "protonmail.ch",
+  "pm.me",
+  "gmx.com",
+  "gmx.net",
+  "mail.com",
+  "zoho.com",
+  "zohomail.com",
+  "fastmail.com",
+  "tutanota.com",
+  "tuta.com",
+]);
+
 // From https://github.com/disposable-email-domains/disposable-email-domains
 // Probably needs updating periodically...
-const bannedEmailDomains = new Set([
+const emailHostBlacklist = new Set([
   "0-mail.com",
   "0-mailer.dynv6.net",
   "000-webmail.myhome-server.de",
