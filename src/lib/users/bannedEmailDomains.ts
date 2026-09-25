@@ -31,22 +31,26 @@ export const isBannedEmailDomain = async (emailAddress: string) => {
     const response = await fetch(
       `https://api.hunter.io/v2/email-verifier?email=${email}&api_key=${apiKey}`,
     );
-    const { data } = await response.json();
-    if (data.status === "invalid" || data.status === "disposable") {
+    const result = await response.json();
+    if (
+      result?.data?.status === "invalid" ||
+      result?.data?.status === "disposable"
+    ) {
       captureServerEvent("bannedEmailDomain", {
         emailAddress,
         method: "hunter-api",
-        ...data,
+        result,
       });
       return true;
     }
     captureServerEvent("validEmailDomain", {
       emailAddress,
       method: "hunter-api",
-      ...data,
+      result,
     });
   } catch (e) {
     captureServerEvent("hunterApiError", {
+      emailAddress,
       message: (e as Error)?.message,
     });
   }
