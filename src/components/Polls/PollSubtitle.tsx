@@ -10,12 +10,16 @@ export default function PollSubtitle({
   hasVoted,
   resultsVisible,
   setResultsVisible,
+  castVerb = "Place",
 }: Readonly<{
   endDate: Date | string | null;
   voteCount: number;
   hasVoted: boolean;
   resultsVisible: boolean;
   setResultsVisible: (visible: boolean) => void;
+  /** Verb shown when the user hasn't voted yet ("Place" for the slider,
+   * "Cast" for multiple-choice). */
+  castVerb?: string;
 }>) {
   const end = useMemo(
     () => (endDate ? new Date(endDate).getTime() : null),
@@ -74,7 +78,7 @@ export default function PollSubtitle({
         ) : (
           <>Voting has closed. </>
         ))}
-      {votingOpen && (hasVoted ? "Change" : "Place") + " your vote or "}
+      {votingOpen && (hasVoted ? "Change" : castVerb) + " your vote or "}
       <button
         data-component="PollSubtitle"
         className={clsx(buttonClassName, "ml-1")}

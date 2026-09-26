@@ -15,6 +15,8 @@ import {
   ForumEventPollVote,
   ForumEventSticker,
   ForumEventStickerData,
+  McPollAnswer,
+  McPollVote,
 } from "./forumEventHelpers";
 
 export type ForumEventRelationalProjection = RelationalProjection<
@@ -249,11 +251,16 @@ export const buildForumEventRevisions = async (
   return Object.assign({}, ...revisions);
 };
 
+/**
+ * Upsert the current user's vote into `publicData`, keyed by userId. Shared by
+ * both poll formats: the slider stores a `{ x, points }` payload, the
+ * multiple-choice poll a `{ answerIds }` payload.
+ */
 export const addUserPollVote = async (
   db: DbOrTransaction,
   currentUser: CurrentUser,
   event: Pick<ForumEvent, "_id">,
-  voteData: ForumEventPollVote,
+  voteData: ForumEventPollVote | McPollVote,
 ) => {
   return db
     .update(forumEvents)
@@ -296,6 +303,55 @@ export const setLatestPollVote = async (
             WHEN ${latestVote}::FLOAT IS NULL THEN 'null'::JSONB
             ELSE TO_JSONB(${latestVote}::FLOAT)
           END
+        )
+      `,
+    })
+    .where(
+      and(
+        eq(comments.forumEventId, event._id),
+        eq(comments.userId, currentUser._id),
+      ),
+    );
+};
+
+/**
+ * Write a multiple-choice poll's answer options + mode into `publicData`
+ * without touching the `votes` sub-object (so edits don't wipe existing votes).
+ */
+export const setMcPollOptions = async (
+  db: DbOrTransaction,
+  forumEventId: string,
+  answers: McPollAnswer[],
+  multiSelect: boolean,
+) => {
+  // Top-level merge replaces the answer options and mode while preserving
+  // `votes` (and any other keys).
+  await db
+    .update(forumEvents)
+    .set({
+      publicData: sql`
+        COALESCE(${forumEvents.publicData}, '{}'::JSONB) ||
+          ${JSON.stringify({ answers, multiSelect })}::JSONB
+      `,
+    })
+    .where(eq(forumEvents._id, forumEventId));
+};
+
+export const setLatestMcPollVote = async (
+  db: DbOrTransaction,
+  currentUser: CurrentUser,
+  event: Pick<ForumEvent, "_id">,
+  latestAnswerIds: string[] | null,
+) => {
+  const value = latestAnswerIds === null ? "null" : JSON.stringify(latestAnswerIds);
+  await db
+    .update(comments)
+    .set({
+      forumEventMetadata: sql`
+        JSONB_SET(
+          ${comments.forumEventMetadata},
+          '{mcPoll,latestAnswerIds}',
+          ${value}::JSONB
         )
       `,
     })

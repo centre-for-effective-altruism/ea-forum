@@ -3,7 +3,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
-import { getForumEventVoteForUser } from "@/lib/forumEvents/forumEventHelpers";
+import {
+  forumEventIsMcPoll,
+  getForumEventVoteForUser,
+} from "@/lib/forumEvents/forumEventHelpers";
 import { makeCloudinaryImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
@@ -12,6 +15,7 @@ import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
 import ForumEventPoll from "./ForumEventPoll";
+import ForumEventMcPoll from "./ForumEventMcPoll";
 import Link from "../Link";
 import Type from "../Type";
 
@@ -90,7 +94,11 @@ export default function PostPagePollSection({
     bannerImageId,
   } = event;
 
-  if (eventFormat !== "POLL" || (isGlobal && !postId)) {
+  const isMcPoll = forumEventIsMcPoll(event);
+  // Both poll formats are stored with eventFormat "POLL"; the multiple-choice
+  // variant is distinguished by publicData (see forumEventIsMcPoll).
+  const isPoll = eventFormat === "POLL";
+  if (!isPoll || (isGlobal && !postId)) {
     return null;
   }
 
@@ -167,11 +175,15 @@ export default function PostPagePollSection({
           >
             <LinkIcon className="block w-4 opacity-80" />
           </button>
-          <ForumEventPoll
-            event={event}
-            refetchEvent={refetchEvent}
-            hideViewResults={event.isGlobal}
-          />
+          {isMcPoll ? (
+            <ForumEventMcPoll event={event} refetchEvent={refetchEvent} />
+          ) : (
+            <ForumEventPoll
+              event={event}
+              refetchEvent={refetchEvent}
+              hideViewResults={event.isGlobal}
+            />
+          )}
         </div>
       </div>
     </AnalyticsContext>
