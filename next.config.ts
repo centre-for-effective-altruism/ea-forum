@@ -44,6 +44,12 @@ const nextConfig: NextConfig = {
       destination: "/users/:path*",
       permanent: true,
     },
+    {
+      source: "/api/notificationEvents",
+      destination:
+        "https://notification-events.effectivealtruism.org/api/notificationEvents",
+      permanent: false,
+    },
   ],
   rewrites: async () => [
     {
