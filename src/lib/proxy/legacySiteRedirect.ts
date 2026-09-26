@@ -30,6 +30,7 @@ const newSitePatterns = [
   /^\/monitoring$/, // Sentry ingestion
   /^\/about$/, // About page
   /^\/intro$/, // Intro page
+  /^\/moderation$/, // Moderation log page
   /^\/contact$/, // Contact page
   /^\/copyright$/, // Copyright page
   /^\/cookie-policy$/, // Cookie policy
