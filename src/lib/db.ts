@@ -1,6 +1,6 @@
 import "server-only";
 
-import { isAnyTest } from "./environment";
+import { isAnyTest, isProduction } from "./environment";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
 import { drizzle as pgLiteDrizzle } from "drizzle-orm/pglite";
@@ -397,7 +397,11 @@ const createDb = () => {
   if (!process.env.DATABASE_URL) {
     throw new Error("Postgres URL is not configured");
   }
-  const db = pgDrizzle(process.env.DATABASE_URL, {
+  const db = pgDrizzle({
+    connection: {
+      connectionString: process.env.DATABASE_URL,
+      ...(isProduction ? { min: 5, max: 20 } : { min: 1, max: 5 }),
+    },
     relations,
     logger: process.env.LOG_DRIZZLE_QUERIES === "true",
   });
