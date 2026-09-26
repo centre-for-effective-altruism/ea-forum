@@ -2,6 +2,11 @@
 
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 
+type PostForReadStatus = {
+  _id: string;
+  readStatus?: { isRead: boolean | null }[];
+};
+
 type ItemsReadContext = {
   postsRead: Record<string, boolean>;
   setPostRead: (postId: string, isRead: boolean) => void;
@@ -38,6 +43,19 @@ export const ItemsReadProvider = ({
   return (
     <itemsReadContext.Provider value={value}>{children}</itemsReadContext.Provider>
   );
+};
+
+/**
+ * Whether the current user has read a post, preferring anything read during
+ * this client session over the read status the page was rendered with.
+ */
+export const usePostIsRead = (
+  post: Pick<PostForReadStatus, "_id" | "readStatus">,
+): boolean => {
+  const { postsRead } = useItemsRead();
+  return !!(post._id in postsRead
+    ? postsRead[post._id]
+    : post.readStatus?.[0]?.isRead);
 };
 
 export const useItemsRead = (): ItemsReadContext => {

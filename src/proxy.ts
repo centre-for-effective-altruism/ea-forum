@@ -9,7 +9,7 @@ export const proxy = async (request: NextRequest) => {
     return NextResponse.redirect(botSiteRedirectUrl, 307);
   }
 
-  const response = createLegacySiteRedirectResponse(request);
+  const response = await createLegacySiteRedirectResponse(request);
   await ensureResponseHasClientId(request, response);
   return response;
 };

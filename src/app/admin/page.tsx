@@ -34,6 +34,7 @@ export default async function AdminPage() {
           { title: "Featured queue", href: "/admin/featured" },
           { title: "Twitter tools", href: "/admin/twitter" },
           { title: "Spotlights", href: "/admin/spotlights" },
+          { title: "Editorial pages", href: "/admin/editorial-pages" },
           { title: "Forum events", href: "/adminForumEvents" },
           { title: "Merge topics", href: "/admin/tagMerge" },
         ]}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, SyntheticEvent, useCallback, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import Image from "next/image";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
 import type { PostListItem } from "@/lib/posts/postLists";
@@ -15,6 +15,7 @@ import {
   postGetPageUrl,
   postHasNewUnreadComments,
 } from "@/lib/posts/postsHelpers";
+import { hideBrokenImage } from "@/lib/utils/domHelpers";
 import clsx from "clsx";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import PostTripleDotMenu from "../PostsPage/PostTripleDotMenu";
@@ -26,14 +27,6 @@ import PostIcons from "./PostIcons";
 import Score from "../Score";
 import Type from "../Type";
 import Link from "../Link";
-
-/**
- * If an image fails to load some browsers show an ugly white border that
- * we should hide
- */
-const onImageError = (ev: SyntheticEvent<HTMLImageElement, Event>) => {
-  (ev.target as HTMLImageElement).style.visibility = "hidden";
-};
 
 export default function PostsItem({
   post,
@@ -232,7 +225,7 @@ export default function PostsItem({
               >
                 <Image
                   src={imageUrl}
-                  onError={onImageError}
+                  onError={hideBrokenImage}
                   alt=""
                   fill
                   className="object-cover"

@@ -5,7 +5,10 @@ import type { PostListItem } from "./postLists";
 import type { JsonRecord } from "../typeHelpers";
 import type { Post } from "../schema";
 import { getSiteUrl } from "../routeHelpers";
-import { getCloudinaryCloudName } from "@/lib/cloudinary/cloudinaryHelpers";
+import {
+  getSocialImagePreviewPrefix,
+  type SocialImageOptions,
+} from "@/lib/cloudinary/cloudinaryHelpers";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { userCanDo, userGetProfileUrl, userIsInGroup } from "../users/userHelpers";
 import { filterSettingsSchema } from "../filterSettings";
@@ -117,18 +120,6 @@ export const getPostReadTimeMinutes = (
   return 1;
 };
 
-type SocialImageOptions = {
-  width?: number;
-  dpr?: number | "auto";
-};
-
-export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
-  const cloudName = getCloudinaryCloudName();
-  const width = options?.width ? `,w_${options.width}` : "";
-  const dpr = options?.dpr ? `,dpr_${options.dpr}` : "";
-  return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_lfill,ar_1.91,g_auto${width}${dpr}/`;
-};
-
 export type PostWithSocialPreview = Pick<
   PostListItem,
   "isEvent" | "eventImageId" | "socialPreview" | "socialPreviewImageAutoUrl"
@@ -179,7 +170,10 @@ export const getPostSocialImageUrlWithDefaultBackup = (
   return `${prefix}SocialPreview/defaults/${backupImage}`;
 };
 
-export const getPostPlaintextDescription = (post: PostListItem): string | null => {
+export const getPostPlaintextDescription = (post: {
+  customHtmlHighlight?: string | null;
+  contents?: { htmlHighlight?: string | null } | null;
+}): string | null => {
   const highlightHtml = post.customHtmlHighlight || post.contents?.htmlHighlight;
   if (!highlightHtml) {
     return null;
