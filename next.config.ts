@@ -46,8 +46,7 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/api/notificationEvents",
-      destination:
-        "https://notification-events.effectivealtruism.org/api/notificationEvents",
+      destination: "https://fm-prod.effectivealtruism.org/api/notificationEvents",
       permanent: false,
     },
   ],
