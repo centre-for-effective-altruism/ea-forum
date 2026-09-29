@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
   },
   redirects: async () => [
     {
+      source: "/start-here",
+      destination: `/posts/${process.env.START_HERE_POST_ID}`,
+      permanent: false,
+    },
+    {
       source: "/allPosts",
       destination: "/all-posts",
       permanent: true,
