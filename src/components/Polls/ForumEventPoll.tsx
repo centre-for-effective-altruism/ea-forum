@@ -11,8 +11,6 @@ import {
 import toast from "react-hot-toast";
 import { captureException } from "@sentry/nextjs";
 import type { ForumEventBase } from "@/lib/forumEvents/forumEventQueries";
-import type { CommentListItem } from "@/lib/comments/commentLists";
-import type { UserBase } from "@/lib/users/userQueries";
 import {
   ForumEventCommentMetadata,
   getForumEventVoteCount,
@@ -25,10 +23,8 @@ import {
   stripFootnotes,
 } from "@/lib/utils/pollHelpers";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
-import { commentGetPageUrlFromIds } from "@/lib/comments/commentHelpers";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { rpc } from "@/lib/rpc";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import CommentIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
@@ -36,15 +32,15 @@ import ChevronLeftIcon from "@heroicons/react/16/solid/ChevronLeftIcon";
 import UserCircleIcon from "@heroicons/react/24/outline/UserCircleIcon";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import clsx from "clsx";
-import ForumEventCommentForm from "../ForumEvents/ForumEventCommentForm";
 import UserProfileImage from "../UserProfileImage";
 import PollResultIcon from "./PollResultIcon";
 import PollSubtitle from "./PollSubtitle";
 import PollButton from "./PollButton";
+import PollCommentForm from "./PollCommentForm";
 import Tooltip from "../Tooltip";
 import Loading from "../Loading";
 import Type from "../Type";
-import Link from "../Link";
+import { usePollParticipants } from "./usePollParticipants";
 
 type AddVoteData = Parameters<typeof rpc.forumEvents.addVote>[0];
 
@@ -98,57 +94,17 @@ export default function ForumEventPoll({
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const tickRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const [voters, setVoters] = useState<UserBase[] | null>(null);
-  const [comments, setComments] = useState<CommentListItem[] | null>(null);
-
-  const refetchVoters = useCallback(async () => {
-    try {
-      const voterIds = Object.keys(event.publicData || {}).slice(0, 1000);
-      const voters = voterIds.length
-        ? await rpc.users.listByIds({ userIds: voterIds })
-        : {};
-      setVoters(Object.values(voters));
-    } catch (e) {
-      console.error("Error fetching poll voters:", e);
-      captureException(e);
-    }
-  }, [event.publicData]);
-
-  useEffect(() => {
-    void refetchVoters();
-  }, [refetchVoters]);
-
-  const refetchComments = useCallback(async () => {
-    try {
-      const comments = await rpc.comments.listByForumEvent({
-        forumEventId: event._id,
-      });
-      setComments(comments);
-    } catch (e) {
-      console.error("Error fetching poll comments:", e);
-      captureException(e);
-    }
-  }, [event._id]);
-
-  useEffect(() => {
-    void refetchComments();
-  }, [refetchComments]);
-
-  const currentUserComment = useMemo(() => {
-    if (!currentUser) {
-      return null;
-    }
-    return (
-      comments?.find((comment) => comment.user?._id === currentUser._id) || null
-    );
-  }, [comments, currentUser]);
+  const { voters, comments, currentUserComment, refetchComments, votesLoading } =
+    usePollParticipants({
+      eventId: event._id,
+      voterIds: Object.keys(event.publicData || {}),
+      currentUser,
+    });
 
   const voteClusters = useMemo(
     () => clusterForumEventVotes({ voters, comments, event, currentUser }),
     [voters, event, currentUser, comments],
   );
-
-  const votesLoading = voters === null;
 
   const toggleCommentFormOpen = useCallback(() => {
     setCommentFormOpen((isOpen) => {
@@ -516,44 +472,15 @@ export default function ForumEventPoll({
                     )}
                     style={{ left: `${votePos}%` }}
                   >
-                    <ForumEventCommentForm
+                    <PollCommentForm
+                      event={event}
                       isOpen={commentFormOpen}
                       setIsOpen={setCommentFormOpen}
-                      disabled={!event.post}
-                      comment={currentUserComment}
-                      successMessage="Success! Open the results to view everyone's votes and comments."
-                      forumEvent={event}
-                      onCancel={() => setCommentFormOpen(false)}
-                      successCallback={refetchComments}
+                      currentUserComment={currentUserComment}
                       commentPrompt={commentPrompt}
                       forumEventMetadata={forumEventMetadata}
-                      parentCommentId={event.comment?._id}
-                      title={() => "What made you vote this way?"}
-                      subtitle={(post, comment) => (
-                        <div>
-                          Your response will appear as a comment on{" "}
-                          {event.isGlobal ? (
-                            <Link
-                              href={
-                                comment
-                                  ? commentGetPageUrlFromIds({
-                                      postId: comment.post?._id,
-                                      commentId: comment._id,
-                                    })
-                                  : post
-                                    ? postGetPageUrl({ post })
-                                    : "#"
-                              }
-                              openInNewTab
-                            >
-                              this post
-                            </Link>
-                          ) : (
-                            "this post"
-                          )}
-                          , and show next to your avatar in the results.
-                        </div>
-                      )}
+                      refetchComments={refetchComments}
+                      showAvatarNote
                     >
                       <Tooltip
                         title={
@@ -615,7 +542,7 @@ export default function ForumEventPoll({
                           />
                         )}
                       </Tooltip>
-                    </ForumEventCommentForm>
+                    </PollCommentForm>
                   </div>
                 </AnalyticsContext>
               </div>
