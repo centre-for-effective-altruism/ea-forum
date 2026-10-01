@@ -1,4 +1,4 @@
-import { isBotSite } from "@/lib/environment";
+import { isBotSite, isNoIndexSite } from "@/lib/environment";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 
 const buildMainRobotsTxt = () => `
@@ -31,8 +31,17 @@ Crawl-Delay: 1
 Sitemap: ${combineUrls(getSiteUrl(), "/sitemap.xml")}
 `;
 
+const buildNoIndexRobotsTxt = () => `
+User-agent: *
+Disallow: /
+`;
+
 export const GET = () => {
-  const robotsTxt = isBotSite ? buildBotsRobotsTxt() : buildMainRobotsTxt();
+  const robotsTxt = isBotSite
+    ? buildBotsRobotsTxt()
+    : isNoIndexSite
+      ? buildNoIndexRobotsTxt()
+      : buildMainRobotsTxt();
   return new Response(robotsTxt, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
