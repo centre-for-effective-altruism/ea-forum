@@ -29,6 +29,8 @@ export const tagBaseProjection = {
   },
   extras: {
     description: htmlSubstring(sql`"description"->>'html'`),
+    imageId: (tags) =>
+      sql<string | null>`COALESCE(${tags}."squareImageId", ${tags}."bannerImageId")`,
   },
 } satisfies TagRelationalProjection;
 
@@ -47,6 +49,19 @@ export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
       name: "asc",
     },
     limit,
+  });
+});
+
+export const fetchAllTags = cache(() => {
+  return db.query.tags.findMany({
+    ...tagBaseProjection,
+    where: {
+      deleted: false,
+      slug: { ne: "wiki" },
+    },
+    orderBy: {
+      name: "asc",
+    },
   });
 });
 
@@ -260,5 +275,26 @@ export const fetchAllPostsTags = async ({
     },
     limit,
     offset,
+  });
+};
+
+const tagPageProjection = {
+  columns: {
+    _id: true,
+    name: true,
+  },
+  extras: {
+    description: sql<string | null>`"description"->>'html'`,
+  },
+} satisfies TagRelationalProjection;
+
+export type TagPage = RevisionFromProjection<typeof tagPageProjection>;
+
+export const fetchTagPage = (slug: string) => {
+  return db.query.tags.findFirst({
+    ...tagPageProjection,
+    where: {
+      slug,
+    },
   });
 };

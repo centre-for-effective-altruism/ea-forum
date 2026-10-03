@@ -523,3 +523,16 @@ export const userCanInitiateConversations = (user: CurrentUser | null): boolean 
   }
   return (user.karma ?? 0) >= 10;
 };
+
+export const userCanCreateTags = (user: CurrentUser | null) => {
+  if (!user) {
+    return false;
+  }
+  if (userIsAdmin(user)) {
+    return true;
+  }
+  return user.karma >= 1;
+};
+
+export const userCanEditTagWiki = (user: CurrentUser | null) =>
+  userIsAdminOrMod(user);
