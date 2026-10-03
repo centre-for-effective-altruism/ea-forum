@@ -50,6 +50,16 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/tags",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/tags/:path*",
+      destination: "/topics/:path*",
+      permanent: true,
+    },
+    {
       source: "/api/notificationEvents",
       destination: "https://fm-prod.effectivealtruism.org/api/notificationEvents",
       permanent: false,
