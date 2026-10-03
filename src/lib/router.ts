@@ -7,6 +7,7 @@ import { commentsRouter } from "./comments/commentsRouter";
 import { featuredQueueRouter } from "./featuredQueue/featuredQueueRouter";
 import { forumEventsRouter } from "./forumEvents/forumEventsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
+import { moderationRouter } from "./moderation/moderationRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
 import { messagesRouter } from "./messages/messagesRouter";
 import { postsRouter } from "./posts/postsRouter";
@@ -31,6 +32,7 @@ export const router = {
   featuredQueue: featuredQueueRouter,
   forumEvents: forumEventsRouter,
   lwEvents: lwEventRouter,
+  moderation: moderationRouter,
   notifications: notificationsRouter,
   messages: messagesRouter,
   posts: postsRouter,
