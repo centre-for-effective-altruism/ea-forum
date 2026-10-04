@@ -1,6 +1,9 @@
+import sortBy from "lodash/sortBy";
 import sum from "lodash/sum";
 import { getSiteUrl } from "../routeHelpers";
-import { SequenceBase, SequencePost } from "./sequenceQueries";
+import { getEditorialPageForSequence } from "./editorialPages";
+// Type only, to keep this module free of a cycle with sequenceQueries
+import type { SequenceBase, SequencePost } from "./sequenceQueries";
 import { getPostReadTimeMinutes } from "../posts/postsHelpers";
 
 export const sequenceGetPageUrl = ({
@@ -10,9 +13,34 @@ export const sequenceGetPageUrl = ({
   sequence: { _id: string };
   isAbsolute?: boolean;
 }) => {
+  // Sequences with their own editorial page are linked to by that page's path
+  const editorialPage = getEditorialPageForSequence(sequence._id);
+  if (editorialPage) {
+    const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
+    return `${prefix}${editorialPage.path}`;
+  }
+  return sequenceGetSequencePageUrl({ sequence, isAbsolute });
+};
+
+/**
+ * The sequence's own page, even when it has an editorial page. Use this where
+ * the sequence itself is the destination, such as an admin edit link.
+ */
+export const sequenceGetSequencePageUrl = ({
+  sequence,
+  isAbsolute,
+}: {
+  sequence: { _id: string };
+  isAbsolute?: boolean;
+}) => {
   const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
   return `${prefix}/s/${sequence._id}`;
 };
+
+/** The ids of a sequence's posts, in the order the sequence puts them in */
+export const sequenceChapterPostIds = (
+  chapters: { number: number | null; postIds: string[] }[],
+) => sortBy(chapters, "number").flatMap(({ postIds }) => postIds);
 
 export const getPreviousAndNextPostIds = (
   sequence: SequenceBase,
