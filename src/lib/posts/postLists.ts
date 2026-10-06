@@ -510,6 +510,7 @@ export const fetchUserProfilePosts = async ({
   return await fetchPostsList({
     currentUserId,
     where: {
+      shortform: undefined, // Overwrite hiding quick takes in the default selector
       OR: [
         { userId },
         {
@@ -519,6 +520,7 @@ export const fetchUserProfilePosts = async ({
       ],
     },
     orderBy: {
+      shortform: "desc",
       createdAt: "desc",
     },
     offset,
