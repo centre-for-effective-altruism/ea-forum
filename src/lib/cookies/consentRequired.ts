@@ -94,14 +94,9 @@ const getUserCountryCode = async ({
     return countryCode;
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_IPAPI_KEY;
-  const ipapiUrl = apiKey
-    ? `https://ipapi.co/json/?key=${apiKey}`
-    : "https://ipapi.co/json/";
-
   inFlightRequest = (async () => {
     try {
-      const response = await fetch(ipapiUrl, { signal });
+      const response = await fetch("/api/country", { signal });
       if (!response.ok) {
         throw new Error(`Error fetching user country: ${response.statusText}`);
       }
