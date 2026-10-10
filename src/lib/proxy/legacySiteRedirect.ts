@@ -30,6 +30,7 @@ const newSitePatterns = [
   /^\/monitoring$/, // Sentry ingestion
   /^\/about$/, // About page
   /^\/intro$/, // Intro page
+  /^\/moderation$/, // Moderation log page
   /^\/contact$/, // Contact page
   /^\/tags$/, // Topics redirect
   /^\/topics$/, // Topics page
