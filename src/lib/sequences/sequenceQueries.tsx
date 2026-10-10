@@ -1,6 +1,7 @@
 import type { CurrentUser } from "../users/currentUser";
 import type { RelationalProjection } from "../utils/queryHelpers";
 import { userBaseProjection } from "../users/userQueries";
+import { sequenceChapterPostIds } from "./sequenceHelpers";
 import { db } from "../db";
 import sortBy from "lodash/sortBy";
 
@@ -33,7 +34,7 @@ export const sequenceBaseProjection = {
 
 export type SequenceBase = SequenceFromProjection<typeof sequenceBaseProjection>;
 
-const sequencePermissionFilter = (currentUser: CurrentUser | null) => {
+export const sequencePermissionFilter = (currentUser: CurrentUser | null) => {
   if (currentUser?.isAdmin) {
     return {};
   }
@@ -169,9 +170,7 @@ export const fetchSequencePosts = async ({
       isDeleted: false,
     },
   });
-  const postIds = sortBy(sequence?.chapters, "number").flatMap(
-    ({ postIds }) => postIds,
-  );
+  const postIds = sequenceChapterPostIds(sequence?.chapters ?? []);
   if (!postIds.length) {
     return [];
   }

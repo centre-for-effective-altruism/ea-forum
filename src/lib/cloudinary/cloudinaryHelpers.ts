@@ -34,6 +34,19 @@ export const makeCloudinaryImageUrl = (
 ) =>
   `https://res.cloudinary.com/${getCloudinaryCloudName()}/image/upload/c_crop,g_custom/${cloudinaryPropsToString(cloudinaryProps)}/${publicId}`;
 
+export type SocialImageOptions = {
+  width?: number;
+  dpr?: number | "auto";
+};
+
+/** Prefix for a cloudinary id, cropped to the aspect ratio used for sharing */
+export const getSocialImagePreviewPrefix = (options?: SocialImageOptions) => {
+  const cloudName = getCloudinaryCloudName();
+  const width = options?.width ? `,w_${options.width}` : "";
+  const dpr = options?.dpr ? `,dpr_${options.dpr}` : "";
+  return `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto,c_lfill,ar_1.91,g_auto${width}${dpr}/`;
+};
+
 export const getSiteLogoUrl = (sizePixels: number) =>
   `https://images.ctfassets.net/ohf186sfn6di/7J4cBC9SXCWMoqqCIqI0GI/affe205261bb8cff47501a0ada0f2268/ea-logo-square-1200x1200__1_.png?h=${sizePixels}`;
 
