@@ -161,6 +161,10 @@ type LinkContentType =
       postId: string;
     }
   | {
+      type: "comment";
+      commentId: string;
+    }
+  | {
       type: "user";
       userSlug: string;
     }
@@ -195,6 +199,11 @@ export const parseLinkContentType = (
     const hostType = classifyHost(absTarget.host);
     if (hostType === "offsite") {
       return null;
+    }
+
+    const commentId = new URLSearchParams(absTarget.search).get("commentId");
+    if (commentId) {
+      return { type: "comment", commentId };
     }
 
     let match: string | null = null;
