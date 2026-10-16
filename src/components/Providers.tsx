@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
+import { CommentAwardsUsedProvider } from "@/lib/commentAwards/useCommentAwardsUsed";
 import { ClientIdProvider } from "@/lib/hooks/useClientId";
 import { ThemeProvider } from "@/lib/hooks/useTheme";
 import { CurrentUserProvider } from "@/lib/hooks/useCurrentUser";
@@ -21,9 +22,14 @@ export default async function Providers({
     getCurrentUser(),
     cookies(),
   ]);
-  const initialCookies = Object.fromEntries(
-    cookieStore.getAll().map((c) => [c.name, c.value]),
-  );
+  // If the user is logged-in then we make cookies available for SSR. For logged-out
+  // users, cookies will be available on the client, but not during SSR. This allows
+  // us to do much more aggresive caching for logged-out users in Cloudflare.
+  const initialCookies = currentUser
+    ? Object.fromEntries(
+      cookieStore.getAll().map((c) => [c.name, c.value]),
+    )
+    : {};
   return (
     <FloatingTreeClientProvider>
       <MobileNavProvider>
@@ -35,7 +41,9 @@ export default async function Providers({
                   <SubscriptionProvider>
                     <ItemsReadProvider>
                       <LoginPopoverContextProvider>
-                        {children}
+                        <CommentAwardsUsedProvider>
+                          {children}
+                        </CommentAwardsUsedProvider>
                       </LoginPopoverContextProvider>
                     </ItemsReadProvider>
                   </SubscriptionProvider>

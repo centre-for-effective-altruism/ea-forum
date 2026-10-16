@@ -6,6 +6,7 @@ import {
   locationHashIsFootnoteBackreference,
   parseLinkContentType,
 } from "@/lib/utils/contentHelpers";
+import LazyCommentsTooltip from "../LazyCommentsTooltip";
 import LazySequenceTooltip from "../LazySequenceTooltip";
 import LazyPostsTooltip from "../LazyPostsTooltip";
 import LazyUsersTooltip from "../LazyUsersTooltip";
@@ -77,6 +78,16 @@ export default function HoverPreviewLink({
           {defaultLinkNode}
         </LazyPostsTooltip>
       );
+    case "comment":
+      return (
+        <LazyCommentsTooltip
+          As="span"
+          commentId={linkContentType.commentId}
+          className="[&_a]:after:content-['°'] [&_a]:after:ml-px"
+        >
+          {defaultLinkNode}
+        </LazyCommentsTooltip>
+      );
     case "user":
       return (
         <LazyUsersTooltip
@@ -115,8 +126,12 @@ export default function HoverPreviewLink({
   return (
     <Tooltip
       As="span"
-      title={<Type style="bodySmall">{href}</Type>}
-      tooltipClassName="max-w-[calc(min(100%,400px))]"
+      title={
+        <Type style="bodySmall" className="line-clamp-2">
+          {href}
+        </Type>
+      }
+      tooltipClassName="max-w-[calc(min(100%,400px))]!"
     >
       {defaultLinkNode}
     </Tooltip>

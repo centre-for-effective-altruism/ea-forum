@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import { useCommentAwardMenuItems } from "@/lib/commentAwards/useCommentAwardMenuItems";
 import { userCanModeratePost } from "@/lib/posts/postsHelpers";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { captureException } from "@sentry/nextjs";
@@ -62,6 +63,7 @@ export default function CommentTripleDotMenu({
   const { isRetracted, toggleRetracted } = useRetractComment(comment);
   const { isModerator, toggleModerator } = useModeratorComment(comment);
   const { subscriptionMenuItems } = useCommentSubscriptions(comment);
+  const commentAwardItems = useCommentAwardMenuItems(comment);
 
   const canDelete = userCanModerateComment(currentUser, comment);
   const [deletePopoverOpen, setDeletePopoverOpen] = useState(false);
@@ -121,6 +123,7 @@ export default function CommentTripleDotMenu({
         className="text-gray-900"
         dismissRef={dismissRef}
         items={[
+          ...commentAwardItems,
           canEdit
             ? {
                 title: "Edit",
@@ -194,7 +197,8 @@ export default function CommentTripleDotMenu({
         <button
           aria-label="Comment options"
           className={clsx(
-            "text-gray-600 hover:text-gray-900 cursor-pointer flex items-center",
+            "text-gray-600 hover:bg-item-hover rounded cursor-pointer",
+            "flex items-center",
             className,
           )}
         >

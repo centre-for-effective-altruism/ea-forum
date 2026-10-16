@@ -11,7 +11,7 @@ declare namespace NodeJS {
     NEXT_PUBLIC_SITE_URL: string;
     CONTACT_EMAIL: string;
     NEXT_PUBLIC_GOOGLE_TAG_MANAGER_KEY: string;
-    ADMIN_ACCOUNT_EMAIL: string;
+    NEXT_PUBLIC_ADMIN_ACCOUNT_EMAIL: string;
     NEXT_PUBLIC_ANALYTICS_EVENTS_DISABLED?: "true" | "false";
 
     // Auth0 settings
@@ -51,8 +51,13 @@ declare namespace NodeJS {
     MAILCHIMP_DIGEST_LIST_ID?: string;
     MAILCHIMP_EA_NEWSLETTER_LIST_ID?: string;
 
+    // Posthog
+    NEXT_PUBLIC_POSTHOG_HOST: string;
+    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: string;
+    POSTHOG_API_KEY: string;
+    POSTHOG_PROJECT_ID: string;
+
     // Other services
-    NEXT_PUBLIC_IPAPI_KEY?: string;
     NEXT_PUBLIC_INTERCOM_APP_ID: string;
     AKISMET_API_KEY: string;
     NEXT_PUBLIC_RECAPTCHA_KEY: string;
@@ -61,8 +66,7 @@ declare namespace NodeJS {
     SENTRY_AUTH_TOKEN?: string;
     INTERCOM_TOKEN: string;
     PANGRAM_API_KEY: string;
-    NEXT_PUBLIC_POSTHOG_HOST: string;
-    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: string;
+    HUNTER_API_KEY: string;
 
     // Site config
     START_HERE_POST_ID: string;

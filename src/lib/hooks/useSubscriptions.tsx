@@ -314,3 +314,50 @@ export const useCommentSubscriptions = (comment: CommentListItem) => {
     subscriptionMenuItems,
   };
 };
+
+const getUserSubscriptionItems = (
+  userId: string,
+  currentUser: CurrentUser | null,
+) => [
+  {
+    collectionName: "Users",
+    documentId: userId,
+    enabled: userId !== currentUser?._id,
+    // TODO: Should these messages contain the user name?
+    subscribeMessage: "Subscribe to user posts",
+    unsubscribeMessage: "Unsubscribe from user posts",
+    title: "New posts",
+    subscriptionType: subscriptionTypes.newPosts,
+  },
+  {
+    collectionName: "Users",
+    documentId: userId,
+    enabled: userId !== currentUser?._id,
+    // TODO: Should these messages contain the user name?
+    subscribeMessage: "Subscribe to user comments",
+    unsubscribeMessage: "Unsubscribe from user comments",
+    title: "New comments",
+    subscriptionType: subscriptionTypes.newUserComments,
+  },
+];
+
+export const useUserSubscriptions = (userId: string) => {
+  const { currentUser } = useCurrentUser();
+  const subscriptionMenuItems = useMemo(() => {
+    const allSubs = getUserSubscriptionItems(userId, currentUser);
+    return allSubs
+      .filter(({ enabled }) => enabled)
+      .map((sub) => (
+        <SubscriptionToggle
+          key={sub.title}
+          title={sub.title}
+          collectionName={sub.collectionName}
+          documentId={sub.documentId}
+          type={sub.subscriptionType}
+        />
+      ));
+  }, [userId, currentUser]);
+  return {
+    subscriptionMenuItems,
+  };
+};

@@ -105,7 +105,7 @@ export default function ForumEventEmojiPicker({
       >
         <div
           className="
-            flex justify-center items-center cursor-pointer user-select-none
+            flex justify-center items-center cursor-pointer select-none
             w-10 h-10 rounded border-1 border-gray-400
           "
         >

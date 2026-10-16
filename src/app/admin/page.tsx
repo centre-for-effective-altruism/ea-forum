@@ -19,6 +19,7 @@ export default async function AdminPage() {
           { title: "Moderator comments", href: "/moderatorComments" },
           { title: "Moderation log", href: "/moderation" },
           { title: "Topics dashboard", href: "/topics/dashboard" },
+          { title: "Swap user emails", href: "/admin/swap-user-emails" },
         ]}
       />
       <AdminPageSection
@@ -30,6 +31,7 @@ export default async function AdminPage() {
             href: "/admin/election-candidates",
           },
           { title: "Digests", href: "/admin/digests" },
+          { title: "Featured queue", href: "/admin/featured" },
           { title: "Twitter tools", href: "/admin/twitter" },
           { title: "Spotlights", href: "/admin/spotlights" },
           { title: "Forum events", href: "/adminForumEvents" },

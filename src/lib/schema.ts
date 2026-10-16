@@ -107,6 +107,9 @@ export const users = pgTable(
     frontpagePostCount: doublePrecision().notNull().default(0),
     commentCount: doublePrecision().notNull().default(0),
     maxCommentCount: doublePrecision().notNull().default(0),
+    sequenceCount: doublePrecision().notNull().default(0),
+    sequenceDraftCount: doublePrecision().notNull().default(0),
+    tagRevisionCount: doublePrecision().notNull().default(0),
     banned: timestamp(),
     services: jsonb<Record<string, Json>>(),
     isAdmin: boolean().notNull().default(false),
@@ -142,7 +145,7 @@ export const users = pgTable(
     showCommunityInRecentDiscussion: boolean().notNull().default(false),
     needsReview: boolean().notNull().default(false),
     snoozedUntilContentCount: doublePrecision(),
-    mapLocation: jsonb(),
+    mapLocation: jsonb<Record<string, string | number>>(),
     mongoLocation: jsonb<{ type: "Point"; coordinates: [number, number] }>(),
     googleLocation: jsonb(),
     location: text(),
@@ -335,8 +338,6 @@ export const users = pgTable(
   "sendInactiveSummaryEmail" BOOL NOT NULL DEFAULT TRUE,
   "subscribedToNewsletter" BOOL NOT NULL DEFAULT FALSE,
   "hideMeetupsPoke" BOOL NOT NULL DEFAULT FALSE,
-  "sequenceCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-  "sequenceDraftCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "mapMarkerText" TEXT,
   "htmlMapMarkerText" TEXT,
   "nearbyEventsNotifications" BOOL NOT NULL DEFAULT FALSE,
@@ -362,7 +363,6 @@ export const users = pgTable(
   "defaultToCKEditor" BOOL,
   "signUpReCaptchaRating" DOUBLE PRECISION,
   "noExpandUnreadCommentsReview" BOOL NOT NULL DEFAULT FALSE,
-  "tagRevisionCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "walledGardenInvite" BOOL,
   "hideWalledGardenUI" BOOL,
   "walledGardenPortalOnboarded" BOOL,
@@ -1068,6 +1068,38 @@ export const comments = pgTable(
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = typeof comments.$inferInsert;
 
+export const commentAwards = pgTable(
+  "CommentAwards",
+  {
+    ...universalFields,
+    userId: varchar({ length: 27 }).notNull(),
+    commentId: varchar({ length: 27 }).notNull(),
+    isDeleted: boolean().default(false).notNull(),
+    count: doublePrecision().default(1).notNull(),
+  },
+  (table) => [
+    index("idx_CommentAwards_schemaVersion").using(
+      "btree",
+      table.schemaVersion.asc().nullsLast(),
+    ),
+    index("idx_CommentAwards_commentId").using(
+      "btree",
+      table.commentId.asc().nullsLast(),
+    ),
+    index("idx_CommentAwards_commentId_deleted").using(
+      "btree",
+      table.commentId.asc().nullsLast(),
+      table.isDeleted.asc().nullsLast(),
+    ),
+    index("idx_CommentAwards_userId").using("btree", table.userId.asc().nullsLast()),
+    index("idx_CommentAwards_userId_deleted").using(
+      "btree",
+      table.userId.asc().nullsLast(),
+      table.isDeleted.asc().nullsLast(),
+    ),
+  ],
+);
+
 export const clientIds = pgTable(
   "ClientIds",
   {
@@ -1148,6 +1180,7 @@ export const digestPosts = pgTable(
     postId: varchar({ length: 27 }).notNull(),
     emailDigestStatus: text(),
     onsiteDigestStatus: text(),
+    onsiteDigestAt: timestamp(),
   },
   (table) => [
     index("idx_DigestPosts_digestId").using(
@@ -1160,6 +1193,8 @@ export const digestPosts = pgTable(
     ),
   ],
 );
+
+export type InsertDigestPost = typeof digestPosts.$inferInsert;
 
 export const curationNotices = pgTable(
   "CurationNotices",
@@ -1246,7 +1281,7 @@ export const conversations = pgTable(
     ...universalFields,
     title: text(),
     participantIds: varchar({ length: 27 }).array().default([]).notNull(),
-    latestActivity: timestamp(),
+    latestActivity: timestamp().notNull(),
     af: boolean(),
     messageCount: doublePrecision().default(0).notNull(),
     moderator: boolean(),
@@ -2074,6 +2109,8 @@ export const posts = pgTable(
     generateDraftJargon: boolean().default(false).notNull(),
     coauthorUserIds: text().array().default([""]).notNull(),
     marginalFundingOrg: text(),
+    onsiteDigestAt: timestamp(),
+    pangramStatusOverride: text(),
   },
   (table) => [
     index("idx_Posts_agentFoundationsId").using(

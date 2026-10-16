@@ -2,10 +2,12 @@ import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { db } from "../db";
 import {
+  fetchAllPostsTags,
   fetchCoreTags,
   fetchOnboardingTags,
   fetchTagBySlug,
-  fetchTagsById,
+  fetchTagsByIds,
+  fetchUserProfileTagRevisions,
 } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 import { getCurrentUser } from "../users/currentUser";
@@ -17,10 +19,37 @@ export const tagsRouter = {
     .handler(({ input }) => fetchCoreTags(input?.limit)),
   listByIds: os
     .input(z.object({ tagIds: z.array(z.string()) }))
-    .handler(({ input: { tagIds } }) => fetchTagsById(tagIds)),
+    .handler(({ input: { tagIds } }) => fetchTagsByIds(tagIds)),
   listBySlug: os
     .input(z.object({ slug: z.string().nonempty() }))
     .handler(({ input: { slug } }) => fetchTagBySlug(slug)),
+  listUserProfile: os
+    .input(
+      z.object({
+        userId: z.string().nonempty(),
+        offset: z.int().nonnegative().optional(),
+        limit: z.int().positive().max(50).optional().default(10),
+      }),
+    )
+    .handler(async ({ input: { userId, offset, limit } }) => {
+      return await fetchUserProfileTagRevisions({
+        userId,
+        offset,
+        limit,
+      });
+    }),
+  listAll: os
+    .input(
+      z.object({
+        before: z.coerce.date().optional(),
+        after: z.coerce.date().optional(),
+        offset: z.number().nonnegative().max(5000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      return await fetchAllPostsTags(input);
+    }),
   diff: os
     .input(z.object({ revisionId: z.string().nonempty() }))
     .handler(async ({ input: { revisionId } }) => {

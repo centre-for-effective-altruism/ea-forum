@@ -29,6 +29,7 @@ export type AnalyticsProps = {
   pageSubSectionContext?: string;
   pageElementContext?: string;
   pageElementSubContext?: string;
+  homePageTab?: string;
   reviewYear?: string;
   path?: string;
   resourceName?: string;

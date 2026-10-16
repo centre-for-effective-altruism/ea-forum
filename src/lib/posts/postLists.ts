@@ -20,11 +20,16 @@ import {
   currentUserSuggestedCurationSelector,
   filterSettingsToSelector,
 } from "./postQueries";
+import {
+  ALL_POSTS_LOW_KARMA_THRESHOLD,
+  AllPostsSettings,
+  AllPostsSortedBy,
+} from "./allPostsSettings";
+import { getKarmaInflationSeries } from "./karmaInflation";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
 const CUTOFF_DAYS = 21;
-const EPOCH_ISO_DATE = "1970-01-01 00:00:00";
 
 // TODO: Maybe this should be a function that takes the current user and does
 // permission checks
@@ -48,17 +53,6 @@ const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
 /** Create a filter to exclude posts with a particular tag */
 export const excludeTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`COALESCE((${postsTable.tagRelevance}->>${tagId})::FLOAT, 0) < 1`;
-
-// TODO: Remove the onsiteDigestFilter, FEATURED_CUTOFF_DAYS,
-// fetchFeaturedCuratedPostsList, and fetchFeaturedPostsList below along with
-// the /admin/featured page once the featured-page experiment is concluded.
-const onsiteDigestFilter = (postsTable: typeof posts) => sql`
-  EXISTS (
-    SELECT 1 FROM "DigestPosts" dp
-    WHERE dp."postId" = ${postsTable}."_id"
-      AND dp."onsiteDigestStatus" = 'yes'
-  )
-`;
 
 /**
  * New and upvoted sorting: Calculate score from karma with bonuses for
@@ -271,40 +265,6 @@ export const fetchFrontpageCuratedPostsList = async (
   });
 };
 
-const FEATURED_CUTOFF_DAYS = 14;
-
-export const fetchFeaturedCuratedPostsList = async (
-  currentUserId: string | null,
-) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      curatedDate: { gte: nDaysAgo(5).toISOString() },
-      RAW: onsiteDigestFilter,
-    },
-    orderBy: {
-      sticky: "desc",
-      curatedDate: "desc",
-      postedAt: "desc",
-    },
-    limit: currentUserId ? 3 : 2,
-  });
-};
-
-export const fetchFeaturedPostsList = (currentUserId: string | null) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: false,
-      sticky: false,
-      groupId: { isNull: true },
-      postedAt: { gt: nDaysAgo(FEATURED_CUTOFF_DAYS).toISOString() },
-      RAW: onsiteDigestFilter,
-    },
-    orderBy: magicSort(),
-  });
-};
-
 export type PostListItem = Awaited<
   ReturnType<typeof fetchFrontpagePostsList>
 >[number];
@@ -376,47 +336,6 @@ export const fetchPingbackPosts = async (
       baseScore: "desc",
     },
   });
-
-export const fetchSidebarOpportunities = (
-  currentUserId: string | null,
-  limit: number,
-) => {
-  const tagId = process.env.OPPORTUNITIES_TAG_ID;
-  if (!tagId) {
-    console.warn("Opportunities tag ID is not configured");
-    return Promise.resolve([]);
-  }
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: false,
-      sticky: false,
-      groupId: { isNull: true },
-      frontpageDate: { gt: EPOCH_ISO_DATE },
-      postedAt: { gt: nDaysAgo(CUTOFF_DAYS).toISOString() },
-      RAW: (postsTable: typeof posts) =>
-        sql`(${postsTable.tagRelevance}->>${tagId})::FLOAT >= 1`,
-    },
-    orderBy: magicSort(),
-    limit,
-  });
-};
-
-export const fetchSidebarEvents = (currentUserId: string | null, limit: number) => {
-  return fetchPostsList({
-    currentUserId,
-    where: {
-      isEvent: true,
-      startTime: { gt: new Date().toISOString() },
-    },
-    orderBy: {
-      startTime: "asc",
-      baseScore: "desc",
-      _id: "desc",
-    },
-    limit,
-  });
-};
 
 export const fetchMoreFromAuthorPostsList = async ({
   currentUserId,
@@ -577,9 +496,78 @@ export const fetchOrgUpdatesPostsList = async ({
   });
 };
 
+export const fetchUserProfilePosts = async ({
+  currentUserId,
+  userId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  userId: string;
+  offset?: number;
+  limit?: number;
+}) => {
+  return await fetchPostsList({
+    currentUserId,
+    where: {
+      shortform: undefined, // Overwrite hiding quick takes in the default selector
+      OR: [
+        { userId },
+        {
+          RAW: (postsTable) =>
+            sql<boolean>`${postsTable}."coauthorUserIds" @> ARRAY[${userId}]`,
+        },
+      ],
+    },
+    orderBy: {
+      shortform: "desc",
+      createdAt: "desc",
+    },
+    offset,
+    limit,
+  });
+};
+
+export const fetchUserProfileDraftPosts = async ({
+  currentUserId,
+  userId,
+  offset,
+  limit,
+}: {
+  currentUserId: string;
+  userId: string;
+  offset?: number;
+  limit?: number;
+}) => {
+  return await db.query.posts.findMany({
+    ...postsListProjection(currentUserId),
+    where: {
+      OR: [
+        { userId },
+        {
+          RAW: (postsTable) =>
+            sql<boolean>`${postsTable}."coauthorUserIds" @> ARRAY[${userId}]`,
+        },
+        {
+          RAW: (postsTable) =>
+            sql<boolean>`${postsTable}."shareWithUsers"@>ARRAY[${userId}]::VARCHAR[]`,
+        },
+      ],
+      draft: true,
+      deletedDraft: false,
+      hideAuthor: false, // This is from ForumMagnum - not sure why?
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    offset,
+    limit,
+  });
+};
+
 export const fetchPostsListFromView = (
   currentUserId: string | null,
-  { view, ...props }: PostsListView,
+  { view, userId, ...props }: PostsListView,
 ) => {
   switch (view) {
     case "frontpage":
@@ -588,6 +576,11 @@ export const fetchPostsListFromView = (
       return fetchStickyPostsList({ currentUserId, ...props });
     case "orgUpdates":
       return fetchOrgUpdatesPostsList({ currentUserId, ...props });
+    case "userProfile":
+      if (!userId) {
+        throw new Error("User profile view requires user id");
+      }
+      return fetchUserProfilePosts({ currentUserId, userId, ...props });
     default:
       throw new Error("Invalid posts list view");
   }
@@ -635,4 +628,172 @@ export const fetchFeaturedVideos = async (currentUser: CurrentUser | null) => {
   });
   const order = new Map(postIds.map((id, i) => [id, i]));
   return sortBy(posts, (p) => order.get(p._id) ?? Infinity);
+};
+
+/**
+ * Posts for the featured front page. This is:
+ *  - all posts marked as being in the on-site digest
+ *  - all non-community posts with >= 100 karma
+ *  - excluding the most recently curated post which is fetched separately
+ *
+ * Ordered by publication date, not by when a post was featured: featuring is a
+ * judgement that a post belongs on this list, not a claim that it is new.
+ */
+export const fetchFeaturedFrontpagePosts = async ({
+  currentUser,
+  offset = 0,
+  limit = 10,
+}: {
+  currentUser: CurrentUser | null;
+  offset?: number;
+  limit?: number;
+}): Promise<PostListItem[]> => {
+  const excludeCommunity = excludeTagFilter(
+    process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID,
+  );
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      AND: [
+        {
+          // The most recently curated post is always shown first and that is
+          // fetched separately, so we should skip it here.
+          OR: [
+            { curatedDate: { isNull: true } },
+            {
+              RAW: (postsTable) => sql`
+                ${postsTable}."curatedDate" < (
+                  SELECT MAX("curatedDate")
+                  FROM "Posts"
+                  WHERE "curatedDate" IS NOT NULL
+                )
+              `,
+            },
+          ],
+        },
+        {
+          OR: [
+            {
+              // Featured on karma alone, with no admin action. The Featured
+              // queue deliberately still offers these up for review — see
+              // `fetchFeaturedQueue`.
+              baseScore: { gte: 100 },
+              RAW: (postsTable) => excludeCommunity(postsTable),
+            },
+            {
+              // Deliberately featured, from the digest tool or the admin
+              // Featured queue — both write these two together, see
+              // `featurePosts`.
+              digestPost: {
+                onsiteDigestAt: { isNotNull: true },
+              },
+            },
+            {
+              onsiteDigestAt: { isNotNull: true },
+            },
+          ],
+        },
+      ],
+    },
+    orderBy: { postedAt: "desc" },
+    offset,
+    limit: Math.min(limit, 50),
+  });
+};
+
+export const fetchMostRecentlyCuratedPost = async (
+  currentUser: CurrentUser | null,
+) => {
+  const result = await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      curatedDate: { isNotNull: true },
+    },
+    orderBy: {
+      curatedDate: "desc",
+    },
+    limit: 1,
+  });
+  return result[0] ?? null;
+};
+
+const getAllPostsSort = async (sortedBy: AllPostsSortedBy) => {
+  switch (sortedBy) {
+    case "magic":
+      return magicSort();
+    case "top":
+      return { baseScore: "desc", postedAt: "desc", _id: "asc" } as const;
+    case "topAdjusted":
+      const { start, interval, values, valuesSql } = await getKarmaInflationSeries();
+      return (postsTable: typeof posts) => sql`
+        ${postsTable}."baseScore" * COALESCE(
+          ${valuesSql}[1 + GREATEST(
+            FLOOR(
+              EXTRACT(EPOCH FROM (
+                ${postsTable}."postedAt" - TO_TIMESTAMP(${start / 1000})
+              )) * 1000 / ${interval}::BIGINT
+            ),
+            0
+          )],
+          ${values[values.length - 1] ?? null},
+          1.0
+        ) DESC,
+        ${postsTable}."postedAt" DESC,
+        ${postsTable}."_id" ASC
+      `;
+    case "recentComments":
+      return { lastCommentedAt: "desc", postedAt: "desc", _id: "asc" } as const;
+    case "new":
+      return { postedAt: "desc", _id: "asc" } as const;
+    case "old":
+      return { postedAt: "asc", _id: "asc" } as const;
+    default:
+      return { _id: "asc" } as const;
+  }
+};
+
+export const fetchAllPosts = async ({
+  currentUser,
+  settings: { sortedBy, filter, showLowKarma, showEvents, showCommunity },
+  before = new Date(),
+  after = new Date(0),
+  limit,
+  offset,
+}: {
+  currentUser: CurrentUser | null;
+  settings: AllPostsSettings;
+  before?: Date;
+  after?: Date;
+  limit?: number;
+  offset?: number;
+}) => {
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      postedAt: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
+      frontpageDate: filter === "frontpage" ? { isNotNull: true } : undefined,
+      curatedDate: filter === "curated" ? { isNotNull: true } : undefined,
+      question: filter === "questions" ? true : undefined,
+      isEvent: filter === "events" ? true : showEvents ? undefined : false,
+      baseScore: showLowKarma ? { gte: ALL_POSTS_LOW_KARMA_THRESHOLD } : undefined,
+      AND: [
+        {
+          RAW:
+            filter === "linkpost"
+              ? (postsTable) => sql`LENGTH(TRIM(${postsTable}."url")) > 0`
+              : undefined,
+        },
+        {
+          RAW: showCommunity
+            ? undefined
+            : excludeTagFilter(process.env.NEXT_PUBLIC_COMMUNITY_TAG_ID),
+        },
+      ],
+    },
+    orderBy: await getAllPostsSort(sortedBy),
+    offset,
+    limit,
+  });
 };

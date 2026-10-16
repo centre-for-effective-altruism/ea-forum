@@ -123,12 +123,14 @@ const getTagProjection = (currentUser: CurrentUser | null) =>
       _id: true,
       slug: true,
       name: true,
+      shortName: true,
       lastCommentedAt: true,
       postCount: true,
       wikiOnly: true,
+      core: true,
     },
     extras: {
-      html: htmlSubstring(sql`"description"->>'html'`, 500),
+      description: htmlSubstring(sql`"description"->>'html'`, 500),
     },
     with: {
       comments: {

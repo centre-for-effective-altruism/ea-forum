@@ -12,6 +12,7 @@ import clsx from "clsx";
 import PostsListSkeleton from "./PostsListSkeleton";
 import PostsItem from "./PostsItem";
 import TextLinkButton from "../TextLinkButton";
+import { useTracking } from "@/lib/analyticsEvents";
 
 export default function PostsList({
   posts,
@@ -37,6 +38,7 @@ export default function PostsList({
   postItemClassName?: string;
   curatedIconLeft?: boolean;
 }>) {
+  const { captureEvent } = useTracking();
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(posts.length);
   const [displayedPosts, setDisplayedPosts] = useState(posts);
@@ -49,19 +51,17 @@ export default function PostsList({
       return;
     }
 
-    const offset_ = offset;
+    const view = { ...loadMoreView, offset };
     setOffset((offset) => offset + loadMoreView.limit);
     setLoading(true);
 
     try {
-      const data = await rpc.posts.list({
-        ...loadMoreView,
-        offset: offset_,
-      });
+      const data = await rpc.posts.list(view);
       setDisplayedPosts((posts) => [...posts, ...data]);
       if (data.length < loadMoreView.limit) {
         setCanLoadMore(false);
       }
+      captureEvent("postsListLoadMore", view);
     } catch (e) {
       console.error("Error loading posts:", e);
       toast.error(e instanceof Error ? e.message : "Something went wrong");
@@ -69,7 +69,7 @@ export default function PostsList({
     } finally {
       setLoading(false);
     }
-  }, [loadMoreView, offset, maxOffset]);
+  }, [captureEvent, loadMoreView, offset, maxOffset]);
 
   useEffect(() => {
     if (displayedPosts.length === 0 && !loading && canLoadMore) {

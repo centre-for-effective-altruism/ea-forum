@@ -42,7 +42,7 @@ import {
 const SPAM_KARMA_THRESHOLD = 10;
 
 export const updateCommentPost = async (txn: Transaction, comment: Comment) => {
-  if (!comment.postId || comment.debateResponse) {
+  if (!comment.postId || comment.debateResponse || comment.authorIsUnreviewed) {
     return;
   }
   await txn

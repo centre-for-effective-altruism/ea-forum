@@ -1,6 +1,6 @@
 import "server-only";
 
-import { isAnyTest } from "./environment";
+import { isAnyTest, isProduction } from "./environment";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
 import { drizzle as pgLiteDrizzle } from "drizzle-orm/pglite";
@@ -19,7 +19,11 @@ import {
   collections,
   commentModeratorActions,
   comments,
+  commentAwards,
   conversations,
+  databaseMetadata,
+  digestPosts,
+  digests,
   forumEvents,
   images,
   localgroups,
@@ -55,7 +59,9 @@ const relations = defineRelations(
     collections,
     books,
     comments,
+    commentAwards,
     conversations,
+    databaseMetadata,
     revisions,
     votes,
     localgroups,
@@ -64,6 +70,8 @@ const relations = defineRelations(
     sequences,
     spotlights,
     subscriptions,
+    digestPosts,
+    digests,
     tags,
     tagRels,
     images,
@@ -136,6 +144,10 @@ const relations = defineRelations(
         where: {
           collectionName: "Posts",
         },
+      }),
+      digestPost: r.many.digestPosts({
+        from: r.posts._id,
+        to: r.digestPosts.postId,
       }),
     },
     sequences: {
@@ -212,6 +224,13 @@ const relations = defineRelations(
           isUnvote: false,
         },
       }),
+      awards: r.many.commentAwards({
+        from: r.comments._id,
+        to: r.commentAwards.commentId,
+        where: {
+          isDeleted: false,
+        },
+      }),
       topLevelComment: r.one.comments({
         from: r.comments.topLevelCommentId,
         to: r.comments._id,
@@ -229,6 +248,12 @@ const relations = defineRelations(
       forumEvent: r.one.forumEvents({
         from: r.comments.forumEventId,
         to: r.forumEvents._id,
+      }),
+    },
+    digestPosts: {
+      post: r.one.posts({
+        from: r.digestPosts.postId,
+        to: r.posts._id,
       }),
     },
     tags: {
@@ -372,7 +397,11 @@ const createDb = () => {
   if (!process.env.DATABASE_URL) {
     throw new Error("Postgres URL is not configured");
   }
-  const db = pgDrizzle(process.env.DATABASE_URL, {
+  const db = pgDrizzle({
+    connection: {
+      connectionString: process.env.DATABASE_URL,
+      ...(isProduction ? { min: 5, max: 20 } : { min: 1, max: 5 }),
+    },
     relations,
     logger: process.env.LOG_DRIZZLE_QUERIES === "true",
   });

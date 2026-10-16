@@ -82,6 +82,44 @@ export const fetchSequencesByIds = async ({
   });
 };
 
+export const fetchUserProfileSequences = async ({ userId }: { userId: string }) => {
+  return await db.query.sequences.findMany({
+    ...sequenceBaseProjection,
+    where: {
+      userId,
+      isDeleted: false,
+      hideFromAuthorPage: false,
+      // Drafts are shown in a different part of the profile page - exclude them
+      // here even for users who _can_ actually view the drafts
+      draft: false,
+    },
+    orderBy: {
+      userProfileOrder: "asc",
+      createdAt: "desc",
+    },
+  });
+};
+
+export const fetchUserProfileDraftSequences = async ({
+  userId,
+}: {
+  userId: string;
+}) => {
+  return await db.query.sequences.findMany({
+    ...sequenceBaseProjection,
+    where: {
+      userId,
+      isDeleted: false,
+      OR: [{ hideFromAuthorPage: true }, { draft: true }],
+    },
+    orderBy: {
+      draft: "desc",
+      userProfileOrder: "asc",
+      createdAt: "desc",
+    },
+  });
+};
+
 export const fetchFeaturedSequences = async (currentUser: CurrentUser | null) => {
   return await fetchSequencesByIds({
     currentUser,

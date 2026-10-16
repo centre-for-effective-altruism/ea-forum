@@ -1,15 +1,8 @@
 import type { SearchUser } from "@/lib/search/searchDocuments";
-import { userCareerStages } from "@/lib/users/userHelpers";
+import { userCareerStageIcons, userCareerStages } from "@/lib/users/userHelpers";
 import { EMPTY_TEXT_PLACEHOLDER } from "./PeopleDirectoryTextCell";
-import AcademicCapIcon from "@heroicons/react/24/solid/AcademicCapIcon";
-import BriefcaseIcon from "@heroicons/react/24/solid/BriefcaseIcon";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
-
-const icons = {
-  School: AcademicCapIcon,
-  Work: BriefcaseIcon,
-};
 
 export default function PeopleDirectoryCareerStageCell({
   user,
@@ -19,7 +12,7 @@ export default function PeopleDirectoryCareerStageCell({
   const stage = user.careerStage?.[0]
     ? userCareerStages.find(({ value }) => value === user.careerStage?.[0])
     : null;
-  const Icon = stage?.icon ? icons[stage.icon] : null;
+  const Icon = stage?.icon ? userCareerStageIcons[stage.icon] : null;
   return (
     <Tooltip title={stage?.label ? <Type>{stage.label}</Type> : null}>
       <Type

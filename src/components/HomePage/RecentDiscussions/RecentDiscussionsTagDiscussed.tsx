@@ -1,5 +1,5 @@
 import type { RecentDiscussionTag } from "@/lib/recentDiscussions/fetchRecentDiscussions";
-import { tagGetUrl } from "@/lib/tags/tagHelpers";
+import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import { CommentsListProvider } from "@/components/Comments/useCommentsList";
 import RecentDiscussionsItem from "./RecentDiscussionsItem";
 import CommentsList from "@/components/Comments/CommentsList";
@@ -28,13 +28,13 @@ export default function RecentDiscussionsTagDiscussed({
     >
       <div className="mb-3">
         <Type style="postTitle" className="mb-2">
-          <Link href={tagGetUrl({ tag })}>{tag.name}</Link>
+          <Link href={tagGetPageUrl({ tag })}>{tag.name}</Link>
         </Type>
         <Type className="text-gray-600">
           {tag.wikiOnly ? "Wiki page" : `Topic page — ${tag.postCount} posts`}
         </Type>
       </div>
-      <TagBody html={tag.html ?? ""} className="mb-4" />
+      <TagBody html={tag.description ?? ""} className="mb-4" />
       <CommentsListProvider comments={comments} collapsedIfRepliedTo>
         <CommentsList />
       </CommentsListProvider>

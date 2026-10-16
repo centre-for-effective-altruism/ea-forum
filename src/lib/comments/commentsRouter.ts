@@ -1,17 +1,21 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { fetchCommentToEdit } from "./commentQueries";
+import { editorDataSchema } from "../ckeditor/editorHelpers";
+import { allPostsSortedBySchema } from "../posts/allPostsSettings";
 import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
   countFrontpageQuickTakes,
+  fetchAllPostsQuickTakes,
   fetchCommentReplies,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
+  fetchFrontpagePopularCommentsAndQuickTakes,
   fetchFrontpageQuickTakes,
   fetchNewComments,
   fetchPopularComments,
+  fetchUserProfileComments,
 } from "./commentLists";
 import {
   createPostComment,
@@ -53,6 +57,38 @@ export const commentsRouter = {
         currentUser,
         commentId,
       });
+    }),
+  listUserProfile: os
+    .input(
+      z.object({
+        userId: z.string().nonempty(),
+        offset: z.int().nonnegative().optional(),
+        limit: z.int().positive().max(50).optional().default(10),
+      }),
+    )
+    .handler(async ({ input: { userId, offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchUserProfileComments({
+        currentUser,
+        userId,
+        offset,
+        limit,
+      });
+    }),
+  listAllQuickTakes: os
+    .input(
+      z.object({
+        frontpage: z.boolean().optional(),
+        sortedBy: allPostsSortedBySchema,
+        before: z.coerce.date().optional(),
+        after: z.coerce.date().optional(),
+        offset: z.number().nonnegative().max(5000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchAllPostsQuickTakes({ currentUser, ...input });
     }),
   create: os
     .input(
@@ -206,6 +242,19 @@ export const commentsRouter = {
           : countFrontpageQuickTakes({ currentUser, includeCommunity }),
       ]);
       return { items, totalCount };
+    }),
+  listPopularAndQuickTakes: os
+    .input(
+      z.object({
+        limit: z.number().positive().optional().default(6),
+      }),
+    )
+    .handler(async ({ input: { limit } }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchFrontpagePopularCommentsAndQuickTakes({
+        currentUser,
+        limit,
+      });
     }),
   updateQuickTakeFrontpage: os
     .input(

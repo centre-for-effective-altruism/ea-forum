@@ -6,12 +6,16 @@ import { posts } from "../schema";
 import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
 import { postsListViewSchema } from "./postsHelpers";
+import { allPostsSettingsSchema } from "./allPostsSettings";
 import {
+  fetchAllPosts,
+  fetchFeaturedFrontpagePosts,
   fetchPostsListById,
   fetchPostsListByIds,
   fetchPostsListFromView,
 } from "./postLists";
 import {
+  deleteDraft,
   moveToDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
@@ -41,6 +45,35 @@ export const postsRouter = {
     .handler(async ({ input: { postIds } }) => {
       const currentUser = await getCurrentUser();
       return fetchPostsListByIds(currentUser?._id ?? null, postIds);
+    }),
+  listFeatured: os
+    .input(
+      z.object({
+        offset: z.number().nonnegative().max(1000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input: { offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      return fetchFeaturedFrontpagePosts({
+        currentUser,
+        offset,
+        limit,
+      });
+    }),
+  listAll: os
+    .input(
+      z.object({
+        settings: allPostsSettingsSchema,
+        before: z.coerce.date().optional(),
+        after: z.coerce.date().optional(),
+        offset: z.number().nonnegative().max(5000).optional(),
+        limit: z.number().positive().default(10).optional(),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchAllPosts({ currentUser, ...input });
     }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))
@@ -109,5 +142,14 @@ export const postsRouter = {
         throw new Error("Not logged in");
       }
       await moveToDraft(currentUser, postId);
+    }),
+  deleteDraft: os
+    .input(z.object({ postId: z.string() }))
+    .handler(async ({ input: { postId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Not logged in");
+      }
+      await deleteDraft(currentUser, postId);
     }),
 };

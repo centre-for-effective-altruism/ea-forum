@@ -3,7 +3,7 @@ import { db } from "../db";
 import { postGetPageUrl } from "../posts/postsHelpers";
 import { reports } from "../schema";
 import { CurrentUser } from "../users/currentUser";
-import { userCanDo } from "../users/userHelpers";
+import { userCanDo, userGetProfileUrl } from "../users/userHelpers";
 import { randomId } from "../utils/random";
 
 export const createPostReport = async (
@@ -80,6 +80,37 @@ export const createCommentReport = async (
     commentId,
     postId: comment.post?._id,
     link: commentGetPageUrl({ comment }),
+    description,
+  });
+};
+
+export const createUserReport = async (
+  currentUser: CurrentUser,
+  userSlug: string,
+  description: string,
+) => {
+  if (!userCanDo(currentUser, ["report.create", "reports.new"])) {
+    throw new Error("You don't have permission to create reports");
+  }
+
+  const user = await db.query.users.findFirst({
+    columns: {
+      _id: true,
+      slug: true,
+    },
+    where: {
+      slug: userSlug,
+    },
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  await db.insert(reports).values({
+    _id: randomId(),
+    userId: currentUser._id,
+    reportedUserId: user._id,
+    link: userGetProfileUrl({ user }),
     description,
   });
 };

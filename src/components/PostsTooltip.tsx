@@ -47,7 +47,9 @@ export default function PostsTooltip({
       title={
         <div data-component="PostsTooltip">
           <div className="px-4 py-3 flex flex-col gap-4">
-            <Type style="postTitle">{title}</Type>
+            <Type style="postTitle" className="break-words line-clamp-4">
+              {title}
+            </Type>
             {tags && tags.length > 0 && (
               <TruncationContainer
                 items={tags.map((tag) => (

@@ -23,7 +23,7 @@ export default function TagChipDisplay({
         variant === "small" ? "rounded-xs" : "rounded-sm",
         core
           ? "border-gray-100 bg-gray-100 hover:bg-gray-200"
-          : "border-gray-200 hover:bg-gray-100",
+          : "border-gray-300 hover:bg-gray-100",
       )}
     >
       <Type

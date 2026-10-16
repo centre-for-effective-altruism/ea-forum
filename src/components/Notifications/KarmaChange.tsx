@@ -11,7 +11,7 @@ import { commentGetPageUrlFromIds } from "@/lib/comments/commentHelpers";
 import { userGetProfileUrl } from "@/lib/users/userHelpers";
 import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { tagGetUrl } from "@/lib/tags/tagHelpers";
+import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import StarIcon from "@heroicons/react/24/solid/StarIcon";
 import LazyCommentsTooltip from "../LazyCommentsTooltip";
 import LazyPostsTooltip from "../LazyPostsTooltip";
@@ -165,7 +165,7 @@ export default function KarmaChange({
       display = (
         <>
           <Link href={commentGetPageUrlFromIds(commentKarmaChange)}>comment</Link> on{" "}
-          <Link href={tagGetUrl({ tag: { slug: tagSlug } })}>{tagName}</Link>
+          <Link href={tagGetPageUrl({ tag: { slug: tagSlug } })}>{tagName}</Link>
         </>
       );
     } else {
@@ -181,7 +181,7 @@ export default function KarmaChange({
     }
     karmaChange = tagRevisionKarmaChange.scoreChange;
     display = (
-      <Link href={tagGetUrl({ tag: { slug: tagRevisionKarmaChange.tagSlug } })}>
+      <Link href={tagGetPageUrl({ tag: { slug: tagRevisionKarmaChange.tagSlug } })}>
         {tagRevisionKarmaChange.tagName}
       </Link>
     );

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
+import { stringHash } from "@/lib/utils/stringHash";
 import CloudinaryImage from "./CloudinaryImage";
 import prand from "pure-rand";
 import clsx from "clsx";
@@ -16,16 +17,6 @@ const MIN_SATURATION = 30;
 const MAX_SATURATION = 65;
 const MIN_LIGHTNESS = 38;
 const MAX_LIGHTNESS = 40;
-
-const stringHash = (str: string) => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
-};
 
 const userBackground = (displayName: string): string => {
   const rand = prand.congruential32(stringHash(displayName));

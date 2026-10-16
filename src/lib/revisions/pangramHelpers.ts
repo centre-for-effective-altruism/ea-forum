@@ -2,12 +2,9 @@ import type { Revision } from "../schema";
 
 export type PangramRevision = Pick<
   Revision,
-  | "_id"
-  | "pangramAiScore"
-  | "pangramCheckedAt"
-  | "pangramStatus"
-  | "pangramRawResponse"
->;
+  "_id" | "pangramAiScore" | "pangramCheckedAt" | "pangramStatus"
+> &
+  Partial<Pick<Revision, "pangramRawResponse">>;
 
 export type PangramV3Response = {
   headline?: string | null;

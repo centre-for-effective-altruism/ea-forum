@@ -2,11 +2,14 @@ import "server-only";
 
 import { bookmarksRouter } from "./bookmarks/bookmarksRouter";
 import { collectionsRouter } from "./collections/collectionsRouter";
+import { commentAwardsRouter } from "./commentAwards/commentAwardsRouter";
 import { commentsRouter } from "./comments/commentsRouter";
+import { featuredQueueRouter } from "./featuredQueue/featuredQueueRouter";
 import { forumEventsRouter } from "./forumEvents/forumEventsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
 import { moderationRouter } from "./moderation/moderationRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
+import { messagesRouter } from "./messages/messagesRouter";
 import { postsRouter } from "./posts/postsRouter";
 import { readStatusesRouter } from "./readStatuses/readStatusesRouter";
 import { recentDiscussionsRouter } from "./recentDiscussions/recentDiscussionsRouter";
@@ -24,11 +27,14 @@ import { votesRouter } from "./votes/voteRouter";
 export const router = {
   bookmarks: bookmarksRouter,
   collections: collectionsRouter,
+  commentAwards: commentAwardsRouter,
   comments: commentsRouter,
+  featuredQueue: featuredQueueRouter,
   forumEvents: forumEventsRouter,
   lwEvents: lwEventRouter,
   moderation: moderationRouter,
   notifications: notificationsRouter,
+  messages: messagesRouter,
   posts: postsRouter,
   readStatuses: readStatusesRouter,
   recentDiscussions: recentDiscussionsRouter,

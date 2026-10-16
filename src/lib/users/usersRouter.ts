@@ -15,11 +15,13 @@ import {
   fetchUsersById,
   isDisplayNameTaken,
   updateExpandedSection,
+  updateProfileImage,
   updateWork,
 } from "./userQueries";
 import {
   approveNewUser,
   completeUserProfile,
+  swapUserEmails,
   userCheckNotifications,
 } from "./userMutations";
 import { themeSchema } from "../themes";
@@ -235,6 +237,20 @@ export const usersRouter = {
       }
       return await updateWork(currentUser, input);
     }),
+  updateProfileImage: os
+    .input(
+      z.object({
+        userId: z.string().nonempty(),
+        profileImageId: z.string().nonempty().nullable(),
+      }),
+    )
+    .handler(async ({ input: { userId, profileImageId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateProfileImage(currentUser, userId, profileImageId);
+    }),
   fetchOnboardingUsers: os.handler(fetchOnboardingUsers),
   karmaChanges: os
     .input(
@@ -269,5 +285,19 @@ export const usersRouter = {
         openedAt,
         endDate,
       });
+    }),
+  swapEmails: os
+    .input(
+      z.object({
+        userId1: z.string().nonempty(),
+        userId2: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { userId1, userId2 } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser?.isAdmin) {
+        throw new Error("Permission denied");
+      }
+      await swapUserEmails(userId1, userId2);
     }),
 };

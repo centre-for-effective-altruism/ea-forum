@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { CurrentUser } from "./currentUser";
 import type { JsonRecord } from "../typeHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
@@ -150,4 +150,50 @@ export const userCheckNotifications = async ({
       }),
     })
     .where(eq(users._id, currentUser._id));
+};
+
+export const swapUserEmails = async (userId1: string, userId2: string) => {
+  if (!userId1 || !userId2 || userId1 === userId2) {
+    throw new Error("Invalid user ids");
+  }
+  await db.transaction(async (txn) => {
+    const results = await txn
+      .select({
+        _id: users._id,
+        email: users.email,
+        emails: users.emails,
+        services: users.services,
+      })
+      .from(users)
+      .where(inArray(users._id, [userId1, userId2]))
+      .for("update");
+    const usersById = new Map(results.map((user) => [user._id, user]));
+    const user1 = usersById.get(userId1);
+    const user2 = usersById.get(userId2);
+    if (!user1 || !user2) {
+      throw new Error("Invalid user ids");
+    }
+    await txn
+      .update(users)
+      .set({
+        email: user2.email,
+        emails: user2.emails,
+        services: {
+          ...user1.services,
+          auth0: user2.services?.auth0 ?? null,
+        },
+      })
+      .where(eq(users._id, userId1));
+    await txn
+      .update(users)
+      .set({
+        email: user1.email,
+        emails: user1.emails,
+        services: {
+          ...user2.services,
+          auth0: user1.services?.auth0 ?? null,
+        },
+      })
+      .where(eq(users._id, userId2));
+  });
 };

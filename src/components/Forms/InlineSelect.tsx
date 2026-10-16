@@ -54,7 +54,7 @@ export default function InlineSelect<T extends string>({
         As="span"
         style="bodyHeavy"
         className="
-          user-select-none text-primary cursor-pointer hover:text-primary-dark
+          select-none text-primary cursor-pointer hover:text-primary-dark
         "
       >
         {selectedOption?.label ?? "Select an option"}

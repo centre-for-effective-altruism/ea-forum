@@ -176,7 +176,7 @@ export default function PangramBadge({
         style="bodyXXSmall"
         className={clsx(
           "inline-flex items-center py-px px-[6px] mr-[6px] rounded-sm",
-          "cursor-pointer user-select-none border-1 border-always-black/10",
+          "cursor-pointer select-none border-1 border-always-black/10",
           ...classNames,
         )}
         onClick={handleClick}

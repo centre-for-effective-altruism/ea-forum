@@ -26,6 +26,7 @@ import {
   MINIMUM_APPROVAL_KARMA,
   userCanDo,
   userIsAdminOrMod,
+  userIsBanned,
   userOwns,
 } from "../users/userHelpers";
 import {
@@ -153,7 +154,7 @@ export const createPostComment = async ({
   forumEventId?: string;
   forumEventMetadata?: ForumEventCommentMetadata;
 }) => {
-  if (user.banned) {
+  if (userIsBanned(user)) {
     throw new Error("Banned");
   }
   if (!postId && !shortform) {
@@ -295,7 +296,7 @@ export const updateComment = async ({
   editorData: EditorData;
   draft?: boolean;
 }) => {
-  if (user.banned) {
+  if (userIsBanned(user)) {
     throw new Error("Banned");
   }
 

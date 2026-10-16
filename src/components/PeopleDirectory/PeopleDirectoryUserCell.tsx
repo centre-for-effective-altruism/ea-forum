@@ -27,7 +27,6 @@ export default function PeopleDirectoryUserCell({
         <InteractionWrapper>
           <Tooltip title={<Type>Send message</Type>} placement="bottom">
             <NewConversationButton
-              currentUser={currentUser}
               userId={user._id}
               from="people_directory"
               openInNewTab

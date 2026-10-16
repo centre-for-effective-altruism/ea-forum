@@ -36,6 +36,7 @@ import CommentTags from "../Tags/CommentTags";
 import PangramBadge from "../PangramBadge";
 import CommentDate from "./CommentDate";
 import EditComment from "./EditComment";
+import PinIcon from "../Icons/PinIcon";
 import NewComment from "./NewComment";
 import UsersName from "../UsersName";
 import Loading from "../Loading";
@@ -96,19 +97,21 @@ export default function CommentItem({
     deleted,
     deletedBy,
     deletedDate,
+    isPinnedOnProfile,
   } = comment;
   const isNew =
     !draft &&
     !!post?.readStatus?.[0]?.lastUpdated &&
     new Date(post?.readStatus?.[0]?.lastUpdated) < new Date(postedAt);
-  const collapsedBecauseRepliedTo =
-    commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew;
   const repliesBlockedUntil = commentRepliesBlockedUntil(comment);
 
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
+  const [collapsedBecauseRepliedTo, setCollapsedBecauseRepliedTo] = useState(
+    commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew,
+  );
   const [isExpanded, setIsExpanded] = useState(
     !draft && !startCollapsed && !collapsedBecauseRepliedTo,
   );
@@ -123,6 +126,9 @@ export default function CommentItem({
   const toggleExpanded = useCallback(() => {
     setIsExpanded((expanded) => {
       const newExpanded = !expanded;
+      if (newExpanded) {
+        setCollapsedBecauseRepliedTo(false);
+      }
       onToggleExpanded?.(newExpanded, node);
       return newExpanded;
     });
@@ -167,6 +173,7 @@ export default function CommentItem({
   }, [draft]);
 
   const isPostAuthor = userIsPostAuthor(user, post);
+  const showPinned = !!commentsListContext?.showPinned && isPinnedOnProfile;
 
   const canLoadParent =
     !!commentsListContext &&
@@ -188,6 +195,7 @@ export default function CommentItem({
     if (draft) {
       setIsExpanded(true);
       setIsEditing(true);
+      setCollapsedBecauseRepliedTo(false);
     }
   }, [draft]);
 
@@ -198,13 +206,17 @@ export default function CommentItem({
         !borderless && "border pl-3 pt-2 mb-1",
         !borderless && (depth === 0 ? "rounded-sm " : "rounded-s-sm"),
         !borderless &&
-          (promoted ? "border-promoted-comment" : "border-comment-border"),
+          (promoted
+            ? "border-promoted-comment"
+            : showPinned
+              ? "border-pinned-comment"
+              : "border-comment-border"),
         !borderless &&
           !moderatorHat &&
           (depth & 1 ? "bg-comment-odd" : "bg-comment-even"),
         !borderless && moderatorHat && "bg-moderator-comment",
         !borderless && depth === 0 ? "" : "border-r-0",
-        !borderless && isNew && "border-l-primary-light border-l-[4px]",
+        !borderless && isNew && "border-l-primary border-l-[4px]",
         className,
       )}
     >
@@ -215,6 +227,7 @@ export default function CommentItem({
       >
         {commentsListContext?.showPostTitle && comment.post && (
           <div className="flex items-center mb-2">
+            {showPinned && <PinIcon className="w-4 text-gray-600 mr-2" />}
             <LazyPostsTooltip
               postId={comment.post._id}
               className="overflow-hidden truncate mr-2 text-gray-600"
@@ -355,7 +368,7 @@ export default function CommentItem({
         </div>
         {!isExpanded && showPreviewWhenCollapsed && !deleted && (
           <div onClick={toggleExpanded} className="line-clamp-2 cursor-pointer">
-            <CommentBody html={html} />
+            <CommentBody html={html} hideImages />
           </div>
         )}
         {isExpanded &&
@@ -450,7 +463,7 @@ export default function CommentItem({
         )}
       </article>
       {loadingReplies && <Loading />}
-      {children.length > 0 && (
+      {children.length > 0 && (isExpanded || collapsedBecauseRepliedTo) && (
         <div>
           {children.map((node) => (
             <CommentItem node={node} key={node.comment._id} />

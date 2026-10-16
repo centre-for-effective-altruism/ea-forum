@@ -3,6 +3,7 @@
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useCallback, useEffect, useState } from "react";
 import { OnboardingProvider } from "./useOnboarding";
+import { useTracking } from "@/lib/analyticsEvents";
 import Popover from "../Popover";
 import OnboardingUserStage from "./OnboardingUserStage";
 import OnboardingSubscribeStage from "./OnboardingSubscribeStage";
@@ -14,6 +15,7 @@ export default function OnboardingFlow({
 }: Readonly<{
   viewAsAdmin?: boolean;
 }>) {
+  const { captureEvent } = useTracking();
   const { currentUser } = useCurrentUser();
 
   // If `usernameUnset` is true, then we need to show the onboarding flow.
@@ -31,7 +33,8 @@ export default function OnboardingFlow({
 
   const onOnboardingComplete = useCallback(() => {
     setIsOnboarding(false);
-  }, []);
+    captureEvent("onboardingComplete");
+  }, [captureEvent]);
 
   if (!isOnboarding) {
     return null;

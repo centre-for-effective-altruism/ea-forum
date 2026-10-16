@@ -32,7 +32,10 @@ export const generatePostMetadata = async (
     title: post.title,
     description,
     authors: authors.map((name) => ({ name })),
-    robots: post.noIndex || isNoIndexSite ? "noindex" : undefined,
+    robots:
+      post.noIndex || post.authorIsUnreviewed || isNoIndexSite
+        ? "noindex"
+        : undefined,
     openGraph: {
       type: "article",
       url: canonicalUrl,

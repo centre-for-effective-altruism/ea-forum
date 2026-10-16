@@ -79,6 +79,21 @@ export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
   return canApprove ? approveNewUser : null;
 };
 
+export const useDeleteDraft = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const deleteDraft = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    toast.promise(rpc.posts.deleteDraft({ postId: post._id }), {
+      loading: "Deleting draft...",
+      success: "Draft deleted",
+      error: "Something went wrong",
+    });
+  }, [post._id]);
+  return currentUser && post.user?._id === currentUser._id && post.draft
+    ? deleteDraft
+    : null;
+};
+
 export const useMoveToFrontpage = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();
   const [frontpage, setFrontpage] = useState(!!post.frontpageDate);

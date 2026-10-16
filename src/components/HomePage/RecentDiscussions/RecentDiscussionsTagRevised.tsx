@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import { useIsInView } from "@/lib/hooks/useIsInView";
+import { rpc } from "@/lib/rpc";
 import type { RecentDiscussionRevision } from "@/lib/recentDiscussions/fetchRecentDiscussions";
+import TagDiffBody from "@/components/ContentStyles/TagDiffBody";
 import RecentDiscussionsItem from "./RecentDiscussionsItem";
-import TagBody from "@/components/ContentStyles/TagBody";
+import ChangeMetrics from "@/components/ChangeMetrics";
 import UsersName from "@/components/UsersName";
 import Type from "@/components/Type";
-import { rpc } from "@/lib/rpc";
 
 export default function RecentDiscussionsTagRevised({
   revision,
@@ -39,8 +40,6 @@ export default function RecentDiscussionsTagRevised({
   }
 
   const { name } = tag;
-  const added = changeMetrics?.added ?? 0;
-  const removed = changeMetrics?.removed ?? 0;
   return (
     <RecentDiscussionsItem
       icon="Tag"
@@ -53,9 +52,8 @@ export default function RecentDiscussionsTagRevised({
       <div className="flex flex-col gap-2" ref={setNode}>
         <Type style="sectionTitleLarge">{name}</Type>
         <Type className="italic text-gray-600">
-          Edited by <UsersName user={user} /> (
-          <span className="text-recent-discussions-green">+{added}</span>/
-          <span className="text-warning">-{removed}</span> characters)
+          Edited by <UsersName user={user} />{" "}
+          <ChangeMetrics changeMetrics={changeMetrics} verbose />
           {/* TODO: Revision vote buttons here */}
         </Type>
         {diff === null ? (
@@ -64,10 +62,7 @@ export default function RecentDiscussionsTagRevised({
             <div className="bg-gray-200 w-full h-[120px] rounded" />
           </div>
         ) : (
-          <TagBody
-            html={diff}
-            className="[&_ins]:bg-diff-added [&_del]:bg-diff-removed"
-          />
+          <TagDiffBody diff={diff} />
         )}
       </div>
     </RecentDiscussionsItem>
