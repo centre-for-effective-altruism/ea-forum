@@ -1,11 +1,14 @@
 import "server-only";
 
+import type { CurrentUser } from "../users/currentUser";
 import { inArray } from "drizzle-orm";
 import { db, DbOrTransaction } from "../db";
-import { digestPosts, posts, type InsertDigestPost, type Post } from "../schema";
 import { randomId } from "../utils/random";
+import { userIsAdmin } from "../users/userHelpers";
+import { updateWithFieldChanges } from "../fieldChanges";
 import { viewablePostFilter } from "../posts/postLists";
 import { deliberatelyFeaturedFilter } from "./featuredQueueQueries";
+import { digestPosts, posts, InsertDigestPost, Post } from "../schema";
 
 type DecidablePost = Pick<Post, "_id" | "postedAt">;
 
@@ -153,6 +156,29 @@ export const featurePosts = async (
     dbOrTxn,
   );
   return featurable.length;
+};
+
+export const unfeaturePost = async (currentUser: CurrentUser, postId: string) => {
+  if (!userIsAdmin(currentUser)) {
+    throw new Error("Permission denied");
+  }
+  await db.transaction(async (db) => {
+    const existingRows = await db.query.digestPosts.findMany({
+      columns: { _id: true },
+      where: { postId },
+    });
+    await Promise.all([
+      updateWithFieldChanges(db, currentUser, posts, postId, {
+        onsiteDigestAt: null,
+      }),
+      existingRows.map(({ _id }) =>
+        updateWithFieldChanges(db, currentUser, digestPosts, _id, {
+          onsiteDigestAt: null,
+          onsiteDigestStatus: "no",
+        }),
+      ),
+    ]);
+  });
 };
 
 /**

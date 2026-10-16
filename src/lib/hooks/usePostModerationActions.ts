@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { useCurrentUser } from "./useCurrentUser";
-import { userCanDo } from "../users/userHelpers";
+import { userCanDo, userIsAdmin } from "../users/userHelpers";
 import { rpc } from "../rpc";
 import {
   userCanEditPostMetadata,
@@ -40,6 +40,19 @@ export const useSetAsQuickTakesPost = (post: PostDisplay | PostListItem) => {
   return !post.shortform && userCanDo(currentUser, "posts.edit.all")
     ? setAsQuickTakesPost
     : null;
+};
+
+export const useUnfeaturePost = (post: PostDisplay | PostListItem) => {
+  const { currentUser } = useCurrentUser();
+  const unfeaturePost = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    toast.promise(rpc.featuredQueue.unfeature({ postId: post._id }), {
+      loading: "Loading...",
+      success: "Unfeatured post",
+      error: "Something went wrong",
+    });
+  }, [post._id]);
+  return userIsAdmin(currentUser) ? unfeaturePost : null;
 };
 
 export const useExcludeFromRecommendations = (post: PostDisplay | PostListItem) => {
