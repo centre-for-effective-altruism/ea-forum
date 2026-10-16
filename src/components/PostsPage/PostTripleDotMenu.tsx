@@ -19,6 +19,7 @@ import {
   useMoveToFrontpage,
   useSetAsQuickTakesPost,
   useSuggestForCurated,
+  useUnfeaturePost,
 } from "@/lib/hooks/usePostModerationActions";
 import clsx from "clsx";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
@@ -39,6 +40,7 @@ import StarIcon from "@heroicons/react/24/outline/StarIcon";
 import StarSolidIcon from "@heroicons/react/24/solid/StarIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
+import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import ReportPopover from "../Moderation/ReportPopover";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import Tooltip from "../Tooltip";
@@ -77,6 +79,7 @@ export default function PostTripleDotMenu({
     useExcludeFromRecommendations(post);
   const { isFrontpage, toggleFrontpage } = useMoveToFrontpage(post);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
+  const unfeaturePost = useUnfeaturePost(post);
   const moveToDraft = useMoveToDraft(post);
   const deleteDraft = useDeleteDraft(post);
   const approveNewUser = useApproveNewUser(post);
@@ -182,6 +185,13 @@ export default function PostTripleDotMenu({
                 title: isFrontpage ? "Move to personal blog" : "Move to frontpage",
                 Icon: NewspaperIcon,
                 onClick: toggleFrontpage,
+              }
+            : null,
+          unfeaturePost
+            ? {
+                title: "Unfeature post",
+                Icon: XMarkIcon,
+                onClick: unfeaturePost,
               }
             : null,
           setAsQuickTakesPost
