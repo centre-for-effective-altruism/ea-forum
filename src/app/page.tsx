@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { getPostHogClient, getPostHogDistinctId } from "@/lib/posthog-server";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
 import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
 import {
@@ -39,13 +38,8 @@ const structuredData = {
 };
 
 export default async function HomePage() {
-  const [cookieStore, posthogDistinctId] = await Promise.all([
-    cookies(),
-    getPostHogDistinctId(),
-  ]);
-  const flags = await getPostHogClient()?.evaluateFlags(posthogDistinctId);
-  const testGroup = flags?.getFlag("default-frontpage-tab") as string | undefined;
-  const initialTab = getCurrentHomePageTab(cookieStore, testGroup);
+  const cookieStore = await cookies();
+  const initialTab = getCurrentHomePageTab(cookieStore);
   const featuredViewCookie = cookieStore.get(featuredViewTypeCookie)?.value ?? "";
   const featuredView = isPostsListViewType(featuredViewCookie)
     ? featuredViewCookie
@@ -62,7 +56,6 @@ export default async function HomePage() {
       <StructuredData data={structuredData} />
       <BotSiteNotice />
       <HomePageTabs
-        testGroup={testGroup}
         initialContent={
           <Suspense
             fallback={

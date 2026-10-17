@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
   },
   redirects: async () => [
     {
+      source: "/start-here",
+      destination: `/posts/${process.env.START_HERE_POST_ID}`,
+      permanent: false,
+    },
+    {
       source: "/allPosts",
       destination: "/all-posts",
       permanent: true,
@@ -43,6 +48,21 @@ const nextConfig: NextConfig = {
       source: "/u/:path*",
       destination: "/users/:path*",
       permanent: true,
+    },
+    {
+      source: "/tags",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/tags/:path*",
+      destination: "/topics/:path*",
+      permanent: true,
+    },
+    {
+      source: "/api/notificationEvents",
+      destination: "https://fm-prod.effectivealtruism.org/api/notificationEvents",
+      permanent: false,
     },
   ],
   rewrites: async () => [

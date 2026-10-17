@@ -1,22 +1,14 @@
-import clsx from "clsx";
+import type {
+  PangramClassification,
+  PangramScoredRevision,
+} from "@/lib/revisions/pangramClassification";
 import { formatPercent } from "@/lib/formatHelpers";
+import clsx from "clsx";
 import Tooltip from "./Tooltip";
 import Type from "./Type";
 import Link from "./Link";
 
-type ScoredRevision = {
-  pangramAiScore: number | null;
-  pangramAssistedScore: number | null;
-  pangramHumanScore: number | null;
-};
-
-type PangramClassification = {
-  label: string;
-  className: string;
-  aiScore?: number | null;
-  assistedScore?: number | null;
-  humanScore?: number | null;
-};
+const PANGRAM_INFO_HREF = "/posts/bxA9fsY9Psgarcq6e/new-ea-forum-llm-use-policy";
 
 const pangramLabels = {
   "entirely-ai": {
@@ -31,63 +23,46 @@ const pangramLabels = {
     label: "Partly AI-written",
     className: "bg-pangram-low-bg text-pangram-low-fg border-pangram-low-hl",
   },
-  human: null,
 } as const;
 
-export const classifyPangramScore = (
-  revision: ScoredRevision | null,
-  statusOverride?: string | null,
-): PangramClassification | null => {
-  if (statusOverride && statusOverride in pangramLabels) {
-    return pangramLabels[statusOverride as keyof typeof pangramLabels];
-  }
-  if (!revision || typeof revision.pangramAiScore !== "number") {
-    return null;
-  }
-  const scores = {
-    aiScore: revision.pangramAiScore,
-    assistedScore: revision.pangramAssistedScore,
-    humanScore: revision.pangramHumanScore,
-  };
-  if (scores.aiScore >= 0.99) {
-    return {
-      ...pangramLabels["entirely-ai"],
-      ...scores,
-    };
-  }
-  if (scores.aiScore > 0.5) {
-    return {
-      ...pangramLabels["mostly-ai"],
-      ...scores,
-    };
-  }
-  if (scores.aiScore > 0.1) {
-    return {
-      ...pangramLabels["partly-ai"],
-      ...scores,
-    };
-  }
-  return null;
-};
-
 export default function PangramStatus({
-  revision,
   classification,
+  revision,
 }: Readonly<{
-  revision?: ScoredRevision | null;
-  classification?: PangramClassification | null;
+  classification: PangramClassification;
+  revision?: PangramScoredRevision | null;
 }>) {
-  if (revision && !classification) {
-    classification = classifyPangramScore(revision);
+  if (classification === "human") {
+    return (
+      <Tooltip
+        title={
+          <Type style="bodySmall" className="text-center">
+            <div>Scanned with Pangram, more than 90% human-written</div>
+            <div>Click for more information</div>
+          </Type>
+        }
+        className="inline-block"
+      >
+        <Link
+          data-component="PangramStatus"
+          href={PANGRAM_INFO_HREF}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          Scanned
+        </Link>
+      </Tooltip>
+    );
   }
-  if (!classification) {
-    return null;
-  }
-  const { label, className, aiScore, assistedScore, humanScore } = classification;
+
+  const { label, className } = pangramLabels[classification];
+  const aiScore = revision?.pangramAiScore ?? null;
+  const assistedScore = revision?.pangramAssistedScore ?? null;
+  const humanScore = revision?.pangramHumanScore ?? null;
   const hasFractions =
     typeof aiScore === "number" &&
     typeof assistedScore === "number" &&
     typeof humanScore === "number";
+
   return (
     <Tooltip
       title={
@@ -109,7 +84,7 @@ export default function PangramStatus({
     >
       <Link
         data-component="PangramStatus"
-        href="/posts/bxA9fsY9Psgarcq6e/new-ea-forum-llm-use-policy"
+        href={PANGRAM_INFO_HREF}
         className={clsx(
           "inline-block border-1 rounded-[100px] px-2 py-0.5",
           "cursor-pointer font-sans text-[11px] leading-none",

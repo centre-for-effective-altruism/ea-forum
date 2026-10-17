@@ -251,7 +251,10 @@ export const fetchOnboardingUsers = async () => {
     where: {
       _id: { in: _ids },
       deleted: false,
-      banned: { isNull: true },
+      OR: [
+        { banned: { isNull: true } },
+        { banned: { lt: new Date().toISOString() } },
+      ],
     },
   });
   const byId = keyBy(users, "_id");
@@ -446,8 +449,15 @@ export const fetchUserProfileCached = cache(
         ...(userIsAdminOrMod(currentUser)
           ? {}
           : {
-              deleted: false,
-              banned: { isNull: true },
+              AND: [
+                { deleted: false },
+                {
+                  OR: [
+                    { banned: { isNull: true } },
+                    { banned: { lt: new Date().toISOString() } },
+                  ],
+                },
+              ],
             }),
       },
     });

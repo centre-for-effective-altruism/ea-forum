@@ -1,18 +1,14 @@
 "use client";
 
-import { SubmitEvent, useCallback, useState } from "react";
-import { useCommentEditor } from "@/lib/hooks/useCommentEditor";
-import { useQuickTakesTags } from "@/lib/hooks/useQuickTakesTags";
+import { useCallback, useState } from "react";
+import { useNewQuickTake } from "./useNewQuickTake";
 import { useQuickTakesListContext } from "./QuickTakesListContext";
 import type { CommentListItem } from "@/lib/comments/commentLists";
 import type { TagBase } from "@/lib/tags/tagQueries";
-import toast from "react-hot-toast";
-import clsx from "clsx";
-import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
-import TruncationContainer from "../TruncationContainer";
+import QuickTakeTags from "./QuickTakeTags";
 import Editor from "../Editor/Editor";
 import Button from "../Button";
-import Type from "../Type";
+import clsx from "clsx";
 
 export default function NewQuickTake({
   coreTags,
@@ -23,45 +19,22 @@ export default function NewQuickTake({
 }>) {
   const [open, setOpen] = useState(false);
   const { addLocalQuickTake } = useQuickTakesListContext();
+  const onSuccess = useCallback(
+    (quickTake: CommentListItem) => addLocalQuickTake(quickTake),
+    [addLocalQuickTake],
+  );
   const {
-    frontpage,
-    frontpageTagId,
-    selectedTagIds,
-    onTagSelected,
-    onTagRemoved,
-    tags,
-  } = useQuickTakesTags(coreTags);
+    tagProps,
+    editorProps: { loading, editorRef, contents, onSubmit, onKeyDown, onChange },
+  } = useNewQuickTake({ coreTags, onSuccess });
 
   const onFocus = useCallback(() => setOpen(true), []);
   const onCancel = useCallback(() => setOpen(false), []);
-  const onSuccess = useCallback(
-    (quickTake: CommentListItem) => {
-      addLocalQuickTake(quickTake);
-      toast.success("Quick take published");
-    },
-    [addLocalQuickTake],
-  );
-
-  const { loading, editorRef, contents, onSubmit, onKeyDown, onChange } =
-    useCommentEditor({
-      shortform: true,
-      onSuccess,
-    });
-
-  const handleSubmit = useCallback(
-    async (ev: SubmitEvent<HTMLFormElement>) => {
-      await onSubmit(ev, {
-        shortformFrontpage: frontpage,
-        relevantTagIds: selectedTagIds,
-      });
-    },
-    [onSubmit, frontpage, selectedTagIds],
-  );
 
   return (
     <form
       data-component="NewQuickTake"
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       onKeyDown={onKeyDown}
       className={clsx("bg-gray-0 border border-gray-200 p-3 rounded", className)}
     >
@@ -96,46 +69,7 @@ export default function NewQuickTake({
           </Button>
         </div>
       </div>
-      {open && (
-        <div className="mt-2 -mb-1 whitespace-nowrap flex items-center">
-          <TruncationContainer
-            items={[
-              <Type style="bodySmall" className="font-[600]! mr-1" key="settopic">
-                Set topic
-              </Type>,
-              ...tags.map((tag) => {
-                const selected =
-                  tag._id === frontpageTagId
-                    ? frontpage
-                    : selectedTagIds.includes(tag._id);
-                const onClick = selected ? onTagRemoved : onTagSelected;
-                return (
-                  <Type
-                    key={tag._id}
-                    role="checkbox"
-                    aria-checked={selected}
-                    onClick={onClick.bind(null, tag)}
-                    style="bodySmall"
-                    className={clsx(
-                      "cursor-pointer select-none rounded-xs px-[6px] py-px",
-                      "flex items-center gap-[2px]",
-                      selected
-                        ? "text-gray-900 bg-gray-200 hover:bg-gray-300"
-                        : "text-gray-500 bg-gray-100 hover:bg-gray-200",
-                    )}
-                  >
-                    {tag.shortName || tag.name}
-                    {selected && <XMarkIcon className="w-3" />}
-                  </Type>
-                );
-              }),
-            ]}
-            gap={4}
-            canShowMore
-            className="flex-wrap"
-          />
-        </div>
-      )}
+      {open && <QuickTakeTags {...tagProps} />}
     </form>
   );
 }

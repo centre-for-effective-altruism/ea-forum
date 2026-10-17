@@ -1281,7 +1281,7 @@ export const conversations = pgTable(
     ...universalFields,
     title: text(),
     participantIds: varchar({ length: 27 }).array().default([]).notNull(),
-    latestActivity: timestamp(),
+    latestActivity: timestamp().notNull(),
     af: boolean(),
     messageCount: doublePrecision().default(0).notNull(),
     moderator: boolean(),

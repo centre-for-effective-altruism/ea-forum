@@ -597,6 +597,7 @@ export const fetchAllPostsQuickTakes = async ({
       },
       shortform: true,
       shortformFrontpage: frontpage ? true : undefined,
+      parentCommentId: { isNull: true },
     },
     orderBy: getAllPostsSort(sortedBy),
     limit,

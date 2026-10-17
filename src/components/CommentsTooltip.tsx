@@ -28,7 +28,8 @@ export default function CommentsTooltip({
       As={As}
       className={className}
       popover
-      tooltipClassName="px-3! py-2! w-[360px]"
+      interactable
+      tooltipClassName="px-3! py-2! w-[360px] max-h-[500px] overflow-y-auto"
       title={
         <div data-component="CommentsTooltip">
           {comment.post?.title && (

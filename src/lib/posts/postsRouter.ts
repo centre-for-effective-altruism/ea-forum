@@ -15,6 +15,7 @@ import {
   fetchPostsListFromView,
 } from "./postLists";
 import {
+  deleteDraft,
   moveToDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
@@ -141,5 +142,14 @@ export const postsRouter = {
         throw new Error("Not logged in");
       }
       await moveToDraft(currentUser, postId);
+    }),
+  deleteDraft: os
+    .input(z.object({ postId: z.string() }))
+    .handler(async ({ input: { postId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Not logged in");
+      }
+      await deleteDraft(currentUser, postId);
     }),
 };

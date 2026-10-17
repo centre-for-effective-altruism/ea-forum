@@ -58,7 +58,6 @@ declare namespace NodeJS {
     POSTHOG_PROJECT_ID: string;
 
     // Other services
-    NEXT_PUBLIC_IPAPI_KEY?: string;
     NEXT_PUBLIC_INTERCOM_APP_ID: string;
     AKISMET_API_KEY: string;
     NEXT_PUBLIC_RECAPTCHA_KEY: string;
@@ -67,6 +66,7 @@ declare namespace NodeJS {
     SENTRY_AUTH_TOKEN?: string;
     INTERCOM_TOKEN: string;
     PANGRAM_API_KEY: string;
+    HUNTER_API_KEY: string;
 
     // Site config
     START_HERE_POST_ID: string;

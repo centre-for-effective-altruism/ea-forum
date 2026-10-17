@@ -161,6 +161,10 @@ type LinkContentType =
       postId: string;
     }
   | {
+      type: "comment";
+      commentId: string;
+    }
+  | {
       type: "user";
       userSlug: string;
     }
@@ -197,6 +201,11 @@ export const parseLinkContentType = (
       return null;
     }
 
+    const commentId = new URLSearchParams(absTarget.search).get("commentId");
+    if (commentId) {
+      return { type: "comment", commentId };
+    }
+
     let match: string | null = null;
     match = matchPath(/^\/posts\/([a-zA-Z0-9]+).*$/, onsiteUrl);
     if (match) {
@@ -214,11 +223,11 @@ export const parseLinkContentType = (
     if (match) {
       return { type: "post", postId: match };
     }
-    match = matchPath(/^\/users\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    match = matchPath(/^\/users\/([a-zA-Z0-9-_.]+).*$/, onsiteUrl);
     if (match) {
       return { type: "user", userSlug: match };
     }
-    match = matchPath(/^\/topics\/([a-zA-Z0-9-]+).*$/, onsiteUrl);
+    match = matchPath(/^\/topics\/([a-zA-Z0-9-_.]+).*$/, onsiteUrl);
     if (match) {
       return { type: "tag", tagSlug: match };
     }

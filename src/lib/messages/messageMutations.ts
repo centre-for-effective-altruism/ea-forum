@@ -22,6 +22,7 @@ export const createConversation = async (
       .values([
         {
           _id: randomId(),
+          latestActivity: new Date().toISOString(),
           ...args,
         },
       ])

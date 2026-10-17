@@ -3,7 +3,10 @@ import { db, DbOrTransaction } from "../db";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import type { CommentListItem } from "./commentLists";
+import type { RelationalFilter } from "../utils/queryHelpers";
 import { userCanEditComment } from "./commentHelpers";
+
+export type CommentsFilter = RelationalFilter<typeof db.query.comments>;
 
 type CommentWithAncestor = {
   _id: string;

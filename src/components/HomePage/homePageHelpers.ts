@@ -21,21 +21,13 @@ const isHomePageTabName = (value?: string | null): value is HomePageTabName =>
 
 export const getCurrentHomePageTab = (
   cookies: ReadonlyRequestCookies | Partial<Record<CookieName, string>>,
-  testGroup?: string | null,
 ): HomePageTabName => {
   const cookie =
     "get" in cookies
       ? cookies.get(homePageTabCookie)?.value
       : cookies[homePageTabCookie];
-  if (cookie) {
-    for (const { name } of homePageTabs) {
-      if (name === cookie) {
-        return name;
-      }
-    }
-  }
-  if (isHomePageTabName(testGroup)) {
-    return testGroup;
+  if (cookie && isHomePageTabName(cookie)) {
+    return cookie;
   }
   return homePageTabs[0].name;
 };

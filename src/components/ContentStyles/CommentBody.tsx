@@ -19,15 +19,21 @@ type CommentBodyContent = CommentBodyHTML | CommentBodyChildren;
 export default function CommentBody({
   html,
   innerRef,
+  hideImages,
   children,
   className = "",
 }: Readonly<
   CommentBodyContent & {
+    hideImages?: boolean;
     innerRef?: RefObject<HTMLDivElement | null>;
     className?: string;
   }
 >) {
-  const styledClassName = clsx("content-base comment-body", className);
+  const styledClassName = clsx(
+    "content-base comment-body",
+    hideImages && "[&_img]:hidden",
+    className,
+  );
   if (html) {
     return (
       <ContentProgressiveEnhancements

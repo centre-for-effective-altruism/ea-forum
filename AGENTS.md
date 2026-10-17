@@ -134,6 +134,8 @@ Frontend structure and conventions:
   `border-gray-200`, `text-error`, `text-warning`) over hardcoded light-only surfaces
   like `bg-white`. Do a quick dark-mode pass before handoff so tables, cards,
   filters, and empty states remain readable.
+- All user-facing text should be wrapped in a `Type` component to ensure font
+  styles match the rest of the site.
 - For async client data loads, default to visible loading and error states so
   failures are discoverable and not mistaken for empty results.
 

@@ -503,7 +503,7 @@ export const getSignatureWithNote = (name: string, note: string) =>
  * create new conversations.
  */
 export const userHasMessagingDisabled = (user: CurrentUser | null) =>
-  !!(user?.banned || user?.conversationsDisabled);
+  !!((user && userIsBanned(user)) || user?.conversationsDisabled);
 
 /**
  * A user who can create new message chains with users. Note also the function
@@ -523,3 +523,16 @@ export const userCanInitiateConversations = (user: CurrentUser | null): boolean 
   }
   return (user.karma ?? 0) >= 10;
 };
+
+export const userCanCreateTags = (user: CurrentUser | null) => {
+  if (!user) {
+    return false;
+  }
+  if (userIsAdmin(user)) {
+    return true;
+  }
+  return user.karma >= 1;
+};
+
+export const userCanEditTagWiki = (user: CurrentUser | null) =>
+  userIsAdminOrMod(user);
