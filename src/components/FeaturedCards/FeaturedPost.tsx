@@ -1,4 +1,4 @@
-import type { FC, ReactNode, SyntheticEvent } from "react";
+import type { FC, ReactNode } from "react";
 import { PostListItem } from "@/lib/posts/postLists";
 import { useItemsRead } from "@/lib/hooks/useItemsRead";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
@@ -9,6 +9,7 @@ import {
   postGetPageUrl,
   postHasNewUnreadComments,
 } from "@/lib/posts/postsHelpers";
+import { hideBrokenImage } from "@/lib/utils/domHelpers";
 import clsx from "clsx";
 import ChatBubbleOutlineIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import ChatBubbleSolidIcon from "@heroicons/react/24/solid/ChatBubbleLeftIcon";
@@ -19,14 +20,6 @@ import LotusIcon from "../Icons/LotusIcon";
 import Image from "next/image";
 import Type from "../Type";
 import Link from "../Link";
-
-/**
- * If an image fails to load some browsers show an ugly white border that
- * we should hide
- */
-const onImageError = (ev: SyntheticEvent<HTMLImageElement, Event>) => {
-  (ev.target as HTMLImageElement).style.visibility = "hidden";
-};
 
 const Chip: FC<{ href: string; className: string; children: ReactNode }> = ({
   href,
@@ -107,7 +100,7 @@ export default function FeaturedPost({
           >
             <Image
               src={imageUrl}
-              onError={onImageError}
+              onError={hideBrokenImage}
               alt=""
               fill
               className="object-cover"
