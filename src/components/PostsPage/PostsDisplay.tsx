@@ -8,13 +8,13 @@ import { formatThousands } from "@/lib/formatHelpers";
 import { PostDisplayProvider } from "./usePostDisplay";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
+import { classifyPangramRevision } from "@/lib/revisions/pangramClassification";
 import {
   getPostReadTimeMinutes,
   postGetStructuredData,
 } from "@/lib/posts/postsHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
-import PangramStatus, { classifyPangramScore } from "../PangramStatus";
 import PostSequenceBottomNavigation from "./PostSequenceBottomNavigation";
 import PostSequenceTopNavigation from "./PostSequenceTopNavigation";
 import PostVoteButtons from "../Voting/PostVoteButtons";
@@ -30,6 +30,7 @@ import PostAudioPlayer from "./PostAudioPlayer";
 import PostBody from "../ContentStyles/PostBody";
 import PostShareButton from "./PostShareButton";
 import StructuredData from "../StructuredData";
+import PangramStatus from "../PangramStatus";
 import PostPingbacks from "./PostPingbacks";
 import PangramBadge from "../PangramBadge";
 import PostBookmark from "./PostBookmark";
@@ -64,7 +65,7 @@ export default async function PostDisplay({
     post.readTimeMinutesOverride,
     wordCount,
   );
-  const pangramClassification = classifyPangramScore(
+  const pangramClassification = classifyPangramRevision(
     post.contents,
     post.pangramStatusOverride,
   );
@@ -153,7 +154,10 @@ export default async function PostDisplay({
                     <span aria-hidden className="mx-1.5">
                       ·
                     </span>
-                    <PangramStatus classification={pangramClassification} />
+                    <PangramStatus
+                      classification={pangramClassification}
+                      revision={post.pangramStatusOverride ? null : post.contents}
+                    />
                   </>
                 )}
               </Type>
