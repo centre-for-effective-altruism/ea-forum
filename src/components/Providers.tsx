@@ -26,9 +26,7 @@ export default async function Providers({
   // users, cookies will be available on the client, but not during SSR. This allows
   // us to do much more aggresive caching for logged-out users in Cloudflare.
   const initialCookies = currentUser
-    ? Object.fromEntries(
-      cookieStore.getAll().map((c) => [c.name, c.value]),
-    )
+    ? Object.fromEntries(cookieStore.getAll().map((c) => [c.name, c.value]))
     : {};
   return (
     <FloatingTreeClientProvider>
