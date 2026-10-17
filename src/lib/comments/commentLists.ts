@@ -115,6 +115,8 @@ export const commentListProjection = (currentUser: UserPermissions | null) =>
         columns: {
           _id: true,
           isGlobal: true,
+          eventFormat: true,
+          publicData: true,
           pollAgreeWording: true,
           pollDisagreeWording: true,
         },

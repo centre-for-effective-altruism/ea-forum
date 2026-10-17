@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import type { ForumEventSticker } from "../forumEvents/forumEventHelpers";
+import type {
+  ForumEventSticker,
+  McPollAnswer,
+} from "../forumEvents/forumEventHelpers";
+import { getMcPollPublicData } from "../forumEvents/forumEventHelpers";
 import type { ForumEventBase } from "../forumEvents/forumEventQueries";
 import type { CommentListItem } from "../comments/commentLists";
 import type { CurrentUser } from "../users/currentUser";
@@ -214,31 +218,104 @@ export const clusterForumEventVotes = ({
   }
 
   for (const cluster of clusters) {
-    cluster.votes.sort((a, b) => {
-      // Current user should always appear at the bottom
-      if (a.user._id === currentUser?._id) {
-        return 1;
-      }
-      if (b.user._id === currentUser?._id) {
-        return -1;
-      }
-
-      // Votes with comments should appear closer to the bottom
-      if (a.comment && !b.comment) {
-        return 1;
-      }
-      if (!a.comment && b.comment) {
-        return -1;
-      }
-
-      // Alphabetically by name
-      return a.user.displayName
-        .toLowerCase()
-        .localeCompare(b.user.displayName.toLowerCase());
-    });
+    cluster.votes = sortVoteDisplays(cluster.votes, currentUser);
   }
 
   return clusters;
+};
+
+const sortVoteDisplays = (
+  votes: ForumEventVoteDisplay[],
+  currentUser: CurrentUser | null,
+) =>
+  [...votes].sort((a, b) => {
+    // Current user should always appear at the bottom
+    if (a.user._id === currentUser?._id) {
+      return 1;
+    }
+    if (b.user._id === currentUser?._id) {
+      return -1;
+    }
+    // Votes with comments should appear closer to the bottom
+    if (a.comment && !b.comment) {
+      return 1;
+    }
+    if (!a.comment && b.comment) {
+      return -1;
+    }
+    return a.user.displayName
+      .toLowerCase()
+      .localeCompare(b.user.displayName.toLowerCase());
+  });
+
+export type McPollAnswerResult = {
+  answer: McPollAnswer;
+  count: number;
+  /** Share of all selections, 0-100 (matches the prototype's histogram math) */
+  pct: number;
+  voters: ForumEventVoteDisplay[];
+};
+
+/**
+ * Tally a multiple-choice poll: per-answer vote counts, percentages (share of
+ * all selections), and the list of voters (with their matched comment) for the
+ * revealed-results avatars.
+ */
+export const aggregateMcPollVotes = ({
+  voters,
+  comments,
+  event,
+  currentUser,
+}: {
+  voters: UserBase[] | null;
+  comments: CommentListItem[] | null;
+  event: ForumEventBase | null | undefined;
+  currentUser: CurrentUser | null;
+}): { results: McPollAnswerResult[]; voterCount: number } => {
+  const { answers, votes } = getMcPollPublicData(event);
+  const votersById = new Map((voters ?? []).map((voter) => [voter._id, voter]));
+  const commentsByUserId = new Map(
+    (comments ?? []).filter((c) => c.user?._id).map((c) => [c.user!._id, c]),
+  );
+
+  // `count` intentionally tracks every selection (including voters whose user
+  // record wasn't loaded), while `voters` only holds the loaded avatars.
+  const tallies = new Map<
+    string,
+    { count: number; voters: ForumEventVoteDisplay[] }
+  >(answers.map((answer) => [answer._id, { count: 0, voters: [] }]));
+
+  for (const [userId, vote] of Object.entries(votes)) {
+    const user = votersById.get(userId);
+    const comment = commentsByUserId.get(userId) ?? null;
+    for (const answerId of vote.answerIds) {
+      // Ignore ids that are no longer part of the poll (e.g. a removed answer)
+      const tally = tallies.get(answerId);
+      if (!tally) {
+        continue;
+      }
+      tally.count += 1;
+      if (user) {
+        tally.voters.push({ x: 0, user, comment });
+      }
+    }
+  }
+
+  const totalSelections = answers.reduce(
+    (sum, answer) => sum + (tallies.get(answer._id)?.count ?? 0),
+    0,
+  );
+  const results = answers.map((answer) => {
+    const { count, voters: answerVoters } = tallies.get(answer._id)!;
+    return {
+      answer,
+      count,
+      pct: totalSelections > 0 ? Math.round((count / totalSelections) * 100) : 0,
+      voters: sortVoteDisplays(answerVoters, currentUser),
+    };
+  });
+
+  return { results, voterCount: Object.keys(votes).length };
 };
 
 export const pollVoteIsAgreement = (pollVote: number) => pollVote >= 0.5;
