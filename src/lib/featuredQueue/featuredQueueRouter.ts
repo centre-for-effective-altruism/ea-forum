@@ -3,7 +3,7 @@ import { os } from "@orpc/server";
 import { userIsAdmin } from "../users/userHelpers";
 import { getCurrentUser } from "../users/currentUser";
 import { db } from "../db";
-import { dismissPosts, featurePosts } from "./featuredQueueMutations";
+import { dismissPosts, featurePosts, unfeaturePost } from "./featuredQueueMutations";
 
 const postIdList = z.array(z.string().nonempty()).max(200).default([]);
 
@@ -36,5 +36,14 @@ export const featuredQueueRouter = {
             dismissedCount,
         };
       });
+    }),
+  unfeature: os
+    .input(z.object({ postId: z.string().nonempty() }))
+    .handler(async ({ input: { postId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!userIsAdmin(currentUser)) {
+        throw new Error("Permission denied");
+      }
+      await unfeaturePost(currentUser, postId);
     }),
 };
