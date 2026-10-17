@@ -8,10 +8,6 @@ import type {
 export const MODERATION_PAGE_SIZE = 20;
 export const MODERATOR_COMMENTS_PAGE_SIZE = 10;
 
-export const uniqueIds = (values: ReadonlyArray<string | null | undefined>) => [
-  ...new Set(values.filter((value): value is string => Boolean(value))),
-];
-
 export const parseRateLimits = (value: unknown): RateLimitEntry[] => {
   if (Array.isArray(value)) {
     return value as RateLimitEntry[];

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
+import uniq from "lodash/uniq";
 import { db } from "@/lib/db";
 import { createRawSqlArray } from "@/lib/utils/queryHelpers";
 import {
@@ -11,7 +12,7 @@ import { viewablePostFilter } from "@/lib/posts/postLists";
 import type { User } from "@/lib/schema";
 import { isNotTrue } from "@/lib/utils/queryHelpers";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
-import { uniqueIds } from "./moderationHelpers";
+import { filterNonNull } from "../typeHelpers";
 import type {
   GloballyBannedUserRow,
   PostSummary,
@@ -23,7 +24,7 @@ export const fetchUsersByIds = async (
   ids: ReadonlyArray<string | null | undefined>,
   { includeDeleted = false }: { includeDeleted?: boolean } = {},
 ): Promise<Record<string, UserSummary>> => {
-  const userIds = uniqueIds(ids);
+  const userIds = uniq(filterNonNull(ids));
   if (userIds.length === 0) {
     return {};
   }
@@ -45,7 +46,7 @@ export const fetchUsersByIds = async (
 export const fetchPostsByIds = async (
   ids: ReadonlyArray<string | null | undefined>,
 ): Promise<Record<string, PostSummary>> => {
-  const postIds = uniqueIds(ids);
+  const postIds = uniq(filterNonNull(ids));
   if (postIds.length === 0) {
     return {};
   }

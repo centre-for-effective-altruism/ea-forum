@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-export const filterNonNull = <T>(arr: (T | null | undefined)[]): T[] =>
+export const filterNonNull = <T>(arr: readonly (T | null | undefined)[]): T[] =>
   arr.filter((x) => x !== null && x !== undefined) as T[];
 
 type Literal<T> = string extends T ? (number extends T ? never : never) : T;
