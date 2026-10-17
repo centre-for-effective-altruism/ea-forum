@@ -11,7 +11,7 @@ import { viewablePostFilter } from "@/lib/posts/postLists";
 import type { User } from "@/lib/schema";
 import { isNotTrue } from "@/lib/utils/queryHelpers";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
-import { uniqueIds } from "./moderationTransforms";
+import { uniqueIds } from "./moderationHelpers";
 import type {
   GloballyBannedUserRow,
   PostSummary,

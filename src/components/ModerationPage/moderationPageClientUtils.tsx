@@ -2,7 +2,7 @@ import Link from "@/components/Link";
 import Type from "@/components/Type";
 import UsersName from "@/components/UsersName";
 import { commentGetPageUrlFromIds } from "@/lib/comments/commentHelpers";
-import { MODERATION_PAGE_SIZE } from "@/lib/moderation/moderationTransforms";
+import { MODERATION_PAGE_SIZE } from "@/lib/moderation/moderationHelpers";
 import type { UserSummary, PostSummary } from "@/lib/moderation/moderationTypes";
 import type { SectionState } from "./moderationPageClientTypes";
 

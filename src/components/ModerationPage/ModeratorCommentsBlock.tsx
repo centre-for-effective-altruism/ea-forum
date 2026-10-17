@@ -1,6 +1,6 @@
 import SectionTitle from "@/components/SectionTitle";
 import Type from "@/components/Type";
-import { MODERATOR_COMMENTS_PAGE_SIZE } from "@/lib/moderation/moderationTransforms";
+import { MODERATOR_COMMENTS_PAGE_SIZE } from "@/lib/moderation/moderationHelpers";
 import ModeratorCommentsSection from "./ModeratorCommentsSection";
 import { SectionStatus, TablePagination } from "./moderationPageClientUtils";
 import type { ModerationRowsState } from "./moderationPageClientTypes";

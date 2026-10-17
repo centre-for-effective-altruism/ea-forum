@@ -16,7 +16,7 @@ import {
   MODERATOR_COMMENTS_PAGE_SIZE,
   redactDeletedCommentsForViewer,
   toRateLimitDisplay,
-} from "@/lib/moderation/moderationTransforms";
+} from "@/lib/moderation/moderationHelpers";
 import ModerationPageComponent from "@/components/ModerationPage/ModerationPage";
 
 export default async function ModerationPage() {

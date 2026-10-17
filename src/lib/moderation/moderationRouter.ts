@@ -24,7 +24,7 @@ import {
   MODERATOR_COMMENTS_PAGE_SIZE,
   redactDeletedCommentsForViewer,
   toRateLimitDisplay,
-} from "./moderationTransforms";
+} from "./moderationHelpers";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 
