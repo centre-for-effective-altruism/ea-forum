@@ -2,16 +2,11 @@ import { sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
 import uniq from "lodash/uniq";
 import { db } from "@/lib/db";
-import { createRawSqlArray } from "@/lib/utils/queryHelpers";
-import {
-  commentListProjection,
-  viewableCommentFilter,
-  type CommentListItem,
-} from "@/lib/comments/commentLists";
+import { createRawSqlArray, findManyWithTotalCount } from "@/lib/utils/queryHelpers";
+import { commentListProjection, CommentListItem } from "@/lib/comments/commentLists";
+import { userIsAdminOrMod, UserPermissions } from "@/lib/users/userHelpers";
 import { viewablePostFilter } from "@/lib/posts/postLists";
-import type { User } from "@/lib/schema";
 import { isNotTrue } from "@/lib/utils/queryHelpers";
-import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { filterNonNull } from "../typeHelpers";
 import type {
   GloballyBannedUserRow,
@@ -20,7 +15,7 @@ import type {
   UserSummary,
 } from "./moderationTypes";
 
-export const fetchUsersByIds = async (
+export const fetchUserSummariesByIds = async (
   ids: ReadonlyArray<string | null | undefined>,
   { includeDeleted = false }: { includeDeleted?: boolean } = {},
 ): Promise<Record<string, UserSummary>> => {
@@ -43,7 +38,7 @@ export const fetchUsersByIds = async (
   return keyBy(users, "_id");
 };
 
-export const fetchPostsByIds = async (
+export const fetchPostSummariesByIds = async (
   ids: ReadonlyArray<string | null | undefined>,
 ): Promise<Record<string, PostSummary>> => {
   const postIds = uniq(filterNonNull(ids));
@@ -71,66 +66,32 @@ export const fetchModeratorComments = async ({
   offset,
   limit,
 }: {
-  currentUser: Pick<User, "_id" | "isAdmin" | "groups" | "banned"> | null;
+  currentUser: UserPermissions | null;
   offset: number;
   limit: number;
 }): Promise<{ comments: CommentListItem[]; count: number }> => {
   const currentUserId = currentUser?._id ?? null;
-  const currentUserIsModerator = userIsAdminOrMod(currentUser);
-  const publicPostVisibilityCondition = sql`(
-    p."draft" = ${viewablePostFilter.draft}
-    AND p."deletedDraft" = ${viewablePostFilter.deletedDraft}
-    AND p."isFuture" = ${viewablePostFilter.isFuture}
-    AND p."unlisted" = ${viewablePostFilter.unlisted}
-    AND p."shortform" = ${viewablePostFilter.shortform}
-    AND p."rejected" = ${viewablePostFilter.rejected}
-    AND p."authorIsUnreviewed" = ${viewablePostFilter.authorIsUnreviewed}
-    AND p."hiddenRelatedQuestion" = ${viewablePostFilter.hiddenRelatedQuestion}
-    AND p."postedAt" IS NOT NULL
-    AND p."status" = ${viewablePostFilter.status}
-  )`;
-  const countConditions = [
-    sql`c."moderatorHat" = TRUE`,
-    sql`c."draft" IS NOT TRUE`,
-    sql`c."deleted" IS NOT TRUE`,
-    currentUserId
-      ? sql`(
-          c."userId" = ${currentUserId}
-          OR (
-            c."rejected" IS NOT TRUE
-            AND c."debateResponse" IS NOT TRUE
-            AND c."authorIsUnreviewed" IS NOT TRUE
-          )
-        )`
-      : sql`(
-          c."rejected" IS NOT TRUE
-          AND c."debateResponse" IS NOT TRUE
-          AND c."authorIsUnreviewed" IS NOT TRUE
-        )`,
-    currentUserIsModerator
-      ? null
-      : currentUserId
-        ? sql`(
-            p."userId" = ${currentUserId}
-            OR ${publicPostVisibilityCondition}
-          )`
-        : publicPostVisibilityCondition,
-  ].filter((condition) => condition !== null);
-  const comments = await db.query.comments.findMany({
+  const [comments, count] = await findManyWithTotalCount(db.query.comments, {
     ...commentListProjection(currentUser),
     where: {
-      ...viewableCommentFilter(currentUserId),
       moderatorHat: true,
-      draft: isNotTrue,
-      deleted: isNotTrue,
-      post: currentUserIsModerator
+      draft: false,
+      deleted: false,
+      OR: [
+        {
+          rejected: false,
+          authorIsUnreviewed: false,
+          debateResponse: isNotTrue,
+        },
+        ...(currentUserId ? [{ userId: currentUserId }] : []),
+      ],
+      post: userIsAdminOrMod(currentUser)
         ? undefined
-        : {
-            OR: [
-              ...(currentUserId ? [{ userId: currentUserId }] : []),
-              viewablePostFilter,
-            ],
-          },
+        : currentUserId
+          ? {
+              OR: [{ userId: currentUserId }, viewablePostFilter],
+            }
+          : viewablePostFilter,
     },
     orderBy: {
       postedAt: "desc",
@@ -138,18 +99,7 @@ export const fetchModeratorComments = async ({
     offset,
     limit,
   });
-
-  const countResult = await db.execute<{ count: number | string }>(
-    sql`
-      SELECT COUNT(*)::int as count
-      FROM "Comments" c
-      LEFT JOIN "Posts" p ON c."postId" = p."_id"
-      WHERE ${sql.join(countConditions, sql` AND `)}
-    `,
-  );
-  const count = Number(countResult.rows[0]?.count ?? 0);
-
-  return { comments: comments as CommentListItem[], count };
+  return { comments, count };
 };
 
 export const fetchDeletedComments = async ({
@@ -159,11 +109,10 @@ export const fetchDeletedComments = async ({
   offset: number;
   limit: number;
 }) => {
-  const comments = await db.query.comments.findMany({
+  const [comments, count] = await findManyWithTotalCount(db.query.comments, {
     columns: {
       _id: true,
       postId: true,
-      userId: true,
       deletedByUserId: true,
       deletedDate: true,
       deletedPublic: true,
@@ -190,16 +139,6 @@ export const fetchDeletedComments = async ({
     offset,
     limit,
   });
-
-  const countResult = await db.execute<{ count: number | string }>(
-    sql`
-      SELECT COUNT(*)::int as count
-      FROM "Comments"
-      WHERE deleted = TRUE AND "deletedPublic" = TRUE
-    `,
-  );
-  const count = Number(countResult.rows[0]?.count ?? 0);
-
   return { comments, count };
 };
 
@@ -210,7 +149,7 @@ export const fetchModeratorActions = async ({
   offset: number;
   limit: number;
 }) => {
-  const actions = await db.query.moderatorActions.findMany({
+  const [actions, count] = await findManyWithTotalCount(db.query.moderatorActions, {
     columns: {
       _id: true,
       userId: true,
@@ -223,18 +162,10 @@ export const fetchModeratorActions = async ({
     offset,
     limit,
   });
-
-  const countResult = await db.execute<{ count: number | string }>(
-    sql`
-      SELECT COUNT(*)::int as count
-      FROM "ModeratorActions"
-    `,
-  );
-  const count = Number(countResult.rows[0]?.count ?? 0);
-
   return { actions, count };
 };
 
+// TODO: Clean up *shudders*
 export const fetchAutoRateLimits = async ({
   offset,
   limit,
@@ -248,14 +179,26 @@ export const fetchAutoRateLimits = async ({
 }) => {
   const latestEventsCte = sql`
     latest_events AS (
-      SELECT DISTINCT ON (e."userId", e.properties->>'rateLimitType', e.properties->>'actionType')
+      SELECT DISTINCT ON (
+        e."userId",
+        e.properties->>'rateLimitType',
+        e.properties->>'actionType'
+      )
         e."userId",
         e.name,
         e.properties,
-        COALESCE((e.properties->>'triggeredAt')::timestamp, e."createdAt") as "triggeredAt"
+        COALESCE(
+          (e.properties->>'triggeredAt')::timestamp,
+          e."createdAt"
+        ) as "triggeredAt"
       FROM "LWEvents" e
       WHERE e.name IN ('rateLimitActivated', 'rateLimitDeactivated')
-      ORDER BY e."userId", e.properties->>'rateLimitType', e.properties->>'actionType', e."createdAt" DESC
+      ORDER BY
+        e."userId",
+        e.properties->>'rateLimitType',
+        e.properties->>'actionType',
+        e."createdAt"
+      DESC
     )
   `;
 
@@ -311,7 +254,9 @@ export const fetchAutoRateLimits = async ({
       ${
         showNewUserRateLimits
           ? sql``
-          : sql`WHERE COALESCE(u."postCount", 0) + COALESCE(u."commentCount", 0) >= 5`
+          : sql`
+            WHERE COALESCE(u."postCount", 0) + COALESCE(u."commentCount", 0) >= 5
+          `
       }
       ORDER BY uwl."mostRecentActivation" DESC
       LIMIT ${limit} OFFSET ${offset}
@@ -328,8 +273,10 @@ export const fetchAutoRateLimits = async ({
       ${
         showNewUserRateLimits
           ? sql``
-          : sql`LEFT JOIN "Users" u ON fl."userId" = u._id
-                WHERE COALESCE(u."postCount", 0) + COALESCE(u."commentCount", 0) >= 5`
+          : sql`
+            LEFT JOIN "Users" u ON fl."userId" = u._id
+            WHERE COALESCE(u."postCount", 0) + COALESCE(u."commentCount", 0) >= 5
+          `
       }
     `),
   ]);
@@ -347,7 +294,7 @@ export const fetchGloballyBannedUsers = async ({
   limit: number;
   showExpiredBans: boolean;
 }): Promise<{ users: GloballyBannedUserRow[]; count: number }> => {
-  const users = await db.query.users.findMany({
+  const [users, count] = await findManyWithTotalCount(db.query.users, {
     columns: {
       _id: true,
       displayName: true,
@@ -368,18 +315,7 @@ export const fetchGloballyBannedUsers = async ({
     offset,
     limit,
   });
-
-  const countResult = await db.execute<{ count: number | string }>(
-    sql`
-      SELECT COUNT(*)::int as count
-      FROM "Users"
-      WHERE banned IS NOT NULL
-        ${showExpiredBans ? sql`` : sql`AND banned > NOW()`}
-    `,
-  );
-  const count = Number(countResult.rows[0]?.count ?? 0);
-
-  return { users: users as GloballyBannedUserRow[], count };
+  return { users, count };
 };
 
 export const fetchManualRateLimits = async ({
@@ -397,8 +333,7 @@ export const fetchManualRateLimits = async ({
     "rateLimitOnePerMonth",
     "rateLimitThreeCommentsPerPost",
   ];
-
-  const actions = await db.query.moderatorActions.findMany({
+  const [actions, count] = await findManyWithTotalCount(db.query.moderatorActions, {
     columns: {
       _id: true,
       userId: true,
@@ -418,14 +353,5 @@ export const fetchManualRateLimits = async ({
     offset,
     limit,
   });
-
-  const countResult = await db.execute<{ count: number | string }>(sql`
-    SELECT COUNT(*)::int as count
-    FROM "ModeratorActions" ma
-    WHERE ma.type = ANY(${createRawSqlArray(manualRateLimitTypes)})
-      AND (ma."endedAt" IS NULL OR ma."endedAt" > NOW())
-  `);
-  const count = Number(countResult.rows[0]?.count ?? 0);
-
   return { actions, count };
 };

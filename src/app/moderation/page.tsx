@@ -8,8 +8,8 @@ import {
   fetchManualRateLimits,
   fetchModeratorActions,
   fetchModeratorComments,
-  fetchPostsByIds,
-  fetchUsersByIds,
+  fetchPostSummariesByIds,
+  fetchUserSummariesByIds,
 } from "@/lib/moderation/moderationQueries";
 import {
   MODERATION_PAGE_SIZE,
@@ -48,8 +48,10 @@ export default async function ModerationPage() {
     globallyBannedUsersData,
     manualRateLimitsData,
   ] = await Promise.all([
-    fetchPostsByIds(deletedCommentsData.comments.map((comment) => comment.postId)),
-    fetchUsersByIds(
+    fetchPostSummariesByIds(
+      deletedCommentsData.comments.map((comment) => comment.postId),
+    ),
+    fetchUserSummariesByIds(
       deletedCommentsData.comments.map((comment) => comment.deletedByUserId),
       { includeDeleted: canViewModeratorActions },
     ),
@@ -69,11 +71,11 @@ export default async function ModerationPage() {
   ]);
 
   const [moderatorActionUsers, manualRateLimitUsers] = await Promise.all([
-    fetchUsersByIds(
+    fetchUserSummariesByIds(
       moderatorActionsData.actions.map((action) => action.userId),
       { includeDeleted: canViewModeratorActions },
     ),
-    fetchUsersByIds(
+    fetchUserSummariesByIds(
       manualRateLimitsData.actions.map((action) => action.userId),
       { includeDeleted: canViewModeratorActions },
     ),

@@ -16,8 +16,8 @@ import {
   fetchManualRateLimits,
   fetchModeratorActions,
   fetchModeratorComments,
-  fetchPostsByIds,
-  fetchUsersByIds,
+  fetchPostSummariesByIds,
+  fetchUserSummariesByIds,
 } from "./moderationQueries";
 import {
   MODERATION_PAGE_SIZE,
@@ -61,7 +61,6 @@ export const moderationRouter = {
         offset,
         limit: MODERATOR_COMMENTS_PAGE_SIZE,
       });
-
       return {
         comments: data.comments,
         count: data.count,
@@ -89,7 +88,6 @@ export const moderationRouter = {
           showExpiredRateLimits,
           showNewUserRateLimits,
         });
-
         return {
           rows: toRateLimitDisplay(data.rows),
           count: data.count,
@@ -112,13 +110,12 @@ export const moderationRouter = {
         limit: MODERATION_PAGE_SIZE,
       });
       const [postMap, deletedByUsersMap] = await Promise.all([
-        fetchPostsByIds(data.comments.map((comment) => comment.postId)),
-        fetchUsersByIds(
+        fetchPostSummariesByIds(data.comments.map((comment) => comment.postId)),
+        fetchUserSummariesByIds(
           data.comments.map((comment) => comment.deletedByUserId),
           { includeDeleted: canViewModeratorActions },
         ),
       ]);
-
       return {
         comments: redactDeletedCommentsForViewer(
           data.comments,
@@ -139,17 +136,15 @@ export const moderationRouter = {
       usersMap: Record<string, UserSummary>;
     }> => {
       await moderationRoleGuard();
-
       const offset = (page - 1) * MODERATION_PAGE_SIZE;
       const data = await fetchModeratorActions({
         offset,
         limit: MODERATION_PAGE_SIZE,
       });
-      const usersMap = await fetchUsersByIds(
+      const usersMap = await fetchUserSummariesByIds(
         data.actions.map((action) => action.userId),
         { includeDeleted: true },
       );
-
       return {
         actions: data.actions,
         count: data.count,
@@ -171,14 +166,12 @@ export const moderationRouter = {
         count: number;
       }> => {
         await moderationRoleGuard();
-
         const offset = (page - 1) * MODERATION_PAGE_SIZE;
         const data = await fetchGloballyBannedUsers({
           offset,
           limit: MODERATION_PAGE_SIZE,
           showExpiredBans,
         });
-
         return {
           users: data.users,
           count: data.count,
@@ -194,17 +187,15 @@ export const moderationRouter = {
       usersMap: Record<string, UserSummary>;
     }> => {
       await moderationRoleGuard();
-
       const offset = (page - 1) * MODERATION_PAGE_SIZE;
       const data = await fetchManualRateLimits({
         offset,
         limit: MODERATION_PAGE_SIZE,
       });
-      const usersMap = await fetchUsersByIds(
+      const usersMap = await fetchUserSummariesByIds(
         data.actions.map((action) => action.userId),
         { includeDeleted: true },
       );
-
       return {
         actions: data.actions,
         count: data.count,
