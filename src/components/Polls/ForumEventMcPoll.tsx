@@ -16,14 +16,14 @@ import {
 } from "@/lib/utils/pollHelpers";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
+import { usePollParticipants } from "./usePollParticipants";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
+import PollCommentForm from "./PollCommentForm";
 import PollResultIcon from "./PollResultIcon";
 import PollSubtitle from "./PollSubtitle";
-import PollCommentForm from "./PollCommentForm";
 import Loading from "../Loading";
-import { usePollParticipants } from "./usePollParticipants";
 
 // Cap on how many voter avatars to show per answer row before collapsing into
 // a "+N" overflow bubble.

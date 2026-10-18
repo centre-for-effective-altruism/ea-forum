@@ -1,10 +1,10 @@
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import { getMcPollPublicData } from "@/lib/forumEvents/forumEventHelpers";
 import {
   pollVoteIsAgreement,
   pollVoteToPercentage,
   stripFootnotes,
 } from "@/lib/utils/pollHelpers";
-import { getMcPollPublicData } from "@/lib/forumEvents/forumEventHelpers";
 import Tooltip from "../Tooltip";
 import Type from "../Type";
 import Link from "../Link";

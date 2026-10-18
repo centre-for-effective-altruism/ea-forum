@@ -24,6 +24,7 @@ import {
 } from "@/lib/utils/pollHelpers";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
+import { usePollParticipants } from "./usePollParticipants";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { rpc } from "@/lib/rpc";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
@@ -33,14 +34,13 @@ import UserCircleIcon from "@heroicons/react/24/outline/UserCircleIcon";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import clsx from "clsx";
 import UserProfileImage from "../UserProfileImage";
+import PollCommentForm from "./PollCommentForm";
 import PollResultIcon from "./PollResultIcon";
 import PollSubtitle from "./PollSubtitle";
 import PollButton from "./PollButton";
-import PollCommentForm from "./PollCommentForm";
 import Tooltip from "../Tooltip";
 import Loading from "../Loading";
 import Type from "../Type";
-import { usePollParticipants } from "./usePollParticipants";
 
 type AddVoteData = Parameters<typeof rpc.forumEvents.addVote>[0];
 

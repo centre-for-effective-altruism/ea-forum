@@ -47,7 +47,7 @@ export type ForumEventPollVote = {
 export type McPollAnswer = { _id: string; text: string };
 
 /** A single user's vote in a multiple-choice poll (one or more answer ids). */
-export type McPollVote = { answerIds: string[] };
+export type McPollVote = { answerIds?: string[] };
 
 /**
  * The parsed contents of a multiple-choice poll's `publicData` (see

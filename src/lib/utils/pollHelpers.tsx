@@ -228,7 +228,7 @@ const sortVoteDisplays = (
   votes: ForumEventVoteDisplay[],
   currentUser: CurrentUser | null,
 ) =>
-  [...votes].sort((a, b) => {
+  votes.toSorted((a, b) => {
     // Current user should always appear at the bottom
     if (a.user._id === currentUser?._id) {
       return 1;
@@ -288,7 +288,7 @@ export const aggregateMcPollVotes = ({
   for (const [userId, vote] of Object.entries(votes)) {
     const user = votersById.get(userId);
     const comment = commentsByUserId.get(userId) ?? null;
-    for (const answerId of vote.answerIds) {
+    for (const answerId of vote.answerIds ?? []) {
       // Ignore ids that are no longer part of the poll (e.g. a removed answer)
       const tally = tallies.get(answerId);
       if (!tally) {

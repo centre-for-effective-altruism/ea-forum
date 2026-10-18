@@ -659,12 +659,15 @@ export default class PollForm extends Plugin {
       this._closeFormView();
     });
 
-    // Cycle to the next input on enter, unless this is the last input in which case close
+    // Cycle to the next input on enter, with a couple of exceptions...
     formView.keystrokes.set("Enter", (_, cancel: () => void) => {
       if (document.activeElement === formView.questionView.element) {
+        // If the question view is focused, submit and close the form
         this.formView.fire("submit");
         this._closeFormView();
-      } else {
+      } else if (document.activeElement !== formView.answersView.element) {
+        // The answers view is a multi-line input so we need to be able to press
+        // enter to add another answer - for anything else cycle to the next input
         this.formView._focusCycler.focusNext();
         cancel();
       }
