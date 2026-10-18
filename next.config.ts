@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { withPostHogConfig } from "@posthog/nextjs-config";
 import { withSentryConfig } from "@sentry/nextjs";
+import { execSync } from "node:child_process";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
@@ -118,7 +119,7 @@ const sentryConfig = withSentryConfig(nextConfig, {
   telemetry: false,
   sourcemaps: {
     disable: false,
-    deleteSourcemapsAfterUpload: true,
+    deleteSourcemapsAfterUpload: false,
   },
   webpack: {
     automaticVercelMonitors: true,
@@ -137,6 +138,12 @@ if (!isPosthogConfigured) {
   console.warn("Warning: Posthog is not configured");
 }
 
+const commitHash =
+  process.env.RENDER_GIT_COMMIT ??
+  execSync("git rev-parse HEAD", {
+    encoding: "utf8",
+  }).trim();
+
 const posthogConfig = isPosthogConfigured
   ? withPostHogConfig(sentryConfig, {
       personalApiKey: process.env.POSTHOG_API_KEY,
@@ -144,7 +151,9 @@ const posthogConfig = isPosthogConfigured
       host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
       sourcemaps: {
         enabled: true,
-        deleteAfterUpload: true,
+        releaseName: `ea-forum-${commitHash}`,
+        releaseVersion: commitHash,
+        deleteAfterUpload: false,
       },
     })
   : sentryConfig;
