@@ -25,7 +25,7 @@ typecheck:
   before_script:
     - npm ci
   script:
-    - npm run tsc
+    - npm run typecheck
 
 tests:
   stage: checks
