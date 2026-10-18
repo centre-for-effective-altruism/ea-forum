@@ -100,41 +100,53 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 };
 
-export default withPostHogConfig(
-  withSentryConfig(nextConfig, {
-    // For all available options, see:
-    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-    org: "centre-for-effective-altruism",
-    project: "eaforum3",
-    silent: !process.env.CI,
-    // Upload source maps for readable stack traces
-    authToken: process.env.SENTRY_AUTH_TOKEN,
-    // Upload a larger set of source maps for prettier stack traces (increases
-    // build time)
-    widenClientFileUpload: true,
-    // Route browser requests to Sentry through a Next.js rewrite to circumvent
-    // ad-blockers.
-    tunnelRoute: "/monitoring",
-    telemetry: false,
-    sourcemaps: {
-      disable: false,
-      deleteSourcemapsAfterUpload: true,
-    },
-    webpack: {
-      automaticVercelMonitors: true,
-      treeshake: {
-        removeDebugLogging: true,
-      },
-    },
-  }),
-  {
-    personalApiKey: process.env.POSTHOG_API_KEY,
-    projectId: process.env.POSTHOG_PROJECT_ID,
-    host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    sourcemaps: {
-      enabled: true,
-      deleteAfterUpload: true,
+const sentryConfig = withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+  org: "centre-for-effective-altruism",
+  project: "eaforum3",
+  silent: !process.env.CI,
+  // Upload source maps for readable stack traces
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Upload a larger set of source maps for prettier stack traces (increases
+  // build time)
+  widenClientFileUpload: true,
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent
+  // ad-blockers.
+  tunnelRoute: "/monitoring",
+  telemetry: false,
+  sourcemaps: {
+    disable: false,
+    deleteSourcemapsAfterUpload: true,
+  },
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
     },
   },
-);
+});
+
+const isPosthogConfigured =
+  !!process.env.POSTHOG_API_KEY &&
+  !!process.env.POSTHOG_PROJECT_ID &&
+  !!process.env.NEXT_PUBLIC_POSTHOG_HOST;
+
+if (!isPosthogConfigured) {
+  console.warn("Warning: Posthog is not configured");
+}
+
+const posthogConfig = isPosthogConfigured
+  ? withPostHogConfig(sentryConfig, {
+      personalApiKey: process.env.POSTHOG_API_KEY,
+      projectId: process.env.POSTHOG_PROJECT_ID,
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+      sourcemaps: {
+        enabled: true,
+        deleteAfterUpload: true,
+      },
+    })
+  : sentryConfig;
+
+export default posthogConfig;
