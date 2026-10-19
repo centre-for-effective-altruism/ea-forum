@@ -6,17 +6,20 @@ import clsx from "clsx";
 export default function ToggleSwitch({
   value,
   setValue,
+  id,
   As = "button",
   className,
 }: Readonly<{
   value: boolean;
   setValue?: (value: boolean) => void;
+  id?: string;
   As?: ElementType;
   className?: string;
 }>) {
   const onClick = useCallback(() => setValue?.(!value), [value, setValue]);
   return (
     <As
+      id={id}
       type="button"
       role="switch"
       aria-checked={value}
