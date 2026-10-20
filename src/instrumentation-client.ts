@@ -25,6 +25,7 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
   defaults: "2026-05-30",
   capture_exceptions: true,
   persistence: "localStorage+cookie",
+  cookieless_mode: "on_reject",
   loaded: (ph) => {
     ph.register({
       environment: process.env.NEXT_PUBLIC_ENVIRONMENT,
