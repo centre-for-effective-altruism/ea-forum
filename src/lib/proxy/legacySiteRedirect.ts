@@ -11,6 +11,7 @@ const oldSitePatterns = [
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
   /^\/api\/search.*$/,
+  /^\/api\/bundle-hash.*$/,
   /^\/api\/eafunds-posts$/,
   /^\/api\/crosspost.*$/,
   /^\/api\/v2\/crosspost.*$/,
