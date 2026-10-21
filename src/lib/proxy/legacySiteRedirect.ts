@@ -7,6 +7,10 @@ const legacySiteUrl = process.env.LEGACY_SITE_URL
 
 // Highest precedence: Always route these to the old site
 const oldSitePatterns = [
+  /^\/js\/bundle.js$/,
+  /^\/allStyles$/,
+  /^\/analyticsEvent$/,
+  /^\/graphql$/,
   /^\/api\/notificationEvents$/,
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
