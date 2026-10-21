@@ -1,15 +1,19 @@
 import { posthog } from "posthog-js";
+import { combineUrls } from "@/lib/routeHelpers";
 
 export default async function ForumMagnumBundlePreload() {
   if (!process.env.LEGACY_SITE_URL) {
     return null;
   }
   try {
-    const hash = await fetch("http://localhost:4000/api/bundle-hash", {
-      headers: {
-        "x-ea-org-api": "true",
+    const hash = await fetch(
+      combineUrls(process.env.LEGACY_SITE_URL, "/api/bundle-hash"),
+      {
+        headers: {
+          "x-ea-org-api": "true",
+        },
       },
-    });
+    );
     const { js } = await hash.json();
     if (js) {
       return (
