@@ -138,7 +138,7 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   // Don't set cookies on the old site patterns; they're not needed and they
   // prevent Cloudflare caching for static assets
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
-    return { response: NextResponse.next(), isRewrite: true };
+    return { response, isRewrite: true };
   }
 
   // Set the preference cookie if it's not already set (so we can change the default)
