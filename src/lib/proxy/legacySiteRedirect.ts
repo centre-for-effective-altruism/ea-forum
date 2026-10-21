@@ -6,6 +6,8 @@ const legacySiteUrl = process.env.LEGACY_SITE_URL
   : null;
 
 // Highest precedence: Always route these to the old site
+// Note that it's currently assumed below that these are all static or API routes
+// on which we don't need to set a cookie containing site patterns.
 const oldSitePatterns = [
   /^\/js\/bundle.js$/,
   /^\/allStyles$/,
@@ -15,7 +17,7 @@ const oldSitePatterns = [
   /^\/api\/eag-application-data$/,
   /^\/api\/health$/,
   /^\/api\/search.*$/,
-  /^\/api\/bundle-hash.*$/,
+  /^\/api\/bundle-hash$/,
   /^\/api\/eafunds-posts$/,
   /^\/api\/crosspost.*$/,
   /^\/api\/v2\/crosspost.*$/,
@@ -106,11 +108,19 @@ const getUserPrefersNewSite = (request: NextRequest): boolean => {
   return DEFAULT_PREFERS_NEW_SITE;
 };
 
+const createRewriteResponse = (request: NextRequest, legacySiteUrl: URL) => {
+  const url = new URL(request.url);
+  url.protocol = legacySiteUrl.protocol;
+  url.hostname = legacySiteUrl.hostname;
+  url.port = legacySiteUrl.port;
+  return NextResponse.rewrite(url);
+};
+
 export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
-    return NextResponse.next();
+    return { response: NextResponse.next(), isRewrite: false };
   }
 
   const prefersNewSite = getUserPrefersNewSite(request);
@@ -119,16 +129,17 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   // Only route to new site if user prefers it AND the route matches new site
   // patterns, or if the proxy is not configured
   if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
-    return NextResponse.next();
+    return { response: NextResponse.next(), isRewrite: false };
   }
 
   // Proxy to the legacy site
-  const url = new URL(request.url);
-  url.protocol = legacySiteUrl.protocol;
-  url.hostname = legacySiteUrl.hostname;
-  url.port = legacySiteUrl.port;
+  const response = createRewriteResponse(request, legacySiteUrl);
 
-  const response = NextResponse.rewrite(url);
+  // Don't set cookies on the old site patterns; they're not needed and they
+  // prevent Cloudflare caching for static assets
+  if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
+    return { response: NextResponse.next(), isRewrite: true };
+  }
 
   // Set the preference cookie if it's not already set (so we can change the default)
   if (!hasPreferenceCookie) {
@@ -152,5 +163,5 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
     });
   }
 
-  return response;
+  return { response, isRewrite: true };
 };
