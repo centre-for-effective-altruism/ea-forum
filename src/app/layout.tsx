@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import localFont from "next/font/local";
@@ -10,15 +10,16 @@ import {
   getSiteOgImageUrl,
 } from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
-import Providers from "@/components/Providers";
-import Header from "@/components/Header/Header";
-import MobileNav from "@/components/Nav/MobileNav";
-import IntercomButton from "@/components/Intercom/IntercomButton";
-import PageLoadListener from "@/components/PageLoadListener";
+import ForumMagnumBundlePreload from "@/components/ForumMagnumBundlePreload";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
 import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
+import IntercomButton from "@/components/Intercom/IntercomButton";
+import PageLoadListener from "@/components/PageLoadListener";
 import PageAnalytics from "@/components/PageAnalytics";
 import SiteToggle from "@/components/Admin/SiteToggle";
+import MobileNav from "@/components/Nav/MobileNav";
+import Header from "@/components/Header/Header";
+import Providers from "@/components/Providers";
 import "./globals.css";
 
 const inter = localFont({
@@ -108,6 +109,9 @@ export default function RootLayout({
           httpEquiv="delegate-ch"
           content="sec-ch-dpr https://res.cloudinary.com;"
         />
+        <Suspense>
+          <ForumMagnumBundlePreload />
+        </Suspense>
       </head>
       <body
         className={clsx(
