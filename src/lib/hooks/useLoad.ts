@@ -41,10 +41,10 @@ export const useLoad = <T>(
   const [canLoadMore, setCanLoadMore] = useState(true);
   const loadingRef = useRef(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   const memoizedLoad = useCallback(load, dependencies);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   const memoizedEventProps = useMemo(() => eventProps, [stringify(eventProps)]);
 
   const loadMoreWithOffset = useCallback(

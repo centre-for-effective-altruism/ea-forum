@@ -165,7 +165,7 @@ export const useSubscription = (
     throw new Error("No subscription provider found");
   }
   const { listen, get, update } = ctx;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   const stableId = useMemo(() => id, [stringify(id)]);
   useEffect(() => listen(stableId), [listen, stableId]);
   const state = get(id) ?? { data: null, loading: true };

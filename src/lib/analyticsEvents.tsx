@@ -225,6 +225,7 @@ export const AnalyticsInViewTracker = ({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const captureInViewEvent = useCallback(
+    // eslint-disable-next-line react-hooks/use-memo
     useTracking({
       eventType: eventType || "inViewEvent",
       eventProps: { ...eventProps, ...observerProps },
