@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const legacySiteUrl = process.env.LEGACY_SITE_URL
   ? new URL(process.env.LEGACY_SITE_URL)
@@ -23,6 +22,8 @@ const oldSitePatterns = [
   /^\/api\/v2\/crosspost.*$/,
 ];
 
+// **NOTE**: These are duplicated in `stranglerFig.ts` in ForumMagnum - any updates
+// here must be copied there.
 // Middle precedence: Route these to the new site
 const newSitePatterns = [
   /^\/$/, // Home page
@@ -60,51 +61,26 @@ const newSitePatterns = [
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
 
-// Cookie payload for the old site to know which routes are owned by the new site
-const OWNED_ROUTES_COOKIE_NAME = "ea_forum_v3_owned_routes";
-const ownedRoutesPayload = JSON.stringify({
-  patterns: newSitePatterns.map((r) => r.source),
-});
-
 const DEFAULT_PREFERS_NEW_SITE = true;
-
-// Static check: cookies have a 4KB limit
-const COOKIE_SIZE_LIMIT = 4 * 1024;
-const encodedPayload = encodeURIComponent(ownedRoutesPayload);
-const cookieSize = OWNED_ROUTES_COOKIE_NAME.length + 1 + encodedPayload.length; // name=value
-if (cookieSize > COOKIE_SIZE_LIMIT * 0.9) {
-  const message =
-    `ea_forum_v3_owned_routes cookie is getting close to the 4KB limit ` +
-    `(${cookieSize} bytes). Consider pruning or grouping route patterns.`;
-  if (process.env.NODE_ENV === "production") {
-    console.warn(message);
-  } else {
-    throw new Error(message);
-  }
-}
 
 const isNewSiteAllowed = (pathname: string): boolean => {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
     return false;
   }
-
   if (newSitePatterns.some((pattern) => pattern.test(pathname))) {
     return true;
   }
-
   return false;
 };
 
 const getUserPrefersNewSite = (request: NextRequest): boolean => {
   const cookieValue = request.cookies.get("prefer_ea_forum_v3")?.value;
-
   if (cookieValue === "true") {
     return true;
   }
   if (cookieValue === "false") {
     return false;
   }
-
   return DEFAULT_PREFERS_NEW_SITE;
 };
 
@@ -150,16 +126,6 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
       httpOnly: false,
       sameSite: "lax",
       expires: oneYearFromNow,
-    });
-  }
-
-  // If user prefers new site, attach the ea_forum_v3_owned_routes cookie as a
-  // hint for SPA navigation
-  if (prefersNewSite) {
-    response.cookies.set(OWNED_ROUTES_COOKIE_NAME, ownedRoutesPayload, {
-      path: "/",
-      httpOnly: false, // Needs to be readable by client JS
-      sameSite: "lax",
     });
   }
 

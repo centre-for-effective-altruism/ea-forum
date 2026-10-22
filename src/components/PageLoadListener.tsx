@@ -24,6 +24,9 @@ export default function PageLoadListener() {
     initGoogleTagManager();
     void initRecaptcha();
 
+    // This cookie is no longer used and is very large - delete it
+    document.cookie = "ea_forum_v3_owned_routes=; Max-Age=0; path=/";
+
     const urlParams = new URLSearchParams(document.location?.search);
     captureEvent("pageLoadFinished", {
       url: document.location?.href,
