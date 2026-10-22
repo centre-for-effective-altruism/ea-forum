@@ -36,12 +36,6 @@ export default function PageLoadListener() {
       utmUserId: urlParams.get("utm_user_id"),
       browserProps: getBrowserProperties(),
       prefersDarkMode: devicePrefersDarkMode(),
-      performance: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        memory: (window as any).performance?.memory?.usedJSHeapSize,
-        timeOrigin: window.performance?.timeOrigin,
-        timing: window.performance?.timing?.toJSON?.(),
-      },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
