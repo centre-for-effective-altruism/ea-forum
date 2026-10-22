@@ -40,6 +40,7 @@ class Auth0Client {
 
   googleLogin(): void {
     const returnTo = encodeURIComponent(window.location.href);
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = `/api/auth?returnTo=${returnTo}&connection=google-oauth2`;
   }
 

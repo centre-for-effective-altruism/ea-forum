@@ -87,7 +87,7 @@ const fetchFromElasticIndex = async (
 };
 
 const useStableSuggestions = (suggestions: string[] = []) =>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   useMemo(() => suggestions, [suggestions.join("")]);
 
 export const useSearchableMultiSelect = ({
@@ -112,7 +112,7 @@ export const useSearchableMultiSelect = ({
     .map(({ value }) => value);
   const selectedValues: string[] = useMemo(() => {
     return filteredSelectedValues;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   }, [filteredSelectedValues.join(" ")]);
 
   const summary = buildMultiSelectSummary(title, suggestions, selectedValues);

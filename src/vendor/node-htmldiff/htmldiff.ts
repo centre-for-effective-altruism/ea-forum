@@ -398,6 +398,8 @@ function MatchBinarySearchTree(this: any) {
 }
 
 MatchBinarySearchTree.prototype = {
+  _root: null as any,
+
   /**
    * Adds matches to the binary search tree.
    *
