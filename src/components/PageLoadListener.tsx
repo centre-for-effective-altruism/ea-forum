@@ -3,12 +3,10 @@
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { devicePrefersDarkMode } from "@/lib/hooks/usePrefersDarkMode";
-import { CLIENT_ID_COOKIE } from "@/lib/clientIds/clientIdHelpers";
 import { initGoogleTagManager } from "@/lib/googleTagManager";
 import { getBrowserProperties } from "@/lib/environment";
 import { useTracking } from "@/lib/analyticsEvents";
 import { initRecaptcha } from "@/lib/recaptcha";
-import { randomId } from "@/lib/utils/random";
 
 let lastUrl: string | null = null;
 
@@ -23,17 +21,6 @@ export default function PageLoadListener() {
    * not again on client-side navigations.
    */
   useEffect(() => {
-    if (
-      !document.cookie.split("; ").find((row) => row.startsWith(CLIENT_ID_COOKIE))
-    ) {
-      const clientId = randomId();
-      document.cookie = `${CLIENT_ID_COOKIE}=${clientId}; path=/; max-age=315360000`;
-    }
-
-    if (!window.tabId) {
-      window.tabId = randomId();
-    }
-
     initGoogleTagManager();
     void initRecaptcha();
 
