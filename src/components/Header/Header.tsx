@@ -76,6 +76,7 @@ export default function Header({
                   alt="Effective Altruism Forum"
                   width={34}
                   height={34}
+                  loading="eager"
                 />
                 <span className="translate-y-px">
                   <span className="hidden md:inline">Effective Altruism Forum</span>
