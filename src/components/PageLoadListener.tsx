@@ -3,12 +3,10 @@
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { devicePrefersDarkMode } from "@/lib/hooks/usePrefersDarkMode";
-import { CLIENT_ID_COOKIE } from "@/lib/clientIds/clientIdHelpers";
 import { initGoogleTagManager } from "@/lib/googleTagManager";
 import { getBrowserProperties } from "@/lib/environment";
 import { useTracking } from "@/lib/analyticsEvents";
 import { initRecaptcha } from "@/lib/recaptcha";
-import { randomId } from "@/lib/utils/random";
 
 let lastUrl: string | null = null;
 
@@ -23,19 +21,11 @@ export default function PageLoadListener() {
    * not again on client-side navigations.
    */
   useEffect(() => {
-    if (
-      !document.cookie.split("; ").find((row) => row.startsWith(CLIENT_ID_COOKIE))
-    ) {
-      const clientId = randomId();
-      document.cookie = `${CLIENT_ID_COOKIE}=${clientId}; path=/; max-age=315360000`;
-    }
-
-    if (!window.tabId) {
-      window.tabId = randomId();
-    }
-
     initGoogleTagManager();
     void initRecaptcha();
+
+    // This cookie is no longer used and is very large - delete it
+    document.cookie = "ea_forum_v3_owned_routes=; Max-Age=0; path=/";
 
     const urlParams = new URLSearchParams(document.location?.search);
     captureEvent("pageLoadFinished", {
@@ -49,12 +39,6 @@ export default function PageLoadListener() {
       utmUserId: urlParams.get("utm_user_id"),
       browserProps: getBrowserProperties(),
       prefersDarkMode: devicePrefersDarkMode(),
-      performance: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        memory: (window as any).performance?.memory?.usedJSHeapSize,
-        timeOrigin: window.performance?.timeOrigin,
-        timing: window.performance?.timing?.toJSON?.(),
-      },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

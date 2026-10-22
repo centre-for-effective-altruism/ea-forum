@@ -1,6 +1,7 @@
 import { Suspense, ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import Script from "next/script";
 import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
@@ -97,6 +98,19 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const clientIdScript = `(() => {
+let rid=()=>{
+  let cs="abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTWXYZ23456789"
+  let id=[]
+  for(let i=0;i<17;i++)id.push(cs[Math.floor(Math.random()*cs.length)])
+  return id.join("")
+}
+if (!document.cookie.split(";").map(c=>c.trim()).find(c=>c.startsWith("clientId=")))
+  document.cookie=\`clientId=\${rid()}; path=/; max-age=315360000; SameSite=Lax\`
+if (!window.tabId)
+  window.tabId=rid()
+})()`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -112,6 +126,11 @@ export default function RootLayout({
         <Suspense>
           <ForumMagnumBundlePreload />
         </Suspense>
+        <Script
+          id="client-id-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: clientIdScript }}
+        />
       </head>
       <body
         className={clsx(

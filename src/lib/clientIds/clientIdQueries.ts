@@ -3,7 +3,7 @@ import { db } from "../db";
 import { clientIds } from "../schema";
 import { randomId } from "../utils/random";
 
-export const ensureClientId = async ({
+export const insertClientId = async ({
   clientId,
   userId,
   referrer,

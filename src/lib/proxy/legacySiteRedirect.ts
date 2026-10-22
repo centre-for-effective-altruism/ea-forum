@@ -1,13 +1,10 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const legacySiteUrl = process.env.LEGACY_SITE_URL
   ? new URL(process.env.LEGACY_SITE_URL)
   : null;
 
 // Highest precedence: Always route these to the old site
-// Note that it's currently assumed below that these are all static or API routes
-// on which we don't need to set a cookie containing site patterns.
 const oldSitePatterns = [
   /^\/js\/bundle.js$/,
   /^\/allStyles$/,
@@ -23,6 +20,8 @@ const oldSitePatterns = [
   /^\/api\/v2\/crosspost.*$/,
 ];
 
+// **NOTE**: These are duplicated in `stranglerFig.ts` in ForumMagnum - any updates
+// here must be copied there.
 // Middle precedence: Route these to the new site
 const newSitePatterns = [
   /^\/$/, // Home page
@@ -60,108 +59,31 @@ const newSitePatterns = [
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
 
-// Cookie payload for the old site to know which routes are owned by the new site
-const OWNED_ROUTES_COOKIE_NAME = "ea_forum_v3_owned_routes";
-const ownedRoutesPayload = JSON.stringify({
-  patterns: newSitePatterns.map((r) => r.source),
-});
-
-const DEFAULT_PREFERS_NEW_SITE = true;
-
-// Static check: cookies have a 4KB limit
-const COOKIE_SIZE_LIMIT = 4 * 1024;
-const encodedPayload = encodeURIComponent(ownedRoutesPayload);
-const cookieSize = OWNED_ROUTES_COOKIE_NAME.length + 1 + encodedPayload.length; // name=value
-if (cookieSize > COOKIE_SIZE_LIMIT * 0.9) {
-  const message =
-    `ea_forum_v3_owned_routes cookie is getting close to the 4KB limit ` +
-    `(${cookieSize} bytes). Consider pruning or grouping route patterns.`;
-  if (process.env.NODE_ENV === "production") {
-    console.warn(message);
-  } else {
-    throw new Error(message);
-  }
-}
-
 const isNewSiteAllowed = (pathname: string): boolean => {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
     return false;
   }
-
   if (newSitePatterns.some((pattern) => pattern.test(pathname))) {
     return true;
   }
-
   return false;
 };
 
-const getUserPrefersNewSite = (request: NextRequest): boolean => {
-  const cookieValue = request.cookies.get("prefer_ea_forum_v3")?.value;
+export const createLegacySiteRedirectResponse = (request: NextRequest) => {
+  const { pathname } = request.nextUrl;
+  const prefersNewSite =
+    request.cookies.get("prefer_ea_forum_v3")?.value !== "false";
 
-  if (cookieValue === "true") {
-    return true;
+  // Only route to new site if user prefers it AND the route matches new site
+  // patterns, or if the proxy is not configured
+  if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
+    return NextResponse.next();
   }
-  if (cookieValue === "false") {
-    return false;
-  }
 
-  return DEFAULT_PREFERS_NEW_SITE;
-};
-
-const createRewriteResponse = (request: NextRequest, legacySiteUrl: URL) => {
+  // Proxy to the legacy site
   const url = new URL(request.url);
   url.protocol = legacySiteUrl.protocol;
   url.hostname = legacySiteUrl.hostname;
   url.port = legacySiteUrl.port;
   return NextResponse.rewrite(url);
-};
-
-export const createLegacySiteRedirectResponse = (request: NextRequest) => {
-  const { pathname } = request.nextUrl;
-
-  if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
-    return { response: NextResponse.next(), isRewrite: false };
-  }
-
-  const prefersNewSite = getUserPrefersNewSite(request);
-  const hasPreferenceCookie = request.cookies.has("prefer_ea_forum_v3");
-
-  // Only route to new site if user prefers it AND the route matches new site
-  // patterns, or if the proxy is not configured
-  if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
-    return { response: NextResponse.next(), isRewrite: false };
-  }
-
-  // Proxy to the legacy site
-  const response = createRewriteResponse(request, legacySiteUrl);
-
-  // Don't set cookies on the old site patterns; they're not needed and they
-  // prevent Cloudflare caching for static assets
-  if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
-    return { response, isRewrite: true };
-  }
-
-  // Set the preference cookie if it's not already set (so we can change the default)
-  if (!hasPreferenceCookie) {
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-    response.cookies.set("prefer_ea_forum_v3", String(DEFAULT_PREFERS_NEW_SITE), {
-      path: "/",
-      httpOnly: false,
-      sameSite: "lax",
-      expires: oneYearFromNow,
-    });
-  }
-
-  // If user prefers new site, attach the ea_forum_v3_owned_routes cookie as a
-  // hint for SPA navigation
-  if (prefersNewSite) {
-    response.cookies.set(OWNED_ROUTES_COOKIE_NAME, ownedRoutesPayload, {
-      path: "/",
-      httpOnly: false, // Needs to be readable by client JS
-      sameSite: "lax",
-    });
-  }
-
-  return { response, isRewrite: true };
 };

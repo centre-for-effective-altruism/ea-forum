@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ensureResponseHasClientId } from "./lib/clientIds/clientIdMutations";
+import { saveClientId } from "./lib/clientIds/clientIdMutations";
 import { createLegacySiteRedirectResponse } from "./lib/proxy/legacySiteRedirect";
 import { getBotSiteRedirectUrl } from "./lib/proxy/botSiteRedirect";
 
@@ -8,12 +8,8 @@ export const proxy = async (request: NextRequest) => {
   if (botSiteRedirectUrl) {
     return NextResponse.redirect(botSiteRedirectUrl, 307);
   }
-
-  const { response, isRewrite } = createLegacySiteRedirectResponse(request);
-  if (!isRewrite) {
-    await ensureResponseHasClientId(request, response);
-  }
-  return response;
+  void saveClientId(request);
+  return createLegacySiteRedirectResponse(request);
 };
 
 export const config = {

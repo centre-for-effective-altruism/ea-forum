@@ -1,13 +1,13 @@
-import type { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { captureException } from "@sentry/nextjs";
 import { LRUCache } from "lru-cache";
 import { LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
-import { isNotRandomId, randomId } from "../utils/random";
+import { isNotRandomId } from "../utils/random";
 import { getCurrentUserByLoginToken } from "../users/currentUser";
-import { ensureClientId } from "./clientIdQueries";
+import { insertClientId } from "./clientIdQueries";
 import { CLIENT_ID_COOKIE } from "./clientIdHelpers";
 
-const seenClientIds = new LRUCache<string, boolean>({
+const seenClientIds = new LRUCache<string, true>({
   max: 10_000,
   ttl: 1000 * 60 * 60,
 });
@@ -31,10 +31,7 @@ const setHasSeen = ({
 const isApplicableUrl = (url: string) =>
   url !== "/robots.txt" && url.indexOf("/rpc/") < 0 && url.indexOf("/api/") < 0;
 
-export const ensureResponseHasClientId = async (
-  request: NextRequest,
-  response: NextResponse,
-) => {
+export const saveClientId = async (request: NextRequest) => {
   const landingPage = request.nextUrl.pathname;
   if (!isApplicableUrl(landingPage)) {
     return;
@@ -46,33 +43,23 @@ export const ensureResponseHasClientId = async (
     : null;
   const userId = currentUser?._id ?? null;
 
-  const existingClientId = request.cookies.get(CLIENT_ID_COOKIE)?.value;
-  let effectiveClientId: string;
-  let shouldSetCookie = false;
-  if (!existingClientId || isNotRandomId(existingClientId)) {
-    effectiveClientId = randomId();
-    shouldSetCookie = true;
-  } else {
-    effectiveClientId = existingClientId;
-    if (hasSeen({ clientId: effectiveClientId, userId })) {
-      return;
-    }
+  const clientId = request.cookies.get(CLIENT_ID_COOKIE)?.value;
+  if (!clientId || hasSeen({ clientId, userId })) {
+    return;
+  }
+  if (isNotRandomId(clientId)) {
+    console.error("Invalid client id:", clientId);
+    return;
   }
 
   try {
-    await ensureClientId({
-      clientId: effectiveClientId,
+    await insertClientId({
+      clientId,
       userId,
       referrer: request.headers.get("referer"),
       landingPage,
     });
-    setHasSeen({ clientId: effectiveClientId, userId });
-    if (shouldSetCookie) {
-      response.cookies.set(CLIENT_ID_COOKIE, effectiveClientId, {
-        path: "/",
-        maxAge: 10 * 365 * 24 * 60 * 60,
-      });
-    }
+    setHasSeen({ clientId, userId });
   } catch (e) {
     console.error("Error assigning client ID:", e);
     captureException(e);
