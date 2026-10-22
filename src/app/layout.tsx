@@ -99,16 +99,16 @@ export const viewport: Viewport = {
 };
 
 const clientIdScript = `(() => {
-let rid = () => {
+let rid=()=>{
   let cs="abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTWXYZ23456789"
   let id=[]
   for(let i=0;i<17;i++)id.push(cs[Math.floor(Math.random()*cs.length)])
   return id.join("")
 }
 if (!document.cookie.split(";").map(c=>c.trim()).find(c=>c.startsWith("clientId=")))
-  document.cookie = \`clientId=\${rid()}; path=/; max-age=315360000\`
+  document.cookie=\`clientId=\${rid()}; path=/; max-age=315360000; SameSite=Lax\`
 if (!window.tabId)
-  window.tabId = rid()
+  window.tabId=rid()
 })()`;
 
 export default function RootLayout({

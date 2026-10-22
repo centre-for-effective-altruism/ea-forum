@@ -5,8 +5,6 @@ const legacySiteUrl = process.env.LEGACY_SITE_URL
   : null;
 
 // Highest precedence: Always route these to the old site
-// Note that it's currently assumed below that these are all static or API routes
-// on which we don't need to set a cookie containing site patterns.
 const oldSitePatterns = [
   /^\/js\/bundle.js$/,
   /^\/allStyles$/,
@@ -61,8 +59,6 @@ const newSitePatterns = [
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
 
-const DEFAULT_PREFERS_NEW_SITE = true;
-
 const isNewSiteAllowed = (pathname: string): boolean => {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
     return false;
@@ -73,34 +69,10 @@ const isNewSiteAllowed = (pathname: string): boolean => {
   return false;
 };
 
-const getUserPrefersNewSite = (request: NextRequest): boolean => {
-  const cookieValue = request.cookies.get("prefer_ea_forum_v3")?.value;
-  if (cookieValue === "true") {
-    return true;
-  }
-  if (cookieValue === "false") {
-    return false;
-  }
-  return DEFAULT_PREFERS_NEW_SITE;
-};
-
-const createRewriteResponse = (request: NextRequest, legacySiteUrl: URL) => {
-  const url = new URL(request.url);
-  url.protocol = legacySiteUrl.protocol;
-  url.hostname = legacySiteUrl.hostname;
-  url.port = legacySiteUrl.port;
-  return NextResponse.rewrite(url);
-};
-
 export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
-
-  if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
-    return NextResponse.next();
-  }
-
-  const prefersNewSite = getUserPrefersNewSite(request);
-  const hasPreferenceCookie = request.cookies.has("prefer_ea_forum_v3");
+  const prefersNewSite =
+    request.cookies.get("prefer_ea_forum_v3")?.value !== "false";
 
   // Only route to new site if user prefers it AND the route matches new site
   // patterns, or if the proxy is not configured
@@ -109,25 +81,9 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   }
 
   // Proxy to the legacy site
-  const response = createRewriteResponse(request, legacySiteUrl);
-
-  // Don't set cookies on the old site patterns; they're not needed and they
-  // prevent Cloudflare caching for static assets
-  if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
-    return response;
-  }
-
-  // Set the preference cookie if it's not already set (so we can change the default)
-  if (!hasPreferenceCookie) {
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-    response.cookies.set("prefer_ea_forum_v3", String(DEFAULT_PREFERS_NEW_SITE), {
-      path: "/",
-      httpOnly: false,
-      sameSite: "lax",
-      expires: oneYearFromNow,
-    });
-  }
-
-  return response;
+  const url = new URL(request.url);
+  url.protocol = legacySiteUrl.protocol;
+  url.hostname = legacySiteUrl.hostname;
+  url.port = legacySiteUrl.port;
+  return NextResponse.rewrite(url);
 };
