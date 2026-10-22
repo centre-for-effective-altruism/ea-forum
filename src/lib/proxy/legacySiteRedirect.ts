@@ -96,7 +96,7 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   if (process.env.DISABLE_PROXY?.toLowerCase() === "true") {
-    return { response: NextResponse.next(), isRewrite: false };
+    return NextResponse.next();
   }
 
   const prefersNewSite = getUserPrefersNewSite(request);
@@ -105,7 +105,7 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   // Only route to new site if user prefers it AND the route matches new site
   // patterns, or if the proxy is not configured
   if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
-    return { response: NextResponse.next(), isRewrite: false };
+    return NextResponse.next();
   }
 
   // Proxy to the legacy site
@@ -114,7 +114,7 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
   // Don't set cookies on the old site patterns; they're not needed and they
   // prevent Cloudflare caching for static assets
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
-    return { response, isRewrite: true };
+    return response;
   }
 
   // Set the preference cookie if it's not already set (so we can change the default)
@@ -129,5 +129,5 @@ export const createLegacySiteRedirectResponse = (request: NextRequest) => {
     });
   }
 
-  return { response, isRewrite: true };
+  return response;
 };

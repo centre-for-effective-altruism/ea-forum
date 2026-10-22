@@ -102,7 +102,7 @@ const clientIdScript = `(() => {
 let rid = () => {
   let cs="abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTWXYZ23456789"
   let id=[]
-  for(let i=0;i<27;i++)id.push(cs[Math.floor(Math.random()*cs.length)])
+  for(let i=0;i<17;i++)id.push(cs[Math.floor(Math.random()*cs.length)])
   return id.join("")
 }
 if (!document.cookie.split(";").map(c=>c.trim()).find(c=>c.startsWith("clientId=")))

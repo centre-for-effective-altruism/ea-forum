@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { createTestUser } from "./testHelpers";
 import { db } from "@/lib/db";
 import { clientIds } from "@/lib/schema";
-import { ensureClientId } from "@/lib/clientIds/clientIdQueries";
+import { insertClientId } from "@/lib/clientIds/clientIdQueries";
 
 suite("Client IDs", () => {
   beforeAll(async () => {
@@ -12,7 +12,7 @@ suite("Client IDs", () => {
 
   test("Can insert a new clientId without userId", async () => {
     const clientId = `test-client-${crypto.randomUUID()}`;
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: null,
       referrer: "https://example.com",
@@ -34,13 +34,13 @@ suite("Client IDs", () => {
   });
   test("Increments timesSeen on conflict without userId", async () => {
     const clientId = `test-client-${crypto.randomUUID()}`;
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: null,
       referrer: "https://ref1.com",
       landingPage: "/first",
     });
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: null,
       referrer: "https://ref2.com",
@@ -59,7 +59,7 @@ suite("Client IDs", () => {
   test("Inserts with userId when provided", async () => {
     const user = await createTestUser();
     const clientId = `test-client-${crypto.randomUUID()}`;
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: user._id,
       referrer: null,
@@ -77,13 +77,13 @@ suite("Client IDs", () => {
   test("Adds userId to set on conflict without duplicating", async () => {
     const user = await createTestUser();
     const clientId = `test-client-${crypto.randomUUID()}`;
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: user._id,
       referrer: null,
       landingPage: "/a",
     });
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: user._id,
       referrer: null,
@@ -103,13 +103,13 @@ suite("Client IDs", () => {
     const user1 = await createTestUser();
     const user2 = await createTestUser();
     const clientId = `test-client-${crypto.randomUUID()}`;
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: user1._id,
       referrer: null,
       landingPage: "/x",
     });
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: user2._id,
       referrer: null,
@@ -128,7 +128,7 @@ suite("Client IDs", () => {
   });
   test("Updates lastSeenAt on conflict", async () => {
     const clientId = `test-client-${crypto.randomUUID()}`;
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: null,
       referrer: null,
@@ -139,7 +139,7 @@ suite("Client IDs", () => {
     )[0];
     const firstSeenAt = new Date(firstRow.lastSeenAt!).getTime();
     await new Promise((resolve) => setTimeout(resolve, 10));
-    await ensureClientId({
+    await insertClientId({
       clientId,
       userId: null,
       referrer: null,
