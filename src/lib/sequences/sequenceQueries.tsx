@@ -144,6 +144,34 @@ export const fetchTopicIntroSequences = async (currentUser: CurrentUser | null) 
   });
 };
 
+export const fetchCommunitySequences = async ({
+  limit,
+  offset,
+}: {
+  limit?: number;
+  offset?: number;
+}) => {
+  return await db.query.sequences.findMany({
+    ...sequenceBaseProjection,
+    where: {
+      hidden: false,
+      isDeleted: false,
+      draft: false,
+      curatedOrder: { isNull: true },
+      OR: [
+        { canonicalCollectionSlug: "" },
+        { canonicalCollectionSlug: { isNull: true } },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+      _id: "desc",
+    },
+    limit,
+    offset,
+  });
+};
+
 export const fetchSequencePosts = async ({
   currentUser,
   sequenceId,

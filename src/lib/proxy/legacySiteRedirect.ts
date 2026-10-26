@@ -50,6 +50,8 @@ const newSitePatterns = [
   /^\/terms-of-use$/, // Terms of use
   /^\/termsOfUse$/, // Terms of use (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of
+  /^\/library$/, // Library
+  /^\/sequences$/, // Library (legacy path, redirect to /library)
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
   /^\/admin$/, // Admin
