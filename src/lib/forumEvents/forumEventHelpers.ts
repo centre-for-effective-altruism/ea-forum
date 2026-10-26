@@ -147,13 +147,17 @@ export const pollPropsIsMultipleChoice = (
 const ONE_MINUTE_MS = 60 * 1000;
 const ONE_HOUR_MS = 60 * ONE_MINUTE_MS;
 const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+const MAX_POLL_DURATION_MS = 365 * ONE_DAY_MS;
 
 export const endDateFromDuration = (duration: PollProps["duration"]) =>
   new Date(
     Date.now() +
-      duration.days * ONE_DAY_MS +
-      duration.hours * ONE_HOUR_MS +
-      duration.minutes * ONE_MINUTE_MS,
+      Math.min(
+        duration.days * ONE_DAY_MS +
+          duration.hours * ONE_HOUR_MS +
+          duration.minutes * ONE_MINUTE_MS,
+        MAX_POLL_DURATION_MS,
+      ),
   );
 
 /**

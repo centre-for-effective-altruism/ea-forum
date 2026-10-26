@@ -529,6 +529,46 @@ suite("Forum events", () => {
       const polls = await db.query.forumEvents.findMany();
       expect(polls.map(({ _id }) => _id)).toEqual(["poll-repeated"]);
     });
+    test("caps the poll duration at one year", async () => {
+      const [user, post, revision] = await Promise.all([
+        createTestUser(),
+        createTestPost(),
+        createTestRevision({
+          collectionName: "Posts",
+          fieldName: "contents",
+          html: `
+            <div
+              class="ck-poll"
+              data-internal-id="poll-long"
+              data-props='{
+                "question": "Question?",
+                "agreeWording": "Yes",
+                "disagreeWording": "No",
+                "duration": { "days": 1000000000, "hours": 0, "minutes": 0 },
+                "colorScheme": {
+                  "lightColor": "#0f0",
+                  "darkColor": "#f00",
+                  "bannerTextColor": "#000"
+                }
+              }'
+            ></div>
+          `,
+        }),
+      ]);
+      await upsertPolls({
+        txn: db,
+        user,
+        revision,
+        post,
+      });
+      const poll = await db.query.forumEvents.findFirst({
+        where: { _id: "poll-long" },
+      });
+      const oneYearFromNow = Date.now() + 365 * 24 * 60 * 60 * 1000;
+      const endDate = new Date(poll!.endDate!).getTime();
+      expect(endDate).toBeLessThanOrEqual(oneYearFromNow);
+      expect(endDate).toBeGreaterThan(oneYearFromNow - 60 * 1000);
+    });
     test("ignores invalid poll props gracefully", async () => {
       const [user, post, revision] = await Promise.all([
         createTestUser(),
