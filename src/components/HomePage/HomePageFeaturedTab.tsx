@@ -109,7 +109,15 @@ export default function HomePageFeaturedTab({
             comments={initialPopularCommentsAndQuickTakes}
             loadMore={loadMorePopularComments}
             replaceAllOnLoadMore
-            listClassName="grid grid-cols-1 mobile-nav:grid-cols-2 gap-x-1"
+            // Collapsed comments in the same row stretch to the same height,
+            // but rows containing an expanded comment don't stretch so that
+            // the collapsed neighbour keeps its own height
+            listClassName="
+              grid grid-cols-1 mobile-nav:grid-cols-2 gap-x-1
+              [&>[data-expanded]]:self-start
+              [&>:nth-child(odd):has(+[data-expanded])]:self-start
+              [&>[data-expanded]:nth-child(odd)+*]:self-start
+            "
           />
         </CommentsListProvider>
       }

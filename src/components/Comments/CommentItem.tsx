@@ -208,6 +208,7 @@ export default function CommentItem({
   return (
     <div
       data-component="CommentItem"
+      data-expanded={isExpanded || undefined}
       className={clsx(
         !borderless && "border pl-3 pt-2 mb-1",
         !borderless && (depth === 0 ? "rounded-sm " : "rounded-s-sm"),
