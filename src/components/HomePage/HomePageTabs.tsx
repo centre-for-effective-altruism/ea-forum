@@ -28,9 +28,12 @@ import clsx from "clsx";
 
 export default function HomePageTabs({
   initialContent,
+  initialContentTab,
   className,
 }: Readonly<{
+  // initialContent and initialContentTab should match
   initialContent: ReactNode;
+  initialContentTab: HomePageTabName;
   className?: string;
 }>) {
   const { captureEvent } = useTracking();
@@ -45,7 +48,13 @@ export default function HomePageTabs({
     : defaultFeaturedViewType;
   const [currentTab, rawSetCurrentTab] = useState<HomePageTabName>(initialTab);
   const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-  const [content, setContent] = useState(initialContent);
+  // When navigating back to the home page the server-rendered content can come
+  // from the client-side router cache, in which case it may be for a different
+  // tab than the one most recently selected
+  const initialContentIsStale = initialContentTab !== initialTab;
+  const [content, setContent] = useState<ReactNode>(
+    initialContentIsStale ? null : initialContent,
+  );
   const [pending, startTransition] = useTransition();
   const requestId = useRef(0);
 
@@ -81,20 +90,32 @@ export default function HomePageTabs({
     return () => window.removeEventListener("resize", updateUnderline);
   }, [currentTab]);
 
+  const loadTabContent = useCallback((tab: HomePageTabName) => {
+    const id = ++requestId.current;
+    startTransition(async () => {
+      const result = await renderHomePageContentAction(tab);
+      if (id === requestId.current) {
+        setContent(result);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (initialContentIsStale) {
+      loadTabContent(initialTab);
+    }
+    // Only check this on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const setCurrentTab = useCallback(
     (tab: HomePageTabName) => {
       rawSetCurrentTab(tab);
       setCookie(homePageTabCookie, tab);
       captureEvent("setFrontpageTab", { tab });
-      const id = ++requestId.current;
-      startTransition(async () => {
-        const result = await renderHomePageContentAction(tab);
-        if (id === requestId.current) {
-          setContent(result);
-        }
-      });
+      loadTabContent(tab);
     },
-    [setCookie, captureEvent],
+    [setCookie, captureEvent, loadTabContent],
   );
 
   return (
@@ -128,7 +149,7 @@ export default function HomePageTabs({
           "
         />
       </div>
-      {pending ? (
+      {pending || !content ? (
         <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
       ) : (
         content
