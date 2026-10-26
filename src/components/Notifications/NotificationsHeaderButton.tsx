@@ -25,22 +25,28 @@ export default function NotificationsHeaderButton() {
       setUnreadNotifications(0);
       return;
     }
-    try {
-      const [karmaChanges, unreadNotifications] = await Promise.all([
-        rpc.users.karmaChanges({}),
-        rpc.notifications.countUnread(),
-      ]);
-      setKarmaChanges(karmaChanges);
-      setUnreadNotifications(unreadNotifications);
-    } catch (e) {
-      captureException(e);
-      console.error("Error fetching karma changes:", e);
-    }
+    await Promise.all([
+      rpc.users
+        .karmaChanges({})
+        .then(setKarmaChanges)
+        .catch((e) => {
+          captureException(e);
+          console.error("Error fetching karma changes:", e);
+        }),
+      rpc.notifications
+        .countUnread()
+        .then(setUnreadNotifications)
+        .catch((e) => {
+          captureException(e);
+          console.error("Error fetching unread notifications count:", e);
+        }),
+    ]);
   }, [currentUser]);
 
   usePolling({
     callback: refetch,
     intervalMs: 60000,
+    dependencies: [currentUser?._id],
   });
 
   if (!currentUser) {

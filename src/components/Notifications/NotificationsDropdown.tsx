@@ -93,12 +93,12 @@ export default function NotificationsDropdown({
   const onToggleOpen = useCallback(
     (open: boolean) => {
       if (open) {
-        void rpc.users.checkNotifications({
-          hasKarmaChanges: !!karmaChanges,
-          openedAt: new Date(),
-          endDate: karmaChanges?.endDate ?? new Date(),
-        });
-        onOpen?.();
+        void rpc.users
+          .checkNotifications({
+            hasKarmaChanges: !!karmaChanges,
+            endDate: karmaChanges?.endDate ?? new Date(),
+          })
+          .finally(() => onOpen?.());
       }
     },
     [karmaChanges, onOpen],
