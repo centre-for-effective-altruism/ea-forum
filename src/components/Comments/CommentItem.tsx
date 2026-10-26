@@ -53,6 +53,7 @@ export default function CommentItem({
   node,
   onToggleExpanded,
   startCollapsed,
+  startRepliesCollapsed,
   showPreviewWhenCollapsed,
   loadingReplies,
   borderless,
@@ -65,6 +66,11 @@ export default function CommentItem({
   ) => void;
   /** If true, the comment initially renders collapsed */
   startCollapsed?: boolean;
+  /**
+   * If true, replies to this comment (and their replies) initially render
+   * collapsed
+   */
+  startRepliesCollapsed?: boolean;
   /**
    * By default, the body of an un-expanded comment is completely hidden. When
    * this is true, we instead show the first couple of lines as a preview, and
@@ -225,7 +231,7 @@ export default function CommentItem({
         data-depth={depth}
         className={borderless ? undefined : "pr-3 mb-2"}
       >
-        {commentsListContext?.showPostTitle && comment.post && (
+        {commentsListContext?.showPostTitle && depth === 0 && comment.post && (
           <div className="flex items-center mb-2">
             {showPinned && <PinIcon className="w-4 text-gray-600 mr-2" />}
             <LazyPostsTooltip
@@ -466,7 +472,12 @@ export default function CommentItem({
       {children.length > 0 && (isExpanded || collapsedBecauseRepliedTo) && (
         <div>
           {children.map((node) => (
-            <CommentItem node={node} key={node.comment._id} />
+            <CommentItem
+              node={node}
+              startCollapsed={startRepliesCollapsed}
+              startRepliesCollapsed={startRepliesCollapsed}
+              key={node.comment._id}
+            />
           ))}
         </div>
       )}

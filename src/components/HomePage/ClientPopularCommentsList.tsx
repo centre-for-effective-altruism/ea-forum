@@ -23,6 +23,7 @@ export default function ClientPopularCommentsList({
       <CommentsFeed
         comments={initialComments}
         loadMore={loadMore}
+        loadRepliesOnExpand
         className={className}
       />
     </CommentsListProvider>
