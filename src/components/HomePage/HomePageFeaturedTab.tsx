@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { CommentsListProvider } from "../Comments/useCommentsList";
+import { ReactNode, useCallback, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import { useTracking } from "@/lib/analyticsEvents";
 import { usePostsListView } from "@/lib/hooks/usePostsListView";
@@ -9,25 +8,23 @@ import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { filterNonNull } from "@/lib/typeHelpers";
 import { rpc } from "@/lib/rpc";
 import type { PostListItem } from "@/lib/posts/postLists";
-import type { CommentListItem } from "@/lib/comments/commentLists";
 import range from "lodash/range";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
-import CommentsFeed from "../Comments/CommentsFeed";
 import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
 
 export default function HomePageFeaturedTab({
   curatedPost,
   initialFeaturedPosts,
-  initialPopularCommentsAndQuickTakes,
+  commentsSection,
 }: Readonly<{
   curatedPost: PostListItem | null;
   initialFeaturedPosts: PostListItem[];
-  initialPopularCommentsAndQuickTakes: CommentListItem[];
+  commentsSection: ReactNode;
 }>) {
   const { captureEvent } = useTracking();
   const { view } = usePostsListView();
@@ -51,11 +48,6 @@ export default function HomePageFeaturedTab({
     }
     setLoadingFeaturedPosts(false);
   }, [featuredPosts.length, captureEvent]);
-
-  const loadMorePopularComments = useCallback(
-    async (args: { limit: number }) => rpc.comments.listPopularAndQuickTakes(args),
-    [],
-  );
 
   const listPosts = filterNonNull([curatedPost, ...featuredPosts]);
 
@@ -100,28 +92,7 @@ export default function HomePageFeaturedTab({
           </section>
         </HideRepeatedPostsProvider>
       }
-      commentsSection={
-        <CommentsListProvider
-          comments={initialPopularCommentsAndQuickTakes}
-          showPostTitle
-        >
-          <CommentsFeed
-            comments={initialPopularCommentsAndQuickTakes}
-            loadMore={loadMorePopularComments}
-            replaceAllOnLoadMore
-            loadRepliesOnExpand
-            // Collapsed comments in the same row stretch to the same height,
-            // but rows containing an expanded comment don't stretch so that
-            // the collapsed neighbour keeps its own height
-            listClassName="
-              grid grid-cols-1 mobile-nav:grid-cols-2 gap-x-1
-              [&>[data-expanded]]:self-start
-              [&>:nth-child(odd):has(+[data-expanded])]:self-start
-              [&>[data-expanded]:nth-child(odd)+*]:self-start
-            "
-          />
-        </CommentsListProvider>
-      }
+      commentsSection={commentsSection}
     />
   );
 }

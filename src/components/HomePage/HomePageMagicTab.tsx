@@ -8,9 +8,7 @@ import { FilterSettingsProvider } from "@/lib/hooks/useFilterSettings";
 import { HighlightTagProvider } from "../PostsList/useHighlightTag";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import HomePagePopularCommentsSection from "./HomePagePopularCommentsSection";
-import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
-import HomePageQuickTakesSection from "./HomePageQuickTakesSection";
+import HomePageCommentsSections from "./HomePageCommentsSections";
 import HomePageCommunitySection from "./HomePageCommunitySection";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FilterSettingsToggle from "./FilterSettingsToggle";
@@ -97,16 +95,12 @@ export default function HomePageMagicTab({
           </HomePageCommunitySection>
         )}
       <div className="max-w-[768px] mx-auto pt-6">
-        <HomePagePopularCommentsSection className="mb-10">
-          <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
-            {popularCommentsList}
-          </Suspense>
-        </HomePagePopularCommentsSection>
-        <HomePageQuickTakesSection coreTags={coreTags} className="mb-10">
-          <Suspense fallback={<QuickTakesListSkeleton count={5} />}>
-            {quickTakesList}
-          </Suspense>
-        </HomePageQuickTakesSection>
+        <HomePageCommentsSections
+          coreTags={coreTags}
+          popularCommentsList={popularCommentsList}
+          quickTakesList={quickTakesList}
+          className="mb-10"
+        />
         <Type className="mb-2" style="sectionTitleLarge">
           Recent discussion
         </Type>

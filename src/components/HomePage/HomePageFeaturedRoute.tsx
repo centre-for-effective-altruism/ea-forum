@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { fetchFrontpagePopularCommentsAndQuickTakes } from "@/lib/comments/commentLists";
 import {
   fetchFeaturedFrontpagePosts,
   fetchMostRecentlyCuratedPost,
@@ -11,17 +10,20 @@ import {
 } from "@/lib/posts/postsListView";
 import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { getCurrentUser } from "@/lib/users/currentUser";
+import { fetchCoreTags } from "@/lib/tags/tagQueries";
+import FrontpageQuickTakesList from "../QuickTakes/FrontpageQuickTakesList";
+import HomePageCommentsSections from "./HomePageCommentsSections";
+import PopularCommentsList from "./PopularCommentsList";
 import HomePageFeaturedTab from "./HomePageFeaturedTab";
 
 export default async function HomePageFeaturedRoute() {
   const currentUser = await getCurrentUser();
-  const [cookieStore, featuredPosts, curatedPost, popularComments] =
-    await Promise.all([
-      cookies(),
-      fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
-      fetchMostRecentlyCuratedPost(currentUser),
-      fetchFrontpagePopularCommentsAndQuickTakes({ currentUser, limit: 6 }),
-    ]);
+  const [cookieStore, featuredPosts, curatedPost, coreTags] = await Promise.all([
+    cookies(),
+    fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
+    fetchMostRecentlyCuratedPost(currentUser),
+    fetchCoreTags(),
+  ]);
 
   const viewCookie = cookieStore.get(featuredViewTypeCookie)?.value ?? "";
   const ssrView = isPostsListViewType(viewCookie) ? viewCookie : undefined;
@@ -35,7 +37,13 @@ export default async function HomePageFeaturedRoute() {
       <HomePageFeaturedTab
         curatedPost={curatedPost}
         initialFeaturedPosts={featuredPosts}
-        initialPopularCommentsAndQuickTakes={popularComments}
+        commentsSection={
+          <HomePageCommentsSections
+            coreTags={coreTags}
+            popularCommentsList={<PopularCommentsList initialLimit={3} />}
+            quickTakesList={<FrontpageQuickTakesList initialLimit={5} />}
+          />
+        }
       />
     </PostsListViewProvider>
   );

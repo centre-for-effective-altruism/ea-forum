@@ -100,18 +100,12 @@ const CommentsFeedItemWithReplies = ({
 export default function CommentsFeed({
   comments,
   loadMore,
-  replaceAllOnLoadMore,
   loadRepliesOnExpand,
   className,
   listClassName,
 }: Readonly<{
   comments: CommentListItem[];
   loadMore: (props: { offset: number; limit: number }) => Promise<CommentListItem[]>;
-  /**
-   * If true, comments loaded via `loadMore` will replace the current list instead
-   * of appending to it.
-   */
-  replaceAllOnLoadMore?: boolean;
   /**
    * If true, expanding a comment will load and display its replies.
    */
@@ -131,28 +125,15 @@ export default function CommentsFeed({
     setLoading(true);
 
     try {
-      if (replaceAllOnLoadMore) {
-        const data = await loadMore({
-          limit: offset_ + loadMoreLimit,
-          offset: 0,
-        });
-        if (data.length) {
-          setDisplayedComments(data);
-        }
-        if (data.length < offset_ + loadMoreLimit) {
-          setCanLoadMore(false);
-        }
-      } else {
-        const data = await loadMore({
-          limit: loadMoreLimit,
-          offset: offset_,
-        });
-        if (data.length) {
-          setDisplayedComments((comments) => [...comments, ...data]);
-        }
-        if (data.length < loadMoreLimit) {
-          setCanLoadMore(false);
-        }
+      const data = await loadMore({
+        limit: loadMoreLimit,
+        offset: offset_,
+      });
+      if (data.length) {
+        setDisplayedComments((comments) => [...comments, ...data]);
+      }
+      if (data.length < loadMoreLimit) {
+        setCanLoadMore(false);
       }
     } catch (e) {
       console.error("Error loading comments:", e);
@@ -161,7 +142,7 @@ export default function CommentsFeed({
     } finally {
       setLoading(false);
     }
-  }, [loadMore, replaceAllOnLoadMore, loadMoreLimit, offset]);
+  }, [loadMore, loadMoreLimit, offset]);
 
   useEffect(() => {
     if (displayedComments.length === 0 && !loading && canLoadMore) {

@@ -7,6 +7,7 @@ import {
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
+import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 
 export default function HomePageTabSkeleton({
   tab,
@@ -26,16 +27,14 @@ export default function HomePageTabSkeleton({
           ))}
           listSection={<PostsListSkeleton count={11} viewType="list" />}
           commentsSection={
-            <div className="grid grid-cols-2 gap-1">
-              {range(6).map((i) => (
-                <div
-                  key={i}
-                  className="
-                    h-30 bg-surface-floating rounded border-1 border-gray-200
-                  "
-                />
-              ))}
-            </div>
+            <>
+              <div className="w-[200px] h-[29px] rounded bg-gray-200 mb-2" />
+              <div className="mb-10">
+                <QuickTakesListSkeleton count={3} />
+              </div>
+              <div className="w-[200px] h-[29px] rounded bg-gray-200 mb-2" />
+              <QuickTakesListSkeleton count={5} />
+            </>
           }
         />
       );

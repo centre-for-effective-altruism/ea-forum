@@ -11,7 +11,6 @@ import {
   fetchCommentReplies,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
-  fetchFrontpagePopularCommentsAndQuickTakes,
   fetchFrontpageQuickTakes,
   fetchNewComments,
   fetchPopularComments,
@@ -242,19 +241,6 @@ export const commentsRouter = {
           : countFrontpageQuickTakes({ currentUser, includeCommunity }),
       ]);
       return { items, totalCount };
-    }),
-  listPopularAndQuickTakes: os
-    .input(
-      z.object({
-        limit: z.number().positive().optional().default(6),
-      }),
-    )
-    .handler(async ({ input: { limit } }) => {
-      const currentUser = await getCurrentUser();
-      return await fetchFrontpagePopularCommentsAndQuickTakes({
-        currentUser,
-        limit,
-      });
     }),
   updateQuickTakeFrontpage: os
     .input(

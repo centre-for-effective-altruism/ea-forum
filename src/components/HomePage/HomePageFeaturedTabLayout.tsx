@@ -36,12 +36,7 @@ export default function HomePageFeaturedTabLayout({
   const isList = view === "list";
 
   const commentsSectionNode = (
-    <section>
-      <Type style="sectionTitleLarge" className="mb-4">
-        Popular comments and quick takes
-      </Type>
-      {commentsSection}
-    </section>
+    <div className="w-full max-w-[768px] mx-auto">{commentsSection}</div>
   );
 
   return (
