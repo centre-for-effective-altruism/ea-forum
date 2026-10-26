@@ -3171,6 +3171,7 @@ export const sequences = pgTable(
 );
 
 export type Sequence = typeof sequences.$inferSelect;
+export type InsertSequence = typeof sequences.$inferInsert;
 
 export const spotlights = pgTable(
   "Spotlights",

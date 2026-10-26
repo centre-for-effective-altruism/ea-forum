@@ -1,7 +1,11 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
-import { fetchSequenceById, fetchSequencePosts } from "./sequenceQueries";
+import {
+  fetchCommunitySequences,
+  fetchSequenceById,
+  fetchSequencePosts,
+} from "./sequenceQueries";
 
 export const sequencesRouter = {
   listById: os
@@ -15,5 +19,16 @@ export const sequencesRouter = {
     .handler(async ({ input: { sequenceId } }) => {
       const currentUser = await getCurrentUser();
       return await fetchSequencePosts({ currentUser, sequenceId });
+    }),
+  listCommunitySequences: os
+    .input(
+      z.object({
+        offset: z.number().min(0).optional(),
+        limit: z.number().min(0).max(50).optional(),
+      }),
+    )
+    .handler(async ({ input: { offset, limit } }) => {
+      const items = await fetchCommunitySequences({ offset, limit });
+      return { items };
     }),
 };

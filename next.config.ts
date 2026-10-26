@@ -51,6 +51,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/sequences",
+      destination: "/library",
+      permanent: true,
+    },
+    {
       source: "/user/:path*",
       destination: "/users/:path*",
       permanent: true,

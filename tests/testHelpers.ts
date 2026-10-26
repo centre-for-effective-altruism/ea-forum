@@ -11,6 +11,7 @@ import {
   InsertLocalgroup,
   InsertPost,
   InsertRevision,
+  InsertSequence,
   InsertTag,
   InsertTagRel,
   InsertUser,
@@ -21,6 +22,8 @@ import {
   posts,
   Revision,
   revisions,
+  Sequence,
+  sequences,
   Tag,
   TagRel,
   tagRels,
@@ -171,6 +174,21 @@ export const createTestTagRel = async (
     ...data,
   };
   const result = await db.insert(tagRels).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestSequence = async (
+  data?: Partial<InsertSequence>,
+): Promise<Sequence> => {
+  const userId = data?.userId ?? (await createTestUser())._id;
+  const insertValues: InsertSequence = {
+    _id: randomId(),
+    userId,
+    title: randomId(),
+    lastUpdated: new Date().toISOString(),
+    ...data,
+  };
+  const result = await db.insert(sequences).values(insertValues).returning();
   return result[0];
 };
 
