@@ -1,12 +1,96 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import toast from "react-hot-toast";
 import range from "lodash/range";
+import { rpc } from "@/lib/rpc";
 import type { CommentListItem } from "@/lib/comments/commentLists";
+import type { CommentTreeNode } from "@/lib/comments/CommentTree";
+import {
+  CommentsListProvider,
+  useCommentsList,
+  useOptionalCommentsList,
+} from "./useCommentsList";
 import CommentItem from "./CommentItem";
 import TextLinkButton from "../TextLinkButton";
+
+const CommentsFeedItemWithRepliesInner = ({
+  comment,
+}: Readonly<{
+  comment: CommentListItem;
+}>) => {
+  const { comments: tree, addComments } = useCommentsList();
+  const [expanded, setExpanded] = useState(false);
+  const [loading, setLoading] = useState<"no" | "yes" | "finished">("no");
+
+  // If the parent comment has been loaded then this comment is rendered as an
+  // (initially expanded) child, so we need its replies immediately
+  const isRoot = tree.some((node) => node.comment._id === comment._id);
+
+  useEffect(() => {
+    if ((expanded || !isRoot) && loading === "no") {
+      void (async () => {
+        try {
+          setLoading("yes");
+          const replies = await rpc.comments.listReplies({
+            commentId: comment._id,
+          });
+          addComments(replies);
+          setLoading("finished");
+        } catch (e) {
+          captureException(e);
+          console.error(e);
+          toast.error("Error fetching replies to comment");
+          setLoading("no");
+        }
+      })();
+    }
+  }, [addComments, comment._id, expanded, isRoot, loading]);
+
+  const onToggleExpanded = useCallback(
+    (expanded: boolean, node: CommentTreeNode<CommentListItem>) => {
+      if (node.comment._id === comment._id) {
+        setExpanded(expanded);
+      }
+    },
+    [comment._id],
+  );
+
+  return tree.map((node) => {
+    const isFeedComment = node.comment._id === comment._id;
+    return (
+      <CommentItem
+        key={node.comment._id}
+        node={node}
+        showPreviewWhenCollapsed={isFeedComment}
+        startCollapsed={isFeedComment}
+        startRepliesCollapsed={isFeedComment}
+        loadingReplies={isFeedComment && loading === "yes"}
+        onToggleExpanded={onToggleExpanded}
+        className="bg-comment-even!"
+      />
+    );
+  });
+};
+
+/**
+ * Each comment gets its own comments list so that its replies (and parent) can
+ * be loaded and displayed as a tree.
+ */
+const CommentsFeedItemWithReplies = ({
+  comment,
+}: Readonly<{
+  comment: CommentListItem;
+}>) => {
+  const showPostTitle = !!useOptionalCommentsList()?.showPostTitle;
+  const comments = useMemo(() => [comment], [comment]);
+  return (
+    <CommentsListProvider comments={comments} showPostTitle={showPostTitle}>
+      <CommentsFeedItemWithRepliesInner comment={comment} />
+    </CommentsListProvider>
+  );
+};
 
 /**
  * Unlike `CommentsList` which shows a tree of comments (for instance, underneath
@@ -17,6 +101,7 @@ export default function CommentsFeed({
   comments,
   loadMore,
   replaceAllOnLoadMore,
+  loadRepliesOnExpand,
   className,
   listClassName,
 }: Readonly<{
@@ -27,6 +112,10 @@ export default function CommentsFeed({
    * of appending to it.
    */
   replaceAllOnLoadMore?: boolean;
+  /**
+   * If true, expanding a comment will load and display its replies.
+   */
+  loadRepliesOnExpand?: boolean;
   className?: string;
   listClassName?: string;
 }>) {
@@ -83,15 +172,19 @@ export default function CommentsFeed({
   return (
     <section data-component="CommentsFeed" className={className}>
       <div className={listClassName}>
-        {displayedComments.map((comment) => (
-          <CommentItem
-            key={comment._id}
-            node={{ comment, depth: 0, children: [], isLocal: false }}
-            showPreviewWhenCollapsed
-            startCollapsed
-            className="bg-comment-even!"
-          />
-        ))}
+        {displayedComments.map((comment) =>
+          loadRepliesOnExpand ? (
+            <CommentsFeedItemWithReplies key={comment._id} comment={comment} />
+          ) : (
+            <CommentItem
+              key={comment._id}
+              node={{ comment, depth: 0, children: [], isLocal: false }}
+              showPreviewWhenCollapsed
+              startCollapsed
+              className="bg-comment-even!"
+            />
+          ),
+        )}
         {loading &&
           range(loadMoreLimit).map((i) => (
             <div key={i} className="w-full h-[80px] bg-gray-200 rounded mb-1" />

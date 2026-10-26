@@ -73,51 +73,60 @@ export default function RecentDiscussionsSubscribeReminder() {
       <AnalyticsInViewTracker eventProps={{ inViewType: "subscribeReminder" }}>
         <div
           data-component="RecentDiscussionsSubscribeReminder"
-          className="
-            w-[520px] max-w-full bg-gray-0 rounded px-4 py-4 mx-auto my-7
-            border-1 border-gray-200 flex flex-col gap-3 relative
-          "
+          className="flex gap-2 my-7"
         >
-          <button onClick={onHide} className="absolute right-3 top-3 cursor-pointer">
-            <XMarkIcon className="w-5 text-gray-600 hover:text-gray-1000" />
-          </button>
-          {success ? (
-            <div className="flex flex-col items-center gap-2 py-6">
-              <CheckIcon className="w-7 text-recent-discussions-green" />
-              <Type style="bodyMedium">
-                You are subscribed to the EA Forum Digest
-              </Type>
-            </div>
-          ) : (
-            <>
-              <Type
-                style="sectionTitleLarge"
-                className="flex items-center gap-2 pr-8"
-              >
-                <EnvelopeIcon className="w-6 text-primary max-sm:hidden" />
-                Sign up for the weekly Forum Digest
-              </Type>
-              <Type style="body">
-                The best posts on the Forum, in your inbox, every week. Hand-picked
-                by the EA Forum team.
-              </Type>
-              <form
-                onSubmit={onSubmit}
-                className="flex items-center justify-center gap-2"
-              >
-                <Input
-                  value={email}
-                  setValue={setEmail}
-                  placeholder="Email address"
-                  variant="filled"
-                  className={clsx("grow", currentUser && "hidden")}
-                />
-                <Button type="submit" loading={loading}>
-                  Subscribe
-                </Button>
-              </form>
-            </>
-          )}
+          {/* Aligns with the content of `RecentDiscussionsItem` */}
+          <div className="sm:min-w-[24px]" />
+          <div
+            className="
+              grow min-w-[0] bg-gray-0 rounded px-4 py-4
+              border-1 border-gray-200 flex flex-col gap-3 relative
+            "
+          >
+            <button
+              onClick={onHide}
+              className="absolute right-3 top-3 cursor-pointer"
+            >
+              <XMarkIcon className="w-5 text-gray-600 hover:text-gray-1000" />
+            </button>
+            {success ? (
+              <div className="flex flex-col items-center gap-2 py-6">
+                <CheckIcon className="w-7 text-recent-discussions-green" />
+                <Type style="bodyMedium">
+                  You are subscribed to the EA Forum Digest
+                </Type>
+              </div>
+            ) : (
+              <>
+                <Type
+                  style="sectionTitleLarge"
+                  className="flex items-center gap-2 pr-8"
+                >
+                  <EnvelopeIcon className="w-6 text-primary max-sm:hidden" />
+                  Sign up for the weekly Forum Digest
+                </Type>
+                <Type style="body">
+                  The best posts on the Forum, in your inbox, every week. Hand-picked
+                  by the EA Forum team.
+                </Type>
+                <form
+                  onSubmit={onSubmit}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Input
+                    value={email}
+                    setValue={setEmail}
+                    placeholder="Email address"
+                    variant="filled"
+                    className={clsx("grow", currentUser && "hidden")}
+                  />
+                  <Button type="submit" loading={loading}>
+                    Subscribe
+                  </Button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
       </AnalyticsInViewTracker>
     </AnalyticsContext>

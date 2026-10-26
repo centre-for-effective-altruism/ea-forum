@@ -65,6 +65,7 @@ export default async function HomePage() {
             <HomePageTabContent tab={initialTab} />
           </Suspense>
         }
+        initialContentTab={initialTab}
         className="mb-5"
       />
     </HomePageColumns>
