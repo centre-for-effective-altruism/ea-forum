@@ -8,6 +8,7 @@ import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelper
 import {
   countFrontpageQuickTakes,
   fetchAllPostsQuickTakes,
+  fetchRecentlyActiveQuickTakes,
   fetchCommentReplies,
   fetchCommentsForForumEvent,
   fetchCommentsListItem,
@@ -241,6 +242,22 @@ export const commentsRouter = {
           : countFrontpageQuickTakes({ currentUser, includeCommunity }),
       ]);
       return { items, totalCount };
+    }),
+  listRecentlyActiveQuickTakes: os
+    .input(
+      z.object({
+        offset: z.number().min(0).optional(),
+        limit: z.number().min(0).max(50).optional(),
+      }),
+    )
+    .handler(async ({ input: { offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      const items = await fetchRecentlyActiveQuickTakes({
+        currentUser,
+        offset,
+        limit,
+      });
+      return { items };
     }),
   updateQuickTakeFrontpage: os
     .input(

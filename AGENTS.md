@@ -39,7 +39,7 @@ Testing notes:
   deterministic and offline.
 - For oRPC procedures, prefer direct tests via `call` from `@orpc/server` unless the
   HTTP transport is what's under test.
-- Use the helpers in `test/testHelpers.ts` rather than adding custom helpers to test
+- Use the helpers in `tests/testHelpers.ts` rather than adding custom helpers to test
   suites.
 
 ## Core Implementation Rules
