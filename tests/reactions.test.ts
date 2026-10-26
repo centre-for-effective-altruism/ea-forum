@@ -137,6 +137,7 @@ suite("Reactions", () => {
           where: {
             documentId: post._id,
             userId: reactor1._id,
+            cancelled: false,
           },
         }),
       ]);
@@ -163,6 +164,7 @@ suite("Reactions", () => {
           where: {
             documentId: post._id,
             userId: reactor1._id,
+            cancelled: false,
           },
         }),
       ]);
@@ -189,6 +191,7 @@ suite("Reactions", () => {
           where: {
             documentId: post._id,
             userId: reactor1._id,
+            cancelled: false,
           },
         }),
       ]);
@@ -229,6 +232,7 @@ suite("Reactions", () => {
           where: {
             documentId: comment._id,
             userId: reactor1._id,
+            cancelled: false,
           },
         }),
       ]);
@@ -255,6 +259,7 @@ suite("Reactions", () => {
           where: {
             documentId: comment._id,
             userId: reactor1._id,
+            cancelled: false,
           },
         }),
       ]);
@@ -281,6 +286,7 @@ suite("Reactions", () => {
           where: {
             documentId: comment._id,
             userId: reactor1._id,
+            cancelled: false,
           },
         }),
       ]);
