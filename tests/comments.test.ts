@@ -9,6 +9,7 @@ import {
 } from "@/lib/comments/commentMutations";
 import { userSmallVotePower } from "@/lib/votes/voteHelpers";
 import { sleep } from "@/lib/utils/asyncUtils";
+import { fetchRecentlyActiveQuickTakes } from "@/lib/comments/commentLists";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 
@@ -714,5 +715,39 @@ suite("Comments", () => {
       const polls = await fetchCommentPolls(commentId);
       expect(polls.map(({ _id }) => _id)).toEqual(["edited-poll"]);
     });
+  });
+
+  test("Recently active quick takes are sorted by latest thread activity", async () => {
+    const user = await createTestUser();
+    const post = await createTestPost({ userId: user._id, shortform: true });
+    const createQuickTake = (data: Parameters<typeof createTestComment>[0]) =>
+      createTestComment({
+        userId: user._id,
+        postId: post._id,
+        shortform: true,
+        ...data,
+      });
+    const older = await createQuickTake({
+      lastSubthreadActivity: new Date("2026-01-01").toISOString(),
+    });
+    const newer = await createQuickTake({
+      lastSubthreadActivity: new Date("2026-02-01").toISOString(),
+    });
+    const deleted = await createQuickTake({ deleted: true });
+    const reply = await createQuickTake({ parentCommentId: newer._id });
+    const notShortform = await createTestComment({ postId: post._id });
+
+    const quickTakes = await fetchRecentlyActiveQuickTakes({
+      currentUser: null,
+      limit: 1000,
+    });
+    const ids = quickTakes.map(({ _id }) => _id);
+    expect(ids).not.toContain(deleted._id);
+    expect(ids).not.toContain(reply._id);
+    expect(ids).not.toContain(notShortform._id);
+    expect(ids.filter((id) => id === older._id || id === newer._id)).toEqual([
+      newer._id,
+      older._id,
+    ]);
   });
 });

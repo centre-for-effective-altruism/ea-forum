@@ -36,6 +36,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/shortform",
+      destination: "/quicktakes",
+      permanent: true,
+    },
+    {
       source: "/banNotice",
       destination: "/ban-notice",
       permanent: true,

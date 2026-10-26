@@ -380,6 +380,32 @@ export const countFrontpageQuickTakes = async ({
   return Number(result?.count ?? 0);
 };
 
+export const fetchRecentlyActiveQuickTakes = ({
+  currentUser,
+  offset,
+  limit = 20,
+}: {
+  currentUser: UserPermissions | null;
+  offset?: number;
+  limit?: number;
+}) => {
+  return fetchCommentsList({
+    currentUser,
+    where: {
+      shortform: true,
+      deleted: false,
+      parentCommentId: { isNull: true },
+    },
+    orderBy: {
+      lastSubthreadActivity: "desc",
+      postedAt: "desc",
+      _id: "desc",
+    },
+    offset,
+    limit,
+  });
+};
+
 export const fetchNewComments = async (
   currentUser: UserPermissions | null,
   postId: string,
