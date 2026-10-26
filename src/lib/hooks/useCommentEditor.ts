@@ -18,6 +18,7 @@ import {
   getLocalStorageKeyPrefix,
   EditorTypeString,
   getUserDefaultEditor,
+  getBlankEditorContents,
 } from "@/lib/ckeditor/editorHelpers";
 import type { EditorOnChangeProps } from "@/components/Editor/Editor";
 import type { CommentToEdit } from "../comments/commentQueries";
@@ -92,10 +93,12 @@ const getInitialContents = ({
   comment?: CommentToEdit | null;
   htmlTemplate?: string;
 }): EditorContents =>
-  comment?.originalContents ?? {
-    type: currentUser?.markDownPostEditor ? "markdown" : "ckEditorMarkup",
-    data: htmlTemplate ?? "",
-  };
+  comment?.originalContents ??
+  // If we supplied an HTML template we have to use CkEditor, otherwise the HTML
+  // will be interpreted as markdown
+  (htmlTemplate
+    ? { type: "ckEditorMarkup", data: htmlTemplate }
+    : getBlankEditorContents(getUserDefaultEditor(currentUser)));
 
 const getCommentLocalStorageId =
   ({
