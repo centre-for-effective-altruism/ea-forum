@@ -47,6 +47,8 @@ const newSitePatterns = [
   /^\/allPosts$/, // All posts page (camelCase, redirect to kebab-case)
   /^\/ban-notice$/, // Ban notice
   /^\/banNotice$/, // Ban notice (camelCase, redirect to kebab-case)
+  /^\/terms-of-use$/, // Terms of use
+  /^\/termsOfUse$/, // Terms of use (camelCase, redirect to kebab-case)
   /^\/best-of$/, // Best of
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)

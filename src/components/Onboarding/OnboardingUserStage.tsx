@@ -101,7 +101,7 @@ export default function OnboardingUserStage() {
           />
           <Type className="select-none">
             I agree to the{" "}
-            <Link href="/termsOfUse" openInNewTab>
+            <Link href="/terms-of-use" openInNewTab>
               terms of use
             </Link>
             , including my content being available under a{" "}
