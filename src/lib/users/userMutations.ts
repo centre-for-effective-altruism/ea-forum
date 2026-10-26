@@ -132,14 +132,13 @@ export const approveNewUser = async (
 export const userCheckNotifications = async ({
   currentUser,
   hasKarmaChanges,
-  openedAt,
   endDate,
 }: {
   currentUser: CurrentUser;
   hasKarmaChanges: boolean;
-  openedAt: Date;
   endDate: Date;
 }) => {
+  const openedAt = new Date();
   await db
     .update(users)
     .set({

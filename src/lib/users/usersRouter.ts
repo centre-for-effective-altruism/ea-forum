@@ -270,11 +270,10 @@ export const usersRouter = {
     .input(
       z.object({
         hasKarmaChanges: z.boolean(),
-        openedAt: z.date(),
         endDate: z.date(),
       }),
     )
-    .handler(async ({ input: { hasKarmaChanges, openedAt, endDate } }) => {
+    .handler(async ({ input: { hasKarmaChanges, endDate } }) => {
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         throw new Error("Please login");
@@ -282,7 +281,6 @@ export const usersRouter = {
       return await userCheckNotifications({
         currentUser,
         hasKarmaChanges,
-        openedAt,
         endDate,
       });
     }),
