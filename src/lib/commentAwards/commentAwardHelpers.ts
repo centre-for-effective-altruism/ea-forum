@@ -3,7 +3,7 @@ import type { User } from "../schema";
 import type { CurrentUser } from "../users/currentUser";
 import type { CommentListItem } from "../comments/commentLists";
 
-export const commentAwardsEnabled = true;
+export const commentAwardsEnabled = false;
 
 export const commentAwardPostHref =
   "/posts/ZQhThndgHNXEKFdSx/cluelessness-critiques-week-discussion-thread";
