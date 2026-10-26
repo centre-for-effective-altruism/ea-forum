@@ -24,6 +24,7 @@ import {
   PollProps,
   PollAnswer,
   MAX_POLL_ANSWERS,
+  MAX_POLL_DURATION_DAYS,
   isMultipleChoicePoll,
 } from "./constants";
 import { randomId } from "../random";
@@ -574,9 +575,19 @@ class MainFormView extends View {
           const props = selectedElement.getAttribute("props") as PollProps;
 
           // Read all duration values safely
-          const days = parseInt(this.daysInputView.element.value, 10) || 0;
-          const hours = parseInt(this.hoursInputView.element.value, 10) || 0;
-          const minutes = parseInt(this.minutesInputView.element.value, 10) || 0;
+          let days = parseInt(this.daysInputView.element.value, 10) || 0;
+          let hours = parseInt(this.hoursInputView.element.value, 10) || 0;
+          let minutes = parseInt(this.minutesInputView.element.value, 10) || 0;
+
+          const totalMinutes = (days * 24 + hours) * 60 + minutes;
+          if (totalMinutes > MAX_POLL_DURATION_DAYS * 24 * 60) {
+            days = MAX_POLL_DURATION_DAYS;
+            hours = 0;
+            minutes = 0;
+            this.daysInputView.element.value = days.toString();
+            this.hoursInputView.element.value = hours.toString();
+            this.minutesInputView.element.value = minutes.toString();
+          }
 
           const newDuration = { days, hours, minutes };
 

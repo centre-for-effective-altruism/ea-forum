@@ -17,6 +17,7 @@ export type PollProps = {
 
 export const MAX_POLL_ANSWERS = 10;
 export const MIN_POLL_ANSWERS = 2;
+export const MAX_POLL_DURATION_DAYS = 365;
 
 /**
  * A poll with `answers` is a multiple-choice poll; otherwise it's the

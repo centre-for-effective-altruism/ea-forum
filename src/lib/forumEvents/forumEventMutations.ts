@@ -2,7 +2,8 @@ import "server-only";
 import { load as cheerioLoad } from "cheerio";
 import { db, DbOrTransaction } from "../db";
 import { sql } from "drizzle-orm";
-import type { EditorContents } from "../ckeditor/editorHelpers";
+import uniqBy from "lodash/uniqBy";
+import type { EditorContents, EditorData } from "../ckeditor/editorHelpers";
 import type { CurrentUser } from "../users/currentUser";
 import { randomId } from "../utils/random";
 import { isAnyTest } from "../environment";
@@ -273,6 +274,74 @@ const upsertMcPoll = ({
   });
 };
 
+const pollBelongsTo = (
+  poll: Pick<ForumEvent, "postId" | "commentId">,
+  post: Pick<Post, "_id">,
+  comment?: Pick<Comment, "_id">,
+) => poll.postId === post._id && (poll.commentId ?? null) === (comment?._id ?? null);
+
+/**
+ * Pasting a poll into the editor keeps its internal id, which would otherwise
+ * make the pasted copy edit the original poll. Give any poll whose id belongs
+ * to a different post or comment, or that repeats an earlier poll in the same
+ * document, a fresh id so it becomes a new poll instead.
+ */
+export const assignUniquePollIds = async ({
+  txn,
+  editorData,
+  post,
+  comment,
+}: {
+  txn: DbOrTransaction;
+  editorData: EditorData;
+  post: Pick<Post, "_id">;
+  comment?: Pick<Comment, "_id">;
+}): Promise<EditorData> => {
+  const { originalContents } = editorData;
+  if (originalContents.type === "markdown") {
+    return editorData;
+  }
+
+  const $ = cheerioLoad(originalContents.data, null, false);
+  const pollElements = $(".ck-poll[data-internal-id]").toArray();
+  if (!pollElements.length) {
+    return editorData;
+  }
+
+  const existingPolls = await txn.query.forumEvents.findMany({
+    columns: {
+      _id: true,
+      postId: true,
+      commentId: true,
+    },
+    where: {
+      _id: {
+        in: pollElements.map((element) => $(element).attr("data-internal-id")!),
+      },
+    },
+  });
+
+  const seenIds = new Set<string>();
+  let changed = false;
+  for (const element of pollElements) {
+    const internalId = $(element).attr("data-internal-id")!;
+    const existingPoll = existingPolls.find((poll) => poll._id === internalId);
+    if (
+      seenIds.has(internalId) ||
+      (existingPoll && !pollBelongsTo(existingPoll, post, comment))
+    ) {
+      $(element).attr("data-internal-id", randomId());
+      changed = true;
+    } else {
+      seenIds.add(internalId);
+    }
+  }
+
+  return changed
+    ? { ...editorData, originalContents: { ...originalContents, data: $.html() } }
+    : editorData;
+};
+
 export const upsertPolls = async ({
   txn,
   user,
@@ -292,7 +361,7 @@ export const upsertPolls = async ({
 
   const $ = cheerioLoad(revision.html, null, false);
   const pollElements = $(".ck-poll[data-internal-id]");
-  const pollData = pollElements
+  const parsedPollData = pollElements
     .map((_, element) => {
       const internalId = $(element).attr("data-internal-id");
       const props = $(element).attr("data-props");
@@ -318,6 +387,7 @@ export const upsertPolls = async ({
     })
     .get()
     .filter((item): item is { _id: string } & PollProps => item !== null);
+  const pollData = uniqBy(parsedPollData, "_id");
 
   if (!pollData?.length) {
     return;
@@ -327,18 +397,24 @@ export const upsertPolls = async ({
     columns: {
       _id: true,
       endDate: true,
+      postId: true,
+      commentId: true,
     },
     where: {
       _id: { in: pollData.map(({ _id }) => _id) },
     },
   });
 
-  // Upsert a poll for each internal id found in the HTML
+  // Upsert a poll for each internal id found in the HTML, skipping any that
+  // belong to a different post or comment
   await Promise.all(
     pollData.map((data) => {
       const existingPoll = existingPolls.find(
         (poll) => poll && poll._id === data._id,
       );
+      if (existingPoll && !pollBelongsTo(existingPoll, post, comment)) {
+        return;
+      }
       return pollPropsIsMultipleChoice(data)
         ? upsertMcPoll({ txn, user, ...data, post, comment, existingPoll })
         : upsertPoll({ txn, user, ...data, post, comment, existingPoll });
