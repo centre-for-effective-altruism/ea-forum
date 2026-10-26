@@ -5,6 +5,7 @@ import {
   createTestTag,
   createTestTagRel,
   createTestUser,
+  createTestVote,
 } from "./testHelpers";
 import { nDaysAgo } from "@/lib/timeUtils";
 import { fetchVoteableDocumentAuthors } from "@/lib/votes/voteableDocument";
@@ -820,5 +821,41 @@ suite("Voting", () => {
     });
     expect(updatedAuthor!.karma).toBe(1000);
     expect(updatedAuthor!.groups).toStrictEqual(["canModeratePersonal"]);
+  });
+  test("Replaces the previous vote when its timestamp has trailing zeros", async () => {
+    const [post, voter] = await Promise.all([createTestPost(), createTestUser()]);
+    await createTestVote({
+      collectionName: "Posts",
+      documentId: post._id,
+      userId: voter._id,
+      voteType: "neutral",
+      power: 0,
+      extendedVoteType: { agree: true },
+      votedAt: "2026-01-01T00:00:00.120Z",
+    });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-01-01T00:00:00.123Z"));
+    try {
+      await performVote({
+        txn: db,
+        collectionName: "Posts",
+        document: post,
+        user: voter,
+        voteType: "neutral",
+        extendedVoteType: { disagree: true },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    const [updatedPost, activeVotes] = await Promise.all([
+      db.query.posts.findFirst({ where: { _id: post._id } }),
+      db.query.votes.findMany({
+        where: { documentId: post._id, userId: voter._id, cancelled: false },
+      }),
+    ]);
+    expect(updatedPost!.extendedScore).toStrictEqual({ disagree: 1 });
+    expect(activeVotes.map((v) => v.votedAt)).toStrictEqual([
+      "2026-01-01T00:00:00.123Z",
+    ]);
   });
 });

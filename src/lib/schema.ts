@@ -54,9 +54,13 @@ const timestamp = customType<{
     return "timestamptz";
   },
   fromDriver(value: string): string {
-    // Postgres: 2025-06-22 16:13:37.489301+00
-    // ISO8601:  2025-06-22T16:13:37.489301Z
-    return `${value.substring(0, 10)}T${value.substring(11, value.indexOf("+00"))}Z`;
+    // Postgres: 2025-06-22 16:13:37.12+00 (trailing zeros are trimmed)
+    // ISO8601:  2025-06-22T16:13:37.120Z
+    // The fraction is padded so that the strings sort chronologically
+    const [seconds, fraction = ""] = value
+      .substring(11, value.indexOf("+00"))
+      .split(".");
+    return `${value.substring(0, 10)}T${seconds}.${fraction.padEnd(3, "0")}Z`;
   },
 });
 
