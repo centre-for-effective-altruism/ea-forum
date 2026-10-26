@@ -46,6 +46,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/termsOfUse",
+      destination: "/terms-of-use",
+      permanent: true,
+    },
+    {
       source: "/user/:path*",
       destination: "/users/:path*",
       permanent: true,

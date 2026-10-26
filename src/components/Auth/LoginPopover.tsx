@@ -296,7 +296,7 @@ export default function LoginPopover() {
               By creating an EA Forum account, you agree to the{" "}
               <Link
                 openInNewTab
-                href="/termsOfUse"
+                href="/terms-of-use"
                 className="underline hover:no-underline"
               >
                 Terms of Use
