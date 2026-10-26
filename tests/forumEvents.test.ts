@@ -493,6 +493,42 @@ suite("Forum events", () => {
       expect(poll!.commentId).toBe(otherComment._id);
       expect(poll!.pollAgreeWording).toBe("Original");
     });
+    test("upserts a repeated poll id only once", async () => {
+      const pollMarkup = `
+        <div
+          class="ck-poll"
+          data-internal-id="poll-repeated"
+          data-props='{
+            "question": "Question?",
+            "agreeWording": "Yes",
+            "disagreeWording": "No",
+            "duration": { "days": 3, "hours": 0, "minutes": 0 },
+            "colorScheme": {
+              "lightColor": "#0f0",
+              "darkColor": "#f00",
+              "bannerTextColor": "#000"
+            }
+          }'
+        ></div>
+      `;
+      const [user, post, revision] = await Promise.all([
+        createTestUser(),
+        createTestPost(),
+        createTestRevision({
+          collectionName: "Posts",
+          fieldName: "contents",
+          html: pollMarkup + pollMarkup,
+        }),
+      ]);
+      await upsertPolls({
+        txn: db,
+        user,
+        revision,
+        post,
+      });
+      const polls = await db.query.forumEvents.findMany();
+      expect(polls.map(({ _id }) => _id)).toEqual(["poll-repeated"]);
+    });
     test("ignores invalid poll props gracefully", async () => {
       const [user, post, revision] = await Promise.all([
         createTestUser(),

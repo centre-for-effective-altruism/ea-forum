@@ -675,6 +675,28 @@ suite("Comments", () => {
       );
     });
 
+    test("Duplicating a poll within a comment creates a new poll", async () => {
+      const [post, user] = await Promise.all([createTestPost(), createTestUser()]);
+      const commentId = await createPostComment({
+        user,
+        postId: post._id,
+        parentCommentId: null,
+        editorData: pollEditorData(
+          `<p>Polls</p>${pollMarkup("duplicated-poll")}${pollMarkup("duplicated-poll")}`,
+        ),
+      });
+
+      const [polls, comment] = await Promise.all([
+        fetchCommentPolls(commentId),
+        db.query.comments.findFirst({ where: { _id: commentId } }),
+      ]);
+      expect(polls).toHaveLength(2);
+      expect(polls.map(({ _id }) => _id)).toContain("duplicated-poll");
+      for (const poll of polls) {
+        expect(comment!.contents!.html).toContain(`data-internal-id="${poll._id}"`);
+      }
+    });
+
     test("Editing a comment keeps its existing poll", async () => {
       const [post, user] = await Promise.all([createTestPost(), createTestUser()]);
       const commentId = await createPostComment({
