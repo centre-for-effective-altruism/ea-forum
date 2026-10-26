@@ -109,6 +109,7 @@ export default function HomePageFeaturedTab({
             comments={initialPopularCommentsAndQuickTakes}
             loadMore={loadMorePopularComments}
             replaceAllOnLoadMore
+            loadRepliesOnExpand
             // Collapsed comments in the same row stretch to the same height,
             // but rows containing an expanded comment don't stretch so that
             // the collapsed neighbour keeps its own height
