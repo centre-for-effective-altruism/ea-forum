@@ -619,4 +619,78 @@ suite("Comments", () => {
       [user._id, admin._id].toSorted(),
     );
   });
+
+  suite("Polls in comments", () => {
+    const pollMarkup = (internalId: string) =>
+      `<div class="ck-poll" data-internal-id="${internalId}" data-props='${JSON.stringify(
+        {
+          question: "Is this a test?",
+          agreeWording: "Yes",
+          disagreeWording: "No",
+          duration: { days: 3, hours: 0, minutes: 0 },
+          colorScheme: {
+            lightColor: "#ffffff",
+            darkColor: "#000000",
+            bannerTextColor: "#ffffff",
+          },
+        },
+      )}'></div>`;
+
+    const pollEditorData = (html: string) =>
+      ({
+        originalContents: { type: "ckEditorMarkup", data: html },
+        updateType: "initial",
+        commitMessage: "",
+      }) as const;
+
+    const fetchCommentPolls = (commentId: string) =>
+      db.query.forumEvents.findMany({ where: { commentId } });
+
+    test("Pasting a poll from another comment creates a new poll", async () => {
+      const [post, user] = await Promise.all([createTestPost(), createTestUser()]);
+      const editorData = pollEditorData(`<p>Poll</p>${pollMarkup("pasted-poll")}`);
+      const originalCommentId = await createPostComment({
+        user,
+        postId: post._id,
+        parentCommentId: null,
+        editorData,
+      });
+      const pastedCommentId = await createPostComment({
+        user,
+        postId: post._id,
+        parentCommentId: null,
+        editorData,
+      });
+
+      const [originalPolls, pastedPolls, pastedComment] = await Promise.all([
+        fetchCommentPolls(originalCommentId),
+        fetchCommentPolls(pastedCommentId),
+        db.query.comments.findFirst({ where: { _id: pastedCommentId } }),
+      ]);
+      expect(originalPolls.map(({ _id }) => _id)).toEqual(["pasted-poll"]);
+      expect(pastedPolls).toHaveLength(1);
+      expect(pastedPolls[0]._id).not.toBe("pasted-poll");
+      expect(pastedComment!.contents!.html).toContain(
+        `data-internal-id="${pastedPolls[0]._id}"`,
+      );
+    });
+
+    test("Editing a comment keeps its existing poll", async () => {
+      const [post, user] = await Promise.all([createTestPost(), createTestUser()]);
+      const commentId = await createPostComment({
+        user,
+        postId: post._id,
+        parentCommentId: null,
+        editorData: pollEditorData(`<p>Poll</p>${pollMarkup("edited-poll")}`),
+      });
+      await updateComment({
+        user,
+        commentId,
+        editorData: pollEditorData(`<p>Edited</p>${pollMarkup("edited-poll")}`),
+      });
+
+      const polls = await fetchCommentPolls(commentId);
+      expect(polls.map(({ _id }) => _id)).toEqual(["edited-poll"]);
+    });
+  });
 });

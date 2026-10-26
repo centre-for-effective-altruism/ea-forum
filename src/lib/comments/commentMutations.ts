@@ -12,7 +12,10 @@ import { htmlToPingbacks, notifyUsersOfPingbackMentions } from "../pingbacks";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import { triggerReviewIfNeededById } from "../users/userReview";
-import { upsertPolls } from "../forumEvents/forumEventMutations";
+import {
+  assignUniquePollIds,
+  upsertPolls,
+} from "../forumEvents/forumEventMutations";
 import { performVote } from "../votes/voteMutations";
 import { createShortformPost } from "../posts/postMutations";
 import { isEditorTypeString, EditorData } from "../ckeditor/editorHelpers";
@@ -244,7 +247,13 @@ export const createPostComment = async ({
 
   const commentId = randomId();
   const [revision, comment] = await db.transaction(async (txn) => {
-    const revision = await createRevision(txn, user, editorData, {
+    const editorDataWithPollIds = await assignUniquePollIds({
+      txn,
+      editorData,
+      post,
+      comment: { _id: commentId },
+    });
+    const revision = await createRevision(txn, user, editorDataWithPollIds, {
       documentId: commentId,
       collectionName: "Comments",
       fieldName: "contents",
@@ -372,7 +381,13 @@ export const updateComment = async ({
   const isUndraft = oldComment.draft && !newDraft;
 
   const [revision, updatedComment] = await db.transaction(async (txn) => {
-    const revision = await createRevision(txn, user, editorData, {
+    const editorDataWithPollIds = await assignUniquePollIds({
+      txn,
+      editorData,
+      post,
+      comment: oldComment,
+    });
+    const revision = await createRevision(txn, user, editorDataWithPollIds, {
       documentId: commentId,
       collectionName: "Comments",
       fieldName: "contents",

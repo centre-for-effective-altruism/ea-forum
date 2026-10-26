@@ -444,6 +444,55 @@ suite("Forum events", () => {
       expect(polls.length).toBe(1);
       expect(polls[0].pollAgreeWording).toBe("Yes");
     });
+    test("does not update a poll belonging to a different comment", async () => {
+      const postId = randomId();
+      const [user, post, comment, otherComment, revision] = await Promise.all([
+        createTestUser(),
+        createTestPost({ _id: postId }),
+        createTestComment({ postId }),
+        createTestComment({ postId }),
+        createTestRevision({
+          collectionName: "Comments",
+          fieldName: "contents",
+          html: `
+            <div
+              class="ck-poll"
+              data-internal-id="poll-other-comment"
+              data-props='{
+                "question": "Question?",
+                "agreeWording": "Yes",
+                "disagreeWording": "No",
+                "duration": { "days": 3, "hours": 0, "minutes": 0 },
+                "colorScheme": {
+                  "lightColor": "#0f0",
+                  "darkColor": "#f00",
+                  "bannerTextColor": "#000"
+                }
+              }'
+            ></div>
+          `,
+        }),
+      ]);
+      await createTestForumEvent({
+        _id: "poll-other-comment",
+        eventFormat: "POLL",
+        postId,
+        commentId: otherComment._id,
+        pollAgreeWording: "Original",
+      });
+      await upsertPolls({
+        txn: db,
+        user,
+        revision,
+        post,
+        comment,
+      });
+      const poll = await db.query.forumEvents.findFirst({
+        where: { _id: "poll-other-comment" },
+      });
+      expect(poll!.commentId).toBe(otherComment._id);
+      expect(poll!.pollAgreeWording).toBe("Original");
+    });
     test("ignores invalid poll props gracefully", async () => {
       const [user, post, revision] = await Promise.all([
         createTestUser(),
