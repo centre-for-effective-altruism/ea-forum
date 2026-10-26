@@ -83,7 +83,10 @@ export default function RecentDiscussionsSubscribeReminder() {
               border-1 border-gray-200 flex flex-col gap-3 relative
             "
           >
-            <button onClick={onHide} className="absolute right-3 top-3 cursor-pointer">
+            <button
+              onClick={onHide}
+              className="absolute right-3 top-3 cursor-pointer"
+            >
               <XMarkIcon className="w-5 text-gray-600 hover:text-gray-1000" />
             </button>
             {success ? (
