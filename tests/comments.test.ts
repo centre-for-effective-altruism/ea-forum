@@ -424,6 +424,61 @@ suite("Comments", () => {
     expect(updatedComment?.contents?.html).not.toContain("Original comment");
     expect(updatedComment?.contents?.version).toBe("1.1.0");
   });
+  test("Editing a comment only sends pingbacks for newly added links", async () => {
+    const [post, commenter, existingAuthor, newAuthor] = await Promise.all([
+      createTestPost(),
+      createTestUser({ karma: 10 }),
+      createTestUser(),
+      createTestUser(),
+    ]);
+    const [existingLinkedPost, newLinkedPost] = await Promise.all([
+      createTestPost({ userId: existingAuthor._id }),
+      createTestPost({ userId: newAuthor._id }),
+    ]);
+    const postLink = (linkedPost: { _id: string }) =>
+      `<a href="/posts/${linkedPost._id}">Post</a>`;
+    const commentId = await createPostComment({
+      user: commenter,
+      postId: post._id,
+      parentCommentId: null,
+      editorData: {
+        originalContents: {
+          type: "ckEditorMarkup",
+          data: `<p>See ${postLink(existingLinkedPost)}</p>`,
+        },
+        updateType: "initial",
+        commitMessage: "",
+      },
+    });
+    // Notifications are sent asynchronously - wait a bit for them to happen
+    await sleep(200);
+    await updateComment({
+      user: commenter,
+      commentId,
+      editorData: {
+        originalContents: {
+          type: "ckEditorMarkup",
+          data: `<p>See ${postLink(existingLinkedPost)} and ${postLink(newLinkedPost)}</p>`,
+        },
+        updateType: "minor",
+        commitMessage: "",
+      },
+    });
+    await sleep(200);
+    const pingbackNotifications = await db.query.notifications.findMany({
+      columns: {
+        userId: true,
+      },
+      where: {
+        documentId: commentId,
+        type: "newPingback",
+        emailed: false,
+      },
+    });
+    expect(
+      pingbackNotifications.map(({ userId }) => userId).toSorted(),
+    ).toStrictEqual([existingAuthor._id, newAuthor._id].toSorted());
+  });
   test("Cannot edit someone elses comment", async () => {
     const [post, commenter, editor] = await Promise.all([
       createTestPost(),

@@ -1,19 +1,15 @@
-# AGENTS.md
-
-Project-specific playbook for coding agents working in this repository.
-
 ## Quick Context
 
-- App: EA Forum web application (Next.js 16, App Router).
-- Language: TypeScript (`strict` mode).
-- Runtime: Node.js `>=22.12.0`.
-- UI: React 19 + Tailwind CSS v4 (theme tokens in `src/app/globals.css`).
-- Data: PostgreSQL via Drizzle ORM; tests use in-memory PGlite.
-- Error monitoring: Sentry (`next.config.ts`, `sentry.*.config.ts`).
+- App: EA Forum web application (Next.js 16, App Router)
+- Language: TypeScript
+- Runtime: Node.js (see `.nvmrc` for version)
+- UI: React 19 + Tailwind CSS v4 (theme tokens in `src/app/globals.css`)
+- Data: PostgreSQL via Drizzle ORM; tests use in-memory PGlite
+- Error monitoring: Sentry and PostHog
 - Architecture: Server Components for initial data, oRPC for client-triggered
-  interactions, feature-local frontend composition.
+  interactions
 - This codebase is an ongoing migration; if expected behavior is ambiguous, ask
-  rather than guess.
+  rather than guess
 
 Primary paths:
 
@@ -23,9 +19,6 @@ Primary paths:
 - Schema: `src/lib/schema.ts`
 - DB client/relations: `src/lib/db.ts`
 - RPC router root: `src/lib/router.ts`
-- RPC client: `src/lib/rpc.ts`
-- RPC transport entrypoint: `src/app/rpc/[[...rest]]/route.ts`
-- API handler helpers: `src/lib/requestHandler.ts`
 - Tests: `tests/*.test.ts`
 - Env contract: `ProcessEnv.d.ts`
 
@@ -34,7 +27,7 @@ Primary paths:
 Local setup: `npm install` → configure `.env` from `ProcessEnv.d.ts` → `npm run dev`.
 
 Common commands: `npm run dev`, `npm run build`, `npm run lint`, `npm run typecheck`,
-`npm run test`. (`format` / `check-format` exist; CI does not run them.)
+`npm run test`
 
 CI runs `lint`, `typecheck`, and `test`. Run those locally before substantial
 handoffs.
@@ -46,6 +39,8 @@ Testing notes:
   deterministic and offline.
 - For oRPC procedures, prefer direct tests via `call` from `@orpc/server` unless the
   HTTP transport is what's under test.
+- Use the helpers in `test/testHelpers.ts` rather than adding custom helpers to test
+  suites.
 
 ## Core Implementation Rules
 
@@ -66,36 +61,7 @@ Pattern and style consistency:
   explicitly.
 - Avoid duplicating UI metadata or configuration when one source of truth can drive
   both rendering and navigation (section lists, labels, visibility, ordering).
-
-Server boundaries and data access:
-
-- Default order for data access: direct server calls for initial Server Component
-  render, oRPC for client-triggered interactions, `app/api/**` only for
-  external/public consumers or strong local precedent.
-- For client-triggered server reads/writes, use oRPC routers via
-  `os.input(...).handler(...)` under `src/lib/*Router.ts`, register them in
-  `src/lib/router.ts`, and call them from the client via `rpc` in `src/lib/rpc.ts`.
-- Use `getCurrentUser()` (`src/lib/users/currentUser.ts`) for auth context.
-- Admin pages live under `src/app/admin/**` and inherit the `notFound()` gate from
-  `src/app/admin/layout.tsx`. New admin `page.tsx` files should rely on that
-  inherited check rather than re-asserting `currentUser?.isAdmin` per page;
-  duplicated checks tend to drift.
-- Enforce auth and permission checks at the server boundary (oRPC handlers, route
-  handlers, server actions), not via client visibility. Apply least-privilege per
-  read/write path.
-- Treat the input schemas of oRPC handlers (`os.input(schema)`) and `ApiRoute`
-  endpoints with `access: "all"` as public, unauthenticated contracts. Widening or
-  adding a field there is a public API change: apply bounded zod constraints
-  (`.max()`, `.min()`, enum literals) to all user-controllable inputs (pagination,
-  filters, IDs), and avoid leaking internal identifiers that aren't already publicly
-  observable.
-- For transactional mutations, use `db.transaction` and pass transaction objects
-  through helper layers (`DbOrTransaction` in `src/lib/db.ts`).
-- Avoid duplicated logic across parallel server paths that must stay consistent (row
-  queries vs count queries, initial server payloads vs client paging state). Prefer a
-  shared source of truth or keep the duplication tightly localized and obvious.
-- If you intentionally deviate from these defaults, explain why before
-  implementation.
+- Avoid leaving comments unless 100% needed, or if directly requested
 
 Routes and the legacy proxy:
 
@@ -105,9 +71,7 @@ Routes and the legacy proxy:
   mode is invisible to typecheck and lint.
 - Use a strict regex anchored with `^` and `$` (e.g. `/^\/admin\/org-updates-test$/`)
   and add a brief trailing comment matching neighboring entries.
-- The owned-routes payload is shipped to the legacy site as a cookie; the file has a
-  static check that throws in dev if `newSitePatterns` approaches the 4KB limit. If
-  it fires, prune or group patterns rather than relaxing the threshold.
+- The list is duplicated in the old repo `ForumMagnum`, and must also be updated there.
 
 Utilities and abstractions:
 
@@ -120,16 +84,9 @@ Utilities and abstractions:
 
 Frontend structure and conventions:
 
-- Global theme tokens: `src/app/globals.css`; fonts: `src/app/layout.tsx`.
+- Global theme tokens: `src/app/globals.css`
 - `src/components/**` is scoped: generic reusable UI at the top level or generic
   subfolders, reusable domain UI in domain folders (`Comments/`, `Moderation/`),
-  route/page-specific composition in `*Page/` folders (`ModerationPage/`).
-- Promote a page-specific component into a domain folder only after a second real
-  caller appears.
-- When a page or client component grows large, split it into a small shell, a local
-  hook for state/loading, and nearby section/subcomponents.
-- For large payloads passed from Server Components to client components, prefer a
-  named contract type (e.g. `*InitialData`) over inline prop shapes.
 - For new page UI, prefer theme-token classes (`bg-gray-0`, `text-gray-1000`,
   `border-gray-200`, `text-error`, `text-warning`) over hardcoded light-only surfaces
   like `bg-white`. Do a quick dark-mode pass before handoff so tables, cards,
@@ -138,24 +95,21 @@ Frontend structure and conventions:
   styles match the rest of the site.
 - For async client data loads, default to visible loading and error states so
   failures are discoverable and not mistaken for empty results.
-
-Hard rules (lint-evadable, easy to miss):
-
-- `page.tsx` and `layout.tsx` files under `src/app/**` are React Server Components by
-  default; no client hooks (`useState`, `useEffect`, `useRef`, `useContext`) without
-  `"use client"`.
 - Add new env vars to `ProcessEnv.d.ts` before reading them, so TypeScript validates
   the access.
-- No floating promises.
-- No `console.log` (use `console.warn` / `console.error`).
 - Do not import full `lodash` or `lodash/fp`; import specific modules.
 - Do not import `next/link`; use `@/components/Link`.
-- Use `<Type style="...">` from `@/components/Type` for headings/labeled text rather
-  than raw `<h1>` / `<h2>`.
 - Import Zod from `zod/v4`, not `zod`.
 - Prefer the Drizzle relational API (`db.query.*`) where practical.
 - Use `clsx` for class composition and `@/*` path aliases.
-- Avoid editing `src/vendor/**` and `ckEditor/**` unless explicitly required.
+- Avoid editing `src/vendor/**` unless explicitly required.
+
+CkEditor
+
+- The app uses a vendored version of CkEditor in `ckEditor/**`
+- Avoid editing `ckEditor/**` unless explicitly required
+- After editing `ckEditor/**`, you must run `npm run build` in the ckEditor directory
+- The results of building should be commited
 
 Types and naming:
 
@@ -170,8 +124,7 @@ Types and naming:
 
 1. Never commit secrets or `.env` values.
 2. Keep changes scoped to the requested task.
-3. If adding env vars, update `ProcessEnv.d.ts` and document usage.
-4. Run `lint`, `typecheck`, and relevant tests before handoff. If blocked by
+3. Run `lint`, `typecheck`, and relevant tests before handoff. If blocked by
    unrelated existing failures, say so explicitly and name the blocking file(s).
-5. In final handoff, include patterns followed, intentional deviations and rationale,
+4. In final handoff, include patterns followed, intentional deviations and rationale,
    and validation results.

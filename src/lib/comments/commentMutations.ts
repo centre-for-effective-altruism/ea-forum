@@ -143,12 +143,14 @@ const commentAsyncCallbacks = ({
   comment,
   revision,
   post,
+  oldComment,
 }: {
   isFirstPublish: boolean;
   user: CurrentUser;
   comment: Comment;
   revision: Revision;
   post: PostForCommentCreation;
+  oldComment?: Pick<Comment, "_id" | "draft" | "pingbacks">;
 }) => {
   if (comment.draft) {
     return;
@@ -158,7 +160,7 @@ const commentAsyncCallbacks = ({
     void newCommentNotifications(comment._id);
   }
   void checkCommentForSpam(db, user, comment._id, revision, post);
-  void notifyUsersOfPingbackMentions(user, "Comments", comment);
+  void notifyUsersOfPingbackMentions(user, "Comments", comment, oldComment);
   void runPangramOnComment(user, revision._id);
   void elasticSyncDocument("Comments", comment._id);
 };
@@ -424,6 +426,7 @@ export const updateComment = async ({
     comment: updatedComment,
     revision,
     post,
+    oldComment,
   });
 };
 
