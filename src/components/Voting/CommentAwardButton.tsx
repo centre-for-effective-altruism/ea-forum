@@ -3,7 +3,6 @@ import { InteractionWrapper } from "@/lib/hooks/useClickableCell";
 import {
   commentAwardedAmount,
   commentAwardPostHref,
-  commentAwardsEnabled,
 } from "@/lib/commentAwards/commentAwardHelpers";
 import TrophyIcon from "@heroicons/react/24/solid/TrophyIcon";
 import Tooltip from "../Tooltip";
@@ -15,10 +14,6 @@ export default function CommentAwardButton({
 }: Readonly<{
   comment: CommentListItem;
 }>) {
-  if (!commentAwardsEnabled) {
-    return null;
-  }
-
   const amount = commentAwardedAmount(comment);
   if (amount <= 0) {
     return null;
