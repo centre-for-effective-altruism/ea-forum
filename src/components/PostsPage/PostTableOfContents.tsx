@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, CSSProperties, useState } from "react";
+import { useEffect, CSSProperties, ReactNode, useState } from "react";
 import type { TableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import Link from "../Link";
@@ -10,11 +10,15 @@ export default function PostTableOfContents({
   title,
   contents,
   commentCount,
+  onClickSection,
+  footer,
   className,
 }: Readonly<{
   title: string;
   contents: TableOfContents | null;
   commentCount: number;
+  onClickSection?: (anchor: string) => void;
+  footer?: ReactNode;
   className?: string;
 }>) {
   const [currentAnchor, setCurrentAnchor] = useState<string | null>(null);
@@ -76,6 +80,7 @@ export default function PostTableOfContents({
             >
               <Link
                 href={`#${anchor}`}
+                onClick={onClickSection && (() => onClickSection(anchor))}
                 className={
                   anchor === currentAnchor
                     ? "text-gray-900 after:content-['•'] after:ml-1"
@@ -96,6 +101,7 @@ export default function PostTableOfContents({
               </Type>
             </>
           )}
+          {footer}
         </nav>
       </aside>
     </AnalyticsContext>
