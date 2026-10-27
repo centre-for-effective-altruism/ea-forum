@@ -6,7 +6,7 @@ import { randomId } from "@/lib/utils/random";
 import { db } from "@/lib/db";
 
 vi.mock("@/lib/mailchimp", () => ({
-  updateMailchimpSubscription: vi.fn(),
+  updateMailchimpSubscription: vi.fn().mockResolvedValue(undefined),
 }));
 
 suite("Auth", () => {
