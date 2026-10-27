@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { generateTopicPageMetadata } from "@/lib/tags/topicPageMetadata";
-import { topicPageTabSchema } from "@/lib/tags/topicPageParams";
 import TopicPageSkeleton from "@/components/Topics/TopicPageSkeleton";
 import TopicPageLoader from "@/components/Topics/TopicPageLoader";
 
@@ -27,11 +26,10 @@ export default async function TopicPage({ params, searchParams }: TopicPageProps
   }
   const sortedByQuery =
     typeof query.sortedBy === "string" ? query.sortedBy : undefined;
-  const tab = topicPageTabSchema.parse(query.tab);
   return (
     <AnalyticsContext pageContext="tagPage">
       <Suspense fallback={<TopicPageSkeleton />}>
-        <TopicPageLoader slug={slug} sortedByQuery={sortedByQuery} tab={tab} />
+        <TopicPageLoader slug={slug} sortedByQuery={sortedByQuery} />
       </Suspense>
     </AnalyticsContext>
   );

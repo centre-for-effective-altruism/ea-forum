@@ -4,7 +4,6 @@ import type { CurrentUser } from "@/lib/users/currentUser";
 import type { TopicPageTag } from "@/lib/tags/tagPageQueries";
 import type { TopicPostsSortedBy } from "@/lib/tags/topicPageParams";
 import PostColumn from "../PostsPage/PostColumn";
-import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import Type from "../Type";
 import AddPostsToTopic from "./AddPostsToTopic";
 import TopicContributorHighlightProvider from "./TopicContributorHighlightProvider";
@@ -12,8 +11,11 @@ import TopicContributors from "./TopicContributors";
 import TopicDescription from "./TopicDescription";
 import TopicHeaderActions from "./TopicHeaderActions";
 import TopicIntroSequence from "./TopicIntroSequence";
+import TopicIntroSequenceSkeleton from "./TopicIntroSequenceSkeleton";
 import TopicPostsList from "./TopicPostsList";
+import TopicPostsListSkeleton from "./TopicPostsListSkeleton";
 import TopicQuickTakes from "./TopicQuickTakes";
+import TopicQuickTakesSkeleton from "./TopicQuickTakesSkeleton";
 import TopicRelatedTopics from "./TopicRelatedTopics";
 import TopicSidebarSkeleton from "./TopicSidebarSkeleton";
 import TopicSubscribeButton from "./TopicSubscribeButton";
@@ -38,7 +40,10 @@ export default function NormalTopicLayout({
         <PostColumn
           left={
             <TopicTocColumn>
-              <TopicTableOfContents tag={tag} />
+              <TopicTableOfContents
+                tag={tag}
+                className="[&_nav]:max-h-none [&_nav]:overflow-visible [&_nav]:pb-0"
+              />
               <Suspense fallback={<TopicSidebarSkeleton />}>
                 <TopicContributors tag={tag} />
               </Suspense>
@@ -65,22 +70,25 @@ export default function NormalTopicLayout({
               <TopicDescription tag={tag} />
             </AnalyticsContext>
             {tag.introSequenceId && (
-              <Suspense>
+              <Suspense fallback={<TopicIntroSequenceSkeleton />}>
                 <TopicIntroSequence sequenceId={tag.introSequenceId} />
               </Suspense>
             )}
             {!tag.wikiOnly && (
               <>
                 <AnalyticsContext pageSectionContext="tagsSection">
-                  <div className="flex flex-col gap-4">
-                    <Suspense fallback={<PostsListSkeleton count={8} />}>
-                      <TopicPostsList tag={tag} sortedBy={sortedBy} />
-                    </Suspense>
-                    <AddPostsToTopic tag={{ _id: tag._id, name: tag.name }} />
-                  </div>
+                  <Suspense fallback={<TopicPostsListSkeleton tag={tag} />}>
+                    <TopicPostsList
+                      tag={tag}
+                      sortedBy={sortedBy}
+                      bottomRightNode={
+                        <AddPostsToTopic tag={{ _id: tag._id, name: tag.name }} />
+                      }
+                    />
+                  </Suspense>
                 </AnalyticsContext>
                 <AnalyticsContext pageSectionContext="quickTakesSection">
-                  <Suspense>
+                  <Suspense fallback={<TopicQuickTakesSkeleton />}>
                     <TopicQuickTakes tag={tag} />
                   </Suspense>
                 </AnalyticsContext>

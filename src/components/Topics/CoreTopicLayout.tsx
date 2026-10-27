@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import type { CurrentUser } from "@/lib/users/currentUser";
 import type { TopicPageTag } from "@/lib/tags/tagPageQueries";
-import type { TopicPostsSortedBy, TopicPageTab } from "@/lib/tags/topicPageParams";
+import type { TopicPostsSortedBy } from "@/lib/tags/topicPageParams";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import TopicContributorHighlightProvider from "./TopicContributorHighlightProvider";
-import TopicDescriptionSkeleton from "./TopicDescriptionSkeleton";
 import TopicTableOfContents from "./TopicTableOfContents";
 import TopicSidebarSkeleton from "./TopicSidebarSkeleton";
 import TopicSubscribeButton from "./TopicSubscribeButton";
@@ -12,15 +11,16 @@ import TopicSubtagsSidebar from "./TopicSubtagsSidebar";
 import TopicWriteNewButton from "./TopicWriteNewButton";
 import TopicHeaderActions from "./TopicHeaderActions";
 import TopicIntroSequence from "./TopicIntroSequence";
+import TopicIntroSequenceSkeleton from "./TopicIntroSequenceSkeleton";
 import TopicRelatedTopics from "./TopicRelatedTopics";
 import TopicContributors from "./TopicContributors";
 import TopicDescription from "./TopicDescription";
 import TopicQuickTakes from "./TopicQuickTakes";
+import TopicQuickTakesSkeleton from "./TopicQuickTakesSkeleton";
 import TopicPostsList from "./TopicPostsList";
+import TopicPostsListSkeleton from "./TopicPostsListSkeleton";
 import AddPostsToTopic from "./AddPostsToTopic";
 import TopicTabs from "./TopicTabs";
-import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
-import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import CloudinaryImage from "../CloudinaryImage";
 import Type from "../Type";
 
@@ -32,7 +32,6 @@ export default function CoreTopicLayout({
   tag: TopicPageTag;
   currentUser: CurrentUser | null;
   sortedBy: TopicPostsSortedBy;
-  tab: TopicPageTab;
 }>) {
   return (
     <TopicContributorHighlightProvider>
@@ -85,13 +84,18 @@ export default function CoreTopicLayout({
             posts: (
               <div className="flex flex-col gap-10">
                 <AnalyticsContext pageSectionContext="tagsSection">
-                  <Suspense fallback={<PostsListSkeleton count={10} />}>
-                    <TopicPostsList tag={tag} sortedBy={sortedBy} />
+                  <Suspense fallback={<TopicPostsListSkeleton tag={tag} />}>
+                    <TopicPostsList
+                      tag={tag}
+                      sortedBy={sortedBy}
+                      bottomRightNode={
+                        <AddPostsToTopic tag={{ _id: tag._id, name: tag.name }} />
+                      }
+                    />
                   </Suspense>
-                  <AddPostsToTopic tag={{ _id: tag._id, name: tag.name }} />
                 </AnalyticsContext>
                 <AnalyticsContext pageSectionContext="quickTakesSection">
-                  <Suspense fallback={<QuickTakesListSkeleton count={3} />}>
+                  <Suspense fallback={<TopicQuickTakesSkeleton />}>
                     <TopicQuickTakes tag={tag} />
                   </Suspense>
                 </AnalyticsContext>
@@ -104,7 +108,7 @@ export default function CoreTopicLayout({
                   <TopicRelatedTopics tag={tag} />
                   <TopicDescription tag={tag} />
                   {tag.introSequenceId && (
-                    <Suspense fallback={<TopicDescriptionSkeleton />}>
+                    <Suspense fallback={<TopicIntroSequenceSkeleton />}>
                       <TopicIntroSequence sequenceId={tag.introSequenceId} />
                     </Suspense>
                   )}

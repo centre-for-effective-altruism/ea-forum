@@ -2,10 +2,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { fetchTopicPageCached, getTopicPageLayout } from "@/lib/tags/tagPageQueries";
-import {
-  getTopicPostsSortedBy,
-  type TopicPageTab,
-} from "@/lib/tags/topicPageParams";
+import { getTopicPostsSortedBy } from "@/lib/tags/topicPageParams";
 import { tagGetPageUrl } from "@/lib/tags/tagHelpers";
 import StructuredData from "../StructuredData";
 import CoreTopicLayout from "./CoreTopicLayout";
@@ -14,11 +11,9 @@ import NormalTopicLayout from "./NormalTopicLayout";
 export default async function TopicPageLoader({
   slug,
   sortedByQuery,
-  tab,
 }: Readonly<{
   slug: string;
   sortedByQuery?: string;
-  tab: TopicPageTab;
 }>) {
   const currentUser = await getCurrentUser();
   const tag = await fetchTopicPageCached(currentUser, slug);
@@ -56,12 +51,7 @@ export default async function TopicPageLoader({
         }}
       />
       {layout === "core" ? (
-        <CoreTopicLayout
-          tag={tag}
-          currentUser={currentUser}
-          sortedBy={sortedBy}
-          tab={tab}
-        />
+        <CoreTopicLayout tag={tag} currentUser={currentUser} sortedBy={sortedBy} />
       ) : (
         <NormalTopicLayout tag={tag} currentUser={currentUser} sortedBy={sortedBy} />
       )}
