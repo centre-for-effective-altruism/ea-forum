@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
 import { slugify } from "@/lib/slugs/slugify";
 import {
+  chapters,
   Comment,
   comments,
   ForumEvent,
@@ -189,6 +190,16 @@ export const createTestSequence = async (
     ...data,
   };
   const result = await db.insert(sequences).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestChapter = async (
+  data: Partial<typeof chapters.$inferInsert> & { sequenceId: string },
+) => {
+  const result = await db
+    .insert(chapters)
+    .values({ _id: randomId(), ...data })
+    .returning();
   return result[0];
 };
 
