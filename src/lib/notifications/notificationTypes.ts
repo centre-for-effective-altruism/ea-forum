@@ -324,7 +324,7 @@ export const notificationTypesArray: NotificationType[] = [
   // New comment on a subforum you're subscribed to
   createNotificationType({
     name: "newSubforumComment",
-    userSettingField: "notificationSubforumUnread",
+    userSettingField: null,
     getLink: getCommentLink,
     getMessage: async ({ documentId }) => {
       if (!documentId) {
