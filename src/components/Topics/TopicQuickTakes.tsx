@@ -20,7 +20,12 @@ export default async function TopicQuickTakes({
   }
   return (
     <div data-component="TopicQuickTakes" className={className}>
-      <SectionTitle title="Quick takes" />
+      <SectionTitle
+        title="Quick takes"
+        noTopMargin
+        noBottomMargin
+        rootClassName="mb-1 min-h-8"
+      />
       <ClientTopicQuickTakesList
         tagId={tag._id}
         quickTakes={quickTakes}

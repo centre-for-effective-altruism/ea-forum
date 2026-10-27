@@ -45,7 +45,11 @@ export default function QuickTakePopover({
               ref={editorRef}
               className="w-full grow px-8"
             />
-            <QuickTakeTags {...tagProps} className="px-8" />
+            <QuickTakeTags
+              {...tagProps}
+              expanded={!!initialTagIds?.length}
+              className="px-8"
+            />
             <hr className="border-t-gray-200 my-4" />
             <div className="flex items-center justify-end gap-2 mx-8 mb-6">
               <Button variant="greyFilled" onClick={onClose}>

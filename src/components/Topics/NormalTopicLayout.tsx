@@ -20,7 +20,6 @@ import TopicRelatedTopics from "./TopicRelatedTopics";
 import TopicSidebarSkeleton from "./TopicSidebarSkeleton";
 import TopicSubscribeButton from "./TopicSubscribeButton";
 import TopicTableOfContents from "./TopicTableOfContents";
-import TopicTocColumn from "./TopicTocColumn";
 
 export default function NormalTopicLayout({
   tag,
@@ -39,7 +38,12 @@ export default function NormalTopicLayout({
       >
         <PostColumn
           left={
-            <TopicTocColumn>
+            <div
+              className="
+                sticky left-0 top-18 pl-8 pt-5 pb-12 flex flex-col gap-8
+                max-h-[calc(100vh-72px)] overflow-y-auto
+              "
+            >
               <TopicTableOfContents
                 tag={tag}
                 className="[&_nav]:max-h-none [&_nav]:overflow-visible [&_nav]:pb-0"
@@ -47,7 +51,7 @@ export default function NormalTopicLayout({
               <Suspense fallback={<TopicSidebarSkeleton />}>
                 <TopicContributors tag={tag} />
               </Suspense>
-            </TopicTocColumn>
+            </div>
           }
         >
           <div className="flex flex-col gap-4 mb-10">

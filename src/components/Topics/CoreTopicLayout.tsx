@@ -118,22 +118,32 @@ export default function CoreTopicLayout({
           }}
           sidebars={{
             posts: (
-              <TopicSubtagsSidebar
-                tag={{
-                  _id: tag._id,
-                  name: tag.name,
-                  shortName: tag.shortName,
-                  slug: tag.slug,
-                  core: tag.core,
-                  postCount: tag.postCount,
-                  description: null,
-                }}
-                subTags={tag.subTags}
-              />
+              <div className="lg:mt-9">
+                <TopicSubtagsSidebar
+                  tag={{
+                    _id: tag._id,
+                    name: tag.name,
+                    shortName: tag.shortName,
+                    slug: tag.slug,
+                    core: tag.core,
+                    postCount: tag.postCount,
+                    description: null,
+                  }}
+                  subTags={tag.subTags}
+                />
+              </div>
             ),
             wiki: (
-              <div className="flex flex-col gap-6">
-                <TopicTableOfContents tag={tag} />
+              <div
+                className="
+                  flex flex-col gap-6 lg:sticky lg:top-18
+                  lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:pb-6
+                "
+              >
+                <TopicTableOfContents
+                  tag={tag}
+                  className="[&_nav]:max-h-none [&_nav]:overflow-visible [&_nav]:pb-0"
+                />
                 <Suspense fallback={<TopicSidebarSkeleton />}>
                   <TopicContributors tag={tag} />
                 </Suspense>

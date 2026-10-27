@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import TagSelect from "../Tags/TagSelect";
 import TagChip from "../Tags/TagChip";
+import TextLinkButton from "../TextLinkButton";
 import Type from "../Type";
 
 const INITIAL_SUBTAGS_COUNT = 7;
@@ -65,7 +66,7 @@ export default function TopicSubtagsSidebar({
   return (
     <section
       data-component="TopicSubtagsSidebar"
-      className="bg-gray-0 border border-gray-200 rounded p-4 flex flex-col gap-3"
+      className="bg-postitem rounded p-4 flex flex-col gap-3"
     >
       <Type style="sectionTitleSmall">Posts in this topic are about</Type>
       <div className="flex flex-wrap items-center gap-1">
@@ -95,29 +96,16 @@ export default function TopicSubtagsSidebar({
             onSelect={onAdd}
             dismissRef={dismissRef}
           >
-            <Type
-              As="button"
-              style="bodySmall"
-              disabled={pending}
-              className="
-                cursor-pointer px-2 py-1 hover:bg-gray-600/10 rounded
-                disabled:cursor-not-allowed disabled:opacity-50
-              "
-            >
+            <TextLinkButton disabled={pending} className="px-2 py-1">
               + Add sub-topic
-            </Type>
+            </TextLinkButton>
           </TagSelect>
         )}
       </div>
       {!showAll && visibleSubTags.length < sortedSubTags.length && (
-        <Type
-          As="button"
-          style="bodySmall"
-          onClick={setShowAll.bind(null, true)}
-          className="cursor-pointer self-start text-primary hover:opacity-70"
-        >
+        <TextLinkButton onClick={setShowAll.bind(null, true)} className="self-start">
           Show all
-        </Type>
+        </TextLinkButton>
       )}
     </section>
   );

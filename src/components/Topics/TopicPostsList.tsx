@@ -33,7 +33,12 @@ export default async function TopicPostsList({
   return (
     <AnalyticsContext pageSectionContext="tagsSection">
       <div data-component="TopicPostsList">
-        <SectionTitle title={`Posts tagged ${tag.name}`}>
+        <SectionTitle
+          title={`Posts tagged ${tag.name}`}
+          noTopMargin
+          noBottomMargin
+          rootClassName="mb-1 min-h-8"
+        >
           <TopicPostsSortDropdown sortedBy={sortedBy} />
         </SectionTitle>
         <TopicPostsListClient

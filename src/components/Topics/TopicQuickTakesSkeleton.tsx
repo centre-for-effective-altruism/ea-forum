@@ -6,7 +6,12 @@ export default function TopicQuickTakesSkeleton({
 }: Readonly<{ className?: string }>) {
   return (
     <div data-component="TopicQuickTakesSkeleton" className={className}>
-      <SectionTitle title="Quick takes" />
+      <SectionTitle
+        title="Quick takes"
+        noTopMargin
+        noBottomMargin
+        rootClassName="mb-1 min-h-8"
+      />
       <QuickTakesListSkeleton count={3} />
     </div>
   );

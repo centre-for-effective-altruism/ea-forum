@@ -51,7 +51,12 @@ export default function TopicPostsSortDropdown({
       {isPending && <Loading />}
       <Type style="bodyMedium" className="text-gray-600">
         Sorted by{" "}
-        <InlineSelect value={sortedBy} setValue={onChange} options={options} />
+        <InlineSelect
+          value={sortedBy}
+          setValue={onChange}
+          options={options}
+          placement="bottom-end"
+        />
       </Type>
     </div>
   );

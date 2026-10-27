@@ -14,7 +14,12 @@ export default function TopicPostsListSkeleton({
   }
   return (
     <div data-component="TopicPostsListSkeleton">
-      <SectionTitle title={`Posts tagged ${tag.name}`} />
+      <SectionTitle
+        title={`Posts tagged ${tag.name}`}
+        noTopMargin
+        noBottomMargin
+        rootClassName="mb-1 min-h-8"
+      />
       <PostsListSkeleton count={count} />
     </div>
   );

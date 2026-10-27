@@ -4,8 +4,7 @@ import { sequenceGetPageUrl } from "@/lib/sequences/sequenceHelpers";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import PostsList from "../PostsList/PostsList";
 import SectionTitle from "../SectionTitle";
-import Type from "../Type";
-import Link from "../Link";
+import TextLinkButton from "../TextLinkButton";
 
 const PREVIEW_COUNT = 3;
 
@@ -29,11 +28,9 @@ export default async function TopicIntroSequence({
         <PostsList posts={sequence.posts} />
       </AnalyticsContext>
       {sequence.totalCount > PREVIEW_COUNT && (
-        <Type style="bodyMedium">
-          <Link href={sequenceUrl} className="text-primary hover:opacity-70">
-            See all {sequence.totalCount} posts
-          </Link>
-        </Type>
+        <TextLinkButton variant="primary" href={sequenceUrl} className="self-start">
+          See all {sequence.totalCount} posts
+        </TextLinkButton>
       )}
     </section>
   );

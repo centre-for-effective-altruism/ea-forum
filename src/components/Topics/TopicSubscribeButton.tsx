@@ -3,7 +3,10 @@
 import { useCallback } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
-import { useSubscribeToTag } from "@/lib/hooks/useFilterSettings";
+import {
+  FilterSettingsProvider,
+  useSubscribeToTag,
+} from "@/lib/hooks/useFilterSettings";
 import { useSubscription } from "@/lib/hooks/useSubscriptions";
 import { useTracking } from "@/lib/analyticsEvents";
 import clsx from "clsx";
@@ -76,9 +79,11 @@ const TopicNotifyMenu = ({ tagId }: { tagId: string }) => {
   );
 };
 
-export default function TopicSubscribeButton({
-  tag,
-}: Readonly<{ tag: { _id: string; name: string; slug: string } }>) {
+type TopicSubscribeButtonProps = Readonly<{
+  tag: { _id: string; name: string; slug: string };
+}>;
+
+const TopicSubscribeButtonInner = ({ tag }: TopicSubscribeButtonProps) => {
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
   const { captureEvent } = useTracking();
@@ -123,5 +128,13 @@ export default function TopicSubscribeButton({
       </Tooltip>
       {showMenu && <TopicNotifyMenu tagId={tag._id} />}
     </div>
+  );
+};
+
+export default function TopicSubscribeButton({ tag }: TopicSubscribeButtonProps) {
+  return (
+    <FilterSettingsProvider>
+      <TopicSubscribeButtonInner tag={tag} />
+    </FilterSettingsProvider>
   );
 }

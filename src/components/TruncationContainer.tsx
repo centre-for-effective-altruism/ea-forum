@@ -17,6 +17,7 @@ export default function TruncationContainer({
   items,
   gap,
   canShowMore,
+  initiallyExpanded = false,
   hiddenItemsTooltip,
   afterNodeTextStyle,
   afterNodeFormat = (count) => `${count} more`,
@@ -30,6 +31,8 @@ export default function TruncationContainer({
   gap: number;
   /** Whether or not clicking the "n more" text reveals the hidden items */
   canShowMore?: boolean;
+  /** If true, all items are shown until the component remounts */
+  initiallyExpanded?: boolean;
   /** If true, the "n more" text has a tooltip containing the hidden items */
   hiddenItemsTooltip?: boolean;
   /** Text style for the "n more" text  */
@@ -44,7 +47,7 @@ export default function TruncationContainer({
   tooltipClassName?: string;
 }>) {
   const [numShown, setNumShown] = useState(items.length);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
 
