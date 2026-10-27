@@ -1,9 +1,11 @@
+import { and, arrayContains, eq, not, sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
+import { userIsAdminOrMod } from "../users/userHelpers";
 import { fetchPostDisplay } from "../posts/postQueries";
 import { postTagsProjection } from "./tagQueries";
 import { performVote } from "../votes/voteMutations";
 import { randomId } from "../utils/random";
-import { tagRels } from "../schema";
+import { tagRels, tags } from "../schema";
 import { db } from "../db";
 
 export const addOrUpvoteTag = async ({
@@ -99,4 +101,71 @@ export const addOrUpvoteTag = async ({
     throw new Error("Updated post not found");
   }
   return updatedPostWithTags.tags ?? [];
+};
+
+export const setParentTag = async ({
+  currentUser,
+  tagId,
+  parentTagId,
+}: {
+  currentUser: CurrentUser | null;
+  tagId: string;
+  parentTagId: string | null;
+}) => {
+  if (!userIsAdminOrMod(currentUser)) {
+    throw new Error("Only admins and moderators can change sub-topics");
+  }
+  if (tagId === parentTagId) {
+    throw new Error("A topic can't be its own parent");
+  }
+  await db.transaction(async (txn) => {
+    const [tag, parentTag, childTag] = await Promise.all([
+      txn.query.tags.findFirst({
+        columns: { name: true, parentTagId: true },
+        where: { _id: tagId },
+      }),
+      parentTagId
+        ? txn.query.tags.findFirst({
+            columns: { _id: true },
+            where: { _id: parentTagId, deleted: false },
+          })
+        : null,
+      parentTagId
+        ? txn.query.tags.findFirst({
+            columns: { _id: true },
+            where: { parentTagId: tagId, deleted: false },
+          })
+        : null,
+    ]);
+    if (!tag) {
+      throw new Error("Topic not found");
+    }
+    if (parentTagId && !parentTag) {
+      throw new Error("Parent topic not found");
+    }
+    if (childTag) {
+      throw new Error(`"${tag.name}" is already the parent of another topic`);
+    }
+    if (tag.parentTagId === parentTagId) {
+      return;
+    }
+    await txn.update(tags).set({ parentTagId }).where(eq(tags._id, tagId));
+    if (tag.parentTagId) {
+      await txn
+        .update(tags)
+        .set({ subTagIds: sql`array_remove(${tags.subTagIds}, ${tagId})` })
+        .where(eq(tags._id, tag.parentTagId));
+    }
+    if (parentTagId) {
+      await txn
+        .update(tags)
+        .set({ subTagIds: sql`array_append(${tags.subTagIds}, ${tagId})` })
+        .where(
+          and(
+            eq(tags._id, parentTagId),
+            not(arrayContains(tags.subTagIds, [tagId])),
+          ),
+        );
+    }
+  });
 };
