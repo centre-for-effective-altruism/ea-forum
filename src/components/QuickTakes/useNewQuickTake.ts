@@ -10,9 +10,11 @@ import type { TagBase } from "@/lib/tags/tagQueries";
 
 export const useNewQuickTake = ({
   coreTags: coreTags_,
+  initialTagIds,
   onSuccess: onSuccess_,
 }: {
   coreTags?: TagBase[];
+  initialTagIds?: string[];
   onSuccess?: (quickTake: CommentListItem) => void;
 }) => {
   const { currentUser } = useCurrentUser();
@@ -31,7 +33,7 @@ export const useNewQuickTake = ({
     onSuccess,
   });
 
-  const tagProps = useQuickTakesTags(coreTags ?? []);
+  const tagProps = useQuickTakesTags(coreTags ?? [], initialTagIds);
 
   const onSubmit = useCallback(
     async (ev: SubmitEvent<HTMLFormElement>) => {

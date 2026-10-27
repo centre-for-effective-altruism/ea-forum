@@ -11,14 +11,16 @@ import Type from "../Type";
 export default function QuickTakePopover({
   open,
   onClose,
+  initialTagIds,
 }: Readonly<{
   open: boolean;
   onClose: () => void;
+  initialTagIds?: string[];
 }>) {
   const {
     tagProps,
     editorProps: { loading, editorRef, contents, onSubmit, onKeyDown, onChange },
-  } = useNewQuickTake({ onSuccess: onClose });
+  } = useNewQuickTake({ initialTagIds, onSuccess: onClose });
   return (
     <Popover open={open} onClose={onClose} noPadding>
       <div data-component="QuickTakePopover" className="w-[750px] max-w-full">
