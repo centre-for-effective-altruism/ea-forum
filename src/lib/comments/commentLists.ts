@@ -605,3 +605,65 @@ export const fetchAllPostsQuickTakes = async ({
     offset,
   });
 };
+
+const tagQuickTakesWhere = (tagId: string): CommentsFilter => ({
+  shortform: true,
+  deleted: false,
+  parentCommentId: { isNull: true },
+  relevantTagIds: { arrayContains: [tagId] },
+});
+
+export const fetchTagQuickTakes = ({
+  currentUser,
+  tagId,
+  offset,
+  limit = 8,
+}: {
+  currentUser: UserPermissions | null;
+  tagId: string;
+  offset?: number;
+  limit?: number;
+}) => {
+  return fetchCommentsList({
+    currentUser,
+    where: tagQuickTakesWhere(tagId),
+    orderBy: { postedAt: "desc", _id: "desc" },
+    offset,
+    limit,
+  });
+};
+
+export const countTagQuickTakes = async ({
+  currentUser,
+  tagId,
+}: {
+  currentUser: UserPermissions | null;
+  tagId: string;
+}): Promise<number> => {
+  const result = await db.query.comments.findFirst({
+    columns: {},
+    extras: { count: sql<number>`COUNT(*)` },
+    where: commentsListWhere(currentUser, tagQuickTakesWhere(tagId)),
+  });
+  return Number(result?.count ?? 0);
+};
+
+export const countTagDiscussionComments = async ({
+  currentUser,
+  tagId,
+}: {
+  currentUser: UserPermissions | null;
+  tagId: string;
+}): Promise<number> => {
+  const result = await db.query.comments.findFirst({
+    columns: {},
+    extras: { count: sql<number>`COUNT(*)` },
+    where: {
+      ...viewableCommentFilter(currentUser?._id ?? null),
+      tagId,
+      tagCommentType: "DISCUSSION",
+      deleted: false,
+    },
+  });
+  return Number(result?.count ?? 0);
+};
