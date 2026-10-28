@@ -7,7 +7,9 @@ import { allPostsSortedBySchema } from "../posts/allPostsSettings";
 import { forumEventCommentMetadataSchema } from "../forumEvents/forumEventHelpers";
 import {
   countFrontpageQuickTakes,
+  countTagQuickTakes,
   fetchAllPostsQuickTakes,
+  fetchTagQuickTakes,
   fetchRecentlyActiveQuickTakes,
   fetchCommentReplies,
   fetchCommentsForForumEvent,
@@ -258,6 +260,24 @@ export const commentsRouter = {
         limit,
       });
       return { items };
+    }),
+  listTagQuickTakes: os
+    .input(
+      z.object({
+        tagId: z.string().nonempty(),
+        offset: z.number().min(0).optional(),
+        limit: z.number().min(0).max(50).optional(),
+      }),
+    )
+    .handler(async ({ input: { tagId, offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      const [items, totalCount] = await Promise.all([
+        fetchTagQuickTakes({ currentUser, tagId, offset, limit }),
+        offset
+          ? Promise.resolve(undefined)
+          : countTagQuickTakes({ currentUser, tagId }),
+      ]);
+      return { items, totalCount };
     }),
   updateQuickTakeFrontpage: os
     .input(

@@ -2,6 +2,7 @@ import { SQL, sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
 import type { FilterSettings } from "../filterSettings";
 import type { CurrentUser } from "../users/currentUser";
+import type { TopicPostsSortedBy } from "../tags/topicPageParams";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
 import { postStatuses, type PostsListView } from "./postsHelpers";
@@ -47,7 +48,7 @@ export const viewablePostFilter = {
 } as const;
 
 /** Create a filter to return _only_ posts with a particular tag */
-const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
+export const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`;
 
 /** Create a filter to exclude posts with a particular tag */
@@ -793,6 +794,41 @@ export const fetchAllPosts = async ({
       ],
     },
     orderBy: await getAllPostsSort(sortedBy),
+    offset,
+    limit,
+  });
+};
+
+const tagRelevanceSort = (tagId: string) => (postsTable: typeof posts) => sql`
+  (${postsTable}."tagRelevance" ->> ${tagId})::FLOAT DESC,
+  ${postsTable}."baseScore" DESC,
+  ${postsTable}."postedAt" DESC,
+  ${postsTable}."_id" ASC
+`;
+
+export const fetchTagPostsList = async ({
+  currentUser,
+  tagId,
+  sortedBy,
+  limit,
+  offset,
+}: {
+  currentUser: CurrentUser | null;
+  tagId: string;
+  sortedBy: TopicPostsSortedBy;
+  limit?: number;
+  offset?: number;
+}): Promise<PostListItem[]> => {
+  return await fetchPostsList({
+    currentUserId: currentUser?._id ?? null,
+    where: {
+      groupId: { isNull: true },
+      RAW: onlyTagFilter(tagId),
+    },
+    orderBy:
+      sortedBy === "relevance"
+        ? tagRelevanceSort(tagId)
+        : await getAllPostsSort(sortedBy),
     offset,
     limit,
   });

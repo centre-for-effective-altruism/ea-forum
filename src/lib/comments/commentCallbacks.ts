@@ -66,11 +66,7 @@ export const updateCommentTag = async (txn: Transaction, comment: Comment) => {
   if (comment.tagId) {
     await txn
       .update(tags)
-      .set(
-        comment.tagCommentType === "SUBFORUM"
-          ? { lastSubforumCommentAt: comment.postedAt }
-          : { lastCommentedAt: comment.postedAt },
-      )
+      .set({ lastCommentedAt: comment.postedAt })
       .where(eq(tags._id, comment.tagId));
   }
 };
@@ -256,7 +252,6 @@ export const newCommentNotifications = async (commentId: string) => {
       parentCommentId: true,
       debateResponse: true,
       tagId: true,
-      tagCommentType: true,
     },
     with: {
       post: {
@@ -506,50 +501,7 @@ export const newCommentNotifications = async (commentId: string) => {
     notifiedUsers = [...notifiedUsers, ...postSubscriberIdsToNotify];
   }
 
-  // 4. If this comment is in a subforum, notify members with email notifications enabled
-  if (
-    comment.tagId &&
-    comment.tagCommentType === "SUBFORUM" &&
-    !comment.topLevelCommentId &&
-    // FIXME: make this more general, and possibly queue up notifications from
-    // unreviewed users to send once they are approved
-    !comment.authorIsUnreviewed
-  ) {
-    const subforumSubcribedUsers = await db.query.users.findMany({
-      columns: {
-        _id: true,
-      },
-      where: {
-        profileTagIds: { arrayContains: [comment.tagId] },
-      },
-    });
-    const subforumSubscriberIds = subforumSubcribedUsers.map(({ _id }) => _id);
-    const subforumSubscriberRels = await db.query.userTagRels.findMany({
-      columns: {
-        userId: true,
-      },
-      where: {
-        userId: { in: subforumSubscriberIds },
-        tagId: comment.tagId,
-        subforumEmailNotifications: true,
-      },
-    });
-    const subforumSubscriberIdsMaybeNotify = subforumSubscriberRels.map(
-      ({ userId }) => userId,
-    );
-    const subforumSubscriberIdsToNotify = difference(
-      subforumSubscriberIdsMaybeNotify,
-      [...notifiedUsers, comment.userId],
-    );
-    await createNotifications({
-      userIds: subforumSubscriberIdsToNotify,
-      notificationType: "newSubforumComment",
-      documentType: "comment",
-      documentId: comment._id,
-    });
-  }
-
-  // 5. Notify users who are subscribed to comments by the comment author
+  // 4. Notify users who are subscribed to comments by the comment author
   const commentAuthorSubscribers = await fetchSubscribedUsers({
     documentId: comment.userId,
     collectionName: "Users",

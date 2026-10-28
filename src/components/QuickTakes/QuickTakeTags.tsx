@@ -11,8 +11,9 @@ export default function QuickTakeTags({
   selectedTagIds,
   onTagSelected,
   onTagRemoved,
+  expanded,
   className,
-}: Readonly<QuickTakesTagsProps & { className?: string }>) {
+}: Readonly<QuickTakesTagsProps & { expanded?: boolean; className?: string }>) {
   return (
     <div
       data-component="QuickTakeTags"
@@ -52,6 +53,7 @@ export default function QuickTakeTags({
         ]}
         gap={4}
         canShowMore
+        initiallyExpanded={expanded}
         className="flex-wrap"
       />
     </div>

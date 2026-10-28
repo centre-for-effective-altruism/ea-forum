@@ -11,7 +11,7 @@ import {
 } from "./tagQueries";
 import { diffHtml } from "../revisions/htmlToChangeMetrics";
 import { getCurrentUser } from "../users/currentUser";
-import { addOrUpvoteTag } from "./tagMutations";
+import { addOrUpvoteTag, setParentTag } from "./tagMutations";
 
 export const tagsRouter = {
   listCore: os
@@ -104,5 +104,16 @@ export const tagsRouter = {
         throw new Error("Please login");
       }
       return await addOrUpvoteTag({ currentUser, postId, tagId });
+    }),
+  setParentTag: os
+    .input(
+      z.object({
+        tagId: z.string().nonempty(),
+        parentTagId: z.string().nonempty().nullable(),
+      }),
+    )
+    .handler(async ({ input: { tagId, parentTagId } }) => {
+      const currentUser = await getCurrentUser();
+      return await setParentTag({ currentUser, tagId, parentTagId });
     }),
 };
