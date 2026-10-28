@@ -3,7 +3,9 @@ export type EditorCollectionName =
   | "Comments"
   | "Tags"
   | "Users"
-  | "Spotlights";
+  | "Spotlights"
+  | "Collections"
+  | "Books";
 
 export const ckEditorBundleVersion = "43.1.6";
 

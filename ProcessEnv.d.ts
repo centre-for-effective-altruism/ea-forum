@@ -73,6 +73,7 @@ declare namespace NodeJS {
     START_HERE_POST_ID: string;
     INTRO_POST_ID: string;
     CONTACT_POST_ID: string;
+    HANDBOOK_COLLECTION_ID: string;
     NEXT_PUBLIC_COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
     TRANSLATION_TAG_ID: string;
