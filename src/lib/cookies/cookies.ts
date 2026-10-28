@@ -263,6 +263,15 @@ const allCookies = [
       "This cookie is used by HotJar to detect the first pageview session of a user. This is a True/False flag set by the cookie.",
   },
   {
+    name: "ph_[*]_posthog",
+    matches: (name: string) => name.startsWith("ph_") && name.endsWith("_posthog"),
+    type: "analytics",
+    thirdPartyName: "PostHog",
+    description:
+      "Used by PostHog to distinguish unique users and sessions for product analytics.",
+    maxExpires: "12 months",
+  },
+  {
     name: "_gid",
     type: "analytics",
     thirdPartyName: "Google",

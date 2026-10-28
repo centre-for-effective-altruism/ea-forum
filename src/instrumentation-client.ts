@@ -4,6 +4,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import posthog from "posthog-js";
+import { posthogSuperProperties } from "./lib/analytics/posthogSuperProperties";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -19,19 +20,23 @@ Sentry.init({
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 
-posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
-  api_host: "/ingest",
-  ui_host: "https://us.posthog.com",
-  defaults: "2026-05-30",
-  capture_exceptions: true,
-  persistence: "localStorage+cookie",
-  cookieless_mode: "on_reject",
-  loaded: (ph) => {
-    ph.register({
-      environment: process.env.NEXT_PUBLIC_ENVIRONMENT,
-      repo: "ea-forum",
-    });
-  },
-  // Set this to true to enable verbose posthog logs in the console
-  debug: false,
-});
+if (process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN) {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, {
+    api_host: "/ingest",
+    ui_host: "https://us.posthog.com",
+    defaults: "2026-05-30",
+    capture_exceptions: true,
+    persistence: "localStorage+cookie",
+    // Capture cookielessly until `PostHogConsent` opts the user in based on
+    // their cookie preferences
+    cookieless_mode: "on_reject",
+    opt_out_capturing_by_default: true,
+    loaded: (ph) => {
+      ph.register(posthogSuperProperties);
+    },
+    // Set this to true to enable verbose posthog logs in the console
+    debug: false,
+  });
+} else {
+  console.warn("Warning: NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN is not set");
+}

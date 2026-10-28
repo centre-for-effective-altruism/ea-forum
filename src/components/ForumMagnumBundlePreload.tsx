@@ -1,5 +1,6 @@
-import { posthog } from "posthog-js";
+import { waitUntil } from "@vercel/functions";
 import { combineUrls } from "@/lib/routeHelpers";
+import { captureServerException } from "@/lib/posthog-server";
 
 export default async function ForumMagnumBundlePreload() {
   if (!process.env.LEGACY_SITE_URL) {
@@ -28,7 +29,7 @@ export default async function ForumMagnumBundlePreload() {
       );
     }
   } catch (e) {
-    posthog.captureException(e);
+    waitUntil(captureServerException(e));
     console.error(e);
   }
   return null;
