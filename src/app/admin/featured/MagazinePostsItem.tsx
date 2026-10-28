@@ -80,7 +80,7 @@ export default function MagazinePostsItem({
           )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
-          <div className="line-clamp-2 font-serif text-[22px] font-normal leading-tight tracking-[-0.01em] text-gray-1000">
+          <div className="line-clamp-2 font-serif text-[22px] font-normal leading-tight text-gray-1000">
             <span className="relative z-[2] inline-flex align-middle">
               <PostIcons post={post} side="left" />
             </span>
