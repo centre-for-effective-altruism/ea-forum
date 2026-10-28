@@ -13,6 +13,7 @@ import * as Sentry from "@sentry/browser";
 import posthog from "posthog-js";
 import { rpc } from "../rpc";
 import { useClientId } from "./useClientId";
+import { posthogSuperProperties } from "../analytics/posthogSuperProperties";
 import type { CurrentUser } from "../users/currentUser";
 
 type CurrentUserContext = {
@@ -64,14 +65,22 @@ export function CurrentUserProvider({
           }
         : null,
     );
+    if (posthog.get_distinct_id() === clientId) {
+      // Logged-out users used to be identified by their client ID, which stops
+      // their anonymous activity being merged into their account when they log in
+      const consentStatus = posthog.get_explicit_consent_status();
+      posthog.reset();
+      if (consentStatus === "granted") {
+        posthog.opt_in_capturing({ captureEventName: false });
+      }
+    }
+    posthog.register({ ...posthogSuperProperties, clientId });
     if (currentUser) {
       posthog.identify(currentUser._id, {
         email: currentUser.email ?? undefined,
         username: currentUser.username ?? currentUser.displayName ?? undefined,
         clientId,
       });
-    } else {
-      posthog.identify(clientId, { clientId });
     }
   }, [currentUser, clientId]);
 

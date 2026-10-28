@@ -13,6 +13,7 @@ import {
 import clsx from "clsx";
 import ForumMagnumBundlePreload from "@/components/ForumMagnumBundlePreload";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
+import PostHogConsent from "@/components/Cookies/PostHogConsent";
 import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 import IntercomButton from "@/components/Intercom/IntercomButton";
 import PageLoadListener from "@/components/PageLoadListener";
@@ -153,6 +154,7 @@ export default function RootLayout({
           <IntercomButton />
           <SiteToggle />
           <DynamicCookieBanner />
+          <PostHogConsent />
           <Toaster
             position="bottom-center"
             toastOptions={{
