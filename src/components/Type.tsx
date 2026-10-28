@@ -33,7 +33,7 @@ export const typeStyles = {
   featuredPostTitle:
     "font-sans font-[600] text-[22px] leading-[120%] tracking-[-0.6px]",
   featuredPostTitleLarge:
-    "font-sans font-[600] text-[22px] leading-[120%] tracking-[0.44px] xl:text-[32px] xl:leading-[110%] xl:tracking-[0.64px]",
+    "font-sans font-[600] text-[22px] leading-[120%] tracking-[-0.6px] xl:text-[32px] xl:leading-[110%] xl:tracking-[0.64px]",
 } as const satisfies Record<string, string>;
 
 export type TextStyle = keyof typeof typeStyles;
