@@ -109,7 +109,9 @@ const HtmlNode: FC<{
             {result}
           </HoverPreviewLink>
         );
-      } else if (node.childNodes.length > 0) {
+      } else if (node.childNodes.length > 0 && As !== "iframe") {
+        // Browsers parse iframe contents as raw text, so rendering them as
+        // elements causes a hydration mismatch
         return <As {...attribs}>{result}</As>;
       }
 
