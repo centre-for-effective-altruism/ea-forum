@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { fetchTagPostsList } from "@/lib/posts/postLists";
 import type { TopicPageTag } from "@/lib/tags/tagPageQueries";
 import type { TopicPostsSortedBy } from "@/lib/tags/topicPageParams";
@@ -14,11 +13,9 @@ const LOAD_MORE_LIMIT = 50;
 export default async function TopicPostsList({
   tag,
   sortedBy,
-  bottomRightNode,
 }: Readonly<{
   tag: TopicPageTag;
   sortedBy: TopicPostsSortedBy;
-  bottomRightNode?: ReactNode;
 }>) {
   if (tag.wikiOnly) {
     return null;
@@ -49,7 +46,6 @@ export default async function TopicPostsList({
           initialPosts={posts}
           initialLimit={INITIAL_LIMIT}
           loadMoreLimit={LOAD_MORE_LIMIT}
-          bottomRightNode={bottomRightNode}
         />
       </div>
     </AnalyticsContext>

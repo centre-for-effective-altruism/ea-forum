@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useLoadMore } from "@/lib/hooks/useLoadMore";
 import { useTracking } from "@/lib/analyticsEvents";
 import { rpc } from "@/lib/rpc";
@@ -9,6 +8,7 @@ import type { TopicPostsSortedBy } from "@/lib/tags/topicPageParams";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import PostsItem from "../PostsList/PostsItem";
 import TextLinkButton from "../TextLinkButton";
+import AddPostsToTopic from "./AddPostsToTopic";
 import Type from "../Type";
 
 export default function TopicPostsListClient({
@@ -18,7 +18,6 @@ export default function TopicPostsListClient({
   initialPosts,
   initialLimit,
   loadMoreLimit,
-  bottomRightNode,
 }: Readonly<{
   tagId: string;
   tagName: string;
@@ -26,7 +25,6 @@ export default function TopicPostsListClient({
   initialPosts: PostListItem[];
   initialLimit: number;
   loadMoreLimit: number;
-  bottomRightNode?: ReactNode;
 }>) {
   const { captureEvent } = useTracking();
   const { items, loading, limit, canLoadMore, onLoadMore } = useLoadMore({
@@ -53,22 +51,16 @@ export default function TopicPostsListClient({
         </div>
       )}
       {loading && <PostsListSkeleton count={limit} className="mt-0.5" />}
-      {(showLoadMore || bottomRightNode) && (
-        <div className="mt-2 flex justify-between items-center">
-          {showLoadMore ? (
-            <TextLinkButton
-              variant="primary"
-              onClick={onLoadMore}
-              disabled={loading}
-            >
-              Load more
-            </TextLinkButton>
-          ) : (
-            <div />
-          )}
-          {bottomRightNode}
-        </div>
-      )}
+      <div className="mt-2 flex justify-between items-center">
+        {showLoadMore ? (
+          <TextLinkButton variant="primary" onClick={onLoadMore} disabled={loading}>
+            Load more
+          </TextLinkButton>
+        ) : (
+          <div />
+        )}
+        <AddPostsToTopic tag={{ _id: tagId, name: tagName }} />
+      </div>
     </section>
   );
 }

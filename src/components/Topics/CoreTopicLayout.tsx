@@ -19,7 +19,6 @@ import TopicQuickTakes from "./TopicQuickTakes";
 import TopicQuickTakesSkeleton from "./TopicQuickTakesSkeleton";
 import TopicPostsList from "./TopicPostsList";
 import TopicPostsListSkeleton from "./TopicPostsListSkeleton";
-import AddPostsToTopic from "./AddPostsToTopic";
 import TopicTabs from "./TopicTabs";
 import CloudinaryImage from "../CloudinaryImage";
 import Type from "../Type";
@@ -85,13 +84,7 @@ export default function CoreTopicLayout({
               <div className="flex flex-col gap-10">
                 <AnalyticsContext pageSectionContext="tagsSection">
                   <Suspense fallback={<TopicPostsListSkeleton tag={tag} />}>
-                    <TopicPostsList
-                      tag={tag}
-                      sortedBy={sortedBy}
-                      bottomRightNode={
-                        <AddPostsToTopic tag={{ _id: tag._id, name: tag.name }} />
-                      }
-                    />
+                    <TopicPostsList tag={tag} sortedBy={sortedBy} />
                   </Suspense>
                 </AnalyticsContext>
                 <AnalyticsContext pageSectionContext="quickTakesSection">

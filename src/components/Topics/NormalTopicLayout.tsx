@@ -5,7 +5,6 @@ import type { TopicPageTag } from "@/lib/tags/tagPageQueries";
 import type { TopicPostsSortedBy } from "@/lib/tags/topicPageParams";
 import PostColumn from "../PostsPage/PostColumn";
 import Type from "../Type";
-import AddPostsToTopic from "./AddPostsToTopic";
 import TopicContributorHighlightProvider from "./TopicContributorHighlightProvider";
 import TopicContributors from "./TopicContributors";
 import TopicDescription from "./TopicDescription";
@@ -82,13 +81,7 @@ export default function NormalTopicLayout({
               <>
                 <AnalyticsContext pageSectionContext="tagsSection">
                   <Suspense fallback={<TopicPostsListSkeleton tag={tag} />}>
-                    <TopicPostsList
-                      tag={tag}
-                      sortedBy={sortedBy}
-                      bottomRightNode={
-                        <AddPostsToTopic tag={{ _id: tag._id, name: tag.name }} />
-                      }
-                    />
+                    <TopicPostsList tag={tag} sortedBy={sortedBy} />
                   </Suspense>
                 </AnalyticsContext>
                 <AnalyticsContext pageSectionContext="quickTakesSection">
