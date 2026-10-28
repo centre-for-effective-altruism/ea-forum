@@ -13,10 +13,7 @@ export type PostTranslation = z.infer<typeof postTranslationSchema>;
 type TranslationsData = z.infer<typeof translationsDataSchema>;
 
 const TRANSLATIONS_API_URL = "https://ea.international/api/translations/forummagnum";
-const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
-
-let cachedTranslationsData: TranslationsData | null = null;
-let cacheExpiry = 0;
+const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7; // 1 week
 
 const fetchTranslationsData = async (): Promise<TranslationsData | null> => {
   const controller = new AbortController();
@@ -25,6 +22,7 @@ const fetchTranslationsData = async (): Promise<TranslationsData | null> => {
     const response = await fetch(TRANSLATIONS_API_URL, {
       headers: { "User-Agent": "ForumMagnum/2.1" },
       signal: controller.signal,
+      next: { revalidate: CACHE_TTL_SECONDS },
     });
     if (!response.ok) {
       throw new Error(`Post translations API returned ${response.status}`);
@@ -46,22 +44,9 @@ const fetchTranslationsData = async (): Promise<TranslationsData | null> => {
   }
 };
 
-const getTranslationsData = async (): Promise<TranslationsData | null> => {
-  const now = Date.now();
-  if (cachedTranslationsData && now < cacheExpiry) {
-    return cachedTranslationsData;
-  }
-  const data = await fetchTranslationsData();
-  if (data) {
-    cachedTranslationsData = data;
-    cacheExpiry = now + CACHE_TTL_MS;
-  }
-  return data;
-};
-
 export const getPostTranslations = async (
   postId: string,
 ): Promise<PostTranslation[]> => {
-  const data = await getTranslationsData();
+  const data = await fetchTranslationsData();
   return data?.[postId] ?? [];
 };

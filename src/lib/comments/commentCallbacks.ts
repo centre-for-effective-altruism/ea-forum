@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import intersection from "lodash/intersection";
 import difference from "lodash/difference";
@@ -743,8 +744,8 @@ export const updateCommentDeleted = async ({
       .where(eq(tags._id, comment.tag._id));
   }
 
-  void sendCommentDeletionPrivateMessage(currentUser, comment._id);
-  void elasticSyncDocument("Comments", comment._id);
+  waitUntil(sendCommentDeletionPrivateMessage(currentUser, comment._id));
+  waitUntil(elasticSyncDocument("Comments", comment._id));
 };
 
 export const updateCommentThreadLock = async (

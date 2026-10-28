@@ -63,7 +63,7 @@ class ElasticClient {
 
     if (!globalClient) {
       globalClient = new Client({
-        requestTimeout: 600000,
+        requestTimeout: 60000,
         cloud: { id: cloudId },
         auth: {
           username,

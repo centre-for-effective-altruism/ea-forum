@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { not, sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import { db } from "../db";
@@ -211,7 +212,7 @@ export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
     throw new Error("Permission denied");
   }
   await updateWithFieldChanges(db, currentUser, posts, postId, { draft: true });
-  void elasticSyncDocument("Posts", postId);
+  waitUntil(elasticSyncDocument("Posts", postId));
 };
 
 export const deleteDraft = async (currentUser: CurrentUser, postId: string) => {
@@ -233,5 +234,5 @@ export const deleteDraft = async (currentUser: CurrentUser, postId: string) => {
     draft: true,
     deletedDraft: true,
   });
-  void elasticSyncDocument("Posts", postId);
+  waitUntil(elasticSyncDocument("Posts", postId));
 };

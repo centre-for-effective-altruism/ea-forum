@@ -10,7 +10,7 @@ const useBeforeUnloadTracking = () => {
   useEffect(() => {
     const handler = () => {
       captureEvent("beforeUnloadFired");
-      flushClientEvents(true);
+      void flushClientEvents(true);
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);

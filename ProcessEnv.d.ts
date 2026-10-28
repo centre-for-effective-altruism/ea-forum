@@ -79,5 +79,10 @@ declare namespace NodeJS {
     APRIL_FOOLS_TAG_ID: string;
     NEXT_PUBLIC_OPEN_THREAD_TAG_ID: string;
     NEXT_PUBLIC_AMA_TAG_ID: string;
+
+    // Hosting platform (set automatically by Render/Vercel)
+    RENDER_GIT_COMMIT?: string;
+    VERCEL_GIT_COMMIT_SHA?: string;
+    VERCEL_URL?: string;
   }
 }

@@ -1,5 +1,6 @@
 import "server-only";
-import { throttledFlushClientEvents, throttledStoreEvent } from "./storeEvent";
+import { waitUntil } from "@vercel/functions";
+import { flushClientEvents, throttledStoreEvent } from "./storeEvent";
 import { AnalyticsEvent, showAnalyticsDebug } from "./analyticsHelpers";
 import { formatConsoleDate } from "../timeUtils";
 import { getPostHogClient } from "../posthog-server";
@@ -43,15 +44,19 @@ export const captureServerEvent = (
   }
 
   throttledStoreEvent(event, serverConsoleLogAnalyticsEvent);
-  throttledFlushClientEvents();
+  waitUntil(flushClientEvents());
 
   const posthog = getPostHogClient();
   const id =
     distinctId ??
     (typeof eventProps.userId === "string" ? eventProps.userId : "anonymous");
-  posthog?.capture({
-    distinctId: id,
-    event: eventType,
-    properties: eventProps,
-  });
+  if (posthog) {
+    waitUntil(
+      posthog.captureImmediate({
+        distinctId: id,
+        event: eventType,
+        properties: eventProps,
+      }),
+    );
+  }
 };
