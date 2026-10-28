@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { eq, inArray } from "drizzle-orm";
 import type { CurrentUser } from "./currentUser";
 import type { JsonRecord } from "../typeHelpers";
@@ -67,14 +68,16 @@ export const createUser = async ({
     ])
     .returning();
   const { lat: latitude, lng: longitude } = userGetLocation(user);
-  void updateMailchimpSubscription({
-    list: "eaForum",
-    status: "subscribed",
-    email,
-    displayName,
-    location: { latitude, longitude },
-  });
-  void elasticSyncDocument("Users", user._id);
+  waitUntil(
+    updateMailchimpSubscription({
+      list: "eaForum",
+      status: "subscribed",
+      email,
+      displayName,
+      location: { latitude, longitude },
+    }),
+  );
+  waitUntil(elasticSyncDocument("Users", user._id));
   return user;
 };
 
@@ -109,7 +112,7 @@ export const completeUserProfile = async (
       subscribedToDigest: false,
     });
   });
-  void elasticSyncDocument("Users", currentUser._id);
+  waitUntil(elasticSyncDocument("Users", currentUser._id));
 };
 
 export const approveNewUser = async (
@@ -126,7 +129,7 @@ export const approveNewUser = async (
     needsReview: false,
     snoozedUntilContentCount: null,
   });
-  void elasticSyncDocument("Users", userIdToApprove);
+  waitUntil(elasticSyncDocument("Users", userIdToApprove));
 };
 
 export const userCheckNotifications = async ({

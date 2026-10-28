@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { saveClientId } from "./lib/clientIds/clientIdMutations";
 import { createLegacySiteRedirectResponse } from "./lib/proxy/legacySiteRedirect";
 import { getBotSiteRedirectUrl } from "./lib/proxy/botSiteRedirect";
@@ -9,12 +9,12 @@ import { getBotSiteRedirectUrl } from "./lib/proxy/botSiteRedirect";
 import EventEmitter from "node:events";
 EventEmitter.defaultMaxListeners = 20;
 
-export const proxy = async (request: NextRequest) => {
+export const proxy = async (request: NextRequest, event: NextFetchEvent) => {
   const botSiteRedirectUrl = getBotSiteRedirectUrl(request);
   if (botSiteRedirectUrl) {
     return NextResponse.redirect(botSiteRedirectUrl, 307);
   }
-  void saveClientId(request);
+  event.waitUntil(saveClientId(request));
   return createLegacySiteRedirectResponse(request);
 };
 

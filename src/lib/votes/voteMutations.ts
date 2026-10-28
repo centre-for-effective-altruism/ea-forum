@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import maxBy from "lodash/maxBy";
 import { and, eq } from "drizzle-orm";
 import { randomId } from "@/lib/utils/random";
@@ -292,7 +293,7 @@ export const performVote = async ({
       if (moderatorActionType === "votingPatternWarningDelivered") {
         showVotingPatternWarning = true;
       }
-      void createModeratorAction(null, user._id, moderatorActionType);
+      waitUntil(createModeratorAction(null, user._id, moderatorActionType));
     }
   }
 
@@ -332,7 +333,7 @@ export const performVote = async ({
   ]);
 
   if (collectionIsSearchIndexed(collectionName)) {
-    void elasticSyncDocument(collectionName, document._id);
+    waitUntil(elasticSyncDocument(collectionName, document._id));
   }
 
   return {

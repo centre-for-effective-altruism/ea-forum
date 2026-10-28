@@ -1,6 +1,6 @@
 import "server-only";
 
-import { isAnyTest, isProduction } from "./environment";
+import { isAnyTest } from "./environment";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as pgDrizzle } from "drizzle-orm/node-postgres";
 import { drizzle as pgLiteDrizzle } from "drizzle-orm/pglite";
@@ -11,6 +11,7 @@ import { vector } from "@electric-sql/pglite/vector";
 import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { cube } from "@electric-sql/pglite/contrib/cube";
 import { defineRelations } from "drizzle-orm";
+import { attachDatabasePool } from "@vercel/functions";
 import { createPerformanceLogger } from "./performanceLogger";
 import {
   bookmarks,
@@ -400,11 +401,13 @@ const createDb = () => {
   const db = pgDrizzle({
     connection: {
       connectionString: process.env.DATABASE_URL,
-      ...(isProduction ? { min: 5, max: 20 } : { min: 1, max: 5 }),
+      min: 0,
+      max: 5,
     },
     relations,
     logger: process.env.LOG_DRIZZLE_QUERIES === "true",
   });
+  attachDatabasePool(db.$client);
   if (
     ["full", "simple"].includes(process.env.ENABLE_QUERY_PERFORMANCE_LOGGER ?? "")
   ) {

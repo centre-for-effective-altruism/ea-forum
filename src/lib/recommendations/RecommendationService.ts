@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { captureException } from "@sentry/nextjs";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
@@ -69,35 +70,37 @@ class RecommendationService {
 
       const strategyName = strategies[0];
       const strategySettings = { ...result.settings, context: strategy.context };
-      void Promise.all(
-        postIds.map((postId) =>
-          // We need to write this manually as drizzle can't handle expression indexes
-          db.execute(sql`
-          INSERT INTO "PostRecommendations" (
-            "_id",
-            "userId",
-            "clientId",
-            "postId",
-            "strategyName",
-            "strategySettings",
-            "recommendationCount",
-            "lastRecommendedAt",
-            "createdAt"
-          ) VALUES (
-            ${randomId()},
-            ${currentUser?._id ?? null},
-            ${clientId},
-            ${postId},
-            ${strategyName},
-            ${strategySettings},
-            0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-          ) ON CONFLICT (
-            COALESCE("userId", ''), COALESCE("clientId", ''), "postId"
-          ) DO UPDATE SET
-            "strategyName" = ${strategyName},
-            "strategySettings" = ${strategySettings},
-            "lastRecommendedAt" = CURRENT_TIMESTAMP
-        `),
+      waitUntil(
+        Promise.all(
+          postIds.map((postId) =>
+            // We need to write this manually as drizzle can't handle expression indexes
+            db.execute(sql`
+              INSERT INTO "PostRecommendations" (
+                "_id",
+                "userId",
+                "clientId",
+                "postId",
+                "strategyName",
+                "strategySettings",
+                "recommendationCount",
+                "lastRecommendedAt",
+                "createdAt"
+              ) VALUES (
+                ${randomId()},
+                ${currentUser?._id ?? null},
+                ${clientId},
+                ${postId},
+                ${strategyName},
+                ${strategySettings},
+                0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              ) ON CONFLICT (
+                COALESCE("userId", ''), COALESCE("clientId", ''), "postId"
+              ) DO UPDATE SET
+                "strategyName" = ${strategyName},
+                "strategySettings" = ${strategySettings},
+                "lastRecommendedAt" = CURRENT_TIMESTAMP
+            `),
+          ),
         ),
       );
 

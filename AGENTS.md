@@ -6,6 +6,7 @@
 - UI: React 19 + Tailwind CSS v4 (theme tokens in `src/app/globals.css`)
 - Data: PostgreSQL via Drizzle ORM; tests use in-memory PGlite
 - Error monitoring: Sentry and PostHog
+- Hosting: Serverless Vercel
 - Architecture: Server Components for initial data, oRPC for client-triggered
   interactions
 - This codebase is an ongoing migration; if expected behavior is ambiguous, ask

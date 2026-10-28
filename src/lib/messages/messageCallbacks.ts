@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { moderatorActionType } from "../moderatorActions/moderatorActionHelpers";
 import { createModeratorAction } from "../moderatorActions/moderatorActionMutations";
@@ -67,10 +68,12 @@ export const flagOrBlockUserOnManyDMs = async ({
     allUsersEverContacted.length > MAX_ALLOWED_CONTACTS_BEFORE_FLAG &&
     !currentUser.reviewedAt
   ) {
-    void createModeratorAction(
-      null,
-      currentUser._id,
-      moderatorActionType("flaggedForNDMs"),
+    waitUntil(
+      createModeratorAction(
+        null,
+        currentUser._id,
+        moderatorActionType("flaggedForNDMs"),
+      ),
     );
   }
 
@@ -123,11 +126,13 @@ export const updateUserNotesOnModMessage = async (conversation: Conversation) =>
   const nonAdminParticipant = participants.find((user) => !userIsAdmin(user));
 
   if (nonAdminParticipant && messages.length === 1) {
-    void createModeratorAction(
-      null,
-      nonAdminParticipant._id,
-      moderatorActionType("sentModeratorMessage"),
-      new Date(),
+    waitUntil(
+      createModeratorAction(
+        null,
+        nonAdminParticipant._id,
+        moderatorActionType("sentModeratorMessage"),
+        new Date(),
+      ),
     );
   }
 };

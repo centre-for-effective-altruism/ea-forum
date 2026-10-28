@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { db } from "../db";
 import { randomId } from "../utils/random";
 import { ModeratorAction, moderatorActions, User } from "../schema";
@@ -20,7 +21,7 @@ const triggerReviewAfterModeration = async (
     isActionActive(moderatorAction) ||
     actionType === moderatorActionType("receivedSeniorDownvotesAlert")
   ) {
-    void triggerReview(moderatorAction.userId);
+    waitUntil(triggerReview(moderatorAction.userId));
   }
 
   await appendToSunshineNotes({

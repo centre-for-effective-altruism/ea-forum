@@ -102,7 +102,7 @@ const clientWriteEvents = async (events: AnalyticsEvent[]) => {
   });
 };
 
-export const flushClientEvents = (force: boolean = false) => {
+export const flushClientEvents = async (force: boolean = false) => {
   if (!pendingAnalyticsEvents.length) {
     return;
   }
@@ -112,7 +112,7 @@ export const flushClientEvents = (force: boolean = false) => {
   }
   const eventsToWrite = [...pendingAnalyticsEvents];
   pendingAnalyticsEvents.length = 0;
-  void clientWriteEvents(eventsToWrite);
+  await clientWriteEvents(eventsToWrite);
 };
 
 let lastFlushedAt: Date | null = null;
@@ -122,6 +122,6 @@ export const throttledFlushClientEvents = () => {
   const now = new Date();
   if (!lastFlushedAt || now.getTime() - lastFlushedAt.getTime() > flushIntervalMs) {
     lastFlushedAt = now;
-    flushClientEvents();
+    void flushClientEvents();
   }
 };

@@ -1,4 +1,5 @@
 import "server-only";
+import { waitUntil } from "@vercel/functions";
 import type { CurrentUser } from "../users/currentUser";
 import type { ForumEventCommentMetadata } from "../forumEvents/forumEventHelpers";
 import { eq } from "drizzle-orm";
@@ -159,13 +160,13 @@ const commentAsyncCallbacks = ({
     return;
   }
   if (isFirstPublish) {
-    void triggerReviewIfNeededById(user._id);
-    void newCommentNotifications(comment._id);
+    waitUntil(triggerReviewIfNeededById(user._id));
+    waitUntil(newCommentNotifications(comment._id));
   }
-  void checkCommentForSpam(db, user, comment._id, revision, post);
-  void notifyUsersOfPingbackMentions(user, "Comments", comment, oldComment);
-  void runPangramOnComment(user, revision._id);
-  void elasticSyncDocument("Comments", comment._id);
+  waitUntil(checkCommentForSpam(db, user, comment._id, revision, post));
+  waitUntil(notifyUsersOfPingbackMentions(user, "Comments", comment, oldComment));
+  waitUntil(runPangramOnComment(user, revision._id));
+  waitUntil(elasticSyncDocument("Comments", comment._id));
 };
 
 export const createPostComment = async ({
@@ -627,7 +628,7 @@ export const toggleCommentRetracted = async ({
   await updateWithFieldChanges(db, user, comments, commentId, {
     retracted: !comment.retracted,
   });
-  void elasticSyncDocument("Comments", commentId);
+  waitUntil(elasticSyncDocument("Comments", commentId));
   return (await fetchCommentsListItem({ currentUser: user, commentId }))!;
 };
 
