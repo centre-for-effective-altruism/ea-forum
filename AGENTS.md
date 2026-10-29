@@ -119,6 +119,12 @@ Cache Components (`cacheComponents` is enabled):
   depends on cookies in `RequestCookiesProvider` (inside `Suspense`).
 - `export const instant = false` lets a route block on request data. Only use it for
   routes that haven't been converted yet.
+- Most data is also edited by the legacy site, so `"use cache"` needs a time-based
+  `cacheLife` (`shortCacheLife` in `src/lib/cacheLifetimes.ts` for frequently
+  changing data). Never cache data that includes the current user's state; see
+  `src/lib/posts/cachedPostLists.ts` for caching only for logged-out users.
+- `next/cache` APIs are no-ops in tests (`vitest.setup.ts`), so cached functions
+  run uncached there.
 
 CkEditor
 

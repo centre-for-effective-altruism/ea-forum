@@ -11,6 +11,16 @@ vi.mock("server-only", () => {
   return {};
 });
 
+// "use cache" is ignored outside of Next, but these throw without the Next
+// runtime, so they're no-ops in tests
+vi.mock(import("next/cache"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
+  revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
+}));
+
 beforeAll(async () => {
   await Promise.all(
     postgresExtensions.map((extension) =>
