@@ -5,6 +5,7 @@ import type { PostsListView } from "./postsHelpers";
 import { shortCacheLife } from "../cacheLifetimes";
 import {
   fetchFeaturedFrontpagePosts,
+  fetchForumFavoritesPostsList,
   fetchFrontpageCuratedPostsList,
   fetchMostRecentlyCuratedPost,
   fetchPostsListFromView,
@@ -37,7 +38,13 @@ const fetchLoggedOutMostRecentlyCuratedPost = async () => {
   return fetchMostRecentlyCuratedPost(null);
 };
 
-export const fetchHomePagePostsListFromView = (
+const fetchLoggedOutForumFavoritesPostsList = async (limit: number) => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  return fetchForumFavoritesPostsList(null, limit);
+};
+
+export const fetchCachedPostsListFromView = (
   currentUserId: string | null,
   view: PostsListView,
 ) =>
@@ -45,12 +52,14 @@ export const fetchHomePagePostsListFromView = (
     ? fetchPostsListFromView(currentUserId, view)
     : fetchLoggedOutPostsListFromView(view);
 
-export const fetchHomePageCuratedPostsList = (currentUserId: string | null) =>
+export const fetchCachedFrontpageCuratedPostsList = (
+  currentUserId: string | null,
+) =>
   currentUserId
     ? fetchFrontpageCuratedPostsList(currentUserId)
     : fetchLoggedOutFrontpageCuratedPostsList();
 
-export const fetchHomePageFeaturedPosts = (
+export const fetchCachedFeaturedFrontpagePosts = (
   currentUser: CurrentUser | null,
   limit: number,
 ) =>
@@ -58,9 +67,17 @@ export const fetchHomePageFeaturedPosts = (
     ? fetchFeaturedFrontpagePosts({ currentUser, limit })
     : fetchLoggedOutFeaturedFrontpagePosts(limit);
 
-export const fetchHomePageMostRecentlyCuratedPost = (
+export const fetchCachedMostRecentlyCuratedPost = (
   currentUser: CurrentUser | null,
 ) =>
   currentUser
     ? fetchMostRecentlyCuratedPost(currentUser)
     : fetchLoggedOutMostRecentlyCuratedPost();
+
+export const fetchCachedForumFavoritesPostsList = (
+  currentUserId: string | null,
+  limit: number,
+) =>
+  currentUserId
+    ? fetchForumFavoritesPostsList(currentUserId, limit)
+    : fetchLoggedOutForumFavoritesPostsList(limit);

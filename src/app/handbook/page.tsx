@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { getCurrentUser } from "@/lib/users/currentUser";
-import { fetchHandbookPage } from "@/lib/collections/handbookQueries";
+import { fetchCachedHandbookPage } from "@/lib/collections/handbookQueries";
 import {
   getSiteOgImageUrl,
   makeCloudinaryImageUrl,
@@ -17,8 +16,8 @@ const TITLE = "The Effective Altruism Handbook";
 const MAX_DESCRIPTION_LENGTH = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const currentUser = await getCurrentUser();
-  const data = await fetchHandbookPage(currentUser);
+  // The metadata doesn't depend on the current user
+  const data = await fetchCachedHandbookPage(null);
   if (!data) {
     return {
       title: "Handbook not found",
