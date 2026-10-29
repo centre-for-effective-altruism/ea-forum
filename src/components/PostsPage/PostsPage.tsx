@@ -9,15 +9,21 @@ import PostColumn from "./PostColumn";
 export default async function PostsPage({
   postId,
   sequenceId,
+  showSharePopup,
 }: Readonly<{
   postId: string;
   sequenceId?: string;
+  showSharePopup?: boolean;
 }>) {
   return (
     <div data-component="PostsPage">
       <div className="px-4 sm:px-2 pt-12 sm:pt-20 md:pt-28 pb-16 bg-post-body-bg">
         <Suspense fallback={<PostDisplaySkeleton />}>
-          <PostsDisplay postId={postId} sequenceId={sequenceId} />
+          <PostsDisplay
+            postId={postId}
+            sequenceId={sequenceId}
+            showSharePopup={showSharePopup}
+          />
         </Suspense>
         <PostColumn>
           <Suspense fallback={<CommentsSectionSkeleton />}>
