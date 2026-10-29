@@ -1,8 +1,10 @@
 import "server-only";
-import { throttledFlushClientEvents, throttledStoreEvent } from "./storeEvent";
+import { waitUntil } from "@vercel/functions";
+import { flushClientEvents, throttledStoreEvent } from "./storeEvent";
 import { AnalyticsEvent, showAnalyticsDebug } from "./analyticsHelpers";
 import { formatConsoleDate } from "../timeUtils";
-import { getPostHogClient } from "../posthog-server";
+import { getPostHogClient, getPostHogDistinctId } from "../posthog-server";
+import { posthogSuperProperties } from "./posthogSuperProperties";
 import type { JsonRecord } from "../typeHelpers";
 
 const stringToColor = (s: string) => {
@@ -27,6 +29,24 @@ const serverConsoleLogAnalyticsEvent = (event: AnalyticsEvent) => {
   );
 };
 
+const resolveDistinctId = async (
+  distinctId: string | undefined,
+  eventProps: JsonRecord,
+) => {
+  if (distinctId) {
+    return distinctId;
+  }
+  if (typeof eventProps.userId === "string") {
+    return eventProps.userId;
+  }
+  try {
+    return (await getPostHogDistinctId()) || "anonymous";
+  } catch {
+    // Not running inside a request (e.g. a cron job or script)
+    return "anonymous";
+  }
+};
+
 export const captureServerEvent = (
   eventType: string,
   eventProps: JsonRecord,
@@ -43,15 +63,18 @@ export const captureServerEvent = (
   }
 
   throttledStoreEvent(event, serverConsoleLogAnalyticsEvent);
-  throttledFlushClientEvents();
+  waitUntil(flushClientEvents());
 
   const posthog = getPostHogClient();
-  const id =
-    distinctId ??
-    (typeof eventProps.userId === "string" ? eventProps.userId : "anonymous");
-  posthog?.capture({
-    distinctId: id,
-    event: eventType,
-    properties: eventProps,
-  });
+  if (posthog) {
+    waitUntil(
+      resolveDistinctId(distinctId, eventProps).then((id) =>
+        posthog.captureImmediate({
+          distinctId: id,
+          event: eventType,
+          properties: { ...posthogSuperProperties, ...eventProps },
+        }),
+      ),
+    );
+  }
 };

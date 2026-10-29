@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, CSSProperties, useState } from "react";
+import { useEffect, CSSProperties, ReactNode, useState } from "react";
 import type { TableOfContents } from "@/lib/revisions/htmlToTableOfContents";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
+import clsx from "clsx";
 import Link from "../Link";
 import Type from "../Type";
 
@@ -10,11 +11,15 @@ export default function PostTableOfContents({
   title,
   contents,
   commentCount,
+  onClickSection,
+  footer,
   className,
 }: Readonly<{
   title: string;
   contents: TableOfContents | null;
   commentCount: number;
+  onClickSection?: (anchor: string) => void;
+  footer?: ReactNode;
   className?: string;
 }>) {
   const [currentAnchor, setCurrentAnchor] = useState<string | null>(null);
@@ -26,6 +31,9 @@ export default function PostTableOfContents({
 
     const onScroll = () => {
       const cutoffPoint = window.innerHeight / 4;
+      const isAtBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 1;
       const sectionsReversed = [...contents.sections].reverse();
       for (const section of sectionsReversed) {
         const element = document.getElementById(section.anchor);
@@ -33,8 +41,7 @@ export default function PostTableOfContents({
           continue;
         }
         const bounds = element.getBoundingClientRect();
-        const position = bounds.bottom;
-        if (position && position < cutoffPoint) {
+        if (bounds.height && (isAtBottom || bounds.top < cutoffPoint)) {
           setCurrentAnchor(section.anchor);
           return;
         }
@@ -76,11 +83,13 @@ export default function PostTableOfContents({
             >
               <Link
                 href={`#${anchor}`}
-                className={
+                onClick={onClickSection && (() => onClickSection(anchor))}
+                className={clsx(
+                  "after:content-['•'] after:ml-1",
                   anchor === currentAnchor
-                    ? "text-gray-900 after:content-['•'] after:ml-1"
-                    : "text-gray-600 hover:text-gray-900"
-                }
+                    ? "text-gray-900"
+                    : "text-gray-600 hover:text-gray-900 after:invisible",
+                )}
               >
                 {title}
               </Link>
@@ -96,6 +105,7 @@ export default function PostTableOfContents({
               </Type>
             </>
           )}
+          {footer}
         </nav>
       </aside>
     </AnalyticsContext>

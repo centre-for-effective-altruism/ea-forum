@@ -73,11 +73,17 @@ declare namespace NodeJS {
     START_HERE_POST_ID: string;
     INTRO_POST_ID: string;
     CONTACT_POST_ID: string;
+    HANDBOOK_COLLECTION_ID: string;
     NEXT_PUBLIC_COMMUNITY_TAG_ID: string;
     OPPORTUNITIES_TAG_ID: string;
     TRANSLATION_TAG_ID: string;
     APRIL_FOOLS_TAG_ID: string;
     NEXT_PUBLIC_OPEN_THREAD_TAG_ID: string;
     NEXT_PUBLIC_AMA_TAG_ID: string;
+
+    // Hosting platform (set automatically by Render/Vercel)
+    RENDER_GIT_COMMIT?: string;
+    VERCEL_GIT_COMMIT_SHA?: string;
+    VERCEL_URL?: string;
   }
 }

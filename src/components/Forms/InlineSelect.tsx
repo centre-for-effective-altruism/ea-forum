@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import type { Placement } from "@floating-ui/react";
 import DropdownMenu from "../Dropdown/DropdownMenu";
 import Type from "../Type";
 
@@ -14,6 +15,7 @@ type InlineSelectProps<T extends string> = {
   setValue: (value: T) => void;
   options: Option<T>[];
   placeholder?: string;
+  placement?: Placement;
   className?: string;
 };
 
@@ -21,6 +23,7 @@ export default function InlineSelect<T extends string>({
   value,
   setValue,
   options,
+  placement = "bottom-start",
 }: Readonly<InlineSelectProps<T>>) {
   const dismissRef = useRef<(() => void) | null>(null);
   const onSelect = useCallback(
@@ -34,7 +37,7 @@ export default function InlineSelect<T extends string>({
   return (
     <DropdownMenu
       dismissRef={dismissRef}
-      placement="bottom-start"
+      placement={placement}
       items={options.map((option) => (
         <Type
           key={option.value}

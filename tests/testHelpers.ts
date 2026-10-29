@@ -2,10 +2,17 @@ import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
 import { slugify } from "@/lib/slugs/slugify";
 import {
+  Book,
+  books,
+  chapters,
+  Collection,
+  collections,
   Comment,
   comments,
   ForumEvent,
   forumEvents,
+  InsertBook,
+  InsertCollection,
   InsertComment,
   InsertForumEvent,
   InsertLocalgroup,
@@ -189,6 +196,42 @@ export const createTestSequence = async (
     ...data,
   };
   const result = await db.insert(sequences).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestChapter = async (
+  data: Partial<typeof chapters.$inferInsert> & { sequenceId: string },
+) => {
+  const result = await db
+    .insert(chapters)
+    .values({ _id: randomId(), ...data })
+    .returning();
+  return result[0];
+};
+
+export const createTestCollection = async (
+  data?: Partial<InsertCollection>,
+): Promise<Collection> => {
+  const userId = data?.userId ?? (await createTestUser())._id;
+  const insertValues: InsertCollection = {
+    _id: randomId(),
+    userId,
+    title: randomId(),
+    slug: randomId(),
+    firstPageLink: "",
+    ...data,
+  };
+  const result = await db.insert(collections).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestBook = async (
+  data: Partial<InsertBook> & { collectionId: string },
+): Promise<Book> => {
+  const result = await db
+    .insert(books)
+    .values({ _id: randomId(), ...data })
+    .returning();
   return result[0];
 };
 

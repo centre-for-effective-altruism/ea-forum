@@ -13,7 +13,9 @@ import {
   fetchPostsListById,
   fetchPostsListByIds,
   fetchPostsListFromView,
+  fetchTagPostsList,
 } from "./postLists";
+import { topicPostsSortedBySchema } from "../tags/topicPageParams";
 import {
   deleteDraft,
   moveToDraft,
@@ -74,6 +76,19 @@ export const postsRouter = {
     .handler(async ({ input }) => {
       const currentUser = await getCurrentUser();
       return await fetchAllPosts({ currentUser, ...input });
+    }),
+  listForTag: os
+    .input(
+      z.object({
+        tagId: z.string(),
+        sortedBy: topicPostsSortedBySchema,
+        offset: z.number().int().nonnegative().max(5000).optional(),
+        limit: z.number().int().positive().max(50).default(15),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchTagPostsList({ currentUser, ...input });
     }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))

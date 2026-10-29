@@ -18,7 +18,12 @@ const oldSitePatterns = [
   /^\/api\/eafunds-posts$/,
   /^\/api\/crosspost.*$/,
   /^\/api\/v2\/crosspost.*$/,
+  /^\/topics\/(all|create|random|dashboard|wiki)$/, // Special-case topic slugs
 ];
+
+// Topic pages with these query params use legacy-only workflows (editing,
+// viewing revisions, and the tag flag dashboard)
+const legacyTopicPageParams = ["edit", "version", "revision", "flagId"];
 
 // **NOTE**: These are duplicated in `stranglerFig.ts` in ForumMagnum - any updates
 // here must be copied there.
@@ -40,6 +45,8 @@ const newSitePatterns = [
   /^\/contact$/, // Contact page
   /^\/tags$/, // Topics redirect
   /^\/topics$/, // Topics page
+  /^\/topics\/[^/]+$/, // Topic pages: /topics/[slug]
+  /^\/(tags|tag|topic)\/[^/]+$/, // Topic pages (legacy paths, redirect to /topics/[slug])
   /^\/copyright$/, // Copyright page
   /^\/cookie-policy$/, // Cookie policy
   /^\/cookiePolicy$/, // Cookie policy (camelCase, redirect to kebab-case)
@@ -52,6 +59,7 @@ const newSitePatterns = [
   /^\/best-of$/, // Best of
   /^\/library$/, // Library
   /^\/sequences$/, // Library (legacy path, redirect to /library)
+  /^\/handbook$/, // EA Handbook
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
   /^\/admin$/, // Admin
@@ -65,8 +73,18 @@ const newSitePatterns = [
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
 
-const isNewSiteAllowed = (pathname: string): boolean => {
+const isLegacyTopicPageRequest = (pathname: string, searchParams: URLSearchParams) =>
+  /^\/topics\/[^/]+$/.test(pathname) &&
+  legacyTopicPageParams.some((param) => searchParams.has(param));
+
+export const isNewSiteAllowed = (
+  pathname: string,
+  searchParams = new URLSearchParams(),
+): boolean => {
   if (oldSitePatterns.some((pattern) => pattern.test(pathname))) {
+    return false;
+  }
+  if (isLegacyTopicPageRequest(pathname, searchParams)) {
     return false;
   }
   if (newSitePatterns.some((pattern) => pattern.test(pathname))) {
@@ -76,13 +94,16 @@ const isNewSiteAllowed = (pathname: string): boolean => {
 };
 
 export const createLegacySiteRedirectResponse = (request: NextRequest) => {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
   const prefersNewSite =
     request.cookies.get("prefer_ea_forum_v3")?.value !== "false";
 
   // Only route to new site if user prefers it AND the route matches new site
   // patterns, or if the proxy is not configured
-  if (legacySiteUrl === null || (prefersNewSite && isNewSiteAllowed(pathname))) {
+  if (
+    legacySiteUrl === null ||
+    (prefersNewSite && isNewSiteAllowed(pathname, searchParams))
+  ) {
     return NextResponse.next();
   }
 

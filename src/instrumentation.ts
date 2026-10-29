@@ -1,9 +1,6 @@
+import type { Instrumentation } from "next";
 import * as Sentry from "@sentry/nextjs";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { registerOTel, OTLPHttpJsonTraceExporter } from "@vercel/otel";
 
 const initOpenTelemetry = () => {
   if (
@@ -12,27 +9,15 @@ const initOpenTelemetry = () => {
   ) {
     return;
   }
-  const sdk = new NodeSDK({
-    traceExporter: new OTLPTraceExporter({
+  registerOTel({
+    serviceName: `eaforum-${process.env.NEXT_PUBLIC_ENVIRONMENT}`,
+    traceExporter: new OTLPHttpJsonTraceExporter({
       url: `${process.env.NEXT_PUBLIC_POSTHOG_HOST}/i/v1/traces`,
       headers: {
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}`,
       },
     }),
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        // Both OpenTelemetry and Sentry try to patch undici with traceparent
-        // headers. Having two of these headers causes Elasticsearch to crash...
-        "@opentelemetry/instrumentation-undici": {
-          enabled: false,
-        },
-      }),
-    ],
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: `eaforum-${process.env.NEXT_PUBLIC_ENVIRONMENT}`,
-    }),
   });
-  sdk.start();
 };
 
 export const register = async () => {
@@ -45,4 +30,19 @@ export const register = async () => {
   }
 };
 
-export const onRequestError = Sentry.captureRequestError;
+export const onRequestError: Instrumentation.onRequestError = async (
+  error,
+  request,
+  context,
+) => {
+  Sentry.captureRequestError(error, request, context);
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { captureServerException } = await import("./lib/posthog-server");
+    await captureServerException(error, {
+      path: request.path,
+      method: request.method,
+      routePath: context.routePath,
+      routeType: context.routeType,
+    });
+  }
+};

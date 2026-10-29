@@ -3,6 +3,7 @@ import { PostHog } from "posthog-node";
 import { isAnyTest } from "./environment";
 import { getCurrentUser } from "./users/currentUser";
 import { getCurrentClientId } from "./clientIds/currentClientId";
+import { posthogSuperProperties } from "./analytics/posthogSuperProperties";
 
 let posthogClient: PostHog | null = null;
 
@@ -23,7 +24,11 @@ export const shutdownPostHog = async () => {
   }
 };
 
-/** This matches the logic in `useCurrentUser` when we call `posthog.identify` */
+/**
+ * Logged-in users match the ID used by `posthog.identify` in `useCurrentUser`.
+ * Logged-out users fall back to their client ID, which client-side events also
+ * carry as the `clientId` property.
+ */
 export const getPostHogDistinctId = cache(async () => {
   const user = await getCurrentUser();
   if (user) {
@@ -31,3 +36,13 @@ export const getPostHogDistinctId = cache(async () => {
   }
   return await getCurrentClientId();
 });
+
+export const captureServerException = async (
+  error: unknown,
+  properties?: Record<string, unknown>,
+) => {
+  await getPostHogClient()?.captureExceptionImmediate(error, undefined, {
+    ...posthogSuperProperties,
+    ...properties,
+  });
+};

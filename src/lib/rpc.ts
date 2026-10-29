@@ -11,10 +11,15 @@ import { BatchLinkPlugin } from "@orpc/client/plugins";
 // serves both Server Components and the rpc handler, so this skips
 // DNS/network entirely and avoids accidentally hitting whatever
 // NEXT_PUBLIC_SITE_URL is set to (which on preview deploys can be prod).
+// On Vercel there's no long-running process listening on localhost, so use
+// the current deployment's own URL instead.
+const getServerBaseUrl = () =>
+  process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : `http://127.0.0.1:${process.env.PORT ?? 3000}`;
+
 const baseUrl =
-  typeof window === "undefined"
-    ? `http://127.0.0.1:${process.env.PORT ?? 3000}`
-    : window.location.origin;
+  typeof window === "undefined" ? getServerBaseUrl() : window.location.origin;
 
 export const rpc: RouterClient<Router> = createORPCClient(
   new RPCLink({

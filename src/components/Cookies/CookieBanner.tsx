@@ -32,7 +32,7 @@ export default function CookieBanner() {
         bg-gray-0 border-t border-gray-200
       "
     >
-      <div className="w-[1200px] max-w-full mx-auto flex gap-2 items-center">
+      <div className="w-[1200px] max-w-full mx-auto flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
         <Type
           className="
             [&_a]:underline [&_a]:hover:opacity-70 [&_a]:cursor-pointer
@@ -45,7 +45,7 @@ export default function CookieBanner() {
           <CookiePopoverLink>cookie settings</CookiePopoverLink> for more control, or
           review our <Link href="/cookie-policy">cookie policy</Link> here.
         </Type>
-        <div className="flex gap-2 items-center [&_*]:whitespace-nowrap">
+        <div className="flex gap-2 items-center justify-end [&_*]:whitespace-nowrap">
           <Button variant="greyFilled" onClick={onReject}>
             Reject
           </Button>

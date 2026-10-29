@@ -512,6 +512,9 @@ export const books = pgTable(
   ],
 );
 
+export type Book = typeof books.$inferSelect;
+export type InsertBook = typeof books.$inferInsert;
+
 export const ckEditorUserSessions = pgTable(
   "CkEditorUserSessions",
   {
@@ -556,6 +559,9 @@ export const collections = pgTable(
     index("idx_Collections_slug").using("btree", table.slug.asc().nullsLast()),
   ],
 );
+
+export type Collection = typeof collections.$inferSelect;
+export type InsertCollection = typeof collections.$inferInsert;
 
 export const comments = pgTable(
   "Comments",

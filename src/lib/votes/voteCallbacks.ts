@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { eq, sql } from "drizzle-orm";
 import { createNotification } from "../notifications/notificationMutations";
 import { userSmallVotePower, VoteType } from "./voteHelpers";
@@ -90,7 +91,7 @@ export const updateUserKarma = async (
 
         // Send notification if crossing a vote power threshold
         if (userSmallVotePower(oldKarma, 1) < userSmallVotePower(newKarma, 1)) {
-          void sendKarmaThresholdNotification(db, author);
+          waitUntil(sendKarmaThresholdNotification(db, author));
         }
 
         // Update the user groups if crossing a group threshold
@@ -211,7 +212,7 @@ export const triggerCommentAutomod = async (
     });
   const needsModeration = isDownvotedBelowBar(document, -10);
   if (previousCommentModeratorActions.length < 1 && needsModeration) {
-    void createCommentModeratorAction(db, commentId, "downvotedCommentAlert");
+    waitUntil(createCommentModeratorAction(db, commentId, "downvotedCommentAlert"));
   }
 };
 

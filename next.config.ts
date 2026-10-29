@@ -76,6 +76,16 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/tag/:slug",
+      destination: "/topics/:slug",
+      permanent: true,
+    },
+    {
+      source: "/topic/:slug",
+      destination: "/topics/:slug",
+      permanent: true,
+    },
+    {
       source: "/api/notificationEvents",
       destination: "https://fm-prod.effectivealtruism.org/api/notificationEvents",
       permanent: false,
@@ -155,6 +165,7 @@ if (!isPosthogConfigured) {
 
 const commitHash =
   process.env.RENDER_GIT_COMMIT ??
+  process.env.VERCEL_GIT_COMMIT_SHA ??
   execSync("git rev-parse HEAD", {
     encoding: "utf8",
   }).trim();

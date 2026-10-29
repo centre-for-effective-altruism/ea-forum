@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import type { CurrentUser } from "../users/currentUser";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
@@ -117,8 +118,8 @@ export const createMessage = async ({
     return [message, updatedConversation];
   });
 
-  void sendMessageNotifications(updatedConversation, message);
-  void updateUserNotesOnModMessage(updatedConversation);
+  waitUntil(sendMessageNotifications(updatedConversation, message));
+  waitUntil(updateUserNotesOnModMessage(updatedConversation));
 
   return message;
 };
