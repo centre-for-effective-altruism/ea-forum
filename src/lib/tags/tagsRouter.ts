@@ -15,7 +15,7 @@ import { addOrUpvoteTag, setParentTag } from "./tagMutations";
 
 export const tagsRouter = {
   listCore: os
-    .input(z.object({ limit: z.number().optional() }).optional())
+    .input(z.object({ limit: z.int().positive().max(50).optional() }).optional())
     .handler(({ input }) => fetchCoreTags(input?.limit)),
   listByIds: os
     .input(z.object({ tagIds: z.array(z.string()) }))

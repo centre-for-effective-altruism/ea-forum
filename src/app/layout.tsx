@@ -19,7 +19,7 @@ import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 import IntercomButton from "@/components/Intercom/IntercomButton";
 import PageLoadListener from "@/components/PageLoadListener";
 import PageAnalytics from "@/components/PageAnalytics";
-import SiteToggle from "@/components/Admin/SiteToggle";
+import DynamicSiteToggle from "@/components/Admin/DynamicSiteToggle";
 import MobileNav from "@/components/Nav/MobileNav";
 import Header from "@/components/Header/Header";
 import Providers from "@/components/Providers";
@@ -167,7 +167,7 @@ export default function RootLayout({
             <IntercomButton />
           </Suspense>
           <Suspense>
-            <SiteToggle />
+            <DynamicSiteToggle />
           </Suspense>
           <DynamicCookieBanner />
           <PostHogConsent />
