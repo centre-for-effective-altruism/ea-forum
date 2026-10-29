@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { combineUrls, getSiteUrl } from "@/lib/routeHelpers";
-import { getCurrentHomePageTab } from "@/components/HomePage/homePageHelpers";
+import {
+  getCurrentHomePageTab,
+  homePageTabs,
+} from "@/components/HomePage/homePageHelpers";
 import {
   featuredViewTypeCookie,
   isPostsListViewType,
@@ -11,8 +14,11 @@ import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
 import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import BotSiteNotice from "@/components/HomePage/BotSiteNotice";
-import HomePageTabs from "@/components/HomePage/HomePageTabs";
+import HomePageTabs, {
+  HomePageTabsSkeleton,
+} from "@/components/HomePage/HomePageTabs";
 import StructuredData from "@/components/StructuredData";
+import RequestCookiesProvider from "@/components/Cookies/RequestCookiesProvider";
 
 const structuredData = {
   "@context": "http://schema.org",
@@ -37,7 +43,7 @@ const structuredData = {
   ].join(" "),
 };
 
-export default async function HomePage() {
+async function HomePageTabsLoader() {
   const cookieStore = await cookies();
   const initialTab = getCurrentHomePageTab(cookieStore);
   const featuredViewCookie = cookieStore.get(featuredViewTypeCookie)?.value ?? "";
@@ -45,16 +51,7 @@ export default async function HomePage() {
     ? featuredViewCookie
     : undefined;
   return (
-    <HomePageColumns
-      pageContext="homePage"
-      banner={
-        <Suspense>
-          <ForumEventHomePageBanner />
-        </Suspense>
-      }
-    >
-      <StructuredData data={structuredData} />
-      <BotSiteNotice />
+    <RequestCookiesProvider>
       <HomePageTabs
         initialContent={
           <Suspense
@@ -68,6 +65,34 @@ export default async function HomePage() {
         initialContentTab={initialTab}
         className="mb-5"
       />
+    </RequestCookiesProvider>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <HomePageColumns
+      pageContext="homePage"
+      banner={
+        <Suspense>
+          <RequestCookiesProvider>
+            <ForumEventHomePageBanner />
+          </RequestCookiesProvider>
+        </Suspense>
+      }
+    >
+      <StructuredData data={structuredData} />
+      <BotSiteNotice />
+      <Suspense
+        fallback={
+          <>
+            <HomePageTabsSkeleton className="mb-5" />
+            <HomePageTabSkeleton tab={homePageTabs[0].name} />
+          </>
+        }
+      >
+        <HomePageTabsLoader />
+      </Suspense>
     </HomePageColumns>
   );
 }

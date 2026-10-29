@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cacheLife } from "next/cache";
 import { sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
 import { db } from "@/lib/db";
@@ -36,7 +36,11 @@ export const tagBaseProjection = {
 
 export type TagBase = TagFromProjection<typeof tagBaseProjection>;
 
-export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
+// Tags are edited on the legacy site, so we can't invalidate these when they
+// change, and cache them for a short time instead
+export const fetchCoreTags = async (limit?: number): Promise<TagBase[]> => {
+  "use cache";
+  cacheLife("minutes");
   return db.query.tags.findMany({
     ...tagBaseProjection,
     where: {
@@ -50,9 +54,11 @@ export const fetchCoreTags = cache((limit?: number): Promise<TagBase[]> => {
     },
     limit,
   });
-});
+};
 
-export const fetchAllTags = cache(() => {
+export const fetchAllTags = async () => {
+  "use cache";
+  cacheLife("minutes");
   return db.query.tags.findMany({
     ...tagBaseProjection,
     where: {
@@ -63,7 +69,7 @@ export const fetchAllTags = cache(() => {
       name: "asc",
     },
   });
-});
+};
 
 export const fetchTagBySlug = async (slug: string): Promise<TagBase | null> => {
   const result = await db.query.tags.findFirst({
@@ -290,7 +296,9 @@ const tagPageProjection = {
 
 export type TagPage = RevisionFromProjection<typeof tagPageProjection>;
 
-export const fetchTagPage = (slug: string) => {
+export const fetchTagPage = async (slug: string) => {
+  "use cache";
+  cacheLife("minutes");
   return db.query.tags.findFirst({
     ...tagPageProjection,
     where: {

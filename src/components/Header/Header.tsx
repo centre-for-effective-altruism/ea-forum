@@ -1,29 +1,44 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
+import { Suspense, useCallback, useState } from "react";
+import { usePathname } from "next/navigation";
 import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
-import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useMobileNav } from "@/lib/hooks/useMobileNav";
 import clsx from "clsx";
 import Image from "next/image";
 import Bars3Icon from "@heroicons/react/24/solid/Bars3Icon";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
-import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
-import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
-import NotificationsHeaderButton from "../Notifications/NotificationsHeaderButton";
-import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
-import LoginPopover from "@/components/Auth/LoginPopover";
-import UserProfileImage from "../UserProfileImage";
 import HeaderButton from "./HeaderButton";
 import HeaderSearch from "./HeaderSearch";
-import Button from "@/components/Button";
+import HeaderUserButtons, { HeaderUserSkeleton } from "./HeaderUserButtons";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
 import Headroom from "./Headroom";
 
 const HEADER_HEIGHT = 66;
 const HEADER_HEIGHT_CLASS = "h-[66px]";
+
+function MobileNavButton({ hideOnDesktop }: Readonly<{ hideOnDesktop: boolean }>) {
+  const { openMobileNav } = useMobileNav();
+  return (
+    <button
+      aria-label="Toggle navigation menu"
+      onClick={openMobileNav}
+      className={clsx(
+        "cursor-pointer hover:bg-item-hover p-1.5 rounded",
+        hideOnDesktop && "mobile-nav:hidden",
+      )}
+    >
+      <Bars3Icon className="w-6" />
+    </button>
+  );
+}
+
+// The home page shows the nav in a sidebar on desktop
+function PathnameMobileNavButton() {
+  const pathname = usePathname();
+  return <MobileNavButton hideOnDesktop={pathname === "/"} />;
+}
 
 export default function Header({
   stayAtTop,
@@ -33,9 +48,6 @@ export default function Header({
   const [_isUnfixed, setIsUnfixed] = useState(true);
   const setUnfixed = useCallback(() => setIsUnfixed(true), []);
   const setFixed = useCallback(() => setIsUnfixed(false), []);
-  const { onLogin, onSignup } = useLoginPopoverContext();
-  const { openMobileNav, showMobileNavOnDesktop } = useMobileNav();
-  const { currentUser } = useCurrentUser();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const toggleSearch = useCallback(() => setIsSearchOpen((open) => !open), []);
@@ -59,16 +71,9 @@ export default function Header({
           )}
         >
           <nav className="w-full mx-auto h-full px-2 sm:px-5 flex items-center">
-            <button
-              aria-label="Toggle navigation menu"
-              onClick={openMobileNav}
-              className={clsx(
-                "cursor-pointer hover:bg-item-hover p-1.5 rounded",
-                !showMobileNavOnDesktop && "mobile-nav:hidden",
-              )}
-            >
-              <Bars3Icon className="w-6" />
-            </button>
+            <Suspense fallback={<MobileNavButton hideOnDesktop={false} />}>
+              <PathnameMobileNavButton />
+            </Suspense>
             <Type style="logo" className="grow flex items-center">
               <Link href="/" className="inline-flex items-center gap-1">
                 <Image
@@ -96,39 +101,9 @@ export default function Header({
                   onClick={toggleSearch}
                 />
               )}
-              {currentUser ? (
-                <>
-                  <NotificationsHeaderButton />
-                  <Link href="/inbox" className="hover:opacity-100!">
-                    <HeaderButton Icon={EnvelopeIcon} description="Messages" />
-                  </Link>
-                  <UserDropdownMenu>
-                    <button
-                      className="
-                        cursor-pointer hover:bg-item-hover rounded h-9 px-1.5
-                        flex items-center gap-1
-                      "
-                    >
-                      <UserProfileImage user={currentUser} size={32} />
-                      <ChevronDownIcon className="w-[16px] text-gray-600" />
-                    </button>
-                  </UserDropdownMenu>
-                </>
-              ) : (
-                <>
-                  <Button variant="greyFilled" onClick={onLogin}>
-                    Login
-                  </Button>
-                  <Button
-                    variant="primaryFilled"
-                    onClick={onSignup}
-                    className="max-sm:hidden"
-                  >
-                    Sign up
-                  </Button>
-                  <LoginPopover />
-                </>
-              )}
+              <Suspense fallback={<HeaderUserSkeleton />}>
+                <HeaderUserButtons />
+              </Suspense>
             </div>
           </nav>
         </header>

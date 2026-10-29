@@ -30,7 +30,9 @@ export default function LibraryPage() {
           <section>
             <div className="flex gap-4 items-center justify-between mb-3">
               <Type style="sectionTitleSmall">Sequences</Type>
-              <NewSequenceButton />
+              <Suspense>
+                <NewSequenceButton />
+              </Suspense>
             </div>
             <Type className="mb-4">
               Sequences are collections of posts on a common theme, or that build on

@@ -15,7 +15,15 @@ export async function generateMetadata({
   return await generatePostMetadata(currentUser, _id);
 }
 
-export default async function PostPage({ params, searchParams }: PostPageProps) {
-  const [{ _id }, { sharePopup }] = await Promise.all([params, searchParams]);
-  return <PostsPage postId={_id} showSharePopup={sharePopup === "true"} />;
+export default function PostPage({ params, searchParams }: PostPageProps) {
+  return (
+    <PostsPage
+      params={Promise.all([params, searchParams]).then(
+        ([{ _id }, { sharePopup }]) => ({
+          postId: _id,
+          showSharePopup: sharePopup === "true",
+        }),
+      )}
+    />
+  );
 }

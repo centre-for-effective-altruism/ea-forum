@@ -1,4 +1,6 @@
+import { cacheLife, cacheTag } from "next/cache";
 import type { RelationalProjection } from "../utils/queryHelpers";
+import { shortCacheLife } from "../cacheLifetimes";
 import { db } from "../db";
 
 export type SpotlightRelationalProjection = RelationalProjection<
@@ -57,7 +59,12 @@ export const fetchAllSpotlights = async () => {
   });
 };
 
+export const currentSpotlightCacheTag = "current-spotlight";
+
 export const fetchCurrentSpotlight = async (): Promise<SpotlightBase | null> => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  cacheTag(currentSpotlightCacheTag);
   const now = new Date().toISOString();
   const result = await db.query.spotlights.findFirst({
     ...spotlightBaseProjection,

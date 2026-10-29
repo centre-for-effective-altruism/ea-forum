@@ -19,17 +19,21 @@ export async function generateMetadata({
   return generateTopicPageMetadata(currentUser, slug);
 }
 
-export default async function TopicPage({ params, searchParams }: TopicPageProps) {
+async function TopicPageContent({ params, searchParams }: TopicPageProps) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   if (!slug) {
     notFound();
   }
   const sortedByQuery =
     typeof query.sortedBy === "string" ? query.sortedBy : undefined;
+  return <TopicPageLoader slug={slug} sortedByQuery={sortedByQuery} />;
+}
+
+export default function TopicPage({ params, searchParams }: TopicPageProps) {
   return (
     <AnalyticsContext pageContext="tagPage">
       <Suspense fallback={<TopicPageSkeleton />}>
-        <TopicPageLoader slug={slug} sortedByQuery={sortedByQuery} />
+        <TopicPageContent params={params} searchParams={searchParams} />
       </Suspense>
     </AnalyticsContext>
   );

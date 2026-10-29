@@ -10,6 +10,7 @@ import NewQuickTakeSkeleton from "@/components/QuickTakes/NewQuickTakeSkeleton";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
+import RequestCookiesProvider from "@/components/Cookies/RequestCookiesProvider";
 
 const initialLimit = 20;
 
@@ -28,20 +29,33 @@ export default function QuickTakesPage() {
           <Link href="/quicktakes">Quick takes</Link>
         </Type>
         <AnalyticsContext listContext="shortformPage">
-          <QuickTakesListProvider>
-            <Suspense fallback={<NewQuickTakeSkeleton />}>
-              <NewQuickTakeWithCoreTags />
-            </Suspense>
-            <Suspense
-              fallback={
+          <Suspense
+            fallback={
+              <>
+                <NewQuickTakeSkeleton />
                 <div>
                   <QuickTakesListSkeleton count={initialLimit} />
                 </div>
-              }
-            >
-              <RecentlyActiveQuickTakesList initialLimit={initialLimit} />
-            </Suspense>
-          </QuickTakesListProvider>
+              </>
+            }
+          >
+            <RequestCookiesProvider>
+              <QuickTakesListProvider>
+                <Suspense fallback={<NewQuickTakeSkeleton />}>
+                  <NewQuickTakeWithCoreTags />
+                </Suspense>
+                <Suspense
+                  fallback={
+                    <div>
+                      <QuickTakesListSkeleton count={initialLimit} />
+                    </div>
+                  }
+                >
+                  <RecentlyActiveQuickTakesList initialLimit={initialLimit} />
+                </Suspense>
+              </QuickTakesListProvider>
+            </RequestCookiesProvider>
+          </Suspense>
         </AnalyticsContext>
       </div>
     </HomePageColumns>

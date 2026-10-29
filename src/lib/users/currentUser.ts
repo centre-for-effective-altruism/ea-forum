@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
 import { db } from "@/lib/db";
 import type { UserRelationalProjection } from "./userQueries";
@@ -74,6 +75,9 @@ export type CurrentUser = NonNullable<
 >;
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  // Everything that depends on the current user is per-request, so this stops
+  // it from being run during prerendering once the cookies are known
+  await connection();
   const cookieStore = await cookies();
   const loginToken = cookieStore.get(LOGIN_TOKEN_COOKIE_NAME)?.value;
   return loginToken ? await getCurrentUserByLoginToken(loginToken) : null;

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import Type from "@/components/Type";
 import { PeopleDirectoryProvider } from "@/components/PeopleDirectory/usePeopleDirectory";
@@ -13,11 +14,13 @@ export default function PeopleDirectoryPage() {
         <Type As="h1" style="sectionTitleLarge" className="text-[32px] mt-2 mb-6">
           People Directory
         </Type>
-        <PeopleDirectoryProvider>
-          <PeopleDirectoryMainSearch />
-          <PeopleDirectoryFilters />
-          <PeopleDirectoryResults />
-        </PeopleDirectoryProvider>
+        <Suspense>
+          <PeopleDirectoryProvider>
+            <PeopleDirectoryMainSearch />
+            <PeopleDirectoryFilters />
+            <PeopleDirectoryResults />
+          </PeopleDirectoryProvider>
+        </Suspense>
       </div>
     </AnalyticsContext>
   );

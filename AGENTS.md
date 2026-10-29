@@ -105,6 +105,27 @@ Frontend structure and conventions:
 - Use `clsx` for class composition and `@/*` path aliases.
 - Avoid editing `src/vendor/**` unless explicitly required.
 
+Cache Components (`cacheComponents` is enabled):
+
+- Pages are prerendered into a static shell, and anything that reads request data
+  (`cookies()`, `headers()`, `params`, `searchParams`, the current user) must be
+  inside a `<Suspense>` boundary. Don't await these at the top of a page or layout;
+  pass the promise down and await it in a child inside `Suspense`. `next build`
+  reports violations (`--debug-prerender` gives better stack traces).
+- `useCurrentUser()` suspends until the user loads, so client components that use
+  it need a `Suspense` boundary above them. Providers and analytics that wrap the
+  whole page use `useCurrentUserIfLoaded()` or `useCurrentUserGetter()` instead.
+- Client-side cookies are empty during SSR. Wrap client components whose SSR output
+  depends on cookies in `RequestCookiesProvider` (inside `Suspense`).
+- `export const instant = false` lets a route block on request data. Only use it for
+  routes that haven't been converted yet.
+- Most data is also edited by the legacy site, so `"use cache"` needs a time-based
+  `cacheLife` (`shortCacheLife` in `src/lib/cacheLifetimes.ts` for frequently
+  changing data). Never cache data that includes the current user's state; see
+  `src/lib/posts/cachedPostLists.ts` for caching only for logged-out users.
+- `next/cache` APIs are no-ops in tests (`vitest.setup.ts`), so cached functions
+  run uncached there.
+
 CkEditor
 
 - The app uses a vendored version of CkEditor in `ckEditor/**`
