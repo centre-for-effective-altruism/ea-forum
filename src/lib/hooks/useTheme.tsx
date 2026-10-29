@@ -9,10 +9,10 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useCurrentUser } from "./useCurrentUser";
+import { useCurrentUserIfLoaded } from "./useCurrentUser";
 import { rpc } from "../rpc";
 import { useCookiesWithConsent } from "../cookies/useCookiesWithConsent";
-import { validateThemeWithDefault, Theme } from "../themes";
+import { validateThemeWithDefault, themeClasses, Theme } from "../themes";
 
 type ThemeContext = {
   theme: Theme;
@@ -21,17 +21,11 @@ type ThemeContext = {
 
 const themeContext = createContext<ThemeContext | null>(null);
 
-const themeClasses: Record<Theme, string> = {
-  auto: "theme-auto",
-  default: "theme-light",
-  dark: "theme-dark",
-};
-
 export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [cookies, setCookie] = useCookiesWithConsent(["theme"]);
-  const { currentUser } = useCurrentUser();
-  const [theme, setTheme] = useState<Theme>(
-    currentUser?.theme?.name ?? validateThemeWithDefault(cookies.theme),
+  const currentUser = useCurrentUserIfLoaded();
+  const [theme, setTheme] = useState<Theme>(() =>
+    validateThemeWithDefault(cookies.theme),
   );
   const updateTheme = useCallback(
     async (theme: Theme) => {
@@ -44,25 +38,26 @@ export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
     [currentUser, setCookie],
   );
 
+  // The user's saved theme takes precedence over the cookie. Copy it into the
+  // cookie so that the theme script can apply it on future page loads.
+  const userTheme = currentUser?.theme?.name;
   useEffect(() => {
-    // We want to apply the theme classes to body, but we can't do that during
-    // SSR without delaying TTFP. To avoid this, we apply the classes first on
-    // the div below during SSR (which includes all the main page content, but
-    // not the page background or absolutely positioned elemnts attached to the
-    // body), and then add the class to the body after rendering in this useEffect.
-    // This is sufficient to prevent a flash of unstyled content.
-    const body = document.body;
-    if (body) {
-      body.classList.remove(...Object.values(themeClasses));
-      body.classList.add(themeClasses[theme]);
+    if (userTheme) {
+      const validTheme = validateThemeWithDefault(userTheme);
+      setTheme(validTheme);
+      setCookie("theme", validTheme, { maxAge: 315360000 });
     }
+  }, [userTheme, setCookie]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove(...Object.values(themeClasses));
+    root.classList.add(themeClasses[theme]);
   }, [theme]);
 
   return (
     <themeContext.Provider value={{ theme, updateTheme }}>
-      <div data-component="ThemeProvider" className={themeClasses[theme]}>
-        {children}
-      </div>
+      <div data-component="ThemeProvider">{children}</div>
     </themeContext.Provider>
   );
 };

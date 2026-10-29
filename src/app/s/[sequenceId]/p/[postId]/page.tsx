@@ -14,7 +14,6 @@ export async function generateMetadata({
   return await generatePostMetadata(currentUser, postId);
 }
 
-export default async function SequencePostPage({ params }: SequencePostPageProps) {
-  const { postId, sequenceId } = await params;
-  return <PostsPage postId={postId} sequenceId={sequenceId} />;
+export default function SequencePostPage({ params }: SequencePostPageProps) {
+  return <PostsPage ids={params} />;
 }

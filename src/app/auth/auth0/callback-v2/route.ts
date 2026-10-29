@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { connection, NextRequest, NextResponse } from "next/server";
 import { captureException } from "@sentry/nextjs";
 import {
   getAuth0Client,
@@ -36,6 +36,7 @@ const getReturnTo = (state: string | null): string => {
 
 // Callback handler for Google login through Auth0
 export const GET = async (req: NextRequest) => {
+  await connection();
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");

@@ -26,6 +26,22 @@ import HomePageTabSkeleton from "./HomePageTabSkeleton";
 import Type from "../Type";
 import clsx from "clsx";
 
+export function HomePageTabsSkeleton({
+  className,
+}: Readonly<{
+  className?: string;
+}>) {
+  return (
+    <div className={clsx("flex gap-6", className)}>
+      {homePageTabs.map(({ label, name }) => (
+        <Type key={name} style="homePageTab" className="pb-2">
+          <span className="rounded bg-gray-200 text-transparent">{label}</span>
+        </Type>
+      ))}
+    </div>
+  );
+}
+
 export default function HomePageTabs({
   initialContent,
   initialContentTab,

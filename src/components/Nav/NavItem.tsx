@@ -1,8 +1,13 @@
-import type { ComponentType } from "react";
+import { Suspense, type ComponentType, type ReactNode } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import clsx from "clsx";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
+
+function LoggedOutOnly({ children }: Readonly<{ children: ReactNode }>) {
+  const { currentUser } = useCurrentUser();
+  return currentUser ? null : children;
+}
 
 export default function NavItem({
   title,
@@ -19,13 +24,9 @@ export default function NavItem({
   isSelected: boolean;
   loggedOutOnly?: boolean;
 }>) {
-  const { currentUser } = useCurrentUser();
-  if (loggedOutOnly && currentUser) {
-    return null;
-  }
   const Icon = isSelected ? SelectedIcon : UnselectedIcon;
   const className = isSelected ? "text-gray-1000 font-[600]" : "text-gray-600";
-  return (
+  const item = (
     <Type style="body" data-component="NavItem">
       <Link
         href={href}
@@ -38,5 +39,12 @@ export default function NavItem({
         <Icon className="w-5" /> {title}
       </Link>
     </Type>
+  );
+  return loggedOutOnly ? (
+    <Suspense fallback={null}>
+      <LoggedOutOnly>{item}</LoggedOutOnly>
+    </Suspense>
+  ) : (
+    item
   );
 }

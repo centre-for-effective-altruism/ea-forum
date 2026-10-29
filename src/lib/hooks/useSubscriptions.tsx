@@ -16,7 +16,7 @@ import type { PostListItem } from "../posts/postLists";
 import type { PostDisplay } from "../posts/postQueries";
 import type { CurrentUser } from "../users/currentUser";
 import { rpc } from "../rpc";
-import { useCurrentUser } from "./useCurrentUser";
+import { useCurrentUser, useCurrentUserIfLoaded } from "./useCurrentUser";
 import { userGetDisplayName } from "../users/userHelpers";
 import {
   SubscriptionType,
@@ -54,7 +54,7 @@ export const SubscriptionProvider = ({
 }: Readonly<{
   children: ReactNode;
 }>) => {
-  const { currentUser } = useCurrentUser();
+  const currentUser = useCurrentUserIfLoaded();
   const [store, setStore] = useState<SubscriptionStore>({});
   const storeRef = useRef(store);
   storeRef.current = store;

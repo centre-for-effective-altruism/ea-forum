@@ -14,7 +14,6 @@ export async function generateMetadata({
   return await generatePostMetadata(currentUser, _id);
 }
 
-export default async function PostPage({ params }: PostPageProps) {
-  const { _id } = await params;
-  return <PostsPage postId={_id} />;
+export default function PostPage({ params }: PostPageProps) {
+  return <PostsPage ids={params.then(({ _id }) => ({ postId: _id }))} />;
 }

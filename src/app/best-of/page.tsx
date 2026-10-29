@@ -27,6 +27,8 @@ export const metadata: Metadata = {
   title: "Best of the Forum",
 };
 
+export const instant = false;
+
 export default async function BestOfPage() {
   const currentUser = await getCurrentUser();
   const [

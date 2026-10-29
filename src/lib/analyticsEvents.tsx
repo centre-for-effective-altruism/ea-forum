@@ -10,10 +10,9 @@ import {
 } from "react";
 import posthog from "posthog-js";
 import type { Json, JsonRecord } from "./typeHelpers";
-import { usePathname } from "next/navigation";
 import { AnalyticsEvent } from "./analytics/analyticsHelpers";
 import { formatConsoleDate } from "./timeUtils";
-import { useCurrentUser } from "./hooks/useCurrentUser";
+import { useCurrentUserGetter } from "./hooks/useCurrentUser";
 import { useIsInView } from "./hooks/useIsInView";
 import { useClientId } from "./hooks/useClientId";
 import {
@@ -121,32 +120,35 @@ export const useTracking = ({
   eventType?: string;
   eventProps?: EventProps;
 } = {}) => {
-  const { currentUser } = useCurrentUser();
+  const getCurrentUser = useCurrentUserGetter();
   const { clientId } = useClientId();
-  const path = usePathname();
   const localTrackingContext = useContext(trackingContext);
   const track = useCallback(
     (type?: string | undefined, trackingData?: Record<string, Json>) => {
       const eventName = type || eventType;
-      const props = {
-        userId: currentUser?._id,
-        clientId,
-        path,
-        tabId: window.tabId,
-        ...localTrackingContext,
-        ...eventProps,
-        ...trackingData,
-      } as JsonRecord;
-      const event = {
-        type: eventName,
-        timestamp: new Date(),
-        props,
-      };
-      throttledStoreEvent(event, browserConsoleLogAnalyticsEvent);
-      throttledFlushClientEvents();
-      posthog.capture(eventName, props);
+      const timestamp = new Date();
+      const path = window.location.pathname;
+      void getCurrentUser().then((currentUser) => {
+        const props = {
+          userId: currentUser?._id,
+          clientId,
+          path,
+          tabId: window.tabId,
+          ...localTrackingContext,
+          ...eventProps,
+          ...trackingData,
+        } as JsonRecord;
+        const event = {
+          type: eventName,
+          timestamp,
+          props,
+        };
+        throttledStoreEvent(event, browserConsoleLogAnalyticsEvent);
+        throttledFlushClientEvents();
+        posthog.capture(eventName, props);
+      });
     },
-    [currentUser, clientId, localTrackingContext, eventProps, eventType, path],
+    [getCurrentUser, clientId, localTrackingContext, eventProps, eventType],
   );
   return { captureEvent: track };
 };

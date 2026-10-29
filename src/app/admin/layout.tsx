@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/users/currentUser";
 
+export const instant = false;
+
 export default async function AdminLayout({
   children,
 }: Readonly<{

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { userCanGiveCommentAwards } from "./commentAwardHelpers";
-import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useCurrentUserIfLoaded } from "../hooks/useCurrentUser";
 import { captureException } from "@sentry/nextjs";
 import { rpc } from "../rpc";
 import toast from "react-hot-toast";
@@ -26,11 +26,11 @@ const commentAwardsUsedContext = createContext<CommentAwardsUsedContext | null>(
 export const CommentAwardsUsedProvider: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  const { currentUser } = useCurrentUser();
+  const currentUser = useCurrentUserIfLoaded();
   const [awardsUsed, setAwardsUsed] = useState(0);
 
   useEffect(() => {
-    if (!userCanGiveCommentAwards(currentUser)) {
+    if (!userCanGiveCommentAwards(currentUser ?? null)) {
       setAwardsUsed(0);
       return;
     }

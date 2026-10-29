@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import { waitUntil } from "@vercel/functions";
 import { combineUrls } from "@/lib/routeHelpers";
 import { captureServerException } from "@/lib/posthog-server";
@@ -17,16 +18,7 @@ export default async function ForumMagnumBundlePreload() {
     );
     const { js } = await hash.json();
     if (js) {
-      return (
-        // eslint-disable-next-line react-hooks/error-boundaries
-        <link
-          data-component="ForumMagnumBundlePreload"
-          as="script"
-          rel="preload"
-          fetchPriority="low"
-          href={`/js/bundle.js?hash=${js}`}
-        />
-      );
+      preload(`/js/bundle.js?hash=${js}`, { as: "script", fetchPriority: "low" });
     }
   } catch (e) {
     waitUntil(captureServerException(e));
