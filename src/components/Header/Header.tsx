@@ -2,11 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
-import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useMobileNav } from "@/lib/hooks/useMobileNav";
 import clsx from "clsx";
-import Image from "next/image";
 import Bars3Icon from "@heroicons/react/24/solid/Bars3Icon";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
 import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
@@ -17,8 +15,8 @@ import LoginPopover from "@/components/Auth/LoginPopover";
 import UserProfileImage from "../UserProfileImage";
 import HeaderButton from "./HeaderButton";
 import HeaderSearch from "./HeaderSearch";
+import SiteLogo from "./SiteLogo";
 import Button from "@/components/Button";
-import Type from "@/components/Type";
 import Link from "@/components/Link";
 import Headroom from "./Headroom";
 
@@ -69,23 +67,15 @@ export default function Header({
             >
               <Bars3Icon className="w-6" />
             </button>
-            <Type style="logo" className="grow flex items-center">
-              <Link href="/" className="inline-flex items-center gap-1">
-                <Image
-                  src={getSiteLogoUrl(100)}
-                  alt="Effective Altruism Forum"
-                  width={34}
-                  height={34}
-                  loading="eager"
-                />
-                <span className="translate-y-px">
-                  <span className="hidden md:inline">Effective Altruism Forum</span>
-                  <span className="max-[330px]:hidden md:hidden inline">
-                    EA Forum
-                  </span>
-                </span>
+            <div className="grow flex items-center">
+              <Link
+                href="/"
+                aria-label="Effective Altruism Forum home"
+                className="inline-flex items-center ml-2"
+              >
+                <SiteLogo />
               </Link>
-            </Type>
+            </div>
             <div className="flex gap-2 items-center">
               {isSearchOpen ? (
                 <HeaderSearch onClose={toggleSearch} />

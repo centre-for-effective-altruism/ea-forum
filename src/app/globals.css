@@ -472,6 +472,27 @@ iframe[data-test="uw-iframe"] {
 }
 
 /**
+ * Show the site logo matching the current theme
+ */
+.site-logo-dark {
+  display: none;
+}
+.theme-dark .site-logo-light {
+  display: none;
+}
+.theme-dark .site-logo-dark {
+  display: flex;
+}
+@media (prefers-color-scheme: dark) {
+  .theme-auto .site-logo-light {
+    display: none;
+  }
+  .theme-auto .site-logo-dark {
+    display: flex;
+  }
+}
+
+/**
  * Dark mode color overrides
  * TODO: Tidy this up so we don't have to copy and paste...
  */

@@ -6,10 +6,7 @@ import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
 import { isNoIndexSite } from "@/lib/environment";
-import {
-  getSiteLogoUrl,
-  getSiteOgImageUrl,
-} from "@/lib/cloudinary/cloudinaryHelpers";
+import { getSiteOgImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
 import ForumMagnumBundlePreload from "@/components/ForumMagnumBundlePreload";
 import DynamicCookieBanner from "@/components/Cookies/DynamicCookieBanner";
@@ -73,9 +70,13 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     icons: {
-      icon: getSiteLogoUrl(96),
-      shortcut: getSiteLogoUrl(50),
-      apple: getSiteLogoUrl(180),
+      icon: [
+        { url: "/favicon.ico", sizes: "48x48" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
+        { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+        { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      ],
+      apple: "/apple-touch-icon.png",
     },
     manifest: "/site.webmanifest",
     openGraph: {
