@@ -14,7 +14,7 @@ export const typeStyles = {
     "font-serif text-[19px] font-[430] tracking-tight [&_em]:tracking-[0.02em] [&_i]:tracking-[0.02em]",
   postTitle: "font-sans text-[16px] font-[600]",
   voteScore: "font-sans text-[16px] font-[500]",
-  homePageTab: "font-sans text-[24px] font-[700] leading-[24px] tracking-[-0.5px]",
+  homePageTab: "font-sans text-[24px] font-[600] leading-[24px] tracking-[-0.5px]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[28px]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
