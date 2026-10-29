@@ -1,41 +1,32 @@
 import Image from "next/image";
 
-// Full logo is 882x86 and reduced is 396x86; both render 24px tall. Brand
-// guidelines say to swap the file on mobile rather than shrink the logo.
-const LogoImages = ({ mode }: { mode: "light" | "dark" }) => (
-  <>
-    <Image
-      src={`/ea-forum-logo_full_${mode}-mode.svg`}
-      alt="Effective Altruism Forum"
-      width={246}
-      height={24}
-      loading="eager"
-      className="hidden md:block h-[24px] w-auto"
-    />
-    <Image
-      src={`/ea-forum-logo_reduced_${mode}-mode.svg`}
-      alt="EA Forum"
-      width={111}
-      height={24}
-      loading="eager"
-      className="md:hidden h-[24px] w-auto"
-    />
-  </>
-);
-
 /**
- * Light and dark versions only differ in the wordmark colour. Which one is
- * visible is controlled by the theme classes in globals.css.
+ * The official wordmark is Inter SemiBold, so we render it as live text next
+ * to the symbol. Browsers hint text but not SVG paths, so this stays sharp on
+ * low-DPI screens where the SVG logo looks blurry. The size and tracking were
+ * matched against the official SVG rendered 24px tall.
  */
 export default function SiteLogo() {
   return (
-    <>
-      <span className="site-logo-light flex">
-        <LogoImages mode="light" />
+    <span
+      className="
+        flex items-center gap-[6px] whitespace-nowrap font-sans font-[600]
+        text-[21px] leading-none tracking-[-0.035em]
+      "
+    >
+      <Image
+        src="/favicon.svg"
+        alt=""
+        width={15}
+        height={24}
+        loading="eager"
+        className="h-[24px] w-auto"
+      />
+      <span className="text-logo-wordmark">
+        <span className="hidden md:inline">Effective Altruism</span>
+        <span className="md:hidden">EA</span>{" "}
+        <span className="text-logo-forum">Forum</span>
       </span>
-      <span className="site-logo-dark">
-        <LogoImages mode="dark" />
-      </span>
-    </>
+    </span>
   );
 }
