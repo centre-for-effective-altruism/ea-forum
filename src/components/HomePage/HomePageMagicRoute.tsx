@@ -22,6 +22,7 @@ export default async function HomePageMagicRoute() {
       stickyPostsList={
         <ViewBasedPostsList
           hideLoadMore
+          isHomePage
           view={{
             view: "sticky",
             limit: 5,
@@ -32,6 +33,7 @@ export default async function HomePageMagicRoute() {
       communityPostsList={
         <ViewBasedPostsList
           hideLoadMore
+          isHomePage
           view={{
             view: "frontpage",
             limit: 5,
