@@ -5,6 +5,7 @@ import PostsPage from "@/components/PostsPage/PostsPage";
 
 type PostPageProps = {
   params: Promise<{ _id: string }>;
+  searchParams: Promise<{ sharePopup?: string }>;
 };
 
 export async function generateMetadata({
@@ -14,6 +15,15 @@ export async function generateMetadata({
   return await generatePostMetadata(currentUser, _id);
 }
 
-export default function PostPage({ params }: PostPageProps) {
-  return <PostsPage ids={params.then(({ _id }) => ({ postId: _id }))} />;
+export default function PostPage({ params, searchParams }: PostPageProps) {
+  return (
+    <PostsPage
+      params={Promise.all([params, searchParams]).then(
+        ([{ _id }, { sharePopup }]) => ({
+          postId: _id,
+          showSharePopup: sharePopup === "true",
+        }),
+      )}
+    />
+  );
 }

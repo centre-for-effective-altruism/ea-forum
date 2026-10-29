@@ -10,9 +10,13 @@ import { userIsAdminOrMod } from "@/lib/users/userHelpers";
 import { formatShortDate, formatLongDateWithTime } from "@/lib/timeUtils";
 import { classifyPangramRevision } from "@/lib/revisions/pangramClassification";
 import {
+  getPostDescription,
   getPostReadTimeMinutes,
+  getPostSocialImageUrl,
+  postGetPageUrl,
   postGetStructuredData,
 } from "@/lib/posts/postsHelpers";
+import { getSiteOgImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import ChatBubbleLeftIcon from "@heroicons/react/24/outline/ChatBubbleLeftIcon";
 import LinkIcon from "@heroicons/react/20/solid/LinkIcon";
 import PostSequenceBottomNavigation from "./PostSequenceBottomNavigation";
@@ -24,6 +28,7 @@ import PostTripleDotMenu from "./PostTripleDotMenu";
 import MorePostsLikeThis from "./MorePostsLikeThis";
 import PostTranslations from "./PostTranslations";
 import DigestPopup from "../Digest/DigestPopup";
+import PostSharePopup from "./PostSharePopup";
 import LinkPostMessage from "./LinkPostMessage";
 import PostAudioToggle from "./PostAudioToggle";
 import PostAudioPlayer from "./PostAudioPlayer";
@@ -45,9 +50,11 @@ import Link from "../Link";
 export default async function PostDisplay({
   postId,
   sequenceId,
+  showSharePopup,
 }: {
   postId: string;
   sequenceId?: string;
+  showSharePopup?: boolean;
 }) {
   const currentUser = await getCurrentUser();
   const [post, sequence] = await Promise.all([
@@ -244,6 +251,17 @@ export default async function PostDisplay({
         </PostColumn>
       </ReadProgress>
       <DigestPopup />
+      {showSharePopup && (
+        <PostSharePopup
+          postId={post._id}
+          title={post.title}
+          url={postGetPageUrl({ post, isAbsolute: true })}
+          description={getPostDescription(post)}
+          imageUrl={
+            getPostSocialImageUrl(post, { width: 78, dpr: 2 }) || getSiteOgImageUrl()
+          }
+        />
+      )}
     </PostDisplayProvider>
   );
 }

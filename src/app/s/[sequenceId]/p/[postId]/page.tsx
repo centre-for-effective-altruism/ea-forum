@@ -15,5 +15,5 @@ export async function generateMetadata({
 }
 
 export default function SequencePostPage({ params }: SequencePostPageProps) {
-  return <PostsPage ids={params} />;
+  return <PostsPage params={params} />;
 }

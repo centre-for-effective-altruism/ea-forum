@@ -7,42 +7,53 @@ import PostDisplaySkeleton from "./PostDisplaySkeleton";
 import PostsDisplay from "./PostsDisplay";
 import PostColumn from "./PostColumn";
 
-type PostsPageIds = Promise<{
+type PostsPageParams = Promise<{
   postId: string;
   sequenceId?: string;
+  showSharePopup?: boolean;
 }>;
 
-async function PostsDisplayLoader({ ids }: Readonly<{ ids: PostsPageIds }>) {
-  const { postId, sequenceId } = await ids;
+async function PostsDisplayLoader({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
+  const { postId, sequenceId, showSharePopup } = await params;
   return (
     <RequestCookiesProvider>
-      <PostsDisplay postId={postId} sequenceId={sequenceId} />
+      <PostsDisplay
+        postId={postId}
+        sequenceId={sequenceId}
+        showSharePopup={showSharePopup}
+      />
     </RequestCookiesProvider>
   );
 }
 
-async function CommentsSectionLoader({ ids }: Readonly<{ ids: PostsPageIds }>) {
-  const { postId } = await ids;
+async function CommentsSectionLoader({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
+  const { postId } = await params;
   return <CommentsSection postId={postId} />;
 }
 
 async function FooterRecommendationsLoader({
-  ids,
-}: Readonly<{ ids: PostsPageIds }>) {
-  const { postId } = await ids;
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
+  const { postId } = await params;
   return <FooterRecommendations postId={postId} />;
 }
 
-export default function PostsPage({ ids }: Readonly<{ ids: PostsPageIds }>) {
+export default function PostsPage({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
   return (
     <div data-component="PostsPage">
       <div className="px-4 sm:px-2 pt-12 sm:pt-20 md:pt-28 pb-16 bg-post-body-bg">
         <Suspense fallback={<PostDisplaySkeleton />}>
-          <PostsDisplayLoader ids={ids} />
+          <PostsDisplayLoader params={params} />
         </Suspense>
         <PostColumn>
           <Suspense fallback={<CommentsSectionSkeleton />}>
-            <CommentsSectionLoader ids={ids} />
+            <CommentsSectionLoader params={params} />
           </Suspense>
         </PostColumn>
       </div>
@@ -50,7 +61,7 @@ export default function PostsPage({ ids }: Readonly<{ ids: PostsPageIds }>) {
         <PostColumn>
           <div className="px-4 sm:px-2 md:px-0">
             <Suspense>
-              <FooterRecommendationsLoader ids={ids} />
+              <FooterRecommendationsLoader params={params} />
             </Suspense>
           </div>
         </PostColumn>
