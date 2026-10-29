@@ -60,6 +60,7 @@ const newSitePatterns = [
   /^\/library$/, // Library
   /^\/sequences$/, // Library (legacy path, redirect to /library)
   /^\/handbook$/, // EA Handbook
+  /^\/recommendations$/, // Recommendations
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
   /^\/admin$/, // Admin

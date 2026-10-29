@@ -577,6 +577,8 @@ export const fetchPostsListFromView = (
       return fetchStickyPostsList({ currentUserId, ...props });
     case "orgUpdates":
       return fetchOrgUpdatesPostsList({ currentUserId, ...props });
+    case "curated":
+      return fetchCuratedPostsList({ currentUserId, ...props });
     case "userProfile":
       if (!userId) {
         throw new Error("User profile view requires user id");
@@ -717,6 +719,74 @@ export const fetchMostRecentlyCuratedPost = async (
   });
   return result[0] ?? null;
 };
+
+export const fetchCuratedPostsList = ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      curatedDate: { isNotNull: true },
+    },
+    orderBy: {
+      sticky: "desc",
+      curatedDate: "desc",
+      postedAt: "desc",
+    },
+    offset,
+    limit,
+  });
+
+const FORUM_FAVORITES_MIN_BASE_SCORE = 50;
+
+/**
+ * The highest karma frontpage posts that the current user hasn't read yet.
+ * Posts marked with `defaultRecommendation` are always shown first.
+ */
+export const fetchForumFavoritesPostsList = (
+  currentUserId: string | null,
+  limit: number,
+) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      OR: [
+        {
+          baseScore: { gt: FORUM_FAVORITES_MIN_BASE_SCORE },
+          frontpageDate: { isNotNull: true },
+          meta: false,
+          disableRecommendation: false,
+          RAW: excludeTagFilter(process.env.APRIL_FOOLS_TAG_ID),
+        },
+        {
+          defaultRecommendation: true,
+        },
+      ],
+      ...(currentUserId
+        ? {
+            RAW: (postsTable) => sql`NOT EXISTS (
+              SELECT 1 FROM "ReadStatuses"
+              WHERE "postId" = ${postsTable._id}
+                AND "userId" = ${currentUserId}
+                AND "isRead" IS TRUE
+            )`,
+          }
+        : null),
+    },
+    orderBy: (postsTable) => sql`
+      ${postsTable}."defaultRecommendation" DESC,
+      ${postsTable}."baseScore" DESC,
+      ${postsTable}."curatedDate" IS NOT NULL DESC,
+      ${postsTable}."_id" ASC
+    `,
+    limit,
+  });
 
 const getAllPostsSort = async (sortedBy: AllPostsSortedBy) => {
   switch (sortedBy) {

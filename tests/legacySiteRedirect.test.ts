@@ -37,4 +37,7 @@ suite("Legacy site redirect", () => {
   test("The handbook is served by the new site", () => {
     expect(isNewSiteAllowed("/handbook")).toBe(true);
   });
+  test("The recommendations page is served by the new site", () => {
+    expect(isNewSiteAllowed("/recommendations")).toBe(true);
+  });
 });

@@ -13,6 +13,7 @@ export default async function ViewBasedPostsList({
   viewType,
   hideLoadMore,
   bottomRightNode,
+  curatedIconLeft,
 }: Readonly<{
   initialLimit?: number;
   maxOffset?: number;
@@ -20,6 +21,7 @@ export default async function ViewBasedPostsList({
   viewType?: PostsListViewType | "fromContext";
   hideLoadMore?: boolean;
   bottomRightNode?: ReactNode;
+  curatedIconLeft?: boolean;
 }>) {
   const currentUser = await getCurrentUser();
   const posts = await fetchPostsListFromView(currentUser?._id ?? null, {
@@ -38,6 +40,7 @@ export default async function ViewBasedPostsList({
         loadMoreView={hideLoadMore ? undefined : view}
         maxOffset={maxOffset}
         bottomRightNode={bottomRightNode}
+        curatedIconLeft={curatedIconLeft}
       />
     </Suspense>
   );
