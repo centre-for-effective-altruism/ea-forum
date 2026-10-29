@@ -1,4 +1,6 @@
+import z from "zod/v4";
 import { getSiteUrl } from "../routeHelpers";
+import { editorDataSchema } from "../ckeditor/editorHelpers";
 import { SequencePost } from "../sequences/sequenceQueries";
 import type { CollectionBase } from "./collectionQueries";
 
@@ -41,3 +43,14 @@ export const getCollectionCardDetails = ({
     imageId: gridImageId || "Banner/yeldubyolqpl3vqqy0m6.jpg",
   };
 };
+
+export const collectionEditDataSchema = z
+  .object({
+    title: z.string(),
+    description: editorDataSchema.nullable(),
+    gridImageId: z.string().nullable(),
+  })
+  .partial()
+  .strict();
+
+export type CollectionEditData = z.infer<typeof collectionEditDataSchema>;

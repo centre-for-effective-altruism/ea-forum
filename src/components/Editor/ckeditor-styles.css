@@ -1,3 +1,6 @@
+.ck-body-wrapper {
+  --ck-z-panel: calc(var(--zindex-popover) + 1);
+}
 .forum-editor .ck {
   --ck-spacing-standard: 8px;
   --ck-color-base-background: var(--color-editor-bg);
