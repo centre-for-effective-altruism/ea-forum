@@ -1,4 +1,5 @@
 import Image from "next/image";
+import clsx from "clsx";
 
 /**
  * The official wordmark is Inter SemiBold, so we render it as live text next
@@ -6,7 +7,7 @@ import Image from "next/image";
  * low-DPI screens where the SVG logo looks blurry. The size and tracking were
  * matched against the official SVG rendered 24px tall.
  */
-export default function SiteLogo() {
+export default function SiteLogo({ isSearchOpen }: { isSearchOpen: boolean }) {
   return (
     <span
       className="
@@ -22,7 +23,12 @@ export default function SiteLogo() {
         loading="eager"
         className="h-[24px] w-auto"
       />
-      <span className="text-logo-wordmark">
+      <span
+        className={clsx(
+          "text-logo-wordmark max-[400px]:hidden",
+          isSearchOpen && "max-[520px]:hidden",
+        )}
+      >
         <span className="hidden md:inline">Effective Altruism</span>
         <span className="md:hidden">EA</span>{" "}
         <span className="text-logo-forum">Forum</span>

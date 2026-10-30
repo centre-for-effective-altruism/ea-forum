@@ -73,7 +73,7 @@ export default function Header({
                 aria-label="Effective Altruism Forum home"
                 className="inline-flex items-center ml-2"
               >
-                <SiteLogo />
+                <SiteLogo isSearchOpen={isSearchOpen} />
               </Link>
             </div>
             <div className="flex gap-2 items-center">
