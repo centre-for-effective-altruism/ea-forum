@@ -114,6 +114,11 @@ export const commentIsPublic = (
   );
 };
 
+const commentCollapseKarmaThreshold = -4;
+
+export const commentIsCollapsedForLowKarma = (comment: Pick<Comment, "baseScore">) =>
+  comment.baseScore < commentCollapseKarmaThreshold;
+
 export const userCanModerateComment = (
   user: CurrentUser | null,
   comment: CommentListItem,
