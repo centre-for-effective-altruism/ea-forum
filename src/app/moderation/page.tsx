@@ -19,6 +19,8 @@ import {
 } from "@/lib/moderation/moderationHelpers";
 import ModerationPageComponent from "@/components/ModerationPage/ModerationPage";
 
+export const instant = false;
+
 export default async function ModerationPage() {
   const currentUser = await getCurrentUser();
   // For now, we're including some sections only visible to mods & admins.

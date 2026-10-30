@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import RequestCookiesProvider from "../Cookies/RequestCookiesProvider";
 import CommentsSectionSkeleton from "../Comments/CommentsSectionSkeleton";
 import FooterRecommendations from "./FooterRecommendations";
 import CommentsSection from "../Comments/CommentsSection";
@@ -6,22 +7,53 @@ import PostDisplaySkeleton from "./PostDisplaySkeleton";
 import PostsDisplay from "./PostsDisplay";
 import PostColumn from "./PostColumn";
 
-export default async function PostsPage({
-  postId,
-  sequenceId,
-}: Readonly<{
+type PostsPageParams = Promise<{
   postId: string;
   sequenceId?: string;
-}>) {
+  showSharePopup?: boolean;
+}>;
+
+async function PostsDisplayLoader({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
+  const { postId, sequenceId, showSharePopup } = await params;
+  return (
+    <RequestCookiesProvider>
+      <PostsDisplay
+        postId={postId}
+        sequenceId={sequenceId}
+        showSharePopup={showSharePopup}
+      />
+    </RequestCookiesProvider>
+  );
+}
+
+async function CommentsSectionLoader({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
+  const { postId } = await params;
+  return <CommentsSection postId={postId} />;
+}
+
+async function FooterRecommendationsLoader({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
+  const { postId } = await params;
+  return <FooterRecommendations postId={postId} />;
+}
+
+export default function PostsPage({
+  params,
+}: Readonly<{ params: PostsPageParams }>) {
   return (
     <div data-component="PostsPage">
       <div className="px-4 sm:px-2 pt-12 sm:pt-20 md:pt-28 pb-16 bg-post-body-bg">
         <Suspense fallback={<PostDisplaySkeleton />}>
-          <PostsDisplay postId={postId} sequenceId={sequenceId} />
+          <PostsDisplayLoader params={params} />
         </Suspense>
         <PostColumn>
           <Suspense fallback={<CommentsSectionSkeleton />}>
-            <CommentsSection postId={postId} />
+            <CommentsSectionLoader params={params} />
           </Suspense>
         </PostColumn>
       </div>
@@ -29,7 +61,7 @@ export default async function PostsPage({
         <PostColumn>
           <div className="px-4 sm:px-2 md:px-0">
             <Suspense>
-              <FooterRecommendations postId={postId} />
+              <FooterRecommendationsLoader params={params} />
             </Suspense>
           </div>
         </PostColumn>

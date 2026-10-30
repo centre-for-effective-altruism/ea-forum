@@ -1,8 +1,10 @@
 import z from "zod/v4";
 import { os } from "@orpc/server";
+import { revalidateTag } from "next/cache";
 import { userIsAdmin } from "../users/userHelpers";
 import { getCurrentUser } from "../users/currentUser";
 import { spotlightEditDataSchema } from "./spotlightHelpers";
+import { currentSpotlightCacheTag } from "./spotlightQueries";
 import {
   createSpotlight,
   deleteSpotlight,
@@ -15,7 +17,9 @@ export const spotlightsRouter = {
     if (!userIsAdmin(currentUser)) {
       throw new Error("Permission denied");
     }
-    return await createSpotlight();
+    const result = await createSpotlight();
+    revalidateTag(currentSpotlightCacheTag, { expire: 0 });
+    return result;
   }),
   edit: os
     .input(
@@ -29,7 +33,9 @@ export const spotlightsRouter = {
       if (!userIsAdmin(currentUser)) {
         throw new Error("Permission denied");
       }
-      return await editSpotlight(currentUser, spotlightId, data);
+      const result = await editSpotlight(currentUser, spotlightId, data);
+      revalidateTag(currentSpotlightCacheTag, { expire: 0 });
+      return result;
     }),
   delete: os
     .input(z.object({ spotlightId: z.string().nonempty() }))
@@ -38,6 +44,8 @@ export const spotlightsRouter = {
       if (!userIsAdmin(currentUser)) {
         throw new Error("Permission denied");
       }
-      return await deleteSpotlight(spotlightId);
+      const result = await deleteSpotlight(spotlightId);
+      revalidateTag(currentSpotlightCacheTag, { expire: 0 });
+      return result;
     }),
 };

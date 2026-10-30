@@ -4,6 +4,8 @@ import { withSentryConfig } from "@sentry/nextjs";
 import { execSync } from "node:child_process";
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
+  partialPrefetching: true,
   reactStrictMode: false,
   devIndicators: false,
   images: {

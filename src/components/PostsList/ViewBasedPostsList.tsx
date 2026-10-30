@@ -2,6 +2,7 @@ import { ReactNode, Suspense } from "react";
 import type { PostsListViewType } from "@/lib/posts/postsListView";
 import type { PostsListView } from "@/lib/posts/postsHelpers";
 import { fetchPostsListFromView } from "@/lib/posts/postLists";
+import { fetchCachedPostsListFromView } from "@/lib/posts/cachedPostLists";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import PostsListSkeleton from "./PostsListSkeleton";
 import PostsList from "./PostsList";
@@ -14,6 +15,7 @@ export default async function ViewBasedPostsList({
   hideLoadMore,
   bottomRightNode,
   curatedIconLeft,
+  cacheLoggedOut,
 }: Readonly<{
   initialLimit?: number;
   maxOffset?: number;
@@ -22,9 +24,13 @@ export default async function ViewBasedPostsList({
   hideLoadMore?: boolean;
   bottomRightNode?: ReactNode;
   curatedIconLeft?: boolean;
+  cacheLoggedOut?: boolean;
 }>) {
   const currentUser = await getCurrentUser();
-  const posts = await fetchPostsListFromView(currentUser?._id ?? null, {
+  const fetchPosts = cacheLoggedOut
+    ? fetchCachedPostsListFromView
+    : fetchPostsListFromView;
+  const posts = await fetchPosts(currentUser?._id ?? null, {
     ...view,
     limit: initialLimit ?? view.limit,
   });

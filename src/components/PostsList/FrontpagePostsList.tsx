@@ -1,8 +1,8 @@
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import {
-  fetchFrontpageCuratedPostsList,
-  fetchPostsListFromView,
-} from "@/lib/posts/postLists";
+  fetchCachedFrontpageCuratedPostsList,
+  fetchCachedPostsListFromView,
+} from "@/lib/posts/cachedPostLists";
 import { HideRepeatedPostsProvider } from "@/lib/hooks/useHideRepeatedPosts";
 import { getDefaultFilterSettings } from "@/lib/filterSettings";
 import { getCurrentUser } from "@/lib/users/currentUser";
@@ -20,8 +20,8 @@ export default async function FrontpagePostsList() {
       currentUser?.frontpageFilterSettings ?? getDefaultFilterSettings(),
   } as const;
   const [curatedPosts, posts] = await Promise.all([
-    fetchFrontpageCuratedPostsList(currentUser?._id ?? null),
-    fetchPostsListFromView(currentUser?._id ?? null, view),
+    fetchCachedFrontpageCuratedPostsList(currentUser?._id ?? null),
+    fetchCachedPostsListFromView(currentUser?._id ?? null, view),
   ]);
   return (
     <HideRepeatedPostsProvider>

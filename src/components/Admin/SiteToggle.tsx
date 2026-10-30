@@ -1,22 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useEAForumV3 } from "@/lib/hooks/useEAForumV3";
 import { useAdminToggle } from "@/lib/hooks/useAdminToggle";
 import ToggleSwitch from "../Forms/ToggleSwitch";
 
 export default function SiteToggle() {
-  const [mounted, setMounted] = useState(false);
   const { showNewSiteToggle, preferNewSite, setPreferNewSite } = useEAForumV3();
   const { showAdminToggle, isAdmin, setAdmin } = useAdminToggle();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const showAnyToggle = showNewSiteToggle || showAdminToggle;
-  if (!mounted || !showAnyToggle) {
+  if (!showAnyToggle) {
     return null;
   }
 

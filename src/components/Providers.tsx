@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
+import { unstable_rethrow } from "next/navigation";
+import { waitUntil } from "@vercel/functions";
 import { getCurrentUser } from "@/lib/users/currentUser";
+import { captureServerException } from "@/lib/posthog-server";
 import { LoginPopoverContextProvider } from "@/lib/hooks/useLoginPopoverContext";
 import { CommentAwardsUsedProvider } from "@/lib/commentAwards/useCommentAwardsUsed";
 import { ClientIdProvider } from "@/lib/hooks/useClientId";
@@ -13,27 +15,27 @@ import CookieClientProvider from "./Cookies/CookieClientProvider";
 import IntercomClientProvider from "./Intercom/IntercomClientProvider";
 import FloatingTreeClientProvider from "./FloatingTreeClientProvider";
 
-export default async function Providers({
+export default function Providers({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const [currentUser, cookieStore] = await Promise.all([
-    getCurrentUser(),
-    cookies(),
-  ]);
-  // If the user is logged-in then we make cookies available for SSR. For logged-out
-  // users, cookies will be available on the client, but not during SSR. This allows
-  // us to do much more aggresive caching for logged-out users in Cloudflare.
-  const initialCookies = currentUser
-    ? Object.fromEntries(cookieStore.getAll().map((c) => [c.name, c.value]))
-    : {};
+  // This isn't awaited so that the providers can be part of the static shell.
+  // Request cookies are made available to SSR by `RequestCookiesProvider`. If
+  // fetching the user fails we fall back to logged-out rather than sending a
+  // rejected promise to every component that uses the current user.
+  const userPromise = getCurrentUser().catch((e) => {
+    unstable_rethrow(e);
+    waitUntil(captureServerException(e));
+    console.error(e);
+    return null;
+  });
   return (
     <FloatingTreeClientProvider>
       <MobileNavProvider>
-        <CookieClientProvider initialCookies={initialCookies}>
+        <CookieClientProvider>
           <ClientIdProvider>
-            <CurrentUserProvider user={currentUser}>
+            <CurrentUserProvider userPromise={userPromise}>
               <ThemeProvider>
                 <IntercomClientProvider>
                   <SubscriptionProvider>

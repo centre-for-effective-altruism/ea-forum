@@ -1,7 +1,9 @@
 import { cache } from "react";
+import { cacheLife } from "next/cache";
 import { sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
 import { db } from "../db";
+import { shortCacheLife } from "../cacheLifetimes";
 import type { CurrentUser } from "../users/currentUser";
 import { userIsAdmin } from "../users/userHelpers";
 import { getPostReadTimeMinutes, postStatuses } from "../posts/postsHelpers";
@@ -171,6 +173,17 @@ export const fetchHandbookPage = cache(async (currentUser: CurrentUser | null) =
     firstSequence && firstPost ? `/s/${firstSequence._id}/p/${firstPost._id}` : null;
   return { collection: { ...collection, firstPageLink }, book };
 });
+
+// The handbook includes the current user's read statuses, so it's only cached
+// for logged-out users
+const fetchLoggedOutHandbookPage = async () => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  return fetchHandbookPage(null);
+};
+
+export const fetchCachedHandbookPage = (currentUser: CurrentUser | null) =>
+  currentUser ? fetchHandbookPage(currentUser) : fetchLoggedOutHandbookPage();
 
 export type HandbookPageData = NonNullable<
   Awaited<ReturnType<typeof fetchHandbookPage>>

@@ -42,8 +42,10 @@ export default function TopicsPage() {
             <div className="flex gap-4 items-center justify-between mb-3">
               <Type style="sectionTitleSmall">EA Forum Topics Wiki</Type>
               <div className="flex items-center gap-4">
-                <EditTagWikiButton />
-                <NewTagButton />
+                <Suspense>
+                  <EditTagWikiButton />
+                  <NewTagButton />
+                </Suspense>
               </div>
             </div>
             <Suspense fallback={<div className="h-[400px] rounded bg-gray-300" />}>
@@ -55,7 +57,9 @@ export default function TopicsPage() {
           <section>
             <div className="flex gap-4 items-center justify-between mb-3">
               <Type style="sectionTitleSmall">All Topics</Type>
-              <NewTagButton />
+              <Suspense>
+                <NewTagButton />
+              </Suspense>
             </div>
             <Suspense fallback={<div className="h-[1000px] rounded bg-gray-300" />}>
               <AllTagsList />

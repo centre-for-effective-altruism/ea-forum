@@ -34,6 +34,7 @@ export default function RecommendationsPage() {
                 <ViewBasedPostsList
                   view={{ view: "curated", limit: curatedLimit }}
                   curatedIconLeft
+                  cacheLoggedOut
                 />
               </Suspense>
             </section>

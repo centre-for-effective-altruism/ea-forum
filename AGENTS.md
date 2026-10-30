@@ -105,6 +105,27 @@ Frontend structure and conventions:
 - Use `clsx` for class composition and `@/*` path aliases.
 - Avoid editing `src/vendor/**` unless explicitly required.
 
+Cache Components (`cacheComponents` is enabled):
+
+- Pages are prerendered into a static shell, and anything that reads request data
+  (`cookies()`, `headers()`, `params`, `searchParams`, the current user) must be
+  inside a `<Suspense>` boundary. Don't await these at the top of a page or layout;
+  pass the promise down and await it in a child inside `Suspense`. `next build`
+  reports violations (`--debug-prerender` gives better stack traces).
+- `useCurrentUser()` suspends until the user loads, so client components that use
+  it need a `Suspense` boundary above them. Providers and analytics that wrap the
+  whole page use `useCurrentUserIfLoaded()` or `useCurrentUserGetter()` instead.
+- Client-side cookies are empty during SSR. Wrap client components whose SSR output
+  depends on cookies in `RequestCookiesProvider` (inside `Suspense`).
+- `export const instant = false` lets a route block on request data. Only use it for
+  routes that haven't been converted yet.
+- Most data is also edited by the legacy site, so `"use cache"` needs a time-based
+  `cacheLife` (`shortCacheLife` in `src/lib/cacheLifetimes.ts` for frequently
+  changing data). Never cache data that includes the current user's state; see
+  `src/lib/posts/cachedPostLists.ts` for caching only for logged-out users.
+- `next/cache` APIs are no-ops in tests (`vitest.setup.ts`), so cached functions
+  run uncached there.
+
 CkEditor
 
 - The app uses a vendored version of CkEditor in `ckEditor/**`
@@ -129,3 +150,13 @@ Types and naming:
    unrelated existing failures, say so explicitly and name the blocking file(s).
 4. In final handoff, include patterns followed, intentional deviations and rationale,
    and validation results.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

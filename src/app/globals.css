@@ -149,6 +149,7 @@
   --font-stack-mono: "Liberation Mono", Menlo, Courier, monospace;
 
   --zindex-digest-popup: 1050;
+  --zindex-share-post-popup: 1050;
   --zindex-site-toggle: 1100;
   --zindex-headroom: 1300;
   --zindex-read-progress: 1302;

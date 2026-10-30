@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { and, eq, sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import type { EditorContents } from "../ckeditor/editorHelpers";
@@ -6,6 +6,7 @@ import type { RelationalProjection } from "../utils/queryHelpers";
 import { forumEvents, ForumEvent, InsertForumEvent, comments } from "../schema";
 import { tagBaseProjection } from "../tags/tagQueries";
 import { db, DbOrTransaction } from "../db";
+import { shortCacheLife } from "../cacheLifetimes";
 import {
   createRevisionForDenormalizedEditableField,
   createRevisionForNormalizedEditableField,
@@ -363,21 +364,24 @@ export const setLatestMcPollVote = async (
     );
 };
 
-export const fetchCurrentForumEvent = cache(
-  async (): Promise<ForumEventBase | null> => {
-    const now = new Date().toISOString();
-    const result = await db.query.forumEvents.findFirst({
-      ...forumEventBaseProjection,
-      where: {
-        startDate: { lte: now },
-        endDate: { gt: now },
-        isGlobal: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-        _id: "asc",
-      },
-    });
-    return result ?? null;
-  },
-);
+export const currentForumEventCacheTag = "current-forum-event";
+
+export const fetchCurrentForumEvent = async (): Promise<ForumEventBase | null> => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  cacheTag(currentForumEventCacheTag);
+  const now = new Date().toISOString();
+  const result = await db.query.forumEvents.findFirst({
+    ...forumEventBaseProjection,
+    where: {
+      startDate: { lte: now },
+      endDate: { gt: now },
+      isGlobal: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+      _id: "asc",
+    },
+  });
+  return result ?? null;
+};

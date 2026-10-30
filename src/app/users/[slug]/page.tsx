@@ -65,11 +65,39 @@ export async function generateMetadata({
   };
 }
 
-export default async function UserProfile({ params }: UserProfilePageProps) {
+async function UserProfileSections({ params }: UserProfilePageProps) {
   const { slug } = await params;
   if (!slug) {
     notFound();
   }
+  return (
+    <>
+      <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
+        <UserProfileSummary slug={slug} />
+      </Suspense>
+      <Suspense>
+        <UserProfileDrafts slug={slug} />
+      </Suspense>
+      <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
+        <UserProfileBiography slug={slug} />
+      </Suspense>
+      <Suspense fallback={<div className="bg-surface-floating rounded h-160" />}>
+        <UserProfilePosts slug={slug} />
+      </Suspense>
+      <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
+        <UserProfileSequences slug={slug} />
+      </Suspense>
+      <Suspense fallback={<div className="bg-surface-floating rounded h-160" />}>
+        <UserProfileComments slug={slug} />
+      </Suspense>
+      <div className="flex justify-end mt-8">
+        <ReportUserButton slug={slug} />
+      </div>
+    </>
+  );
+}
+
+export default function UserProfile({ params }: UserProfilePageProps) {
   return (
     <AnalyticsContext pageContext="userPage">
       <div
@@ -77,26 +105,8 @@ export default async function UserProfile({ params }: UserProfilePageProps) {
         className="w-[766px] max-w-full mx-auto pt-6 pb-30 px-1 flex flex-col gap-6"
       >
         <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
-          <UserProfileSummary slug={slug} />
+          <UserProfileSections params={params} />
         </Suspense>
-        <Suspense>
-          <UserProfileDrafts slug={slug} />
-        </Suspense>
-        <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
-          <UserProfileBiography slug={slug} />
-        </Suspense>
-        <Suspense fallback={<div className="bg-surface-floating rounded h-160" />}>
-          <UserProfilePosts slug={slug} />
-        </Suspense>
-        <Suspense fallback={<div className="bg-surface-floating rounded h-80" />}>
-          <UserProfileSequences slug={slug} />
-        </Suspense>
-        <Suspense fallback={<div className="bg-surface-floating rounded h-160" />}>
-          <UserProfileComments slug={slug} />
-        </Suspense>
-        <div className="flex justify-end mt-8">
-          <ReportUserButton slug={slug} />
-        </div>
       </div>
     </AnalyticsContext>
   );

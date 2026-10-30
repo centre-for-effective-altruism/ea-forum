@@ -10,6 +10,7 @@ import AllPostsSettings from "@/components/AllPosts/AllPostsSettings";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
 import Type from "@/components/Type";
 import Link from "@/components/Link";
+import RequestCookiesProvider from "@/components/Cookies/RequestCookiesProvider";
 
 export const metadata: Metadata = {
   title: "All posts",
@@ -19,25 +20,40 @@ export const metadata: Metadata = {
   },
 };
 
+const AllPostsTitle = () => (
+  <Type style="postsPageTitle">
+    <Link href="/all-posts">All posts</Link>
+  </Type>
+);
+
 export default function AllPostsPage() {
   return (
     <HomePageColumns pageContext="allPostsPage">
       <div className="max-w-[1000px] mx-auto flex flex-col gap-6 pb-20">
         <AnalyticsContext listContext="allPostsPage">
-          <AllPostsProvider>
-            <div className="flex items-center justify-between gap-4">
-              <Type style="postsPageTitle">
-                <Link href="/all-posts">All posts</Link>
-              </Type>
-              <AllPostsOptionsToggle />
-            </div>
-            <Suspense fallback={<div className="bg-gray-200 rounded h-42" />}>
-              <AllPostsSettings />
-            </Suspense>
-            <Suspense fallback={<PostsListSkeleton count={10} />}>
-              <DynamicAllPostsList />
-            </Suspense>
-          </AllPostsProvider>
+          <Suspense
+            fallback={
+              <>
+                <AllPostsTitle />
+                <PostsListSkeleton count={10} />
+              </>
+            }
+          >
+            <RequestCookiesProvider>
+              <AllPostsProvider>
+                <div className="flex items-center justify-between gap-4">
+                  <AllPostsTitle />
+                  <AllPostsOptionsToggle />
+                </div>
+                <Suspense fallback={<div className="bg-gray-200 rounded h-42" />}>
+                  <AllPostsSettings />
+                </Suspense>
+                <Suspense fallback={<PostsListSkeleton count={10} />}>
+                  <DynamicAllPostsList />
+                </Suspense>
+              </AllPostsProvider>
+            </RequestCookiesProvider>
+          </Suspense>
         </AnalyticsContext>
       </div>
     </HomePageColumns>

@@ -1,8 +1,9 @@
 import { z } from "zod/v4";
 import { os } from "@orpc/server";
+import { revalidateTag } from "next/cache";
 import { getCurrentUser } from "../users/currentUser";
 import { addPollVote, removePollVote, addMcPollVote } from "./forumEventMutations";
-import { fetchForumEventById } from "./forumEventQueries";
+import { currentForumEventCacheTag, fetchForumEventById } from "./forumEventQueries";
 
 export const forumEventsRouter = {
   listById: os
@@ -23,6 +24,7 @@ export const forumEventsRouter = {
         throw new Error("Please login");
       }
       await addPollVote({ ...input, currentUser });
+      revalidateTag(currentForumEventCacheTag, { expire: 0 });
     }),
   removeVote: os
     .input(z.object({ forumEventId: z.string().nonempty() }))
@@ -32,6 +34,7 @@ export const forumEventsRouter = {
         throw new Error("Please login");
       }
       await removePollVote(currentUser, forumEventId);
+      revalidateTag(currentForumEventCacheTag, { expire: 0 });
     }),
   addMcVote: os
     .input(
@@ -45,6 +48,8 @@ export const forumEventsRouter = {
       if (!currentUser) {
         throw new Error("Please login");
       }
-      return await addMcPollVote({ currentUser, forumEventId, answerIds });
+      const result = await addMcPollVote({ currentUser, forumEventId, answerIds });
+      revalidateTag(currentForumEventCacheTag, { expire: 0 });
+      return result;
     }),
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Placement } from "@floating-ui/react";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import type { UserBase } from "@/lib/users/userQueries";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { userIsAdminOrMod, userGetProfileUrl } from "@/lib/users/userHelpers";
@@ -33,6 +33,41 @@ const DeletedAccountTooltip = ({ children }: { children: ReactNode }) => (
   </Tooltip>
 );
 
+const AnonymousUsersName = () => (
+  <DeletedAccountTooltip>[anonymous]</DeletedAccountTooltip>
+);
+
+// Only admins and mods can see the names of deleted users
+function DeletedUsersName({
+  displayName,
+  profileUrl,
+  className,
+}: Readonly<{
+  displayName: string;
+  profileUrl: string;
+  className?: string;
+}>) {
+  const { currentUser } = useCurrentUser();
+  if (!userIsAdminOrMod(currentUser)) {
+    return <AnonymousUsersName />;
+  }
+  return (
+    <DeletedAccountTooltip>
+      <span className={clsx("group inline-flex", className)}>
+        <span className="group-hover:hidden group-focus-within:hidden">
+          [anonymous]
+        </span>
+        <Link
+          href={profileUrl}
+          className="hidden group-hover:inline group-focus-within:inline"
+        >
+          {displayName}
+        </Link>
+      </span>
+    </DeletedAccountTooltip>
+  );
+}
+
 export default function UsersName({
   user,
   pageSectionContext,
@@ -44,11 +79,8 @@ export default function UsersName({
   tooltipPlacement?: Placement;
   className?: string;
 }>) {
-  const { currentUser } = useCurrentUser();
-  const viewerIsMod = userIsAdminOrMod(currentUser);
-
-  if (!user || (user.deleted && !viewerIsMod) || !user.displayName) {
-    return <DeletedAccountTooltip>[anonymous]</DeletedAccountTooltip>;
+  if (!user || !user.displayName) {
+    return <AnonymousUsersName />;
   }
 
   let profileUrl = userGetProfileUrl({ user });
@@ -58,19 +90,13 @@ export default function UsersName({
 
   if (user.deleted) {
     return (
-      <DeletedAccountTooltip>
-        <span className={clsx("group inline-flex", className)}>
-          <span className="group-hover:hidden group-focus-within:hidden">
-            [anonymous]
-          </span>
-          <Link
-            href={profileUrl}
-            className="hidden group-hover:inline group-focus-within:inline"
-          >
-            {user.displayName}
-          </Link>
-        </span>
-      </DeletedAccountTooltip>
+      <Suspense fallback={<AnonymousUsersName />}>
+        <DeletedUsersName
+          displayName={user.displayName}
+          profileUrl={profileUrl}
+          className={className}
+        />
+      </Suspense>
     );
   }
 

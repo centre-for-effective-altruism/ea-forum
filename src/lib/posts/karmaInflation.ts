@@ -1,6 +1,8 @@
-import { SQL, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { cache } from "react";
+import { cacheLife } from "next/cache";
 import { db } from "../db";
+import { shortCacheLife } from "../cacheLifetimes";
 import { z } from "zod/v4";
 
 const timeSeriesSchema = z.object({
@@ -17,40 +19,36 @@ const valuesToSql = (values: (number | null)[]) =>
     sql`, `,
   )}]::DOUBLE PRECISION[])`;
 
-let karmaInflationSeries: TimeSeries & { valuesSql: SQL } = {
-  start: Date.now(),
-  interval: 1,
+// A long interval keeps the array index generated in SQL in range
+const defaultKarmaInflationSeries: TimeSeries = {
+  start: 0,
+  interval: 1000 * 60 * 60 * 24 * 365,
   values: [1],
-  valuesSql: valuesToSql([1]),
 };
-let lastFetchedAt = new Date(0).getTime();
-const cacheMaxAgeMs = 1000 * 60 * 60 * 24; // 24 hours
 
-// Even though we manually cache the value here, we also need to react cache to
-// ensure that the request that triggers the refresh only even sends one query.
-export const getKarmaInflationSeries = cache(async () => {
-  const now = Date.now();
-  if (now - lastFetchedAt > cacheMaxAgeMs) {
-    const result = await db.query.databaseMetadata.findFirst({
-      columns: {
-        value: true,
-      },
-      where: {
-        name: "karmaInflationSeries",
-      },
-    });
-    if (result?.value) {
-      const parseResult = timeSeriesSchema.safeParse(result.value);
-      if (parseResult.success) {
-        karmaInflationSeries = {
-          ...parseResult.data,
-          valuesSql: valuesToSql(parseResult.data.values),
-        };
-        lastFetchedAt = now;
-      } else {
-        console.error("Invalid karma inflation series");
-      }
-    }
+const fetchKarmaInflationSeries = async (): Promise<TimeSeries> => {
+  "use cache";
+  const result = await db.query.databaseMetadata.findFirst({
+    columns: {
+      value: true,
+    },
+    where: {
+      name: "karmaInflationSeries",
+    },
+  });
+  const parseResult = timeSeriesSchema.safeParse(result?.value);
+  if (!parseResult.success) {
+    console.error("Invalid karma inflation series");
+    // Retry soon rather than caching the fallback for a whole day
+    cacheLife(shortCacheLife);
+    return defaultKarmaInflationSeries;
   }
-  return karmaInflationSeries;
+  cacheLife("days");
+  return parseResult.data;
+};
+
+// The SQL can't be stored in the "use cache" cache, so it's built per-request
+export const getKarmaInflationSeries = cache(async () => {
+  const series = await fetchKarmaInflationSeries();
+  return { ...series, valuesSql: valuesToSql(series.values) };
 });

@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 import { Toaster } from "react-hot-toast";
 import { getSiteUrl } from "@/lib/routeHelpers";
 import { isNoIndexSite } from "@/lib/environment";
+import { themeClasses, themeScript } from "@/lib/themes";
 import { getSiteOgImageUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import clsx from "clsx";
 import ForumMagnumBundlePreload from "@/components/ForumMagnumBundlePreload";
@@ -15,7 +16,7 @@ import OnboardingFlow from "@/components/Onboarding/OnboardingFlow";
 import IntercomButton from "@/components/Intercom/IntercomButton";
 import PageLoadListener from "@/components/PageLoadListener";
 import PageAnalytics from "@/components/PageAnalytics";
-import SiteToggle from "@/components/Admin/SiteToggle";
+import DynamicSiteToggle from "@/components/Admin/DynamicSiteToggle";
 import MobileNav from "@/components/Nav/MobileNav";
 import Header from "@/components/Header/Header";
 import Providers from "@/components/Providers";
@@ -119,19 +120,21 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={themeClasses.auto} suppressHydrationWarning>
       <head>
         <meta
           httpEquiv="delegate-ch"
           content="sec-ch-dpr https://res.cloudinary.com;"
         />
-        <Suspense>
-          <ForumMagnumBundlePreload />
-        </Suspense>
         <Script
           id="client-id-script"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: clientIdScript }}
+        />
+        <Script
+          id="theme-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeScript }}
         />
       </head>
       <body
@@ -142,18 +145,31 @@ export default function RootLayout({
           newsreader.variable,
         )}
       >
+        <Suspense>
+          <ForumMagnumBundlePreload />
+        </Suspense>
         <Providers>
-          <PageLoadListener />
+          <Suspense>
+            <PageLoadListener />
+          </Suspense>
           <PageAnalytics />
           <div id="tooltip-target" />
           <Header />
-          <MobileNav />
+          <Suspense>
+            <MobileNav />
+          </Suspense>
           <main className="grow bg-background text-foreground font-sans max-w-full">
             {children}
           </main>
-          <OnboardingFlow />
-          <IntercomButton />
-          <SiteToggle />
+          <Suspense>
+            <OnboardingFlow />
+          </Suspense>
+          <Suspense>
+            <IntercomButton />
+          </Suspense>
+          <Suspense>
+            <DynamicSiteToggle />
+          </Suspense>
           <DynamicCookieBanner />
           <PostHogConsent />
           <Toaster

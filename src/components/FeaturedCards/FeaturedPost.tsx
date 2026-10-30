@@ -110,6 +110,7 @@ export default function FeaturedPost({
               onError={onImageError}
               alt=""
               fill
+              loading="eager"
               className="object-cover"
             />
             <div className="absolute z-1 top-3 right-4 flex flex-col gap-1">

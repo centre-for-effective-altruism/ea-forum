@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import {
-  fetchFeaturedFrontpagePosts,
-  fetchMostRecentlyCuratedPost,
-} from "@/lib/posts/postLists";
+  fetchCachedFeaturedFrontpagePosts,
+  fetchCachedMostRecentlyCuratedPost,
+} from "@/lib/posts/cachedPostLists";
 import {
   defaultFeaturedViewType,
   featuredViewTypeCookie,
@@ -20,8 +20,8 @@ export default async function HomePageFeaturedRoute() {
   const currentUser = await getCurrentUser();
   const [cookieStore, featuredPosts, curatedPost, coreTags] = await Promise.all([
     cookies(),
-    fetchFeaturedFrontpagePosts({ currentUser, limit: 10 }),
-    fetchMostRecentlyCuratedPost(currentUser),
+    fetchCachedFeaturedFrontpagePosts(currentUser, 10),
+    fetchCachedMostRecentlyCuratedPost(currentUser),
     fetchCoreTags(),
   ]);
 

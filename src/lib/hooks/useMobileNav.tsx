@@ -1,13 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 
 type MobileNavContext = {
   isMobileNavOpen: boolean;
   openMobileNav: () => void;
   closeMobileNav: () => void;
-  showMobileNavOnDesktop: boolean;
 };
 
 const mobileNavContext = createContext<MobileNavContext | null>(null);
@@ -17,8 +15,6 @@ export const MobileNavProvider = ({
 }: Readonly<{
   children: ReactNode;
 }>) => {
-  const pathname = usePathname();
-  const showMobileNavOnDesktop = pathname !== "/";
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const openMobileNav = useCallback(() => setIsMobileNavOpen(true), []);
   const closeMobileNav = useCallback(() => setIsMobileNavOpen(false), []);
@@ -28,7 +24,6 @@ export const MobileNavProvider = ({
         isMobileNavOpen,
         openMobileNav,
         closeMobileNav,
-        showMobileNavOnDesktop,
       }}
     >
       {children}
