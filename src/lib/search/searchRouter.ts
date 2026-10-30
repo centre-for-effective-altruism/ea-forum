@@ -3,6 +3,8 @@ import { defaultSearchOptions, queryRequestSchema } from "./searchClient";
 import type { SearchResult } from "./SearchResult";
 import { os } from "@orpc/server";
 import ElasticService from "./elastic/ElasticService";
+import ElasticExporter from "./elastic/ElasticExporter";
+import { getCurrentUser } from "@/lib/users/currentUser";
 import uniq from "lodash/uniq";
 
 export const searchRouter = {
@@ -34,4 +36,11 @@ export const searchRouter = {
         );
       }
     }),
+  rebuildIndexes: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.isAdmin) {
+      throw new Error("Permission denied");
+    }
+    await new ElasticExporter().configureIndexes();
+  }),
 };
