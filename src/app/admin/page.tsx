@@ -36,6 +36,7 @@ export default async function AdminPage() {
           { title: "Spotlights", href: "/admin/spotlights" },
           { title: "Forum events", href: "/adminForumEvents" },
           { title: "Merge topics", href: "/admin/tagMerge" },
+          { title: "Search indexes", href: "/admin/search-indexes" },
         ]}
       />
       <AdminPageSection

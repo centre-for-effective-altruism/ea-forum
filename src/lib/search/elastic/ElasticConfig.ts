@@ -115,6 +115,28 @@ const fullTextMapping: MappingProperty = {
 };
 
 /**
+ * Edge n-grams of each word, so that partially typed words match (eg; "will"
+ * matches "William"). Queries are analyzed into whole words, not n-grams.
+ */
+const prefixSubfieldMapping: MappingProperty = {
+  type: "text",
+  analyzer: "fm_edge_ngram_analyzer",
+  search_analyzer: "fm_word_analyzer",
+};
+
+/**
+ * Short full-text fields, such as titles, which should support search-as-you-type
+ * on top of the normal full text search.
+ */
+const shortTextMapping: MappingProperty = {
+  ...fullTextMapping,
+  fields: {
+    ...fullTextMapping.fields,
+    prefix: prefixSubfieldMapping,
+  },
+};
+
+/**
  * The shingle text mapping is particularly suited to short text fields that
  * often contain punctuation but not a lot of semantic meaning, such as
  * usernames.
@@ -130,6 +152,13 @@ const shingleTextMapping: MappingProperty = {
     sort: {
       type: "keyword",
       normalizer: "fm_sortable_keyword",
+    },
+    prefix: prefixSubfieldMapping,
+    // The whole value with case, accents, whitespace and punctuation removed,
+    // so that "William_MacAskill" matches "william macaskill"
+    compact: {
+      type: "keyword",
+      normalizer: "fm_compact_keyword",
     },
   },
 };
@@ -224,7 +253,7 @@ const elasticSearchConfig: Record<SearchIndexCollectionName, IndexConfig> = {
       { term: { status: postStatuses.STATUS_APPROVED } },
     ],
     mappings: {
-      title: fullTextMapping,
+      title: shortTextMapping,
       authorDisplayName: shingleTextMapping,
       authorFullName: shingleTextMapping,
       authorSlug: shingleTextMapping,
@@ -312,7 +341,7 @@ const elasticSearchConfig: Record<SearchIndexCollectionName, IndexConfig> = {
       posts: objectMapping({
         _id: keywordMapping,
         slug: keywordMapping,
-        title: fullTextMapping,
+        title: shortTextMapping,
       }),
       _geoloc: geopointMapping,
     },
@@ -335,6 +364,7 @@ const elasticSearchConfig: Record<SearchIndexCollectionName, IndexConfig> = {
       { term: { hidden: false } },
     ],
     mappings: {
+      title: shortTextMapping,
       body: fullTextMapping,
       plaintextDescription: fullTextMapping,
       authorDisplayName: shingleTextMapping,
@@ -374,7 +404,7 @@ const elasticSearchConfig: Record<SearchIndexCollectionName, IndexConfig> = {
       { term: { adminOnly: false } },
     ],
     mappings: {
-      name: fullTextMapping,
+      name: shortTextMapping,
       description: fullTextMapping,
       bannerImageId: keywordMapping,
       parentTagId: keywordMapping,
@@ -421,5 +451,24 @@ export const isFullTextField = <N extends SearchIndexCollectionName>(
   if (!config) {
     throw new Error(`Invalid elastic collection name: ${collectionName}`);
   }
-  return config.mappings?.[fieldName] === fullTextMapping;
+  const mapping = config.mappings?.[fieldName];
+  return mapping === fullTextMapping || mapping === shortTextMapping;
+};
+
+const fieldSubfieldNames = (mapping?: MappingProperty): string[] =>
+  mapping && "fields" in mapping ? Object.keys(mapping.fields ?? {}) : [];
+
+export const fieldHasSubfield = (
+  collectionName: SearchIndexCollectionName,
+  fieldName: string,
+  subfieldName: string,
+): boolean => {
+  const mappings = collectionNameToConfig(collectionName).mappings ?? {};
+  const [parentName, childName] = fieldName.split(".");
+  const parentMapping = mappings[parentName];
+  const mapping =
+    childName && parentMapping && "properties" in parentMapping
+      ? parentMapping.properties?.[childName]
+      : parentMapping;
+  return fieldSubfieldNames(mapping).includes(subfieldName);
 };

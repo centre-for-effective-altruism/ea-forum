@@ -13,7 +13,7 @@ export default function SearchUserHit({ hit }: Readonly<{ hit: SearchUser }>) {
   return (
     <article
       data-component="SearchUserHit"
-      className="flex gap-3 max-w-[720px] px-3 py-2 rounded hover:bg-gray-100"
+      className="flex items-start gap-3 max-w-[720px] px-3 py-2 rounded hover:bg-gray-100"
     >
       <UserProfileImage user={hit} size={36} className="shrink-0" />
       <div className="flex flex-col gap-1 min-w-0">
