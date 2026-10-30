@@ -102,7 +102,8 @@ export default function HeaderSearch({
 
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+    router.prefetch("/search");
+  }, [router]);
 
   const hasResults = !!Object.values(results).flat().length;
 
