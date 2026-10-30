@@ -302,9 +302,12 @@ class ElasticQuery {
   }
 
   /**
-   * Each clause is an independent way for a document to match, and the scores
-   * of all the matching clauses are summed. The fuzzy full text query provides
-   * recall, and the other clauses boost more precise matches.
+   * The fuzzy full text query provides recall. The other clauses are different
+   * views of the same precise match (eg; a title containing the exact phrase
+   * also matches its words and prefixes), so they're combined with `dis_max`
+   * to score each document by its best precise match instead of summing them.
+   * Summing them would let a title mentioning a name outrank a document by
+   * that author, which only matches the name once.
    */
   private compileSimpleQuery(tokens: QueryToken[]): CompiledQuery {
     const { fields, snippet, highlight } = this.config;
@@ -324,45 +327,52 @@ class ElasticQuery {
             },
             this.getDefaultQuery(search, fields),
             {
-              multi_match: {
-                query: search,
-                fields: fields.map((field) =>
-                  this.textFieldToSubfield(field, "exact"),
-                ),
-                operator: "and",
-                boost: 2,
-              },
-            },
-            {
-              multi_match: {
-                query: search,
-                fields,
-                type: "phrase",
-                slop: 2,
-                boost: 4,
-              },
-            },
-            {
-              match_phrase_prefix: {
-                [this.textFieldToSubfield(fields[0], "exact", false)]: {
-                  query: search,
-                  boost: 4,
-                },
-              },
-            },
-            ...(prefixFields.length
-              ? [
+              dis_max: {
+                tie_breaker: 0.1,
+                queries: [
                   {
                     multi_match: {
                       query: search,
-                      fields: prefixFields,
-                      operator: "and" as const,
+                      fields: fields.map((field) =>
+                        this.textFieldToSubfield(field, "exact"),
+                      ),
+                      operator: "and",
                       boost: 2,
                     },
                   },
-                ]
-              : []),
-            ...this.getCompactQueries(search),
+                  {
+                    multi_match: {
+                      query: search,
+                      fields,
+                      type: "phrase",
+                      slop: 2,
+                      boost: 4,
+                    },
+                  },
+                  {
+                    match_phrase_prefix: {
+                      [this.textFieldToSubfield(fields[0], "exact", false)]: {
+                        query: search,
+                        boost: 4,
+                      },
+                    },
+                  },
+                  ...(prefixFields.length
+                    ? [
+                        {
+                          multi_match: {
+                            query: search,
+                            fields: prefixFields,
+                            operator: "and" as const,
+                            boost: 2,
+                          },
+                        },
+                      ]
+                    : []),
+                  ...this.getCompactQueries(search),
+                ],
+              },
+            },
           ],
         },
       },
