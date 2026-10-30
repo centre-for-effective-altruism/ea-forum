@@ -43,4 +43,18 @@ export const searchRouter = {
     }
     await new ElasticExporter().configureIndexes();
   }),
+  deleteOrphanedIndexes: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.isAdmin) {
+      throw new Error("Permission denied");
+    }
+    return new ElasticExporter().deleteOrphanedIndexes();
+  }),
+  indexStatuses: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.isAdmin) {
+      throw new Error("Permission denied");
+    }
+    return new ElasticExporter().getIndexStatuses();
+  }),
 };

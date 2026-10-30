@@ -34,6 +34,14 @@ export const getSearchIndexName = (
   }
 };
 
+/**
+ * The name of the Elasticsearch alias for a collection. Unlike
+ * `getSearchIndexName`, this never includes the search index prefix, as
+ * `ElasticService` strips the prefix before querying.
+ */
+export const getElasticIndexName = (collectionName: SearchIndexCollectionName) =>
+  collectionName.toLowerCase();
+
 export const collectionIsSearchIndexed = (
   collectionName: string,
 ): collectionName is SearchIndexCollectionName =>

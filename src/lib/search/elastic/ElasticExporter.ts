@@ -7,7 +7,7 @@ import type { SearchDocument } from "../searchDocuments";
 import { collectionNameToConfig, Mappings } from "./ElasticConfig";
 import { getSearchRepoByCollectionName } from "./fetchSearchDocuments";
 import {
-  getSearchIndexName,
+  getElasticIndexName,
   SearchIndexCollectionName,
   searchIndexedCollectionNames,
 } from "./elasticIndexes";
@@ -20,6 +20,25 @@ const HTML_FIELDS = [
   "plaintextDescription",
   "description",
 ];
+
+export type SearchBackingIndexStatus = {
+  name: string;
+  createdAt: number;
+  docsCount: number;
+  isLive: boolean;
+  reindexProgress: { copied: number; total: number } | null;
+};
+
+export type SearchIndexStatus = {
+  collectionName: SearchIndexCollectionName;
+  aliasName: string;
+  indexes: SearchBackingIndexStatus[];
+};
+
+export type DeleteOrphanedIndexesResult = {
+  deleted: string[];
+  skipped: { name: string; reason: string }[];
+};
 
 export class ElasticExporter {
   constructor(private client = new ElasticClient()) {}
@@ -52,6 +71,67 @@ export class ElasticExporter {
     }
   }
 
+  /**
+   * Lists the backing indexes for each collection, newest first, along with
+   * the progress of any reindexes that are still copying documents into them
+   */
+  async getIndexStatuses(): Promise<SearchIndexStatus[]> {
+    const client = this.client.getClient();
+    const aliasNames = searchIndexedCollectionNames.map(getElasticIndexName);
+    const [indexes, aliases, reindexTasks] = await Promise.all([
+      client.cat.indices({
+        index: aliasNames.map((aliasName) => `${aliasName}_*`),
+        h: ["index", "docs.count", "creation.date"],
+        format: "json",
+      }),
+      client.cat.aliases({
+        name: aliasNames,
+        h: ["alias", "index"],
+        format: "json",
+      }),
+      client.tasks.list({
+        actions: "*reindex",
+        detailed: true,
+        group_by: "none",
+      }),
+    ]);
+
+    const liveIndexNames = new Set(aliases.map(({ index }) => index));
+    const reindexProgressByIndexName = new Map<
+      string,
+      SearchBackingIndexStatus["reindexProgress"]
+    >();
+    const tasks = Array.isArray(reindexTasks.tasks) ? reindexTasks.tasks : [];
+    for (const { description, status } of tasks) {
+      const destinationIndexName = /to \[([^\]]+)\]/.exec(description ?? "")?.[1];
+      if (destinationIndexName) {
+        reindexProgressByIndexName.set(destinationIndexName, {
+          copied: (status?.created ?? 0) + (status?.updated ?? 0),
+          total: status?.total ?? 0,
+        });
+      }
+    }
+
+    return searchIndexedCollectionNames.map((collectionName) => {
+      const aliasName = getElasticIndexName(collectionName);
+      const backingIndexPattern = new RegExp(`^${aliasName}_\\d+$`);
+      return {
+        collectionName,
+        aliasName,
+        indexes: indexes
+          .filter(({ index }) => index && backingIndexPattern.test(index))
+          .map(({ index, "docs.count": docsCount, "creation.date": createdAt }) => ({
+            name: index!,
+            createdAt: Number(createdAt),
+            docsCount: Number(docsCount ?? 0),
+            isLive: liveIndexNames.has(index),
+            reindexProgress: reindexProgressByIndexName.get(index!) ?? null,
+          }))
+          .sort((a, b) => b.createdAt - a.createdAt),
+      };
+    });
+  }
+
   async exportAll() {
     await Promise.all(
       searchIndexedCollectionNames.map((collectionName) =>
@@ -60,42 +140,39 @@ export class ElasticExporter {
     );
   }
 
-  private isBackingIndexName(name: string): boolean {
-    for (const collectionName of searchIndexedCollectionNames) {
-      if (
-        name.indexOf(collectionName.toLowerCase()) === 0 &&
-        /[a-z]+_\d+/.exec(name)?.length
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  async deleteOrphanedIndexes() {
+  /**
+   * Deletes the old backing indexes left behind by `configureIndex`. An old
+   * index is only deleted once its collection has a live index which has
+   * finished copying and has at least as many documents, as the old index is
+   * otherwise needed to finish the copy or to roll back.
+   */
+  async deleteOrphanedIndexes(): Promise<DeleteOrphanedIndexesResult> {
     const client = this.client.getClient();
-    const indexes = await client.indices.get({
-      index: "*",
-    });
-    const indexNames = Object.keys(indexes);
-    for (const indexName of indexNames) {
-      if (!this.isBackingIndexName(indexName)) {
-        continue;
+    const result: DeleteOrphanedIndexesResult = { deleted: [], skipped: [] };
+    for (const { indexes } of await this.getIndexStatuses()) {
+      const liveIndex = indexes.find(({ isLive }) => isLive);
+      const isCopying = indexes.some(({ reindexProgress }) => reindexProgress);
+      for (const { name, docsCount, isLive } of indexes) {
+        if (isLive) {
+          continue;
+        }
+        if (!liveIndex) {
+          result.skipped.push({ name, reason: "The collection has no live index" });
+        } else if (isCopying) {
+          result.skipped.push({ name, reason: "Documents are still being copied" });
+        } else if (liveIndex.docsCount < docsCount) {
+          result.skipped.push({
+            name,
+            reason: `The live index has fewer documents (${liveIndex.docsCount} vs ${docsCount})`,
+          });
+        } else {
+          console.log("Deleting orphaned elastic index:", name);
+          await client.indices.delete({ index: name });
+          result.deleted.push(name);
+        }
       }
-
-      const aliasName = /([a-z]+)_\d+/.exec(indexName)?.[1];
-      if (!aliasName) {
-        continue;
-      }
-      const targetName = await this.getExistingAliasTarget(aliasName);
-      if (targetName === indexName) {
-        continue;
-      }
-      console.log("Deleting orphaned elastic index:", indexName);
-      await client.indices.delete({
-        index: indexName,
-      });
     }
+    return result;
   }
 
   /**
@@ -108,57 +185,52 @@ export class ElasticExporter {
    * alias for the actual name pointing to the underlining index.
    *
    * To change the schema, we then:
-   *  (1) Make the old index read-only
-   *  (2) Reindex all of the existing data into a new index with the new schema
-   *  (3) Mark the new index as writable
-   *  (4) Update the alias to point to the new index
+   *  (1) Create a new index with the new schema
+   *  (2) Atomically move the alias to the new index, so new writes go there
+   *  (3) Make the old index read-only
+   *  (4) Copy the existing data into the new index in the background, without
+   *      overwriting anything written to the new index since step (2)
    *
    * For a populated index, expect this to take ~a couple of minutes. Note that,
    * for the sake of data safety, the old index is _not_ automatically deleted.
-   * You should wait a couple of minutes for the reindexing to complete, check
-   * that the document count on the new index is >= the document count on the old
-   * index, then run `Globals.elasticDeleteOrphanedIndexes()`.
+   * You should wait for the copying to complete (see /admin/search-indexes),
+   * check that the document count on the new index is >= the document count on
+   * the old index, then call `deleteOrphanedIndexes`.
    *
-   * Whilst exporting, there'll be a short period during copying where search
-   * will continue to work but not all the documents are available - this is
-   * currently ~45 seconds for EA forum prod as of 2023-06-22.
+   * Whilst copying, search will continue to work but not all the documents are
+   * available - this was ~45 seconds for EA forum prod as of 2023-06-22.
    */
   async configureIndex(collectionName: SearchIndexCollectionName) {
     const client = this.client.getClient();
-    const aliasName = getSearchIndexName(collectionName);
+    const aliasName = getElasticIndexName(collectionName);
     const newIndexName = `${aliasName}_${Date.now()}`;
     const oldIndexName = await this.getExistingAliasTarget(aliasName);
 
     if (oldIndexName) {
       console.log(`Reindexing index: ${collectionName}`);
       const synonyms = await this.getExistingSynonyms();
+      await this.createIndex(newIndexName, collectionName);
+      await this.updateSynonymsForIndex(newIndexName, synonyms);
+      await client.indices.updateAliases({
+        actions: [
+          { add: { index: newIndexName, alias: aliasName } },
+          { remove: { index: oldIndexName, alias: aliasName } },
+        ],
+      });
       await client.indices.putSettings({
         index: oldIndexName,
         body: {
           "index.blocks.write": true,
         },
       });
-      await this.createIndex(newIndexName, collectionName);
-      await this.updateSynonymsForIndex(newIndexName, synonyms);
+      // Documents written to the new index whilst copying are newer than the
+      // copies in the old index, so they mustn't be overwritten
       await client.reindex({
         refresh: true,
         wait_for_completion: false,
+        conflicts: "proceed",
         source: { index: oldIndexName },
-        dest: { index: newIndexName },
-      });
-      await client.indices.putSettings({
-        index: newIndexName,
-        body: {
-          "index.blocks.write": false,
-        },
-      });
-      await client.indices.putAlias({
-        index: newIndexName,
-        name: aliasName,
-      });
-      await client.indices.deleteAlias({
-        index: oldIndexName,
-        name: aliasName,
+        dest: { index: newIndexName, op_type: "create" },
       });
     } else {
       console.log(`Creating index: ${collectionName}`);
@@ -178,7 +250,7 @@ export class ElasticExporter {
    */
   async recreateIndex(collectionName: SearchIndexCollectionName) {
     const client = this.client.getClient();
-    const aliasName = getSearchIndexName(collectionName);
+    const aliasName = getElasticIndexName(collectionName);
     const newIndexName = `${aliasName}_${Date.now()}`;
     const oldIndexName = await this.getExistingAliasTarget(aliasName);
 
@@ -204,7 +276,7 @@ export class ElasticExporter {
   }
 
   async deleteIndex(collectionName: SearchIndexCollectionName) {
-    const aliasName = getSearchIndexName(collectionName);
+    const aliasName = getElasticIndexName(collectionName);
     const indexName = await this.getExistingAliasTarget(aliasName);
     if (!indexName) {
       throw new Error("Can't find backing index for collection " + collectionName);
@@ -239,7 +311,7 @@ export class ElasticExporter {
     collectionName: SearchIndexCollectionName,
     documentId: string,
   ): Promise<void> {
-    const index = collectionName.toLowerCase();
+    const index = getElasticIndexName(collectionName);
     const repo = getSearchRepoByCollectionName(collectionName);
     const searchDocument = await repo.fetchById(documentId);
     await this.client.getClient().index({
@@ -413,7 +485,7 @@ export class ElasticExporter {
     overrideAlias?: string,
   ) {
     const repo = getSearchRepoByCollectionName(collectionName);
-    const indexName = getSearchIndexName(collectionName);
+    const indexName = getElasticIndexName(collectionName);
     const alias = overrideAlias ?? (await this.getExistingAliasTarget(indexName));
     if (!alias) {
       throw new Error("Alias is not configured - run `elasticConfigureIndexes`");
@@ -474,7 +546,7 @@ export class ElasticExporter {
   async getExistingSynonyms(): Promise<string[]> {
     const client = this.client.getClient();
     const settings = await client.indices.getSettings({
-      index: "posts", // All the indexes use the same synonym list
+      index: getElasticIndexName("Posts"), // All the indexes use the same synonym list
     });
     const indexName = Object.keys(settings)[0]; // Get the alias target
     const filters = settings[indexName]?.settings?.index?.analysis?.filter;
@@ -497,7 +569,7 @@ export class ElasticExporter {
     collectionName: SearchIndexCollectionName,
     synonyms: string[],
   ) {
-    const index = getSearchIndexName(collectionName);
+    const index = getElasticIndexName(collectionName);
     await this.updateSynonymsForIndex(index, synonyms);
   }
 
