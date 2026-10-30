@@ -14,14 +14,13 @@ export const typeStyles = {
     "font-serif text-[19px] font-[430] tracking-tight [&_em]:tracking-[0.02em] [&_i]:tracking-[0.02em]",
   postTitle: "font-sans text-[16px] font-[600]",
   voteScore: "font-sans text-[16px] font-[500]",
-  homePageTab: "font-sans text-[24px] font-[700] leading-[24px] tracking-[-0.5px]",
+  homePageTab: "font-sans text-[24px] font-[600] leading-[24px] tracking-[-0.5px]",
   pollQuestion: "font-sans text-[24px] font-[700] leading-[28px]",
   commentsHeader: "font-sans text-[24px] leading-[36px] font-[600]",
   sectionTitleLarge: "font-sans text-[20px] font-[700] leading-[25px]",
   sectionTitleSmall:
     "font-sans text-[13px] font-[700] leading-[16px] uppercase text-gray-600",
   spotlightTitle: "font-sans text-[22px] font-[600]",
-  logo: "font-sans text-[19px] font-[400] tracking-[-0.015em]",
   postsPageTitle:
     "font-sans font-[700] text-[34px] leading-[1.15] sm:text-[40px] sm:leading-[125%]",
   directoryCell: "font-sans text-[13px] font-[500] leading-[1.4rem]",

@@ -27,6 +27,10 @@
      teal (vs the brighter #009da8 primary) for readable white text on dark. */
   --color-primary-button: #0c869b;
 
+  /* Wordmark colours from the official EA Forum logo */
+  --color-logo-wordmark: #231f1b;
+  --color-logo-forum: #625d59;
+
   --color-panel-background: #fff;
   --color-error: #e04e4b;
   --color-error-light: #cb5e3c;
@@ -214,6 +218,9 @@
   --color-primary: #009da8;
   --color-primary-light: #0c869b;
   --color-primary-dark: #00adb9;
+
+  --color-logo-wordmark: #fcf8f4;
+  --color-logo-forum: #8c8681;
 
   --color-panel-background: #191919;
   --color-error: #9b5e5e;

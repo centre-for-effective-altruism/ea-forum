@@ -2,16 +2,14 @@
 
 import { Suspense, useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
-import { getSiteLogoUrl } from "@/lib/cloudinary/cloudinaryHelpers";
 import { useMobileNav } from "@/lib/hooks/useMobileNav";
 import clsx from "clsx";
-import Image from "next/image";
 import Bars3Icon from "@heroicons/react/24/solid/Bars3Icon";
 import MagnifyingGlassIcon from "@heroicons/react/24/outline/MagnifyingGlassIcon";
 import HeaderButton from "./HeaderButton";
 import HeaderSearch from "./HeaderSearch";
 import HeaderUserButtons, { HeaderUserSkeleton } from "./HeaderUserButtons";
-import Type from "@/components/Type";
+import SiteLogo from "./SiteLogo";
 import Link from "@/components/Link";
 import Headroom from "./Headroom";
 
@@ -74,23 +72,15 @@ export default function Header({
             <Suspense fallback={<MobileNavButton hideOnDesktop={false} />}>
               <PathnameMobileNavButton />
             </Suspense>
-            <Type style="logo" className="grow flex items-center">
-              <Link href="/" className="inline-flex items-center gap-1">
-                <Image
-                  src={getSiteLogoUrl(100)}
-                  alt="Effective Altruism Forum"
-                  width={34}
-                  height={34}
-                  loading="eager"
-                />
-                <span className="translate-y-px">
-                  <span className="hidden md:inline">Effective Altruism Forum</span>
-                  <span className="max-[330px]:hidden md:hidden inline">
-                    EA Forum
-                  </span>
-                </span>
+            <div className="grow flex items-center">
+              <Link
+                href="/"
+                aria-label="Effective Altruism Forum home"
+                className="inline-flex items-center ml-2"
+              >
+                <SiteLogo isSearchOpen={isSearchOpen} />
               </Link>
-            </Type>
+            </div>
             <div className="flex gap-2 items-center">
               {isSearchOpen ? (
                 <HeaderSearch onClose={toggleSearch} />
