@@ -12,6 +12,7 @@ import { postGetPageUrl } from "@/lib/posts/postsHelpers";
 import { useIsClamped } from "@/lib/hooks/useIsClamped";
 import {
   commentGetPageUrl,
+  commentIsCollapsedForLowKarma,
   commentIsHiddenPendingReview,
   commentRepliesBlockedUntil,
 } from "@/lib/comments/commentHelpers";
@@ -119,7 +120,10 @@ export default function CommentItem({
     commentsListContext?.collapsedIfRepliedTo && children.length > 0 && !isNew,
   );
   const [isExpanded, setIsExpanded] = useState(
-    !draft && !startCollapsed && !collapsedBecauseRepliedTo,
+    !draft &&
+      !startCollapsed &&
+      !collapsedBecauseRepliedTo &&
+      !commentIsCollapsedForLowKarma(comment),
   );
   const [isTruncated, setIsTruncated] = useState(
     commentsListContext?.collapsedIfRepliedTo && !collapsedBecauseRepliedTo,
