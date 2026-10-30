@@ -294,12 +294,32 @@ export class ElasticExporter {
                 pattern: " ",
                 replacement: "",
               },
+              fm_edge_ngram_filter: {
+                type: "edge_ngram",
+                min_gram: 1,
+                max_gram: 20,
+              },
             },
             char_filter: {
               fm_punctuation_filter: {
                 type: "pattern_replace",
                 pattern: "[()_-]+",
                 replacement: " ",
+              },
+              fm_apostrophe_filter: {
+                type: "pattern_replace",
+                pattern: "['’]",
+                replacement: "",
+              },
+              fm_word_separator_filter: {
+                type: "pattern_replace",
+                pattern: "[^\\p{L}\\p{N}]+",
+                replacement: " ",
+              },
+              fm_strip_separators_filter: {
+                type: "pattern_replace",
+                pattern: "[^\\p{L}\\p{N}]+",
+                replacement: "",
               },
             },
             analyzer: {
@@ -343,11 +363,28 @@ export class ElasticExporter {
                 ],
                 char_filter: ["fm_punctuation_filter"],
               },
+              fm_word_analyzer: {
+                type: "custom",
+                tokenizer: "standard",
+                filter: ["lowercase", "asciifolding"],
+                char_filter: ["fm_apostrophe_filter", "fm_word_separator_filter"],
+              },
+              fm_edge_ngram_analyzer: {
+                type: "custom",
+                tokenizer: "standard",
+                filter: ["lowercase", "asciifolding", "fm_edge_ngram_filter"],
+                char_filter: ["fm_apostrophe_filter", "fm_word_separator_filter"],
+              },
             },
             normalizer: {
               fm_sortable_keyword: {
                 type: "custom",
                 filter: ["lowercase", "trim"],
+              },
+              fm_compact_keyword: {
+                type: "custom",
+                filter: ["lowercase", "asciifolding"],
+                char_filter: ["fm_strip_separators_filter"],
               },
             },
           },

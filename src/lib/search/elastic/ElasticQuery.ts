@@ -3,6 +3,7 @@ import {
   IndexConfig,
   Ranking,
   isFullTextField,
+  fieldHasSubfield,
   indexToCollectionName,
   collectionNameToConfig,
 } from "./ElasticConfig";
@@ -13,6 +14,7 @@ import { getElasticOriginDate } from "./elasticSettings";
 type Sort = estypes.Sort;
 type SearchRequest = estypes.SearchRequest;
 type QueryDslQueryContainer = estypes.QueryDslQueryContainer;
+type Script = estypes.Script;
 
 export type QueryFilterOperator = "gt" | "gte" | "lt" | "lte" | "eq";
 
@@ -59,13 +61,23 @@ type CompiledQuery = {
   highlightQuery?: QueryDslQueryContainer;
 };
 
+/**
+ * Matches the `fm_compact_keyword` normalizer used by `.compact` subfields
+ */
+export const toCompactKeyword = (value: string): string =>
+  value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+
 class ElasticQuery {
   private collectionName: SearchIndexCollectionName;
   private config: IndexConfig;
 
   constructor(
     private queryData: QueryData,
-    private fuzziness: Fuzziness = 1,
+    private fuzziness: Fuzziness = "AUTO",
   ) {
     this.collectionName = indexToCollectionName(queryData.index);
     this.config = collectionNameToConfig(this.collectionName);
@@ -79,10 +91,9 @@ class ElasticQuery {
         expr = `saturation(Math.max(${min}, doc['${field}'].value), ${scoring.pivot}L)`;
         break;
       case "date":
-        const start = getElasticOriginDate();
-        const delta = Date.now() - start.getTime();
-        const dayRange = Math.ceil(delta / (1000 * 60 * 60 * 24));
-        expr = `1 - decayDateLinear('${start.toISOString()}', '${dayRange}d', '0', 0.5, doc['${field}'].value)`;
+        // Ranges from 1 for documents created now to 0.5 for documents created
+        // at the origin date
+        expr = `decayDateLinear(params.now, params.dateScale, '0', 0.5, doc['${field}'].value)`;
         break;
       case "bool":
         expr = `doc['${field}'].value == true ? 0.75 : 0.25`;
@@ -95,12 +106,22 @@ class ElasticQuery {
     return order === "asc" ? `(1 - ${expr})` : expr;
   }
 
-  private compileScoreExpression(): string {
-    let expr = "_score";
+  private compileScoreScript(): Script {
+    let source = "_score";
     for (const ranking of this.config.ranking ?? []) {
-      expr += " * " + this.compileRanking(ranking);
+      source += " * " + this.compileRanking(ranking);
     }
-    return expr;
+    const now = new Date();
+    const dayRange = Math.ceil(
+      (now.getTime() - getElasticOriginDate().getTime()) / (1000 * 60 * 60 * 24),
+    );
+    return {
+      source,
+      params: {
+        now: now.toISOString(),
+        dateScale: `${dayRange}d`,
+      },
+    };
   }
 
   private compileFacet(
@@ -238,24 +259,57 @@ class ElasticQuery {
     return terms.length ? terms : undefined;
   }
 
+  /**
+   * Fuzzy full text search across all of the fields: queries with up to 2
+   * terms must match all of them, longer queries may miss up to 25% of them
+   */
   private getDefaultQuery(search: string, fields: string[]): QueryDslQueryContainer {
     return {
       multi_match: {
         query: search,
         fields,
+        type: "best_fields",
+        tie_breaker: 0.3,
         fuzziness: this.fuzziness,
-        max_expansions: 10,
-        prefix_length: 3,
-        minimum_should_match: "75%",
-        operator: "or",
+        max_expansions: 50,
+        prefix_length: 1,
+        minimum_should_match: "2<-25%",
       },
     };
   }
 
+  private getFieldsWithSubfield(subfieldName: string): string[] {
+    return this.config.fields
+      .filter((field) =>
+        fieldHasSubfield(this.collectionName, field.split("^")[0], subfieldName),
+      )
+      .map((field) => this.textFieldToSubfield(field, subfieldName));
+  }
+
+  private getCompactQueries(search: string): QueryDslQueryContainer[] {
+    const value = toCompactKeyword(search);
+    if (!value) {
+      return [];
+    }
+    return this.getFieldsWithSubfield("compact").flatMap((field) => {
+      const [fieldName, relevance] = field.split("^");
+      const boost = Number(relevance ?? 1);
+      return [
+        { term: { [fieldName]: { value, boost: 10 * boost } } },
+        { prefix: { [fieldName]: { value, boost: 3 * boost } } },
+      ];
+    });
+  }
+
+  /**
+   * Each clause is an independent way for a document to match, and the scores
+   * of all the matching clauses are summed. The fuzzy full text query provides
+   * recall, and the other clauses boost more precise matches.
+   */
   private compileSimpleQuery(tokens: QueryToken[]): CompiledQuery {
     const { fields, snippet, highlight } = this.config;
     const { search } = this.queryData;
-    const mainField = this.textFieldToExactField(fields[0], false);
+    const prefixFields = this.getFieldsWithSubfield("prefix");
     return {
       tokens,
       searchQuery: {
@@ -272,20 +326,43 @@ class ElasticQuery {
             {
               multi_match: {
                 query: search,
+                fields: fields.map((field) =>
+                  this.textFieldToSubfield(field, "exact"),
+                ),
+                operator: "and",
+                boost: 2,
+              },
+            },
+            {
+              multi_match: {
+                query: search,
                 fields,
                 type: "phrase",
                 slop: 2,
-                boost: 100,
+                boost: 4,
               },
             },
             {
               match_phrase_prefix: {
-                [mainField]: {
+                [this.textFieldToSubfield(fields[0], "exact", false)]: {
                   query: search,
-                  boost: 1000,
+                  boost: 4,
                 },
               },
             },
+            ...(prefixFields.length
+              ? [
+                  {
+                    multi_match: {
+                      query: search,
+                      fields: prefixFields,
+                      operator: "and" as const,
+                      boost: 2,
+                    },
+                  },
+                ]
+              : []),
+            ...this.getCompactQueries(search),
           ],
         },
       },
@@ -294,10 +371,14 @@ class ElasticQuery {
     };
   }
 
-  private textFieldToExactField(textField: string, keepRelevance = true): string {
+  private textFieldToSubfield(
+    textField: string,
+    subfieldName: string,
+    keepRelevance = true,
+  ): string {
     const [fieldName, relevance] = textField.split("^");
-    const exactField = `${fieldName}.exact`;
-    return relevance && keepRelevance ? `${exactField}^${relevance}` : exactField;
+    const subfield = `${fieldName}.${subfieldName}`;
+    return relevance && keepRelevance ? `${subfield}^${relevance}` : subfield;
   }
 
   private getAdvancedHighlightQuery(
@@ -338,7 +419,9 @@ class ElasticQuery {
           must.push({
             multi_match: {
               query: token,
-              fields: fields.map((field) => this.textFieldToExactField(field)),
+              fields: fields.map((field) =>
+                this.textFieldToSubfield(field, "exact"),
+              ),
               type: "phrase",
             },
           });
@@ -544,9 +627,7 @@ class ElasticQuery {
               filter: this.compileFilters(tokens),
             },
           },
-          script: {
-            source: this.compileScoreExpression(),
-          },
+          script: this.compileScoreScript(),
         },
       },
       sort: this.compileSort(sorting, coordinates),
