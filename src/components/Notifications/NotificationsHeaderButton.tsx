@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { captureException } from "@sentry/nextjs";
 import type { UserKarmaChanges } from "@/lib/users/karmaChangesTypes";
 import { userHasKarmaChange } from "@/lib/users/userHelpers";
@@ -18,8 +18,17 @@ export default function NotificationsHeaderButton() {
   const { currentUser } = useCurrentUser();
   const [karmaChanges, setKarmaChanges] = useState<UserKarmaChanges | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const latestRequestId = useRef(0);
 
   const refetch = useCallback(async () => {
+    const requestId = ++latestRequestId.current;
+    const ifLatestRequest =
+      <T,>(setter: (value: T) => void) =>
+      (value: T) => {
+        if (requestId === latestRequestId.current) {
+          setter(value);
+        }
+      };
     if (!currentUser) {
       setKarmaChanges(null);
       setUnreadNotifications(0);
@@ -28,14 +37,14 @@ export default function NotificationsHeaderButton() {
     await Promise.all([
       rpc.users
         .karmaChanges({})
-        .then(setKarmaChanges)
+        .then(ifLatestRequest(setKarmaChanges))
         .catch((e) => {
           captureException(e);
           console.error("Error fetching karma changes:", e);
         }),
       rpc.notifications
         .countUnread()
-        .then(setUnreadNotifications)
+        .then(ifLatestRequest(setUnreadNotifications))
         .catch((e) => {
           captureException(e);
           console.error("Error fetching unread notifications count:", e);
@@ -58,9 +67,7 @@ export default function NotificationsHeaderButton() {
 
   return (
     <NotificationsDropdown
-      // Add a key to force the notifications list to reload when the number of
-      // unread notifications changes
-      key={unreadNotifications}
+      unreadNotifications={unreadNotifications}
       karmaChanges={karmaChanges}
       onOpen={refetch}
       className="relative"

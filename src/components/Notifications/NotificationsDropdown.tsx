@@ -20,11 +20,13 @@ import Type from "../Type";
 const PAGE_SIZE = 20;
 
 export default function NotificationsDropdown({
+  unreadNotifications,
   karmaChanges,
   onOpen,
   className,
   children,
 }: Readonly<{
+  unreadNotifications: number;
   karmaChanges: UserKarmaChanges | null;
   onOpen?: () => void;
   className?: string;
@@ -33,6 +35,16 @@ export default function NotificationsDropdown({
   const [markAsReadLoading, setMarkAsReadLoading] = useState(false);
   const [pages, setPages] = useState<(TNotificationDisplay[] | null)[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [previousUnreadNotifications, setPreviousUnreadNotifications] =
+    useState(unreadNotifications);
+
+  if (unreadNotifications !== previousUnreadNotifications) {
+    setPreviousUnreadNotifications(unreadNotifications);
+    if (unreadNotifications > previousUnreadNotifications) {
+      setPages([]);
+      setHasMore(true);
+    }
+  }
 
   const loadPage = useCallback(async (pageIndex: number) => {
     try {
