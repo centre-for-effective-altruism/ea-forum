@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { SQL, sql } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
 import { db } from "../db";
 import { posts } from "../schema";
 import { coauthorsSelector, userBaseProjection } from "../users/userQueries";
@@ -188,14 +189,14 @@ export const fetchPostDisplayCached = cache(fetchPostDisplay);
 export const filterSettingsToSelector = (
   filterSettings: FilterSettings,
 ): {
-  filter: (postsTable: typeof posts) => SQL<unknown>;
-  score: (postsTable: typeof posts) => SQL<number>;
+  filter: (postsTable: PgTable) => SQL<unknown>;
+  score: (postsTable: PgTable) => SQL<number>;
 } => {
   const { tagsRequired, tagsExcluded, tagsSoftFiltered } =
     resolveFrontpageTagFilters(filterSettings);
   const { personalBlog } = filterSettings;
 
-  const filterClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [];
+  const filterClauses: ((postsTable: PgTable) => SQL<unknown>)[] = [];
   for (const tag of tagsRequired) {
     filterClauses.push(
       (posts) =>
@@ -209,10 +210,10 @@ export const filterSettingsToSelector = (
     );
   }
 
-  const addClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [
+  const addClauses: ((postsTable: PgTable) => SQL<unknown>)[] = [
     (posts) => sql`${posts}."score"`,
   ];
-  const multClauses: ((postsTable: typeof posts) => SQL<unknown>)[] = [];
+  const multClauses: ((postsTable: PgTable) => SQL<unknown>)[] = [];
   for (const tag of tagsSoftFiltered) {
     const addModifier = filterModeToAdditiveKarmaModifier(tag.filterMode);
     const multModifier = filterModeToMultiplicativeKarmaModifier(tag.filterMode);
@@ -270,14 +271,14 @@ export const filterSettingsToSelector = (
     multClauses.push(() => sql`1`);
   }
 
-  const filter = (postsTable: typeof posts) =>
+  const filter = (postsTable: PgTable) =>
     filterClauses.length
       ? sql.join(
           filterClauses.map((clause) => clause(postsTable)),
           sql` AND `,
         )
       : sql`TRUE`;
-  const score = (postsTable: typeof posts) =>
+  const score = (postsTable: PgTable) =>
     sql<number>`(
       (${sql.join(
         addClauses.map((clause) => clause(postsTable)),

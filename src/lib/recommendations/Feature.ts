@@ -1,4 +1,5 @@
 import { sql, SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { CurrentUser } from "../users/currentUser";
 import type { RecommendationFeatureName } from "./RecommendationStrategy";
 import { FilterSettings, getDefaultFilterSettings } from "../filterSettings";
@@ -151,8 +152,9 @@ class FrontpageFilterSettingsFeature extends Feature {
       (currentUser?.frontpageFilterSettings as FilterSettings) ??
       getDefaultFilterSettings();
     const { filter, score } = filterSettingsToSelector(filterSettings);
-    this.filter = filter(posts);
-    this.score = score(posts);
+    const aliasedPosts = alias(posts, "p");
+    this.filter = filter(aliasedPosts);
+    this.score = score(aliasedPosts);
   }
 
   getFilter() {
