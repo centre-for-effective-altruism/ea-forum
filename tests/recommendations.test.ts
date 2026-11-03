@@ -25,4 +25,42 @@ suite("Recommendations", () => {
     );
     expect(posts.length).toBe(0);
   });
+
+  test("Can fetch posts with feature strategy using filters and subscriptions", async () => {
+    const service = new RecommendationService();
+    const [user, post] = await Promise.all([createTestUser(), createTestPost()]);
+    const posts = await service.recommend(
+      user,
+      "client-id",
+      3,
+      {
+        name: "feature",
+        postId: post._id,
+        features: [
+          { feature: "frontpageFilterSettings", weight: 1 },
+          { feature: "subscribedAuthorPosts", weight: 1 },
+          { feature: "subscribedTagPosts", weight: 1 },
+        ],
+      },
+      true,
+    );
+    expect(posts.length).toBe(0);
+  });
+
+  test("Can fetch posts with wrapped strategy", async () => {
+    const service = new RecommendationService();
+    const [user, post] = await Promise.all([createTestUser(), createTestPost()]);
+    const posts = await service.recommend(
+      user,
+      "client-id",
+      3,
+      {
+        name: "wrapped",
+        postId: post._id,
+        year: 2025,
+      },
+      true,
+    );
+    expect(posts.length).toBe(0);
+  });
 });

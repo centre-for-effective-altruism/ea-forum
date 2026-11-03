@@ -1,8 +1,8 @@
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import keyBy from "lodash/keyBy";
 import uniq from "lodash/uniq";
 import { db } from "@/lib/db";
-import { createRawSqlArray, findManyWithTotalCount } from "@/lib/utils/queryHelpers";
+import { findManyWithTotalCount } from "@/lib/utils/queryHelpers";
 import { commentListProjection, CommentListItem } from "@/lib/comments/commentLists";
 import { userIsAdminOrMod, UserPermissions } from "@/lib/users/userHelpers";
 import { viewablePostFilter } from "@/lib/posts/postLists";
@@ -342,7 +342,7 @@ export const fetchManualRateLimits = async ({
     },
     where: {
       RAW: (moderatorActions, { sql }) => sql`
-        ${moderatorActions.type} = ANY(${createRawSqlArray(manualRateLimitTypes)}) AND
+        ${inArray(moderatorActions.type, manualRateLimitTypes)} AND
         (${moderatorActions.endedAt} IS NULL OR ${moderatorActions.endedAt} > NOW())
       `,
     },

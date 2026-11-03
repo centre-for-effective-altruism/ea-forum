@@ -34,23 +34,6 @@ export type RelationalOrderBy<TTable extends TTableBase> = NonNullable<
  */
 export const isNotTrue = { OR: [{ isNull: true as const }, { eq: false }] };
 
-export const createRawSqlArray = <T>(array: T[], cast?: string) => {
-  const sanitizedItems: SQL<unknown>[] = [sql`'{`];
-  const rawItems: SQL<unknown>[] = [];
-  for (const item of array) {
-    rawItems.push(sql.raw(sql`${item}`.queryChunks[1]!.toString()));
-  }
-  sanitizedItems.push(sql.join(rawItems, sql`, `));
-  sanitizedItems.push(sql`}'`);
-  if (cast) {
-    sanitizedItems.push(sql.raw(`::${cast}[]`));
-  }
-  return sql.join(sanitizedItems);
-};
-
-export const isAnyInArray = <C, T>(column: C, array: T[], cast?: string) =>
-  sql<boolean>`${column} = ANY(${createRawSqlArray(array, cast)})`;
-
 /**
  * Given a `field` containing HTML, create a selector to fetch a substring of
  * that HTML of `length` characters. Note that the returned HTML will often

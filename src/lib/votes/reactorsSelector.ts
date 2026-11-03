@@ -3,9 +3,10 @@ import { sql } from "drizzle-orm";
 import { publicReactionPalette } from "./reactions";
 import type { comments, posts } from "../schema";
 
-const publicReactionNamesSql = publicReactionPalette
-  .map(({ name }) => `'${name}'`)
-  .join(",");
+const publicReactionNamesSql = sql.join(
+  publicReactionPalette.map(({ name }) => sql`${name}`),
+  sql`, `,
+);
 
 export const reactorsSelector =
   (collectionName: "Posts" | "Comments") =>
@@ -25,7 +26,7 @@ export const reactorsSelector =
           AND v."cancelled" IS NOT TRUE
           AND v."isUnvote" IS NOT TRUE
           AND v."extendedVoteType" IS NOT NULL
-          AND e."key" IN (${sql.raw(publicReactionNamesSql)})
+          AND e."key" IN (${publicReactionNamesSql})
           AND e."value" = 'true'::JSONB
         GROUP BY e."key"
       ) reactors

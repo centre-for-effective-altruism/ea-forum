@@ -1,10 +1,9 @@
 import { waitUntil } from "@vercel/functions";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { createNotification } from "../notifications/notificationMutations";
 import { userSmallVotePower, VoteType } from "./voteHelpers";
 import { Post, posts, TagRel, users } from "../schema";
 import { userIsInGroup } from "../users/userHelpers";
-import { isAnyInArray } from "../utils/queryHelpers";
 import { nDaysAgo } from "../timeUtils";
 import type { DbOrTransaction } from "../db";
 import type {
@@ -82,7 +81,7 @@ export const updateUserKarma = async (
       .set({
         karma: sql`${users.karma} + ${votePower}`,
       })
-      .where(isAnyInArray(users._id, authorIds, "text"));
+      .where(inArray(users._id, authorIds));
 
     await Promise.all(
       authors.map(async (author) => {
@@ -102,12 +101,14 @@ export const updateUserKarma = async (
           }
         }
         if (newGroups.length) {
-          const separatedGroups = newGroups.map((g) => `'${g}'`).join(",");
-          const arrayLiteral = `ARRAY[${separatedGroups}]::TEXT[]`;
+          const groupsArray = sql`ARRAY[${sql.join(
+            newGroups.map((group) => sql`${group}`),
+            sql`, `,
+          )}]::TEXT[]`;
           await db
             .update(users)
             .set({
-              groups: sql`${users.groups} || ${sql.raw(arrayLiteral)}`,
+              groups: sql`${users.groups} || ${groupsArray}`,
             })
             .where(eq(users._id, author._id));
         }
@@ -146,7 +147,7 @@ export const updateUserVoteCounts = async (
           voteReceivedCount: sql`COALESCE(${users.voteReceivedCount}, 0) + ${amount}`,
           [receiverField]: sql`COALESCE(${users[receiverField]}, 0) + ${amount}`,
         })
-        .where(isAnyInArray(users._id, authorIds, "text")),
+        .where(inArray(users._id, authorIds)),
     ]);
   }
 };

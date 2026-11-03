@@ -279,7 +279,7 @@ export const fetchKarmaChanges = async ({
   const { publicEmojis, privateEmojis } = getReactionsForKarmaChanges(showNegative);
   const publicSelectors = publicEmojis.map(
     (emoji) =>
-      `'${emoji}', ARRAY_AGG(
+      sql`${emoji}::TEXT, ARRAY_AGG(
       DISTINCT JSONB_BUILD_OBJECT(
         '_id', v."userId",
         'displayName', u."displayName",
@@ -288,15 +288,15 @@ export const fetchKarmaChanges = async ({
     ) FILTER (WHERE
       v."cancelled" IS NOT TRUE AND
       v."isUnvote" IS NOT TRUE AND
-      fm_vote_added_emoji(v."_id", '${emoji}')
+      fm_vote_added_emoji(v."_id", ${emoji})
     )`,
   );
   const privateSelectors = privateEmojis.map(
     (emoji) =>
-      `'${emoji}', NULLIF(COUNT(DISTINCT "userId") FILTER (WHERE
+      sql`${emoji}::TEXT, NULLIF(COUNT(DISTINCT "userId") FILTER (WHERE
       v."cancelled" IS NOT TRUE AND
       v."isUnvote" IS NOT TRUE AND
-      fm_vote_added_emoji(v."_id", '${emoji}')
+      fm_vote_added_emoji(v."_id", ${emoji})
     ), 0)`,
   );
   const results = await db.execute<AnyKarmaChange>(sql`
@@ -330,7 +330,7 @@ export const fetchKarmaChanges = async ({
             GREATEST(SUM(v."power"), 0)
           END "scoreChange",
         NULLIF(JSONB_STRIP_NULLS(JSONB_BUILD_OBJECT(
-          ${sql.raw([...publicSelectors, ...privateSelectors].join(",\n"))}
+          ${sql.join([...publicSelectors, ...privateSelectors], sql`,\n`)}
         )), '{}'::JSONB) "addedReacts"
       FROM "Votes" v
       JOIN "Users" u ON v."userId" = u."_id"

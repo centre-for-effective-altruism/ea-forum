@@ -1,4 +1,5 @@
 import { sql, SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { CurrentUser } from "../users/currentUser";
 import type { RecommendationFeatureName } from "./RecommendationStrategy";
 import { FilterSettings, getDefaultFilterSettings } from "../filterSettings";
@@ -111,7 +112,7 @@ class SubscribedAuthorPostsFeature extends Feature {
         author_subs."state" = 'subscribed' AND
         author_subs."deleted" IS NOT TRUE AND
         author_subs."type" = 'newPosts' AND
-        author_subs."userId" = $(userId) AND
+        author_subs."userId" = ${this.currentUser?._id ?? null} AND
         (author_subs."documentId" = p."userId" OR
           author_subs."documentId" = ANY(p."coauthorUserIds"))
     `;
@@ -130,7 +131,7 @@ class SubscribedTagPostsFeature extends Feature {
         tag_subs."state" = 'subscribed' AND
         tag_subs."deleted" IS NOT TRUE AND
         tag_subs."type" = 'newTagPosts' AND
-        tag_subs."userId" = $(userId) AND
+        tag_subs."userId" = ${this.currentUser?._id ?? null} AND
         (p."tagRelevance"->tag_subs."documentId")::INTEGER >= 1
     `;
   }
@@ -151,8 +152,9 @@ class FrontpageFilterSettingsFeature extends Feature {
       (currentUser?.frontpageFilterSettings as FilterSettings) ??
       getDefaultFilterSettings();
     const { filter, score } = filterSettingsToSelector(filterSettings);
-    this.filter = filter(posts);
-    this.score = score(posts);
+    const aliasedPosts = alias(posts, "p");
+    this.filter = filter(aliasedPosts);
+    this.score = score(aliasedPosts);
   }
 
   getFilter() {
