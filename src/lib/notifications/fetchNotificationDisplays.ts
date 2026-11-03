@@ -191,7 +191,7 @@ export const fetchNotificationDisplays = async ({
       n."deleted" IS NOT TRUE AND
       n."emailed" IS NOT TRUE AND
       n."waitingForBatch" IS NOT TRUE AND
-      ${type ? `${sql.raw(`n."type" =`)} ${type} ${sql.raw("AND")}` : sql.raw("")}
+      ${type ? sql`n."type" = ${type} AND` : sql``}
       ${sql.raw(
         includeMessages ? "" : `COALESCE(n."documentType", '') <> 'message' AND`,
       )}

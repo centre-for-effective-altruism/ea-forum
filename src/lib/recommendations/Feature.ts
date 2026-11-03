@@ -111,7 +111,7 @@ class SubscribedAuthorPostsFeature extends Feature {
         author_subs."state" = 'subscribed' AND
         author_subs."deleted" IS NOT TRUE AND
         author_subs."type" = 'newPosts' AND
-        author_subs."userId" = $(userId) AND
+        author_subs."userId" = ${this.currentUser?._id ?? null} AND
         (author_subs."documentId" = p."userId" OR
           author_subs."documentId" = ANY(p."coauthorUserIds"))
     `;
@@ -130,7 +130,7 @@ class SubscribedTagPostsFeature extends Feature {
         tag_subs."state" = 'subscribed' AND
         tag_subs."deleted" IS NOT TRUE AND
         tag_subs."type" = 'newTagPosts' AND
-        tag_subs."userId" = $(userId) AND
+        tag_subs."userId" = ${this.currentUser?._id ?? null} AND
         (p."tagRelevance"->tag_subs."documentId")::INTEGER >= 1
     `;
   }

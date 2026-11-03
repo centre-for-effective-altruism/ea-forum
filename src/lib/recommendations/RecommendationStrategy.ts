@@ -206,7 +206,7 @@ abstract class RecommendationStrategy {
         ${recommendedFilter.filter}
         ${postFilter.filter}
         ${filter}
-      ORDER BY p."${sql.raw(sort)}" DESC
+      ORDER BY p.${sql.identifier(sort)} DESC
       LIMIT ${count}
     `);
     return result.rows.map(({ _id }) => _id);

@@ -39,10 +39,10 @@ class FeatureStrategy extends RecommendationStrategy {
     const scores: SQL[] = [];
 
     if (options?.publishedAfter) {
-      filters.push(sql`p."postedAt" > $(publishedAfter)`);
+      filters.push(sql`p."postedAt" > ${options.publishedAfter}`);
     }
     if (options?.publishedBefore) {
-      filters.push(sql`p."postedAt" < $(publishedBefore)`);
+      filters.push(sql`p."postedAt" < ${options.publishedBefore}`);
     }
 
     for (const { feature: featureName, weight } of features) {
@@ -75,7 +75,7 @@ class FeatureStrategy extends RecommendationStrategy {
         ${sql.join(joins, sql` `)}
         WHERE
           p."_id" <> ${postId} AND
-          ${sql.join(filters, sql` AND `)}
+          ${filters.length ? sql`${sql.join(filters, sql` AND `)} AND` : sql``}
           ${readFilter.filter}
           ${postFilter.filter}
           ${tagFilter.filter}
