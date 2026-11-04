@@ -58,6 +58,7 @@ export const fetchPostDisplay = async (
       debate: true,
       shortform: true,
       draft: true,
+      deletedDraft: true,
       status: true,
       rejected: true,
       authorIsUnreviewed: true,

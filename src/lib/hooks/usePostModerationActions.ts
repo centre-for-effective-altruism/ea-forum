@@ -92,19 +92,36 @@ export const useApproveNewUser = (post: PostDisplay | PostListItem) => {
   return canApprove ? approveNewUser : null;
 };
 
-export const useDeleteDraft = (post: PostDisplay | PostListItem) => {
+export const useArchiveDraft = (
+  post: PostDisplay | PostListItem,
+  onArchivedChange?: (archived: boolean) => void,
+) => {
   const { currentUser } = useCurrentUser();
-  const deleteDraft = useCallback(async () => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    toast.promise(rpc.posts.deleteDraft({ postId: post._id }), {
-      loading: "Deleting draft...",
-      success: "Draft deleted",
-      error: "Something went wrong",
-    });
-  }, [post._id]);
-  return currentUser && post.user?._id === currentUser._id && post.draft
-    ? deleteDraft
-    : null;
+  const [archived, setArchived] = useState(post.deletedDraft);
+  const toggleArchived = useCallback(async () => {
+    const newArchived = !archived;
+    const updateArchived = (value: boolean) => {
+      setArchived(value);
+      onArchivedChange?.(value);
+    };
+    updateArchived(newArchived);
+    const request = newArchived ? rpc.posts.deleteDraft : rpc.posts.restoreDraft;
+    try {
+      await toast.promise(request({ postId: post._id }), {
+        loading: newArchived ? "Archiving draft..." : "Unarchiving draft...",
+        success: newArchived ? "Draft archived" : "Draft unarchived",
+        error: "Something went wrong",
+      });
+    } catch {
+      updateArchived(!newArchived);
+    }
+  }, [archived, onArchivedChange, post._id]);
+  const canArchive =
+    !!currentUser && post.user?._id === currentUser._id && post.draft;
+  return {
+    archived,
+    toggleArchived: canArchive ? toggleArchived : null,
+  };
 };
 
 export const useMoveToFrontpage = (post: PostDisplay | PostListItem) => {

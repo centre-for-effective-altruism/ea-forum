@@ -5,6 +5,10 @@ import { posts, users } from "../schema";
 import type { CurrentUser } from "./currentUser";
 import type { AnyKarmaChange } from "./karmaChangesTypes";
 import type {
+  DraftsListSettings,
+  DraftsListUserSettings,
+} from "../posts/draftsListSettings";
+import type {
   RelationalFilter,
   RelationalOrderBy,
   RelationalProjection,
@@ -178,6 +182,40 @@ export const updateExpandedSection = async (
           ${expanded}::JSONB
         )
       `,
+    })
+    .where(eq(users._id, currentUserId));
+};
+
+export const fetchDraftsListUserSettings = async (
+  currentUserId: string,
+): Promise<DraftsListUserSettings> => {
+  const settings = await db.query.users.findFirst({
+    columns: {
+      draftsListSorting: true,
+      draftsListShowArchived: true,
+      draftsListShowShared: true,
+    },
+    where: { _id: currentUserId },
+  });
+  return (
+    settings ?? {
+      draftsListSorting: null,
+      draftsListShowArchived: null,
+      draftsListShowShared: null,
+    }
+  );
+};
+
+export const updateDraftsListUserSettings = async (
+  currentUserId: string,
+  { sortDraftsBy, includeArchived, includeShared }: DraftsListSettings,
+) => {
+  await db
+    .update(users)
+    .set({
+      draftsListSorting: sortDraftsBy,
+      draftsListShowArchived: includeArchived,
+      draftsListShowShared: includeShared,
     })
     .where(eq(users._id, currentUserId));
 };

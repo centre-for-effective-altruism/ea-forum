@@ -8,12 +8,14 @@ import { users } from "../schema";
 import { careerStageValuesSchema, userIsInGroup } from "./userHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { filterSettingsSchema } from "../filterSettings";
+import { draftsListSettingsSchema } from "../posts/draftsListSettings";
 import { calculateKarmaChanges } from "./karmaChanges";
 import {
   fetchOnboardingUsers,
   fetchUserBySlug,
   fetchUsersById,
   isDisplayNameTaken,
+  updateDraftsListUserSettings,
   updateExpandedSection,
   updateProfileImage,
   updateWork,
@@ -167,6 +169,15 @@ export const usersRouter = {
       .set({ frontpageFilterSettings: input })
       .where(eq(users._id, currentUser._id));
   }),
+  updateDraftsListSettings: os
+    .input(draftsListSettingsSchema)
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await updateDraftsListUserSettings(currentUser._id, input);
+    }),
   updateTheme: os
     .input(z.object({ theme: themeSchema }))
     .handler(async ({ input: { theme } }) => {

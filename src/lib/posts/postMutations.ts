@@ -215,7 +215,11 @@ export const moveToDraft = async (currentUser: CurrentUser, postId: string) => {
   waitUntil(elasticSyncDocument("Posts", postId));
 };
 
-export const deleteDraft = async (currentUser: CurrentUser, postId: string) => {
+const setDraftDeleted = async (
+  currentUser: CurrentUser,
+  postId: string,
+  deletedDraft: boolean,
+) => {
   const post = await db.query.posts.findFirst({
     columns: {
       userId: true,
@@ -232,7 +236,13 @@ export const deleteDraft = async (currentUser: CurrentUser, postId: string) => {
   }
   await updateWithFieldChanges(db, currentUser, posts, postId, {
     draft: true,
-    deletedDraft: true,
+    deletedDraft,
   });
   waitUntil(elasticSyncDocument("Posts", postId));
 };
+
+export const deleteDraft = (currentUser: CurrentUser, postId: string) =>
+  setDraftDeleted(currentUser, postId, true);
+
+export const restoreDraft = (currentUser: CurrentUser, postId: string) =>
+  setDraftDeleted(currentUser, postId, false);
