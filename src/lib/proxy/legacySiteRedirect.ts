@@ -68,6 +68,7 @@ const newSitePatterns = [
   /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
   /^\/admin\/org-updates-test$/, // Admin org-updates layout test
+  /^\/admin\/migration-progress$/, // Admin migration progress
   /^\/admin\/search-indexes$/, // Admin search index tools
   /^\/admin\/spotlights.*/, // Admin spotlights pages
   /^\/admin\/swap-user-emails$/, // Admin swap user emails page
