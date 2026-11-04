@@ -13,7 +13,7 @@ import { useUpdateReadStatus } from "@/lib/hooks/useUpdateReadStatus";
 import { usePostSubscriptions } from "@/lib/hooks/useSubscriptions";
 import {
   useApproveNewUser,
-  useDeleteDraft,
+  useArchiveDraft,
   useExcludeFromRecommendations,
   useMoveToDraft,
   useMoveToFrontpage,
@@ -29,6 +29,7 @@ import BellIcon from "@heroicons/react/24/outline/BellIcon";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ArchiveBoxArrowDownIcon from "@heroicons/react/24/outline/ArchiveBoxArrowDownIcon";
 import ArchiveBoxXMarkIcon from "@heroicons/react/24/outline/ArchiveBoxXMarkIcon";
+import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import BookmarkSolidIcon from "@heroicons/react/24/solid/BookmarkIcon";
 import BookmarkOutlineIcon from "@heroicons/react/24/outline/BookmarkIcon";
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
@@ -50,11 +51,13 @@ export default function PostTripleDotMenu({
   post,
   hideBookmark,
   withBackground,
+  onArchivedChange,
   className,
 }: Readonly<{
   post: PostDisplay | PostListItem;
   hideBookmark?: boolean;
   withBackground?: boolean;
+  onArchivedChange?: (archived: boolean) => void;
   className?: string;
 }>) {
   const [reportOpen, setReportOpen] = useState(false);
@@ -78,10 +81,10 @@ export default function PostTripleDotMenu({
   const { excludedFromRecommendations, toggleExcludeFromRecommendations } =
     useExcludeFromRecommendations(post);
   const { isFrontpage, toggleFrontpage } = useMoveToFrontpage(post);
+  const { archived, toggleArchived } = useArchiveDraft(post, onArchivedChange);
   const setAsQuickTakesPost = useSetAsQuickTakesPost(post);
   const unfeaturePost = useUnfeaturePost(post);
   const moveToDraft = useMoveToDraft(post);
-  const deleteDraft = useDeleteDraft(post);
   const approveNewUser = useApproveNewUser(post);
 
   // TODO: Remaining actions from PostActions.tsx - do we need these?
@@ -157,11 +160,11 @@ export default function PostTripleDotMenu({
                 onClick: moveToDraft,
               }
             : null,
-          deleteDraft
+          toggleArchived
             ? {
-                title: "Delete draft",
-                Icon: ArchiveBoxXMarkIcon,
-                onClick: deleteDraft,
+                title: archived ? "Unarchive draft" : "Archive draft",
+                Icon: archived ? ArrowUturnLeftIcon : ArchiveBoxXMarkIcon,
+                onClick: toggleArchived,
               }
             : null,
           toggleExcludeFromRecommendations

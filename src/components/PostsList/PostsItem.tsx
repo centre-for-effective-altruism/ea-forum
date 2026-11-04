@@ -41,6 +41,7 @@ export default function PostsItem({
   openInNewTab,
   curatedIconLeft = false,
   underNode,
+  onArchivedChange,
   className,
 }: Readonly<{
   post: PostListItem;
@@ -48,6 +49,7 @@ export default function PostsItem({
   openInNewTab?: boolean;
   curatedIconLeft?: boolean;
   underNode?: ReactNode;
+  onArchivedChange?: (archived: boolean) => void;
   className?: string;
 }>) {
   const cardView = viewType === "card";
@@ -160,7 +162,10 @@ export default function PostsItem({
                 <PostsTooltip As="span" post={post}>
                   <Link
                     href={postLink}
-                    className="align-middle visited:text-gray-600 hover:opacity-70"
+                    className={clsx(
+                      "align-middle visited:text-gray-600 hover:opacity-70",
+                      post.deletedDraft && "line-through",
+                    )}
                   >
                     {title}
                   </Link>
@@ -191,7 +196,7 @@ export default function PostsItem({
                 {commentsNode}
               </InteractionWrapper>
               <InteractionWrapper className="flex items-center sm:hidden">
-                <PostTripleDotMenu post={post} />
+                <PostTripleDotMenu post={post} onArchivedChange={onArchivedChange} />
               </InteractionWrapper>
             </Type>
           </div>
@@ -206,7 +211,7 @@ export default function PostsItem({
               cardView && "mt-[6px]",
             )}
           >
-            <PostTripleDotMenu post={post} />
+            <PostTripleDotMenu post={post} onArchivedChange={onArchivedChange} />
           </InteractionWrapper>
         </div>
         {cardView && (

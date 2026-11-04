@@ -27,6 +27,7 @@ import {
   AllPostsSortedBy,
 } from "./allPostsSettings";
 import { getKarmaInflationSeries } from "./karmaInflation";
+import type { DraftsListSettings, DraftsListSorting } from "./draftsListSettings";
 
 const SCORE_BIAS = 2;
 const TIME_DECAY_FACTOR = 0.8;
@@ -100,6 +101,7 @@ export const postsListProjection = (
       curatedDate: true,
       frontpageDate: true,
       draft: true,
+      deletedDraft: true,
       question: true,
       isEvent: true,
       groupId: true,
@@ -561,6 +563,63 @@ export const fetchUserProfileDraftPosts = async ({
     orderBy: {
       createdAt: "desc",
     },
+    offset,
+    limit,
+  });
+};
+
+const getDraftsListSort = (sortDraftsBy: DraftsListSorting) => {
+  switch (sortDraftsBy) {
+    case "newest":
+      return { createdAt: "desc", _id: "asc" } as const;
+    case "oldest":
+      return { createdAt: "asc", _id: "asc" } as const;
+    case "lastModified":
+    default:
+      return (postsTable: typeof posts) => sql`
+        ${postsTable}."modifiedAt" DESC NULLS LAST,
+        ${postsTable}."createdAt" DESC,
+        ${postsTable}."_id" ASC
+      `;
+  }
+};
+
+export const fetchDraftsListPosts = async ({
+  currentUserId,
+  settings: { sortDraftsBy, includeArchived, includeShared },
+  offset,
+  limit,
+}: {
+  currentUserId: string;
+  settings: DraftsListSettings;
+  offset?: number;
+  limit?: number;
+}) => {
+  return await db.query.posts.findMany({
+    ...postsListProjection(currentUserId),
+    where: {
+      ...(includeShared
+        ? {
+            OR: [
+              { userId: currentUserId },
+              {
+                RAW: (postsTable) =>
+                  sql<boolean>`${postsTable}."coauthorUserIds" @> ARRAY[${currentUserId}]`,
+              },
+              {
+                RAW: (postsTable) =>
+                  sql<boolean>`${postsTable}."shareWithUsers" @> ARRAY[${currentUserId}]::VARCHAR[]`,
+              },
+            ],
+          }
+        : { userId: currentUserId }),
+      draft: true,
+      ...(includeArchived ? null : { deletedDraft: false }),
+      hideAuthor: false,
+      shortform: false,
+      rejected: false,
+    },
+    orderBy: getDraftsListSort(sortDraftsBy),
     offset,
     limit,
   });

@@ -7,8 +7,10 @@ import { upsertReadStatus } from "../readStatuses/readStatusQueries";
 import { getCurrentUser } from "../users/currentUser";
 import { postsListViewSchema } from "./postsHelpers";
 import { allPostsSettingsSchema } from "./allPostsSettings";
+import { draftsListSettingsSchema } from "./draftsListSettings";
 import {
   fetchAllPosts,
+  fetchDraftsListPosts,
   fetchFeaturedFrontpagePosts,
   fetchPostsListById,
   fetchPostsListByIds,
@@ -19,6 +21,7 @@ import { topicPostsSortedBySchema } from "../tags/topicPageParams";
 import {
   deleteDraft,
   moveToDraft,
+  restoreDraft,
   setAsQuickTakesPost,
   toggleEnableRecommendation,
   toggleFrontpage,
@@ -89,6 +92,26 @@ export const postsRouter = {
     .handler(async ({ input }) => {
       const currentUser = await getCurrentUser();
       return await fetchTagPostsList({ currentUser, ...input });
+    }),
+  listDrafts: os
+    .input(
+      z.object({
+        settings: draftsListSettingsSchema,
+        offset: z.number().int().nonnegative().optional(),
+        limit: z.number().int().positive().max(50).default(50),
+      }),
+    )
+    .handler(async ({ input: { settings, offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Not logged in");
+      }
+      return await fetchDraftsListPosts({
+        currentUserId: currentUser._id,
+        settings,
+        offset,
+        limit,
+      });
     }),
   incrementViewCount: os
     .input(z.object({ postId: z.string() }))
@@ -166,5 +189,14 @@ export const postsRouter = {
         throw new Error("Not logged in");
       }
       await deleteDraft(currentUser, postId);
+    }),
+  restoreDraft: os
+    .input(z.object({ postId: z.string() }))
+    .handler(async ({ input: { postId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Not logged in");
+      }
+      await restoreDraft(currentUser, postId);
     }),
 };

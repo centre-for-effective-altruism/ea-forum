@@ -301,6 +301,9 @@ export const users = pgTable(
     auto_subscribe_to_my_comments: boolean().notNull().default(true),
     autoSubscribeAsOrganizer: boolean().notNull().default(true),
     blockedUserIds: varchar({ length: 27 }).array().notNull().default([]),
+    draftsListSorting: text(),
+    draftsListShowArchived: boolean(),
+    draftsListShowShared: boolean(),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -315,9 +318,6 @@ export const users = pgTable(
   "allPostsIncludeEvents" BOOL,
   "allPostsHideCommunity" BOOL,
   "allPostsOpenSettings" BOOL,
-  "draftsListSorting" TEXT,
-  "draftsListShowArchived" BOOL,
-  "draftsListShowShared" BOOL,
   "goodHeartTokens" DOUBLE PRECISION,
   "moderationStyle" TEXT,
   "moderatorAssistance" BOOL,
