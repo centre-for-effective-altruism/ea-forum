@@ -1,7 +1,6 @@
 export type MigrationRoute = {
   paths: string[];
   notes: string;
-  dropCandidate?: boolean;
 };
 
 export type MigrationTier = {
@@ -14,73 +13,6 @@ export type MigrationTier = {
 export const migrationProgressAuditDate = "2026-11-04";
 
 export const migrationProgressTiers: MigrationTier[] = [
-  {
-    complexity: 1,
-    title: "Redirects and aliases",
-    description: "Config-only changes in next.config.ts or the proxy.",
-    routes: [
-      { paths: ["/privacyPolicy"], notes: "Redirects to ev.org" },
-      { paths: ["/bestOf"], notes: "Redirects to /best-of" },
-      { paths: ["/meta"], notes: "Redirects to the community topic" },
-      {
-        paths: ["/groupsAndEvents", "/community"],
-        notes: "Redirect to /groups",
-      },
-      { paths: ["/bookmarks"], notes: "Redirects to /saved" },
-      {
-        paths: ["/user/:slug/overview"],
-        notes: "Redirects to /users/:slug",
-      },
-      {
-        paths: [
-          "/wiki",
-          "/tags/all",
-          "/topics/all",
-          "/concepts",
-          "/concepts/all",
-          "/wikitags",
-          "/wikitags/all",
-        ],
-        notes:
-          "Aliases for the all-topics page (/topics/all is currently in oldSitePatterns)",
-      },
-      {
-        paths: [
-          "/tag/:slug/discussion",
-          "/tag/:slug/history",
-          "/tag/:slug/edit",
-          "/tag/create",
-          "/tags/random",
-          "/tags/dashboard",
-          "/tagVoting",
-          "/tagActivity",
-          "/tagFeed",
-          "/compare/tag/:slug",
-          "/revisions/tag/:slug",
-        ],
-        notes:
-          "Redirects from the old tag base to topics (targets are listed in later tiers)",
-      },
-      {
-        paths: ["/topics/:slug/subforum"],
-        notes: "Redirects to subforum2, rewriting the query string",
-      },
-      {
-        paths: ["eaLegacyRedirects (~30 hard-coded paths)"],
-        notes: "Static list in ForumMagnum lib/eaLegacyRedirects.ts",
-      },
-      {
-        paths: ["/2018/:shortUrl (45 entries)"],
-        notes: "LW 2018 Review redirects that aren't limited to LW",
-        dropCandidate: true,
-      },
-      {
-        paths: ["/nominations", "/reviews", "/reviewAdmin"],
-        notes: "Redirect to LW review pages by year",
-        dropCandidate: true,
-      },
-    ],
-  },
   {
     complexity: 2,
     title: "Small pages that mostly reuse existing pieces",
@@ -113,8 +45,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/resetPassword/:token", "/setPassword"],
         notes: "Auth0 password flows",
       },
-      { paths: ["/instagram"], notes: "Static list of links" },
-      { paths: ["/abTestGroups"], notes: "Small debug list" },
       {
         paths: ["/questions"],
         notes: "Reuses PostsList with a question filter",
@@ -142,18 +72,8 @@ export const migrationProgressTiers: MigrationTier[] = [
         notes: "Admin debug pages",
       },
       {
-        paths: [
-          "/admin/random-user",
-          "/admin/synonyms",
-          "/admin/curation",
-          "/admin/event-post-email",
-        ],
+        paths: ["/admin/random-user", "/admin/curation", "/admin/event-post-email"],
         notes: "Small admin tools",
-      },
-      {
-        paths: ["/admin/migrations"],
-        notes: "Probably not needed in the new stack",
-        dropCandidate: true,
       },
     ],
   },
@@ -227,10 +147,8 @@ export const migrationProgressTiers: MigrationTier[] = [
       },
       {
         paths: [
-          "/admin/recommendationsSample",
           "/admin/twitter",
           "/admin/moderationTemplates",
-          "/admin/modgpt",
           "/admin/recentlyActiveUsers",
         ],
         notes: "Admin pages of about 130–340 lines each",
@@ -239,20 +157,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/admin/election-candidates", "/admin/election-candidates/:id"],
         notes: "Seasonal",
       },
-      {
-        paths: ["/admin/llmConversations"],
-        notes: "Probably an LW feature",
-        dropCandidate: true,
-      },
-      {
-        paths: [
-          "/users/:slug/reviews/:year",
-          "/reviews/:year",
-          "/reviewAdmin/:year",
-        ],
-        notes: "LW review pages that technically load on the EA Forum",
-        dropCandidate: true,
-      },
     ],
   },
   {
@@ -260,15 +164,6 @@ export const migrationProgressTiers: MigrationTier[] = [
     title: "Large",
     description: "Big forms or whole feature areas with new data layers.",
     routes: [
-      {
-        paths: [
-          "/admin/surveys",
-          "/survey/:id/edit",
-          "/surveySchedule",
-          "/surveySchedule/:id",
-        ],
-        notes: "Survey builder and scheduler (~800 lines)",
-      },
       {
         paths: ["/adminForumEvents", "/editForumEvent/:id"],
         notes: "ForumEventForm (~500 lines)",
@@ -300,11 +195,6 @@ export const migrationProgressTiers: MigrationTier[] = [
       {
         paths: ["/groups/:groupId"],
         notes: "LocalGroupPage (~580 lines), group editing, organizer tools",
-      },
-      {
-        paths: ["/community-old", "/meetups"],
-        notes: "Old community home",
-        dropCandidate: true,
       },
       {
         paths: ["/profile/edit", "/profile/:slug/edit"],

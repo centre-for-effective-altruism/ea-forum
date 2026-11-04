@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { withPostHogConfig } from "@posthog/nextjs-config";
 import { withSentryConfig } from "@sentry/nextjs";
 import { execSync } from "node:child_process";
+import { legacyRedirects } from "./src/lib/proxy/legacyRedirects";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -33,6 +34,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/bestOf",
+      destination: "/best-of",
+      permanent: true,
+    },
+    {
       source: "/cookiePolicy",
       destination: "/cookie-policy",
       permanent: true,
@@ -58,6 +64,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/user/:slug/overview",
+      destination: "/users/:slug",
+      permanent: true,
+    },
+    {
       source: "/user/:path*",
       destination: "/users/:path*",
       permanent: true,
@@ -65,6 +76,41 @@ const nextConfig: NextConfig = {
     {
       source: "/u/:path*",
       destination: "/users/:path*",
+      permanent: true,
+    },
+    {
+      source: "/tags/all",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/topics/all",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/wiki",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/concepts",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/concepts/all",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/wikitags",
+      destination: "/topics",
+      permanent: true,
+    },
+    {
+      source: "/wikitags/all",
+      destination: "/topics",
       permanent: true,
     },
     {
@@ -88,10 +134,71 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/tag/:slug/:subpage(discussion|history|edit)",
+      destination: "/topics/:slug/:subpage",
+      permanent: true,
+    },
+    {
+      source: "/tagVoting",
+      destination: "/topicsActivity",
+      permanent: true,
+    },
+    {
+      source: "/tagActivity",
+      destination: "/topicsActivity",
+      permanent: true,
+    },
+    {
+      source: "/tagFeed",
+      destination: "/topicsFeed",
+      permanent: true,
+    },
+    {
+      source: "/compare/tag/:slug",
+      destination: "/compare/topics/:slug",
+      permanent: true,
+    },
+    {
+      source: "/revisions/tag/:slug",
+      destination: "/revisions/topics/:slug",
+      permanent: true,
+    },
+    {
+      source: "/topics/:slug/subforum",
+      destination: "/topics/:slug/subforum2?tab=subforum",
+      permanent: true,
+    },
+    {
+      source: "/meta",
+      destination: "/topics/community",
+      permanent: true,
+    },
+    {
+      source: "/groupsAndEvents",
+      destination: "/groups",
+      permanent: true,
+    },
+    {
+      source: "/community",
+      destination: "/groups",
+      permanent: true,
+    },
+    {
+      source: "/bookmarks",
+      destination: "/saved",
+      permanent: true,
+    },
+    {
+      source: "/privacyPolicy",
+      destination: "https://ev.org/ops/about/privacy-policy",
+      permanent: false,
+    },
+    {
       source: "/api/notificationEvents",
       destination: "https://fm-prod.effectivealtruism.org/api/notificationEvents",
       permanent: false,
     },
+    ...legacyRedirects,
   ],
   rewrites: async () => [
     {

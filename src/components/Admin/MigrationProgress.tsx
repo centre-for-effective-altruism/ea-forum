@@ -23,7 +23,9 @@ export default function MigrationProgress() {
           Not listed: server and API endpoints (RSS, sitemap, crosspost and
           /api/eag-application-data), and /voting-portal while giving season is
           disabled. /people-directory has a page here but is not yet in
-          newSitePatterns.
+          newSitePatterns. LessWrong-only routes that still load on the EA Forum
+          (annual review pages, /2018 redirects, the migrations dashboard, LLM
+          conversations, the old community home) won&apos;t be migrated.
         </Type>
       </div>
       {migrationProgressTiers.map(({ complexity, title, description, routes }) => (
@@ -36,20 +38,13 @@ export default function MigrationProgress() {
           </Type>
           <ModerationTable
             headers={["Route", "Notes"]}
-            rows={routes.map(({ paths, notes, dropCandidate }) => [
+            rows={routes.map(({ paths, notes }) => [
               <div key="paths" className="flex flex-col">
                 {paths.map((path) => (
                   <code key={path}>{path}</code>
                 ))}
               </div>,
-              <div key="notes" className="flex flex-col gap-1">
-                {notes}
-                {dropCandidate && (
-                  <Type style="bodySmall" className="text-warning">
-                    Candidate to drop
-                  </Type>
-                )}
-              </div>,
+              notes,
             ])}
           />
         </section>
