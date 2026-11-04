@@ -18,7 +18,7 @@ const oldSitePatterns = [
   /^\/api\/eafunds-posts$/,
   /^\/api\/crosspost.*$/,
   /^\/api\/v2\/crosspost.*$/,
-  /^\/topics\/(all|create|random|dashboard|wiki)$/, // Special-case topic slugs
+  /^\/topics\/(create|random|dashboard|wiki)$/, // Special-case topic slugs
 ];
 
 // Topic pages with these query params use legacy-only workflows (editing,
@@ -74,6 +74,18 @@ const newSitePatterns = [
   /^\/admin\/swap-user-emails$/, // Admin swap user emails page
   /^\/search$/, // Search page
   /^\/robots.txt$/, // robots.txt
+  /^\/bestOf$/, // Best of (camelCase, redirect to kebab-case)
+  /^\/user\/[^/]+\/overview$/, // User profile overview (redirect to /users/[slug])
+  /^\/(wiki|concepts|wikitags)$/, // Topics page (legacy paths, redirect to /topics)
+  /^\/(tags|topics|concepts|wikitags)\/all$/, // Topics page (legacy paths, redirect to /topics)
+  /^\/tag\/[^/]+\/(discussion|history|edit)$/, // Topic subpages (legacy paths, redirect to /topics/[slug]/*)
+  /^\/(tagVoting|tagActivity|tagFeed)$/, // Topic activity (legacy paths, redirect to /topicsActivity and /topicsFeed)
+  /^\/(compare|revisions)\/tag\/[^/]+$/, // Topic revisions (legacy paths, redirect to /compare/topics and /revisions/topics)
+  /^\/topics\/[^/]+\/subforum$/, // Subforum (legacy path, redirect to /topics/[slug]/subforum2)
+  /^\/meta$/, // Community topic (redirect to /topics/community)
+  /^\/(groupsAndEvents|community)$/, // Groups (legacy paths, redirect to /groups)
+  /^\/bookmarks$/, // Saved (legacy path, redirect to /saved)
+  /^\/privacyPolicy$/, // Privacy policy (redirect to ev.org)
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
