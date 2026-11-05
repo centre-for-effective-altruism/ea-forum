@@ -22,7 +22,8 @@ import ConversationView from "./ConversationView";
 import TextLinkButton from "../TextLinkButton";
 import Type from "../Type";
 
-const pollIntervalMs = 30000;
+const conversationListPollIntervalMs = 30000;
+const selectedConversationPollIntervalMs = 5000;
 
 type LoadError = { conversationId: string; reason: "notFound" | "error" };
 
@@ -113,7 +114,18 @@ export default function Inbox({
     ]);
   }, [refresh, loadConversation]);
 
-  usePolling({ callback: refreshAll, intervalMs: pollIntervalMs });
+  const refreshSelectedConversation = useCallback(async () => {
+    const conversationId = selectedConversationIdRef.current;
+    if (conversationId) {
+      await loadConversation(conversationId);
+    }
+  }, [loadConversation]);
+
+  usePolling({ callback: refresh, intervalMs: conversationListPollIntervalMs });
+  usePolling({
+    callback: refreshSelectedConversation,
+    intervalMs: selectedConversationPollIntervalMs,
+  });
 
   const selectConversation = useCallback(
     (conversationId: string | null) => {
