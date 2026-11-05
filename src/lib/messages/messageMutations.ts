@@ -25,6 +25,7 @@ import {
   sendUserLeftConversationMessages,
   updateUserNotesOnModMessage,
 } from "./messageCallbacks";
+import { fetchConversationByParticipants } from "./messageQueries";
 
 export const createConversation = async (
   user: CurrentUser,
@@ -49,6 +50,36 @@ export const createConversation = async (
     return conversation;
   });
   return conversation;
+};
+
+export const findOrCreateConversation = async (
+  user: CurrentUser,
+  { userIds, moderator }: { userIds: string[]; moderator: boolean },
+): Promise<string> => {
+  if (userHasMessagingDisabled(user)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You are not allowed to send messages",
+    });
+  }
+  if (!userCanInitiateConversations(user)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You must earn 10 karma to start a conversation",
+    });
+  }
+  const participantIds = uniq([...userIds, user._id]);
+  const existingConversationId = await fetchConversationByParticipants(
+    participantIds,
+    moderator,
+  );
+  if (existingConversationId) {
+    return existingConversationId;
+  }
+  const newConversation = await createConversation(user, {
+    title: null,
+    participantIds,
+    moderator,
+  });
+  return newConversation._id;
 };
 
 export const createMessage = async ({

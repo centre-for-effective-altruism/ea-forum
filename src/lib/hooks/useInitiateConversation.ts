@@ -20,22 +20,24 @@ export const useInitiateConversation = () => {
       userIds,
       includeModerators = false,
       redirectOnSuccess = false,
+      isModInbox,
       from,
       openInNewTab = false,
     }: {
       userIds: string[];
       includeModerators?: boolean;
       redirectOnSuccess?: boolean;
+      isModInbox?: boolean;
       from?: string;
       openInNewTab?: boolean;
-    }) => {
+    }): Promise<string | null> => {
       if (!userIds.length) {
         throw new Error("No users in conversation");
       }
 
       if (!currentUser) {
         onSignup();
-        return;
+        return null;
       }
 
       try {
@@ -45,13 +47,18 @@ export const useInitiateConversation = () => {
         });
         captureEvent("initiateConversation", { userIds, includeModerators });
         if (redirectOnSuccess) {
-          const url = conversationGetPageUrl({ conversationId, from });
+          const url = conversationGetPageUrl({
+            conversationId,
+            isModInbox,
+            from,
+          });
           if (openInNewTab) {
             window.open(url, "_blank");
           } else {
             router.push(url);
           }
         }
+        return conversationId;
       } catch (e) {
         captureException(e);
         console.error("Error initiating conversation:", e);
@@ -60,6 +67,7 @@ export const useInitiateConversation = () => {
             ? e.message
             : "An error occurred - please try again",
         );
+        return null;
       }
     },
     [router, currentUser, onSignup, captureEvent],

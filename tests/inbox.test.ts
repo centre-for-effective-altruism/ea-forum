@@ -505,6 +505,24 @@ suite("Inbox", () => {
         call(messagesRouter.createConversation, { userIds: [recipient._id] }),
       ).rejects.toThrow("You are not allowed to send messages");
     });
+
+    test("reuses an existing conversation with the same participants", async () => {
+      const [user, recipient] = await Promise.all([
+        createTestUser({ karma: 100 }),
+        createTestUser(),
+      ]);
+      loginAs(user);
+      const create = (includeModerators?: boolean) =>
+        call(messagesRouter.createConversation, {
+          userIds: [recipient._id],
+          includeModerators,
+        });
+      const conversationId = await create();
+      await flushBackgroundWork();
+      expect(await create()).toBe(conversationId);
+      expect(await create(true)).not.toBe(conversationId);
+      await flushBackgroundWork();
+    });
   });
 
   suite("moderation PMs", () => {

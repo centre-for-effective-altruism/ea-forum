@@ -1,15 +1,13 @@
-import uniq from "lodash/uniq";
 import { z } from "zod/v4";
-import { ORPCError, os } from "@orpc/server";
+import { os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { editorDataSchema } from "../ckeditor/editorHelpers";
 import {
-  createConversation,
+  findOrCreateConversation,
   markConversationRead,
   sendConversationMessage,
   updateConversation,
 } from "./messageMutations";
-import { fetchConversationByParticipants } from "./messageQueries";
 import {
   fetchConversationForUser,
   fetchConversationMessage,
@@ -18,10 +16,6 @@ import {
   fetchModeratorConversations,
   fetchUnreadMessagesCount,
 } from "./conversationQueries";
-import {
-  userCanInitiateConversations,
-  userHasMessagingDisabled,
-} from "../users/userHelpers";
 
 const requireCurrentUser = async () => {
   const currentUser = await getCurrentUser();
@@ -41,29 +35,10 @@ export const messagesRouter = {
     )
     .handler(async ({ input: { userIds, includeModerators } }) => {
       const currentUser = await requireCurrentUser();
-      if (userHasMessagingDisabled(currentUser)) {
-        throw new ORPCError("FORBIDDEN", {
-          message: "You are not allowed to send messages",
-        });
-      }
-      if (!userCanInitiateConversations(currentUser)) {
-        throw new Error("Permission denied");
-      }
-      const participantIds = uniq([...userIds, currentUser._id]);
-      const moderator = !!includeModerators;
-      const existingConversationId = await fetchConversationByParticipants(
-        participantIds,
-        moderator,
-      );
-      if (existingConversationId) {
-        return existingConversationId;
-      }
-      const newConversation = await createConversation(currentUser, {
-        title: null,
-        participantIds,
-        moderator,
+      return await findOrCreateConversation(currentUser, {
+        userIds,
+        moderator: includeModerators,
       });
-      return newConversation._id;
     }),
   listConversations: os
     .input(
