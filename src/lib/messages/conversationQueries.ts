@@ -1,8 +1,8 @@
 import keyBy from "lodash/keyBy";
 import uniq from "lodash/uniq";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, arrayContains, eq, gt, ne, sql, SQL } from "drizzle-orm";
 import { db } from "../db";
-import { messages, notifications } from "../schema";
+import { conversations, messages, notifications } from "../schema";
 import { userCanDo } from "../users/userHelpers";
 import { userBaseProjection, UserBase } from "../users/userQueries";
 import { filterNonNull } from "../typeHelpers";
@@ -24,6 +24,16 @@ const unreadMessageNotificationFilter = (userId: string) =>
     ne(notifications.deleted, true),
     ne(notifications.viewed, true),
   );
+
+const conversationHasUnreadMessages = (conversationId: SQL, userId: string) =>
+  sql<boolean>`EXISTS (
+    SELECT 1
+    FROM ${notifications}
+    JOIN ${messages} ON ${messages._id} = ${notifications.documentId}
+    WHERE
+      ${messages.conversationId} = ${conversationId} AND
+      ${unreadMessageNotificationFilter(userId)}
+  )`;
 
 const fetchConversations = async (
   user: CurrentUser,
@@ -47,14 +57,8 @@ const fetchConversations = async (
       moderator: true,
     },
     extras: {
-      hasUnreadMessages: (conversationsTable, { sql }) => sql<boolean>`EXISTS (
-        SELECT 1
-        FROM ${notifications}
-        JOIN ${messages} ON ${messages._id} = ${notifications.documentId}
-        WHERE
-          ${messages.conversationId} = ${conversationsTable}."_id" AND
-          ${unreadMessageNotificationFilter(user._id)}
-      )`,
+      hasUnreadMessages: (conversationsTable, { sql }) =>
+        conversationHasUnreadMessages(sql`${conversationsTable}."_id"`, user._id),
     },
     with: {
       messages: {
@@ -196,21 +200,17 @@ export const fetchConversationMessage = async (
 };
 
 export const fetchUnreadMessagesCount = async (user: CurrentUser) => {
-  const result = await db.query.notifications.findFirst({
-    columns: {},
-    extras: {
-      count: sql<number>`COUNT(*)::INT`,
-    },
-    where: {
-      userId: user._id,
-      type: "newMessage",
-      viewed: { ne: true },
-      deleted: { ne: true },
-      emailed: { ne: true },
-      waitingForBatch: { ne: true },
-    },
-  });
-  return result?.count ?? 0;
+  const [{ count }] = await db
+    .select({ count: sql<number>`COUNT(*)::INT` })
+    .from(conversations)
+    .where(
+      and(
+        gt(conversations.messageCount, 0),
+        arrayContains(conversations.participantIds, [user._id]),
+        conversationHasUnreadMessages(sql`${conversations._id}`, user._id),
+      ),
+    );
+  return count;
 };
 
 export const unreadConversationMessageNotificationIds = (

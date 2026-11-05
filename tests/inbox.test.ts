@@ -9,7 +9,8 @@ import {
 } from "@/lib/messages/messageHelpers";
 import { isNewSiteAllowed } from "@/lib/proxy/legacySiteRedirect";
 import type { EditorData } from "@/lib/ckeditor/editorHelpers";
-import type { User } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import { messages, type User } from "@/lib/schema";
 import { flagOrBlockUserOnManyDMs } from "@/lib/messages/messageCallbacks";
 import { sendModerationPM } from "@/lib/messages/sendModerationPM";
 import { fetchCommentsListItem } from "@/lib/comments/commentLists";
@@ -273,6 +274,24 @@ suite("Inbox", () => {
         hasUnreadMessages: false,
         unreadCount: 0,
       });
+    });
+
+    test("unread count is per conversation and ignores notifications for deleted messages", async () => {
+      const [sender, recipient] = await Promise.all([
+        createTestUser({ karma: 100 }),
+        createTestUser(),
+      ]);
+      const conversation = await createTestConversation({
+        participantIds: [sender._id, recipient._id],
+      });
+      await sendMessageAs(sender, conversation._id);
+      await sendMessageAs(sender, conversation._id);
+
+      loginAs(recipient);
+      expect(await call(messagesRouter.unreadCount, undefined)).toBe(1);
+
+      await db.delete(messages).where(eq(messages.conversationId, conversation._id));
+      expect(await call(messagesRouter.unreadCount, undefined)).toBe(0);
     });
   });
 
