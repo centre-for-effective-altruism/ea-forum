@@ -37,6 +37,7 @@ const onImageError = (ev: SyntheticEvent<HTMLImageElement, Event>) => {
 
 export default function PostsItem({
   post,
+  sequenceId,
   viewType,
   openInNewTab,
   curatedIconLeft = false,
@@ -45,6 +46,7 @@ export default function PostsItem({
   className,
 }: Readonly<{
   post: PostListItem;
+  sequenceId?: string;
   viewType?: PostsListViewType;
   openInNewTab?: boolean;
   curatedIconLeft?: boolean;
@@ -55,7 +57,7 @@ export default function PostsItem({
   const cardView = viewType === "card";
   const { _id, title, baseScore, commentCount, voteCount, sticky, readStatus } =
     post;
-  const postLink = postGetPageUrl({ post });
+  const postLink = postGetPageUrl({ post, sequenceId });
   const { postsRead } = useItemsRead();
   const { highlightTag } = useHighlightTag();
   const isRead = !!(post._id in postsRead

@@ -8,7 +8,7 @@ export const collectionGetPageUrl = ({
   collection,
   isAbsolute,
 }: {
-  collection: CollectionBase;
+  collection: Pick<CollectionBase, "slug">;
   isAbsolute?: boolean;
 }) => {
   const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";

@@ -27,6 +27,7 @@ import {
   AllPostsSortedBy,
 } from "./allPostsSettings";
 import { getKarmaInflationSeries } from "./karmaInflation";
+import { fetchActiveBookmarkIds } from "../bookmarks/bookmarkQueries";
 import type { DraftsListSettings, DraftsListSorting } from "./draftsListSettings";
 
 const SCORE_BIAS = 2;
@@ -624,6 +625,71 @@ export const fetchDraftsListPosts = async ({
     limit,
   });
 };
+
+export const fetchBookmarkedPosts = async ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string;
+  offset?: number;
+  limit?: number;
+}) => {
+  const postIds = await fetchActiveBookmarkIds(currentUserId, "Posts");
+  if (!postIds.length) {
+    return [];
+  }
+  return await fetchPostsList({
+    currentUserId,
+    where: {
+      _id: { in: postIds },
+    },
+    orderBy: (postsTable) => sql`
+      (
+        SELECT b."lastUpdated"
+        FROM "Bookmarks" b
+        WHERE
+          b."documentId" = ${postsTable}."_id" AND
+          b."collectionName" = 'Posts' AND
+          b."userId" = ${currentUserId}
+      ) DESC,
+      ${postsTable}."_id" ASC
+    `,
+    offset,
+    limit,
+  });
+};
+
+export const fetchReadHistoryPosts = ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string;
+  offset?: number;
+  limit?: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      readStatus: {
+        userId: currentUserId,
+      },
+    },
+    orderBy: (postsTable) => sql`
+      (
+        SELECT rs."lastUpdated"
+        FROM "ReadStatuses" rs
+        WHERE
+          rs."postId" = ${postsTable}."_id" AND
+          rs."userId" = ${currentUserId}
+        LIMIT 1
+      ) DESC,
+      ${postsTable}."_id" ASC
+    `,
+    offset,
+    limit,
+  });
 
 export const fetchPostsListFromView = (
   currentUserId: string | null,

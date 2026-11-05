@@ -6,6 +6,11 @@ import {
   fetchSequenceById,
   fetchSequencePosts,
 } from "./sequenceQueries";
+import {
+  dismissContinueReading,
+  fetchContinueReading,
+  updateContinueReading,
+} from "./continueReading";
 
 export const sequencesRouter = {
   listById: os
@@ -30,5 +35,34 @@ export const sequencesRouter = {
     .handler(async ({ input: { offset, limit } }) => {
       const items = await fetchCommunitySequences({ offset, limit });
       return { items };
+    }),
+  updateContinueReading: os
+    .input(
+      z.object({
+        sequenceId: z.string().nonempty(),
+        postId: z.string().nonempty(),
+      }),
+    )
+    .handler(async ({ input: { sequenceId, postId } }) => {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        await updateContinueReading({ currentUser, sequenceId, postId });
+      }
+    }),
+  listContinueReading: os.handler(async () => {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("Please login");
+    }
+    return await fetchContinueReading(currentUser);
+  }),
+  dismissContinueReading: os
+    .input(z.object({ postId: z.string().nonempty() }))
+    .handler(async ({ input: { postId } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await dismissContinueReading({ currentUser, postId });
     }),
 };

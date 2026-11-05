@@ -7,6 +7,7 @@ import type { Json, JsonRecord } from "./typeHelpers";
 import type { Pingbacks } from "./pingbacks";
 import type { VoteType } from "./votes/voteHelpers";
 import type { Rsvp } from "./posts/rsvpHelpers";
+import type { PartiallyReadSequence } from "./sequences/continueReading";
 import type { Theme } from "./themes";
 import {
   KarmaChangeSettings,
@@ -304,6 +305,7 @@ export const users = pgTable(
     draftsListSorting: text(),
     draftsListShowArchived: boolean(),
     draftsListShowShared: boolean(),
+    partiallyReadSequences: jsonbArray<PartiallyReadSequence[]>(),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -357,7 +359,6 @@ export const users = pgTable(
   "afKarma" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "fullName" TEXT,
   "viewUnreviewedComments" BOOL,
-  "partiallyReadSequences" JSONB[],
   "beta" BOOL,
   "reviewVotesQuadratic" BOOL,
   "reviewVotesQuadratic2019" BOOL,
@@ -456,6 +457,9 @@ export const bookmarks = pgTable(
     ),
   ],
 );
+
+export type Bookmark = typeof bookmarks.$inferSelect;
+export type InsertBookmark = typeof bookmarks.$inferInsert;
 
 export const chapters = pgTable(
   "Chapters",
@@ -3014,6 +3018,9 @@ export const readStatuses = pgTable(
     ),
   ],
 );
+
+export type ReadStatus = typeof readStatuses.$inferSelect;
+export type InsertReadStatus = typeof readStatuses.$inferInsert;
 
 export const sessions = pgTable(
   "Sessions",

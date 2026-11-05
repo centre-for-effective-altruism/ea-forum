@@ -1,50 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import {
   SearchContentType,
   searchContentTypes,
   searchTabs,
 } from "@/lib/search/searchPageParams";
+import { useTabIndicator } from "@/lib/hooks/useTabIndicator";
 import { useSearchPage } from "./useSearchPage";
 import clsx from "clsx";
+import TabIndicator from "../../TabIndicator";
 import Type from "../../Type";
-
-type IndicatorPosition = {
-  left: number;
-  width: number;
-};
 
 export default function SearchPageTabs() {
   const { state, setContentType } = useSearchPage();
-  const tabRefs = useRef<Partial<Record<SearchContentType, HTMLButtonElement>>>({});
-  const tabListRef = useRef<HTMLDivElement>(null);
-  const [indicator, setIndicator] = useState<IndicatorPosition | null>(null);
-  const [animateIndicator, setAnimateIndicator] = useState(false);
-
-  useEffect(() => {
-    const tabList = tabListRef.current;
-    const activeTab = tabRefs.current[state.contentType];
-    if (!tabList || !activeTab) {
-      return;
-    }
-    const updateIndicator = () =>
-      setIndicator({ left: activeTab.offsetLeft, width: activeTab.offsetWidth });
-    updateIndicator();
-    const resizeObserver = new ResizeObserver(updateIndicator);
-    resizeObserver.observe(tabList);
-    resizeObserver.observe(activeTab);
-    return () => resizeObserver.disconnect();
-  }, [state.contentType]);
+  const { tabListRef, setTabRef, indicator, animate, enableAnimation } =
+    useTabIndicator(state.contentType);
 
   const onSelectTab = useCallback(
     (contentType: SearchContentType) => {
       if (contentType !== state.contentType) {
-        setAnimateIndicator(true);
+        enableAnimation();
         setContentType(contentType);
       }
     },
-    [state.contentType, setContentType],
+    [state.contentType, setContentType, enableAnimation],
   );
 
   return (
@@ -60,13 +40,7 @@ export default function SearchPageTabs() {
       {searchContentTypes.map((contentType) => (
         <button
           key={contentType}
-          ref={(element) => {
-            if (element) {
-              tabRefs.current[contentType] = element;
-            } else {
-              delete tabRefs.current[contentType];
-            }
-          }}
+          ref={setTabRef(contentType)}
           role="tab"
           id={`search-tab-${contentType}`}
           aria-selected={contentType === state.contentType}
@@ -82,20 +56,7 @@ export default function SearchPageTabs() {
           <Type style="bodyLarge">{searchTabs[contentType].label}</Type>
         </button>
       ))}
-      {indicator && (
-        <div
-          aria-hidden
-          className={clsx(
-            "absolute bottom-0 left-0 h-0.5 bg-primary",
-            animateIndicator &&
-              "transition-[translate,width] duration-300 ease-out motion-reduce:transition-none",
-          )}
-          style={{
-            width: indicator.width,
-            translate: `${indicator.left}px 0`,
-          }}
-        />
-      )}
+      <TabIndicator indicator={indicator} animate={animate} />
     </div>
   );
 }

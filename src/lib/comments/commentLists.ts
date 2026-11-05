@@ -10,6 +10,7 @@ import { postStatuses } from "../posts/postsHelpers";
 import { isNotTrue, RelationalProjection } from "@/lib/utils/queryHelpers";
 import { reactorsSelector } from "../votes/reactorsSelector";
 import { fetchCommentDescendants } from "./commentQueries";
+import { fetchActiveBookmarkIds } from "../bookmarks/bookmarkQueries";
 import fromPairs from "lodash/fromPairs";
 import sortBy from "lodash/sortBy";
 
@@ -258,6 +259,59 @@ export const fetchCommentsListItem = async ({
     limit: 1,
   });
   return result[0] ?? null;
+};
+
+export const fetchCommentsListByIds = async ({
+  currentUser,
+  commentIds,
+}: {
+  currentUser: UserPermissions | null;
+  commentIds: string[];
+}): Promise<CommentListItem[]> => {
+  if (!commentIds.length) {
+    return [];
+  }
+  const comments = await fetchCommentsList({
+    currentUser,
+    where: { _id: { in: commentIds } },
+  });
+  const order = new Map(commentIds.map((id, i) => [id, i]));
+  return sortBy(comments, (c) => order.get(c._id) ?? Infinity);
+};
+
+export const fetchBookmarkedComments = async ({
+  currentUser,
+  offset,
+  limit,
+}: {
+  currentUser: UserPermissions;
+  offset?: number;
+  limit?: number;
+}) => {
+  const commentIds = await fetchActiveBookmarkIds(currentUser._id, "Comments");
+  if (!commentIds.length) {
+    return [];
+  }
+  return await fetchCommentsList({
+    currentUser,
+    where: {
+      _id: { in: commentIds },
+      deleted: false,
+    },
+    orderBy: (commentsTable) => sql`
+      (
+        SELECT b."lastUpdated"
+        FROM "Bookmarks" b
+        WHERE
+          b."documentId" = ${commentsTable}."_id" AND
+          b."collectionName" = 'Comments' AND
+          b."userId" = ${currentUser._id}
+      ) DESC,
+      ${commentsTable}."_id" ASC
+    `,
+    offset,
+    limit,
+  });
 };
 
 export const fetchCommmentsForPost = ({

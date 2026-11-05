@@ -62,6 +62,7 @@ const newSitePatterns = [
   /^\/handbook$/, // EA Handbook
   /^\/recommendations$/, // Recommendations
   /^\/drafts$/, // Drafts page
+  /^\/saved$/, // Saved & read page
   /^\/better-futures$/, // Better Futures sequence event
   /^\/scaling-series$/, // The Scaling Series sequence event
   /^\/in-development-highlight$/, // In Development Highlight sequence event
