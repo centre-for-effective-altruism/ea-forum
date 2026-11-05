@@ -57,7 +57,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/notifications"],
         notes: "Notifications components already exist",
       },
-      { paths: ["/saved"], notes: "lib/bookmarks already exists" },
       {
         paths: ["/my-stats"],
         notes: "Thin wrapper around the user stats page",

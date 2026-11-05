@@ -4,6 +4,7 @@ import { db } from "../db";
 import { getCurrentUser } from "../users/currentUser";
 import { performVote } from "../votes/voteMutations";
 import { voteTypeSchema } from "../votes/voteHelpers";
+import { fetchVoteHistory } from "../votes/voteHistory";
 import {
   getVoteableDocument,
   voteableCollectionNameSchema,
@@ -45,4 +46,19 @@ export const votesRouter = {
         );
       },
     ),
+  listHistory: os
+    .input(
+      z.object({
+        offset: z.int().nonnegative().optional(),
+        limit: z.int().positive().max(50).default(20),
+      }),
+    )
+    .handler(async ({ input: { offset, limit } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      const items = await fetchVoteHistory({ currentUser, offset, limit });
+      return { items };
+    }),
 };

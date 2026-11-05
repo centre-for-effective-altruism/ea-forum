@@ -8,26 +8,26 @@ import {
 import clsx from "clsx";
 import ChevronRightIcon from "@heroicons/react/16/solid/ChevronRightIcon";
 import ChevronLeftIcon from "@heroicons/react/16/solid/ChevronLeftIcon";
+import SequenceNavigationLink from "./SequenceNavigationLink";
 import SequenceTooltip from "../SequenceTooltip";
 import Type from "../Type";
 import Link from "../Link";
 
 const Button: FC<{
   postId: string | null;
+  sequenceId: string;
   requestedSequenceId?: string;
   Icon: ComponentType<{ className?: string }>;
-}> = ({ postId, requestedSequenceId, Icon }) =>
+}> = ({ postId, sequenceId, requestedSequenceId, Icon }) =>
   postId ? (
-    <Link
-      href={
-        requestedSequenceId
-          ? `/s/${requestedSequenceId}/p/${postId}`
-          : `/posts/${postId}`
-      }
+    <SequenceNavigationLink
+      postId={postId}
+      sequenceId={sequenceId}
+      requestedSequenceId={requestedSequenceId}
       className="hover:text-gray-1000"
     >
       <Icon className="w-6" />
-    </Link>
+    </SequenceNavigationLink>
   ) : (
     <Icon className="w-6 opacity-50" />
   );
@@ -59,6 +59,7 @@ export default function PostSequenceTopNavigation({
     >
       <Button
         postId={prev}
+        sequenceId={sequence._id}
         requestedSequenceId={requestedSequence?._id}
         Icon={ChevronLeftIcon}
       />
@@ -71,6 +72,7 @@ export default function PostSequenceTopNavigation({
       </SequenceTooltip>
       <Button
         postId={next}
+        sequenceId={sequence._id}
         requestedSequenceId={requestedSequence?._id}
         Icon={ChevronRightIcon}
       />

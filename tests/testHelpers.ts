@@ -3,6 +3,9 @@ import { randomId } from "@/lib/utils/random";
 import { slugify } from "@/lib/slugs/slugify";
 import {
   Book,
+  Bookmark,
+  bookmarks,
+  InsertBookmark,
   books,
   chapters,
   Collection,
@@ -27,6 +30,9 @@ import {
   localgroups,
   Post,
   posts,
+  ReadStatus,
+  readStatuses,
+  InsertReadStatus,
   Revision,
   revisions,
   Sequence,
@@ -263,6 +269,39 @@ export const createTestVote = async (data: Partial<InsertVote>): Promise<Vote> =
     ...data,
   };
   const result = await db.insert(votes).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestBookmark = async (
+  data: Partial<InsertBookmark> & { userId: string; documentId: string },
+): Promise<Bookmark> => {
+  const now = new Date().toISOString();
+  const result = await db
+    .insert(bookmarks)
+    .values({
+      _id: randomId(),
+      collectionName: "Posts",
+      createdAt: now,
+      lastUpdated: now,
+      active: true,
+      ...data,
+    })
+    .returning();
+  return result[0];
+};
+
+export const createTestReadStatus = async (
+  data: Partial<InsertReadStatus> & { userId: string; postId: string },
+): Promise<ReadStatus> => {
+  const result = await db
+    .insert(readStatuses)
+    .values({
+      _id: randomId(),
+      isRead: true,
+      lastUpdated: new Date().toISOString(),
+      ...data,
+    })
+    .returning();
   return result[0];
 };
 

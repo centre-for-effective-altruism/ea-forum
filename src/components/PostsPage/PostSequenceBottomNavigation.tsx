@@ -8,20 +8,19 @@ import {
 import { getPreviousAndNextPostIds } from "@/lib/sequences/sequenceHelpers";
 import clsx from "clsx";
 import Type from "../Type";
-import Link from "../Link";
+import SequenceNavigationLink from "./SequenceNavigationLink";
 
 const Button: FC<{
   label: string;
   post: SequenceNavigationPost;
+  sequenceId: string;
   requestedSequenceId?: string;
   className?: string;
-}> = ({ label, post, requestedSequenceId, className }) => (
-  <Link
-    href={
-      requestedSequenceId
-        ? `/s/${requestedSequenceId}/p/${post._id}`
-        : `/posts/${post._id}`
-    }
+}> = ({ label, post, sequenceId, requestedSequenceId, className }) => (
+  <SequenceNavigationLink
+    postId={post._id}
+    sequenceId={sequenceId}
+    requestedSequenceId={requestedSequenceId}
     className={clsx(
       "flex flex-col gap-1 h-full rounded px-3 py-2 hover:bg-gray-100",
       className,
@@ -37,7 +36,7 @@ const Button: FC<{
       </span>
       <span className="ml-3">{post.baseScore} karma</span>
     </Type>
-  </Link>
+  </SequenceNavigationLink>
 );
 
 export default async function PostSequenceBottomNavigation({
@@ -72,6 +71,7 @@ export default async function PostSequenceBottomNavigation({
           <Button
             label="Previous"
             post={prev}
+            sequenceId={sequence._id}
             requestedSequenceId={requestedSequence?._id}
             className="text-right"
           />
@@ -83,6 +83,7 @@ export default async function PostSequenceBottomNavigation({
           <Button
             label="Next"
             post={next}
+            sequenceId={sequence._id}
             requestedSequenceId={requestedSequence?._id}
           />
         )}
