@@ -21,14 +21,17 @@ export default function MessageItem({
   return (
     <div
       data-component="MessageItem"
-      className={clsx("flex items-end gap-2 max-w-[95%]", isOwnMessage && "ml-auto")}
+      className={clsx(
+        "flex items-end gap-2 w-fit max-w-[95%]",
+        isOwnMessage && "ml-auto",
+      )}
     >
       {!isOwnMessage && (
         <UserProfileImage user={message.user} size={36} className="max-sm:hidden" />
       )}
       <div
         className={clsx(
-          "min-w-0 grow rounded-[5px] px-3 py-2 break-words",
+          "min-w-0 rounded-[5px] px-3 py-2 break-words",
           isOwnMessage ? "bg-gray-700 text-gray-0" : "bg-gray-200 text-gray-1000",
         )}
       >
