@@ -63,6 +63,11 @@ const newSitePatterns = [
   /^\/recommendations$/, // Recommendations
   /^\/drafts$/, // Drafts page
   /^\/saved$/, // Saved & read page
+  /^\/inbox$/, // Inbox
+  /^\/inbox\/[^/]+$/, // Inbox conversation: /inbox/[_id]
+  /^\/moderatorInbox$/, // Moderator inbox
+  /^\/moderatorInbox\/[^/]+$/, // Moderator inbox conversation: /moderatorInbox/[_id]
+  /^\/message\/[^/]+$/, // Message user magic link: /message/[slug]
   /^\/better-futures$/, // Better Futures sequence event
   /^\/scaling-series$/, // The Scaling Series sequence event
   /^\/in-development-highlight$/, // In Development Highlight sequence event

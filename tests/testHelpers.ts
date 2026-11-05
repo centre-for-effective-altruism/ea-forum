@@ -1,3 +1,4 @@
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
 import { slugify } from "@/lib/slugs/slugify";
@@ -12,13 +13,17 @@ import {
   collections,
   Comment,
   comments,
+  Conversation,
+  conversations,
   ForumEvent,
   forumEvents,
   InsertBook,
   InsertCollection,
   InsertComment,
+  InsertConversation,
   InsertForumEvent,
   InsertLocalgroup,
+  InsertMessage,
   InsertPost,
   InsertRevision,
   InsertSequence,
@@ -28,6 +33,8 @@ import {
   InsertVote,
   Localgroup,
   localgroups,
+  Message,
+  messages,
   Post,
   posts,
   ReadStatus,
@@ -315,5 +322,50 @@ export const createTestGroup = async (
     ...data,
   };
   const result = await db.insert(localgroups).values(insertValues).returning();
+  return result[0];
+};
+
+export const createTestConversation = async (
+  data: Partial<InsertConversation> & { participantIds: string[] },
+): Promise<Conversation> => {
+  const result = await db
+    .insert(conversations)
+    .values({
+      _id: randomId(),
+      latestActivity: new Date().toISOString(),
+      ...data,
+    })
+    .returning();
+  return result[0];
+};
+
+export const createTestMessage = async (
+  data: Partial<InsertMessage> & { conversationId: string; userId: string },
+): Promise<Message> => {
+  const html = "<p>Test message</p>";
+  const result = await db
+    .insert(messages)
+    .values({
+      _id: randomId(),
+      contents: {
+        originalContents: { type: "ckEditorMarkup", data: html },
+        html,
+        userId: data.userId,
+        version: "1.0.0",
+        editedAt: null,
+        wordCount: 2,
+        updateType: "initial",
+        commitMessage: null,
+      },
+      ...data,
+    })
+    .returning();
+  await db
+    .update(conversations)
+    .set({
+      messageCount: sql`${conversations.messageCount} + 1`,
+      latestActivity: result[0].createdAt,
+    })
+    .where(eq(conversations._id, data.conversationId));
   return result[0];
 };

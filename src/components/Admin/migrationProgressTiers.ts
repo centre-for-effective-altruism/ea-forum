@@ -61,10 +61,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/my-stats"],
         notes: "Thin wrapper around the user stats page",
       },
-      {
-        paths: ["/message/:slug"],
-        notes: "Creates a conversation and redirects (needs the inbox)",
-      },
       { paths: ["/keywords/:keyword"], notes: "Keyword results page" },
       {
         paths: ["/debug/emailHistory", "/debug/notificationEmailPreview"],
@@ -200,14 +196,6 @@ export const migrationProgressTiers: MigrationTier[] = [
       {
         paths: ["/wrapped/:year?"],
         notes: "About 25 sections, each with its own queries (seasonal)",
-      },
-      {
-        paths: ["/inbox", "/inbox/:_id"],
-        notes: "FriendlyInbox and conversations; lib/messages exists",
-      },
-      {
-        paths: ["/moderatorInbox", "/moderatorInbox/:_id"],
-        notes: "Moderator inbox",
       },
     ],
   },

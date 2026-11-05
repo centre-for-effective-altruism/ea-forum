@@ -2,15 +2,13 @@
 
 import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import EnvelopeIcon from "@heroicons/react/24/outline/EnvelopeIcon";
 import ChevronDownIcon from "@heroicons/react/16/solid/ChevronDownIcon";
 import NotificationsHeaderButton from "../Notifications/NotificationsHeaderButton";
 import UserDropdownMenu from "../Dropdown/UserDropdownMenu";
 import LoginPopover from "@/components/Auth/LoginPopover";
 import UserProfileImage from "../UserProfileImage";
-import HeaderButton from "./HeaderButton";
+import MessagesHeaderButton from "./MessagesHeaderButton";
 import Button from "@/components/Button";
-import Link from "@/components/Link";
 
 export function HeaderUserSkeleton() {
   return <div className="h-9 w-[140px] rounded bg-gray-200" />;
@@ -22,9 +20,7 @@ export default function HeaderUserButtons() {
   return currentUser ? (
     <>
       <NotificationsHeaderButton />
-      <Link href="/inbox" className="hover:opacity-100!">
-        <HeaderButton Icon={EnvelopeIcon} description="Messages" />
-      </Link>
+      <MessagesHeaderButton />
       <UserDropdownMenu>
         <button
           className="
