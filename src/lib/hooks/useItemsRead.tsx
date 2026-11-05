@@ -47,3 +47,13 @@ export const useItemsRead = (): ItemsReadContext => {
   }
   return context;
 };
+
+export const usePostIsRead = (post: {
+  _id: string;
+  readStatus?: { isRead: boolean | null }[];
+}) => {
+  const { postsRead } = useItemsRead();
+  return !!(post._id in postsRead
+    ? postsRead[post._id]
+    : post.readStatus?.[0]?.isRead);
+};

@@ -2,6 +2,7 @@ import sum from "lodash/sum";
 import { getSiteUrl } from "../routeHelpers";
 import { SequenceBase, SequencePost } from "./sequenceQueries";
 import { getPostReadTimeMinutes } from "../posts/postsHelpers";
+import { sequenceEvents } from "./sequenceEvents";
 
 export const sequenceGetPageUrl = ({
   sequence,
@@ -11,7 +12,10 @@ export const sequenceGetPageUrl = ({
   isAbsolute?: boolean;
 }) => {
   const prefix = isAbsolute ? getSiteUrl().slice(0, -1) : "";
-  return `${prefix}/s/${sequence._id}`;
+  const eventPath = sequenceEvents.find(
+    ({ sequenceId }) => sequenceId === sequence._id,
+  )?.path;
+  return `${prefix}${eventPath ?? `/s/${sequence._id}`}`;
 };
 
 export const getPreviousAndNextPostIds = (

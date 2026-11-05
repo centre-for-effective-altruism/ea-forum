@@ -62,6 +62,10 @@ const newSitePatterns = [
   /^\/handbook$/, // EA Handbook
   /^\/recommendations$/, // Recommendations
   /^\/drafts$/, // Drafts page
+  /^\/better-futures$/, // Better Futures sequence event
+  /^\/scaling-series$/, // The Scaling Series sequence event
+  /^\/in-development-highlight$/, // In Development Highlight sequence event
+  /^\/marginal-funding$/, // Marginal Funding Week sequence event
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
   /^\/admin$/, // Admin
