@@ -6,7 +6,7 @@ import type {
   ConversationMessage,
   InboxConversation,
 } from "@/lib/messages/conversationQueries";
-import { conversationGetFriendlyTitle } from "@/lib/messages/messageHelpers";
+import { conversationGetTitle } from "@/lib/messages/messageHelpers";
 import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIcon";
 import ChatBubbleLeftRightIcon from "@heroicons/react/24/outline/ChatBubbleLeftRightIcon";
 import type { SelectedConversation } from "./inboxHelpers";
@@ -89,7 +89,7 @@ function LoadedConversation({
           style="bodyLarge"
           className="font-[600]! text-gray-1000 line-clamp-2 sm:line-clamp-1"
         >
-          {conversationGetFriendlyTitle(conversation, currentUserId)}
+          {conversationGetTitle(conversation, currentUserId)}
         </Type>
         <button
           aria-label="Conversation options"

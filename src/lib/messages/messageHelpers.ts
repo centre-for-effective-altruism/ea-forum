@@ -32,7 +32,7 @@ export const messageGetPageUrl = ({
 /**
  * Get the title of a conversation, formatted like e.g. "Bob, Charlie + 1 more"
  */
-export const conversationGetFriendlyTitle = (
+export const conversationGetTitle = (
   conversation: {
     title: string | null;
     participants: (UserDisplayNameInfo & { _id: string })[];

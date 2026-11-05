@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { messagesRouter } from "@/lib/messages/messagesRouter";
 import { createMessage } from "@/lib/messages/messageMutations";
 import {
-  conversationGetFriendlyTitle,
+  conversationGetTitle,
   getDraftMessageHtml,
 } from "@/lib/messages/messageHelpers";
 import { isNewSiteAllowed } from "@/lib/proxy/legacySiteRedirect";
@@ -575,7 +575,7 @@ suite("Inbox", () => {
       (displayName) => ({ _id: displayName, displayName, username: null }),
     );
     const titleWith = (count: number, title: string | null = null) =>
-      conversationGetFriendlyTitle(
+      conversationGetTitle(
         { title, participants: participants.slice(0, count + 1) },
         "Me",
       );

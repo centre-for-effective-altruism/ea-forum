@@ -2,7 +2,7 @@
 
 import { MouseEvent, useCallback } from "react";
 import type { InboxConversation } from "@/lib/messages/conversationQueries";
-import { conversationGetFriendlyTitle } from "@/lib/messages/messageHelpers";
+import { conversationGetTitle } from "@/lib/messages/messageHelpers";
 import clsx from "clsx";
 import UserProfileImage from "../UserProfileImage";
 import TimeAgo from "../TimeAgo";
@@ -55,7 +55,7 @@ export default function InboxConversationItem({
             style={hasUnreadMessages ? "bodyXHeavy" : "bodyHeavy"}
             className="truncate text-gray-1000"
           >
-            {conversationGetFriendlyTitle(conversation, currentUserId)}
+            {conversationGetTitle(conversation, currentUserId)}
           </Type>
           <div className="flex items-center gap-1.5 shrink-0 text-gray-600">
             {hasUnreadMessages && (
