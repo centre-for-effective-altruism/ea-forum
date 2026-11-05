@@ -29,7 +29,11 @@ export const sendModerationPM = async ({
   });
   await createMessage({
     user: admin,
-    html: messageContents,
+    editorData: {
+      originalContents: { type: "ckEditorMarkup", data: messageContents },
+      updateType: "initial",
+      commitMessage: "Initial commit",
+    },
     conversation: conversation,
     noEmail,
   });

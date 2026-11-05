@@ -1,4 +1,6 @@
 import { waitUntil } from "@vercel/functions";
+import difference from "lodash/difference";
+import escape from "lodash/escape";
 import isEqual from "lodash/isEqual";
 import { eq } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
@@ -6,7 +8,9 @@ import { moderatorActionType } from "../moderatorActions/moderatorActionHelpers"
 import { createModeratorAction } from "../moderatorActions/moderatorActionMutations";
 import { createNotifications } from "../notifications/notificationMutations";
 import { users, Conversation, Message } from "../schema";
-import { userIsAdmin } from "../users/userHelpers";
+import { userGetDisplayName, userIsAdmin } from "../users/userHelpers";
+import { fetchAdminAccount } from "../users/adminAccount";
+import { createMessage } from "./messageMutations";
 import { filterNonNull } from "../typeHelpers";
 import { db, DbOrTransaction } from "../db";
 import type { CurrentUser } from "../users/currentUser";
@@ -159,4 +163,72 @@ export const sendMessageNotifications = async (
     documentId: message._id,
     noEmail: message.noEmail,
   });
+};
+
+export const sendUserLeftConversationMessages = async (
+  conversation: Conversation,
+  oldConversation: Conversation,
+) => {
+  const leftUserIds = difference(
+    oldConversation.participantIds,
+    conversation.participantIds,
+  );
+  if (!leftUserIds.length) {
+    return;
+  }
+  const [admin, leftUsers] = await Promise.all([
+    fetchAdminAccount(),
+    db.query.users.findMany({
+      columns: { _id: true, displayName: true, username: true },
+      where: { _id: { in: leftUserIds } },
+    }),
+  ]);
+  for (const leftUser of leftUsers) {
+    await createMessage({
+      user: admin,
+      editorData: {
+        originalContents: {
+          type: "html",
+          data: `<p>User ${escape(userGetDisplayName(leftUser))} left the conversation.</p>`,
+        },
+        updateType: "initial",
+        commitMessage: "",
+      },
+      conversation,
+      noEmail: true,
+    });
+  }
+};
+
+/**
+ * Notify newly added participants (other than the user who added them) of the
+ * latest message. If there are no messages yet they'll be notified when the
+ * first one is sent.
+ */
+export const notifyNewConversationParticipants = async (
+  conversation: Conversation,
+  oldConversation: Conversation,
+  currentUser: CurrentUser,
+) => {
+  const newParticipantIds = difference(
+    conversation.participantIds,
+    oldConversation.participantIds,
+  ).filter((id) => id !== currentUser._id);
+  if (!newParticipantIds.length) {
+    return;
+  }
+  const latestMessage = await db.query.messages.findFirst({
+    columns: { _id: true, noEmail: true },
+    where: { conversationId: conversation._id },
+    orderBy: { createdAt: "desc" },
+  });
+  if (latestMessage) {
+    await createNotifications({
+      userIds: newParticipantIds,
+      notificationType: "newMessage",
+      documentType: "message",
+      documentId: latestMessage._id,
+      noEmail: latestMessage.noEmail,
+    });
+  }
 };

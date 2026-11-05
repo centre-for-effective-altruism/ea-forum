@@ -1,15 +1,28 @@
 import { waitUntil } from "@vercel/functions";
+import uniq from "lodash/uniq";
+import { ORPCError } from "@orpc/server";
 import type { CurrentUser } from "../users/currentUser";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { randomId } from "../utils/random";
 import { createRevision } from "../revisions/revisionMutations";
-import { conversations, Conversation, messages } from "../schema";
+import { conversations, Conversation, messages, notifications } from "../schema";
+import { EditorData, isEditorTypeString } from "../ckeditor/editorHelpers";
+import {
+  userCanDo,
+  userCanInitiateConversations,
+  userHasMessagingDisabled,
+  userIsAdmin,
+  userIsAdminOrMod,
+} from "../users/userHelpers";
+import { unreadConversationMessageNotificationIds } from "./conversationQueries";
 import { denormalizeRevision } from "../revisions/revisionHelpers";
 import { convertImagesInObject } from "../cloudinary/convertImagesToCloudinary";
 import {
   flagOrBlockUserOnManyDMs,
+  notifyNewConversationParticipants,
   sendMessageNotifications,
+  sendUserLeftConversationMessages,
   updateUserNotesOnModMessage,
 } from "./messageCallbacks";
 
@@ -40,16 +53,19 @@ export const createConversation = async (
 
 export const createMessage = async ({
   user,
-  html,
+  editorData,
   conversation,
   noEmail,
 }: {
   user: CurrentUser;
-  html: string;
+  editorData: EditorData;
   conversation: Conversation;
   noEmail?: boolean;
 }) => {
-  if (!html) {
+  if (!isEditorTypeString(editorData.originalContents.type)) {
+    throw new Error("Invalid editor type");
+  }
+  if (!editorData.originalContents.data.trim()) {
     throw new Error("Message is empty");
   }
 
@@ -63,7 +79,9 @@ export const createMessage = async ({
   });
   for (const receiver of receivers) {
     if (receiver.blockedUserIds.includes(user._id)) {
-      throw new Error("You are blocked from messaging users in this conversation");
+      throw new ORPCError("FORBIDDEN", {
+        message: "You are blocked from messaging users in this conversation",
+      });
     }
   }
 
@@ -71,20 +89,11 @@ export const createMessage = async ({
   const messageId = randomId();
 
   const [message, updatedConversation] = await db.transaction(async (txn) => {
-    const initialRevision = await createRevision(
-      txn,
-      user,
-      {
-        originalContents: { type: "ckEditorMarkup", data: html },
-        updateType: "initial",
-        commitMessage: "Initial commit",
-      },
-      {
-        documentId: messageId,
-        collectionName: "Messages",
-        fieldName: "contents",
-      },
-    );
+    const initialRevision = await createRevision(txn, user, editorData, {
+      documentId: messageId,
+      collectionName: "Messages",
+      fieldName: "contents",
+    });
     const { newRevision } = await convertImagesInObject(txn, initialRevision);
     const revision = newRevision ?? initialRevision;
 
@@ -123,4 +132,129 @@ export const createMessage = async ({
   waitUntil(updateUserNotesOnModMessage(updatedConversation));
 
   return message;
+};
+
+const fetchConversation = (conversationId: string) =>
+  db.query.conversations.findFirst({
+    where: { _id: conversationId },
+  });
+
+/**
+ * Send a message as `user`, applying the permission checks for messages sent
+ * from the inbox. Starting a conversation needs `userCanInitiateConversations`
+ * whereas replying doesn't.
+ */
+export const sendConversationMessage = async ({
+  user,
+  conversationId,
+  editorData,
+  noEmail,
+}: {
+  user: CurrentUser;
+  conversationId: string;
+  editorData: EditorData;
+  noEmail?: boolean;
+}) => {
+  if (userHasMessagingDisabled(user)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You are not allowed to send messages",
+    });
+  }
+  const conversation = await fetchConversation(conversationId);
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+  if (conversation.messageCount < 1 && !userCanInitiateConversations(user)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You must earn 10 karma to start a conversation",
+    });
+  }
+  const canSend = conversation.participantIds.includes(user._id)
+    ? userCanDo(user, "messages.new.own")
+    : userCanDo(user, "messages.new.all");
+  if (!canSend) {
+    throw new Error("Permission denied");
+  }
+  return createMessage({
+    user,
+    editorData,
+    conversation,
+    noEmail: userIsAdmin(user) && !!noEmail,
+  });
+};
+
+export const markConversationRead = async (
+  user: CurrentUser,
+  conversationId: string,
+) => {
+  await db
+    .update(notifications)
+    .set({ viewed: true })
+    .where(
+      inArray(
+        notifications._id,
+        unreadConversationMessageNotificationIds(user._id, conversationId),
+      ),
+    );
+};
+
+/**
+ * Edit a conversation's title, participants or moderator flag. Only
+ * participants and admins can edit, and only admins and mods can change the
+ * moderator flag.
+ */
+export const updateConversation = async (
+  user: CurrentUser,
+  conversationId: string,
+  {
+    title,
+    participantIds,
+    moderator,
+  }: {
+    title?: string | null;
+    participantIds?: string[];
+    moderator?: boolean;
+  },
+): Promise<Conversation> => {
+  const oldConversation = await fetchConversation(conversationId);
+  if (!oldConversation) {
+    throw new Error("Conversation not found");
+  }
+  const canEdit = oldConversation.participantIds.includes(user._id)
+    ? userCanDo(user, "conversations.edit.own")
+    : userCanDo(user, "conversations.edit.all");
+  if (!canEdit) {
+    throw new Error("Permission denied");
+  }
+  if (moderator !== undefined && !userIsAdminOrMod(user)) {
+    throw new Error("Only moderators can change the moderator status");
+  }
+
+  const updatedConversation = await db.transaction(async (txn) => {
+    const [updatedConversation] = await txn
+      .update(conversations)
+      .set({
+        ...(title !== undefined && { title: title || null }),
+        ...(participantIds && { participantIds: uniq(participantIds) }),
+        ...(moderator !== undefined && { moderator }),
+      })
+      .where(eq(conversations._id, conversationId))
+      .returning();
+    await flagOrBlockUserOnManyDMs({
+      db: txn,
+      currentConversation: updatedConversation,
+      oldConversation,
+      currentUser: user,
+    });
+    return updatedConversation;
+  });
+
+  await sendUserLeftConversationMessages(updatedConversation, oldConversation);
+  await notifyNewConversationParticipants(
+    updatedConversation,
+    oldConversation,
+    user,
+  );
+
+  return updatedConversation;
 };

@@ -30,6 +30,7 @@ import {
   localgroups,
   lwEvents,
   messages,
+  moderationTemplates,
   moderatorActions,
   notifications,
   podcastEpisodes,
@@ -67,6 +68,7 @@ const relations = defineRelations(
     votes,
     localgroups,
     messages,
+    moderationTemplates,
     notifications,
     sequences,
     spotlights,
@@ -342,6 +344,12 @@ const relations = defineRelations(
         where: {
           deleted: false,
         },
+      }),
+    },
+    conversations: {
+      messages: r.many.messages({
+        from: r.conversations._id,
+        to: r.messages.conversationId,
       }),
     },
     messages: {
