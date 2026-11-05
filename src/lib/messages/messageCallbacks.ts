@@ -1,5 +1,7 @@
 import { waitUntil } from "@vercel/functions";
+import isEqual from "lodash/isEqual";
 import { eq } from "drizzle-orm";
+import { ORPCError } from "@orpc/server";
 import { moderatorActionType } from "../moderatorActions/moderatorActionHelpers";
 import { createModeratorAction } from "../moderatorActions/moderatorActionMutations";
 import { createNotifications } from "../notifications/notificationMutations";
@@ -39,8 +41,13 @@ export const flagOrBlockUserOnManyDMs = async ({
   if (currentUser.reviewedByUserId && !currentUser.snoozedUntilContentCount) {
     return;
   }
-  // If the participants didn't change we can ignore it
-  if (!currentConversation.participantIds) {
+  if (
+    oldConversation &&
+    isEqual(
+      new Set(oldConversation.participantIds),
+      new Set(currentConversation.participantIds),
+    )
+  ) {
     return;
   }
 
@@ -88,9 +95,9 @@ export const flagOrBlockUserOnManyDMs = async ({
     allUsersEverContacted.length > MAX_ALLOWED_CONTACTS_BEFORE_BLOCK &&
     !currentUser.reviewedAt
   ) {
-    throw new Error(
-      `You cannot message more than ${MAX_ALLOWED_CONTACTS_BEFORE_BLOCK} users before your account has been reviewed. Please contact us if you'd like to message more people.`,
-    );
+    throw new ORPCError("FORBIDDEN", {
+      message: `You cannot message more than ${MAX_ALLOWED_CONTACTS_BEFORE_BLOCK} users before your account has been reviewed. Please contact us if you'd like to message more people.`,
+    });
   }
 };
 
@@ -141,10 +148,6 @@ export const sendMessageNotifications = async (
   conversation: Conversation,
   message: Message,
 ) => {
-  // For on-site notifications, notify everyone except the sender of the
-  // message. For email notifications, notify everyone including the sender
-  // (since if there's a back-and-forth in the grouped notifications, you want
-  // to see your own messages).
   const recipientIds = conversation.participantIds.filter(
     (id) => id !== message.userId,
   );

@@ -1,10 +1,13 @@
 import uniq from "lodash/uniq";
 import { z } from "zod/v4";
-import { os } from "@orpc/server";
+import { ORPCError, os } from "@orpc/server";
 import { getCurrentUser } from "../users/currentUser";
 import { createConversation } from "./messageMutations";
 import { fetchConversationByParticipants } from "./messageQueries";
-import { userCanInitiateConversations } from "../users/userHelpers";
+import {
+  userCanInitiateConversations,
+  userHasMessagingDisabled,
+} from "../users/userHelpers";
 
 export const messagesRouter = {
   createConversation: os
@@ -18,6 +21,11 @@ export const messagesRouter = {
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         throw new Error("Please login");
+      }
+      if (userHasMessagingDisabled(currentUser)) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "You are not allowed to send messages",
+        });
       }
       if (!userCanInitiateConversations(currentUser)) {
         throw new Error("Permission denied");

@@ -2,7 +2,7 @@
 
 import { useCallback, ReactNode, MouseEvent } from "react";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { useInitialConversation } from "@/lib/hooks/useInitiateConversation";
+import { useInitiateConversation } from "@/lib/hooks/useInitiateConversation";
 import {
   userCanInitiateConversations,
   userHasMessagingDisabled,
@@ -12,6 +12,8 @@ import Type from "./Type";
 
 export default function NewConversationButton({
   userId,
+  from,
+  openInNewTab,
   children,
 }: Readonly<{
   userId: string;
@@ -20,7 +22,7 @@ export default function NewConversationButton({
   children: ReactNode;
 }>) {
   const { currentUser } = useCurrentUser();
-  const { initiateConversation } = useInitialConversation();
+  const { initiateConversation } = useInitiateConversation();
 
   const onClick = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
@@ -28,9 +30,11 @@ export default function NewConversationButton({
       void initiateConversation({
         userIds: [userId],
         redirectOnSuccess: true,
+        from,
+        openInNewTab,
       });
     },
-    [initiateConversation, userId],
+    [initiateConversation, userId, from, openInNewTab],
   );
 
   if (currentUser) {

@@ -1328,6 +1328,7 @@ export const conversations = pgTable(
 );
 
 export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
 
 export const debouncerEvents = pgTable(
   "DebouncerEvents",
@@ -1554,6 +1555,7 @@ export const messages = pgTable(
 );
 
 export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
 
 export const migrations = pgTable(
   "Migrations",

@@ -1,6 +1,6 @@
 import { waitUntil } from "@vercel/functions";
 import type { CurrentUser } from "../users/currentUser";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { randomId } from "../utils/random";
 import { createRevision } from "../revisions/revisionMutations";
@@ -106,6 +106,7 @@ export const createMessage = async ({
         .update(conversations)
         .set({
           latestActivity: new Date().toISOString(),
+          messageCount: sql`${conversations.messageCount} + 1`,
           archivedByIds: [],
           ...(!userIsParticipant
             ? { participantIds: [...conversation.participantIds, user._id] }

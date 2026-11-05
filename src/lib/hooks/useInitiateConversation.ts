@@ -7,8 +7,9 @@ import { useLoginPopoverContext } from "./useLoginPopoverContext";
 import { conversationGetPageUrl } from "../messages/messageHelpers";
 import { rpc } from "../rpc";
 import toast from "react-hot-toast";
+import { ORPCError } from "@orpc/client";
 
-export const useInitialConversation = () => {
+export const useInitiateConversation = () => {
   const { captureEvent } = useTracking();
   const { currentUser } = useCurrentUser();
   const { onSignup } = useLoginPopoverContext();
@@ -19,10 +20,14 @@ export const useInitialConversation = () => {
       userIds,
       includeModerators = false,
       redirectOnSuccess = false,
+      from,
+      openInNewTab = false,
     }: {
       userIds: string[];
       includeModerators?: boolean;
       redirectOnSuccess?: boolean;
+      from?: string;
+      openInNewTab?: boolean;
     }) => {
       if (!userIds.length) {
         throw new Error("No users in conversation");
@@ -40,12 +45,21 @@ export const useInitialConversation = () => {
         });
         captureEvent("initiateConversation", { userIds, includeModerators });
         if (redirectOnSuccess) {
-          router.push(conversationGetPageUrl({ conversationId }));
+          const url = conversationGetPageUrl({ conversationId, from });
+          if (openInNewTab) {
+            window.open(url, "_blank");
+          } else {
+            router.push(url);
+          }
         }
       } catch (e) {
         captureException(e);
-        console.error("Error initiating conversaion:", e);
-        toast.error("An error occurred - please try again");
+        console.error("Error initiating conversation:", e);
+        toast.error(
+          e instanceof ORPCError && e.code === "FORBIDDEN"
+            ? e.message
+            : "An error occurred - please try again",
+        );
       }
     },
     [router, currentUser, onSignup, captureEvent],

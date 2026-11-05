@@ -22,7 +22,9 @@ export const sendModerationPM = async ({
   const admin = await fetchAdminAccount();
   const conversation = await createConversation(admin, {
     participantIds: [comment.user._id, admin._id],
-    title: `Comment ${action} on ${contentTitle}`,
+    title: contentTitle
+      ? `Comment ${action} on ${contentTitle}`
+      : `Comment ${action}`,
     ...(action === "rejected" ? { moderator: true } : {}),
   });
   await createMessage({
