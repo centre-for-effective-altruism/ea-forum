@@ -132,12 +132,6 @@ export const migrationProgressTiers: MigrationTier[] = [
       { paths: ["/digests/:num"], notes: "Public digest page" },
       { paths: ["/admin/digests"], notes: "Digest list" },
       {
-        paths: ["/better-futures", "/scaling-series", "/in-development-highlight"],
-        notes:
-          "Share one SequenceEventPage (~750 lines); the other two are near-free after the first",
-      },
-      { paths: ["/marginal-funding"], notes: "Giving season page" },
-      {
         paths: ["/postAnalytics"],
         notes: "Needs the analytics data source",
       },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { ReactNode, useCallback, useRef } from "react";
 import { useTracking } from "@/lib/analyticsEvents";
 import { isMobile } from "@/lib/environment";
 import { useShareActions } from "@/lib/hooks/useShareActions";
@@ -19,12 +19,16 @@ export default function ShareButton({
   clickEventName = "shareButtonClicked",
   shareEventName = "share",
   campaign = "share",
+  className,
+  children,
 }: Readonly<{
   title: string;
   url: string;
   clickEventName?: string;
   shareEventName?: string;
   campaign?: string;
+  className?: string;
+  children?: ReactNode;
 }>) {
   const { captureEvent } = useTracking();
   const dismissRef = useRef<() => void>(null);
@@ -75,14 +79,23 @@ export default function ShareButton({
         },
       ]}
     >
-      <Tooltip title={<Type style="bodySmall">Share</Type>} offsetPx={8}>
-        <button
-          onClick={onClick}
-          className="cursor-pointer text-gray-600 flex items-center rounded p-1.5 hover:bg-item-hover hover:text-gray-800"
-        >
-          <ArrowUpTrayIcon className="w-5" />
+      {children ? (
+        <button onClick={onClick} className={className}>
+          {children}
         </button>
-      </Tooltip>
+      ) : (
+        <Tooltip title={<Type style="bodySmall">Share</Type>} offsetPx={8}>
+          <button
+            onClick={onClick}
+            className="
+              cursor-pointer text-gray-600 flex items-center rounded p-1.5
+              hover:bg-item-hover hover:text-gray-800
+            "
+          >
+            <ArrowUpTrayIcon className="w-5" />
+          </button>
+        </Tooltip>
+      )}
     </DropdownMenu>
   );
 }
