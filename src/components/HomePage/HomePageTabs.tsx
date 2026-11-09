@@ -188,11 +188,14 @@ export default function HomePageTabs({
                         </span>
                       </Type>
                     }
-                    className="
-                    absolute -top-1.5 -right-[17px] opacity-0
-                    transition-opacity duration-150
-                    group-hover:opacity-100 focus-within:opacity-100
-                  "
+                    className={clsx(
+                      "absolute -top-1.5 -right-[17px] opacity-0",
+                      "transition-opacity duration-150",
+                      "group-hover:opacity-100 focus-within:opacity-100",
+                      name === currentTab
+                        ? "[@media(hover:none)]:opacity-100"
+                        : "[@media(hover:none)]:pointer-events-none",
+                    )}
                   >
                     <Link
                       href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
