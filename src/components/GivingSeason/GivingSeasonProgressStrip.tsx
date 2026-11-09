@@ -32,7 +32,9 @@ function StripItem({
       ref={innerRef}
       className={clsx(
         "group shrink-0 cursor-pointer rounded-full p-[3px] border outline-none",
-        selected ? "border-(--week-lead)" : "border-transparent",
+        selected
+          ? "border-(--week-lead) focus-visible:outline-1 focus-visible:outline-solid focus-visible:outline-white/40 focus-visible:outline-offset-2"
+          : "border-transparent",
       )}
     >
       <span
