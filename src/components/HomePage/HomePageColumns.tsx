@@ -17,9 +17,9 @@ export default function HomePageColumns({
         {banner}
         <div
           className="
-            max-mobile-nav:block max-mobile-nav:w-[780px]
+            max-mobile-nav:block max-mobile-nav:max-w-[780px]
             grid grid-cols-[min-content_1fr] justify-between gap-10
-            max-w-full mx-auto px-2 py-4 sm:p-4 md:p-8
+            px-2 py-4 sm:px-5 mobile-nav:p-8
           "
         >
           <Nav className="max-mobile-nav:hidden sticky top-[98px] self-start" />
