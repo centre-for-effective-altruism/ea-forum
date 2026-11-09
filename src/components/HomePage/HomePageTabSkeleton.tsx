@@ -53,12 +53,23 @@ export default function HomePageTabSkeleton({
     case "marginalFunding":
       return (
         <HomePageMarginalFundingTabLayout
+          view={featuredView}
+          viewPicker={<div className="bg-gray-200 rounded w-[56px] h-[32px]" />}
           explainerPost={<FeaturedPostSkeleton />}
           posts={range(MARGINAL_FUNDING_CARD_COUNT).map((i) => (
             <FeaturedPostSkeleton key={i} />
           ))}
           listSection={
-            <PostsListSkeleton count={MARGINAL_FUNDING_LIST_INITIAL_COUNT} />
+            <PostsListSkeleton
+              count={
+                featuredView === "list"
+                  ? 1 +
+                    MARGINAL_FUNDING_CARD_COUNT +
+                    MARGINAL_FUNDING_LIST_INITIAL_COUNT
+                  : MARGINAL_FUNDING_LIST_INITIAL_COUNT
+              }
+              viewType="list"
+            />
           }
         />
       );

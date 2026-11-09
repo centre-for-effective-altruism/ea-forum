@@ -2,10 +2,13 @@
 
 import { useLoadMore } from "@/lib/hooks/useLoadMore";
 import { useTracking } from "@/lib/analyticsEvents";
+import { usePostsListView } from "@/lib/hooks/usePostsListView";
+import { filterNonNull } from "@/lib/typeHelpers";
 import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import type { PostListItem } from "@/lib/posts/postLists";
 import HomePageMarginalFundingTabLayout from "./HomePageMarginalFundingTabLayout";
+import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
 import TextLinkButton from "../TextLinkButton";
@@ -45,6 +48,7 @@ export default function HomePageMarginalFundingTab({
   loadMoreLimit: number;
 }>) {
   const { captureEvent } = useTracking();
+  const { view } = usePostsListView();
   const { items, loading, limit, canLoadMore, onLoadMore } = useLoadMore({
     initialItems: initialListPosts,
     limit: loadMoreLimit,
@@ -66,8 +70,13 @@ export default function HomePageMarginalFundingTab({
   });
   const showLoadMore = initialListPosts.length >= initialListLimit && canLoadMore;
 
+  const listPosts =
+    view === "list" ? filterNonNull([explainerPost, ...cardPosts, ...items]) : items;
+
   return (
     <HomePageMarginalFundingTabLayout
+      view={view}
+      viewPicker={<PostsListViewPicker />}
       explainerPost={
         explainerPost && (
           <FeaturedPost
@@ -86,18 +95,21 @@ export default function HomePageMarginalFundingTab({
         />
       ))}
       listSection={
-        items.length > 0 && (
+        listPosts.length > 0 && (
           <section className="max-w-full">
             <div className="space-y-0.5">
-              {items.map((post) => (
+              {listPosts.map((post) => (
                 <PostsItem
                   key={post._id}
                   post={post}
+                  viewType="list"
                   readClassName={readListItemClassName}
                 />
               ))}
             </div>
-            {loading && <PostsListSkeleton count={limit} className="mt-0.5" />}
+            {loading && (
+              <PostsListSkeleton count={limit} viewType="list" className="mt-0.5" />
+            )}
             {showLoadMore && (
               <TextLinkButton
                 variant="primary"
