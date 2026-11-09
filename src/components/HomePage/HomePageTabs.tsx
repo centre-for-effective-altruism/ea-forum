@@ -98,6 +98,34 @@ export default function HomePageTabs({
     }
   }, [currentTab]);
 
+  const [isScrolledAllTheWayLeft, setIsScrolledAllTheWayLeft] = useState(true);
+  const [isScrolledAllTheWayRight, setIsScrolledAllTheWayRight] = useState(true);
+
+  const updateScrollBounds = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      setIsScrolledAllTheWayLeft(scrollLeft <= 0);
+      setIsScrolledAllTheWayRight(scrollLeft + clientWidth >= scrollWidth - 1);
+    }
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    updateScrollBounds();
+    const observer = new ResizeObserver(updateScrollBounds);
+    observer.observe(container);
+    for (const tab of Object.values(tabRefs.current)) {
+      if (tab) {
+        observer.observe(tab);
+      }
+    }
+    return () => observer.disconnect();
+  }, [updateScrollBounds]);
+
   useEffect(() => {
     const updateUnderline = () => {
       const activeTab = tabRefs.current[currentTab];
@@ -156,42 +184,60 @@ export default function HomePageTabs({
 
   return (
     <div data-component="HomePageTabs">
-      <div
-        className={clsx(
-          "relative flex gap-6 overflow-x-auto overflow-y-hidden no-scrollbars",
-          className,
-        )}
-        ref={containerRef}
-      >
-        {homePageTabs.map(({ label, name }) => (
-          <Type
-            key={name}
-            As="button"
-            style="homePageTab"
-            onClick={() => setCurrentTab(name)}
-            innerRef={(el: HTMLButtonElement | null) => {
-              tabRefs.current[name] = el;
-            }}
-            className={clsx(
-              "cursor-pointer relative pb-2 flex-none whitespace-nowrap",
-              name === currentTab
-                ? "text-gray-1000"
-                : "text-gray-400 hover:text-gray-500 transition-all",
-            )}
-            cssStyle={
-              name === currentTab && activeColor ? { color: activeColor } : undefined
-            }
-          >
-            {label}
-          </Type>
-        ))}
-        <span
+      <div className={clsx("relative", className)}>
+        <div
+          className="relative flex gap-6 overflow-x-auto overflow-y-hidden no-scrollbars"
+          ref={containerRef}
+          onScroll={updateScrollBounds}
+        >
+          {homePageTabs.map(({ label, name }) => (
+            <Type
+              key={name}
+              As="button"
+              style="homePageTab"
+              onClick={() => setCurrentTab(name)}
+              innerRef={(el: HTMLButtonElement | null) => {
+                tabRefs.current[name] = el;
+              }}
+              className={clsx(
+                "cursor-pointer relative pb-2 flex-none whitespace-nowrap",
+                name === currentTab
+                  ? "text-gray-1000"
+                  : "text-gray-400 hover:text-gray-500 transition-all",
+              )}
+              cssStyle={
+                name === currentTab && activeColor
+                  ? { color: activeColor }
+                  : undefined
+              }
+            >
+              {label}
+            </Type>
+          ))}
+          <span
+            aria-hidden
+            style={{ ...underlineStyle, backgroundColor: activeColor }}
+            className="
+              absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
+              transition-all duration-300 ease-in-out
+            "
+          />
+        </div>
+        <div
           aria-hidden
-          style={{ ...underlineStyle, backgroundColor: activeColor }}
-          className="
-            absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
-            transition-all duration-300 ease-in-out
-          "
+          className={clsx(
+            "absolute inset-y-0 left-0 w-8 pointer-events-none",
+            "bg-linear-to-r from-background to-transparent transition-opacity",
+            isScrolledAllTheWayLeft ? "opacity-0" : "opacity-100",
+          )}
+        />
+        <div
+          aria-hidden
+          className={clsx(
+            "absolute inset-y-0 right-0 w-8 pointer-events-none",
+            "bg-linear-to-l from-background to-transparent transition-opacity",
+            isScrolledAllTheWayRight ? "opacity-0" : "opacity-100",
+          )}
         />
       </div>
       {pending || !content ? (
