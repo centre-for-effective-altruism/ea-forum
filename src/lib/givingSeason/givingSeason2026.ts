@@ -18,8 +18,9 @@ export type GivingSeasonWeek = {
   colors: GivingSeasonWeekColors;
 };
 
-const announcementPostUrl =
-  "/posts/yYPtDPwFhinYmGuSR/giving-season-on-the-forum-2026";
+export const givingSeasonAnnouncementPostId = "yYPtDPwFhinYmGuSR";
+
+const announcementPostUrl = `/posts/${givingSeasonAnnouncementPostId}/giving-season-on-the-forum-2026`;
 
 export const givingSeasonGapStripColor = "#121212";
 

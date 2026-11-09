@@ -4,6 +4,7 @@ import { CSSProperties, useCallback, useState } from "react";
 import {
   getCurrentGivingSeasonWeek,
   GivingSeasonWeek,
+  givingSeasonAnnouncementPostId,
   givingSeasonGapStripColor,
   givingSeasonWeeks,
 } from "@/lib/givingSeason/givingSeason2026";
@@ -13,6 +14,7 @@ import { CookieName, HIDE_FORUM_EVENT_BANNER_PREFIX } from "@/lib/cookies/cookie
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import GivingSeasonProgressStrip from "./GivingSeasonProgressStrip";
 import GivingSeasonBannerLines from "./GivingSeasonBannerLines";
+import LazyPostsTooltip from "../LazyPostsTooltip";
 import Link from "../Link";
 import Type from "../Type";
 import clsx from "clsx";
@@ -47,9 +49,14 @@ function WeekText({ week }: Readonly<{ week: GivingSeasonWeek }>) {
       </Type>
       <Type style="body" className="font-[400]! leading-[1.5] text-white">
         {week.description}{" "}
-        <Link href={week.postUrl} className="underline underline-offset-2">
-          Read the announcement post.
-        </Link>
+        <LazyPostsTooltip postId={givingSeasonAnnouncementPostId} As="span">
+          <Link
+            href={week.postUrl}
+            className="underline underline-offset-2 hover:opacity-70 transition-opacity"
+          >
+            Read the announcement post.
+          </Link>
+        </LazyPostsTooltip>
       </Type>
     </>
   );
