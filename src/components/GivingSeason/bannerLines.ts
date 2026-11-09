@@ -33,7 +33,8 @@ type Pluck = {
 export type BannerLinesRenderer = {
   /**
    * With `animate`, the lines and colours move from their previous state to
-   * the new one rather than snapping.
+   * the new one rather than snapping. The lines spring into place, wobbling
+   * slightly before they settle.
    */
   draw: (args: DrawArgs, options?: { animate?: boolean }) => void;
   dispose: () => void;
@@ -43,6 +44,9 @@ const MAX_DPR = 2;
 const MAX_TEXT_RECTS = 32;
 const MAX_COLOR_STOPS = 5;
 const TRANSITION_MS = 200;
+const SPRING_SETTLE_MS = 900;
+const SPRING_DAMPING = 0.5;
+const SPRING_STIFFNESS = 16;
 
 const GAP = 26;
 const PITCH = 20;
@@ -164,6 +168,7 @@ uniform int uFromRectCount;
 uniform vec4 uToRects[MAX_TEXT_RECTS];
 uniform int uToRectCount;
 uniform float uProgress;
+uniform float uColorProgress;
 uniform vec3 uDeep;
 uniform vec4 uFromStops[MAX_COLOR_STOPS];
 uniform int uFromStopCount;
@@ -198,7 +203,7 @@ void main() {
   ${textDistanceLoop("To")}
   float softTextDistance = softTo;
   float hardTextDistance = hardTo;
-  if (uProgress < 1.0) {
+  if (uProgress != 1.0) {
     ${textDistanceLoop("From")}
     softTextDistance = mix(softFrom, softTo, uProgress);
     // The new text is already on screen, so it's masked from the start
@@ -239,7 +244,7 @@ void main() {
   vec3 color = mix(
     gradient(uFromStops, uFromStopCount, colorPosition),
     gradient(uToStops, uToStopCount, colorPosition),
-    uProgress
+    uColorProgress
   );
   gl_FragColor = vec4(mix(uDeep, color, alpha), 1.0);
 }
@@ -262,6 +267,20 @@ const clamp = (x: number, min: number, max: number) =>
 
 /** Matches the CSS `cubic-bezier(0.65, 0, 0.35, 1)` used by the banner text */
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+
+/**
+ * A damped spring from 0 to 1 that overshoots before settling. `t` is in
+ * seconds.
+ */
+const spring = (t: number) => {
+  const decay = SPRING_DAMPING * SPRING_STIFFNESS;
+  const frequency = SPRING_STIFFNESS * Math.sqrt(1 - SPRING_DAMPING ** 2);
+  return (
+    1 -
+    Math.exp(-decay * t) *
+      (Math.cos(frequency * t) + (decay / frequency) * Math.sin(frequency * t))
+  );
+};
 
 const prefersReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -422,6 +441,7 @@ const createProgram = (gl: WebGLRenderingContext, maxPlucks: number) => {
     toRects: gl.getUniformLocation(program, "uToRects"),
     toRectCount: gl.getUniformLocation(program, "uToRectCount"),
     progress: gl.getUniformLocation(program, "uProgress"),
+    colorProgress: gl.getUniformLocation(program, "uColorProgress"),
     deep: gl.getUniformLocation(program, "uDeep"),
     fromStops: gl.getUniformLocation(program, "uFromStops"),
     fromStopCount: gl.getUniformLocation(program, "uFromStopCount"),
@@ -480,7 +500,7 @@ export const createBannerLinesRenderer = (
     gl.uniform1i(uniforms.pluckCount, plucks.length);
   };
 
-  const renderFrame = (now: number, progress: number) => {
+  const renderFrame = (now: number, elapsed: number) => {
     if (!uniforms || !from || !to || gl.isContextLost() || !to.width || !to.height) {
       return;
     }
@@ -491,7 +511,8 @@ export const createBannerLinesRenderer = (
       canvas.width = pixelWidth;
       canvas.height = pixelHeight;
     }
-    const eased = easeInOut(progress);
+    const eased = easeInOut(Math.min(1, elapsed / TRANSITION_MS));
+    const sprung = elapsed < SPRING_SETTLE_MS ? spring(elapsed / 1000) : 1;
     gl.viewport(0, 0, pixelWidth, pixelHeight);
     gl.uniform2f(uniforms.size, to.width, to.height);
     gl.uniform1f(uniforms.dpr, dpr);
@@ -499,7 +520,8 @@ export const createBannerLinesRenderer = (
     gl.uniform1i(uniforms.fromRectCount, from.rectCount);
     gl.uniform4fv(uniforms.toRects, to.rects);
     gl.uniform1i(uniforms.toRectCount, to.rectCount);
-    gl.uniform1f(uniforms.progress, eased);
+    gl.uniform1f(uniforms.progress, sprung);
+    gl.uniform1f(uniforms.colorProgress, eased);
     gl.uniform3fv(uniforms.deep, mixRgb(from.deep, to.deep, eased));
     gl.uniform4fv(uniforms.fromStops, from.stops);
     gl.uniform1i(uniforms.fromStopCount, from.stopCount);
@@ -511,14 +533,17 @@ export const createBannerLinesRenderer = (
 
   const render = () => {
     const now = performance.now();
-    const progress = Math.min(1, (now - transitionStart) / TRANSITION_MS);
-    renderFrame(now, progress);
-    frame = progress < 1 || plucks.length ? requestAnimationFrame(render) : 0;
+    const elapsed = now - transitionStart;
+    renderFrame(now, elapsed);
+    frame =
+      elapsed < SPRING_SETTLE_MS || plucks.length
+        ? requestAnimationFrame(render)
+        : 0;
   };
 
   const draw = (args: DrawArgs, { animate = false } = {}) => {
     const next = measureLinesState(args);
-    const isTransitioning = performance.now() - transitionStart < TRANSITION_MS;
+    const isTransitioning = performance.now() - transitionStart < SPRING_SETTLE_MS;
     if (animate && to && !prefersReducedMotion()) {
       from = to;
       transitionStart = performance.now();
