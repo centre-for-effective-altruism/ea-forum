@@ -14,6 +14,11 @@ import Type from "../Type";
 
 const Check = () => <CheckIcon className="w-4 text-primary" />;
 
+const viewOptions = {
+  card: { title: "Card view", Icon: CardViewIcon },
+  list: { title: "List view", Icon: ListViewIcon },
+} as const satisfies Record<PostsListViewType, unknown>;
+
 export default function PostsListViewPicker() {
   const { captureEvent } = useTracking();
   const { view, setView } = usePostsListView();
@@ -28,37 +33,32 @@ export default function PostsListViewPicker() {
     [setView, captureEvent],
   );
 
-  const CurrentIcon = view === "list" ? ListViewIcon : CardViewIcon;
+  const { title: currentLabel, Icon: CurrentIcon } = viewOptions[view];
   return (
     <DropdownMenu
       placement="bottom-end"
       dismissRef={dismissRef}
-      items={[
-        {
-          title: "Card view",
-          Icon: CardViewIcon,
-          onClick: () => onClick("card"),
-          afterNode: view === "card" ? <Check /> : undefined,
-        },
-        {
-          title: "List view",
-          Icon: ListViewIcon,
-          onClick: () => onClick("list"),
-          afterNode: view === "list" ? <Check /> : undefined,
-        },
-      ]}
+      items={(["card", "list"] as const).map((value) => ({
+        ...viewOptions[value],
+        onClick: () => onClick(value),
+        afterNode: view === value ? <Check /> : undefined,
+      }))}
     >
       <Tooltip title={<Type style="bodySmall">Change post view</Type>} offsetPx={8}>
         <button
           type="button"
-          aria-label="Change post view"
+          aria-label={`Change post view (${currentLabel})`}
           data-component="PostsListViewPicker"
           className="
-            text-gray-600 flex items-center p-2 rounded-sm
-            hover:bg-item-hover cursor-pointer
+            text-gray-1000 flex items-center gap-1.5 py-1.5 pr-2 pl-2.5
+            rounded border-1 border-gray-200 bg-surface-floating
+            hover:bg-surface-floating-hover cursor-pointer
           "
         >
-          <CurrentIcon className="w-6" />
+          <CurrentIcon className="w-4" />
+          <Type As="span" className="max-sm:hidden">
+            {currentLabel}
+          </Type>
           <ChevronDownIcon className="w-4" />
         </button>
       </Tooltip>

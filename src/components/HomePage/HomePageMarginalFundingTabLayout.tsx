@@ -21,13 +21,11 @@ export default function HomePageMarginalFundingTabLayout({
   posts,
   listSection,
   view = defaultFeaturedViewType,
-  viewPicker,
 }: Readonly<{
   explainerPost?: ReactNode;
   posts: ReactNode[];
   listSection?: ReactNode;
   view?: PostsListViewType;
-  viewPicker?: ReactNode;
 }>) {
   const titleBox = (
     <div
@@ -70,7 +68,6 @@ export default function HomePageMarginalFundingTabLayout({
           view === "list" && "max-w-[1000px]",
         )}
       >
-        {viewPicker && <div className="flex justify-end -my-2">{viewPicker}</div>}
         {view === "list" ? (
           titleBox
         ) : (

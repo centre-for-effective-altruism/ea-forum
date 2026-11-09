@@ -11,7 +11,6 @@ import type { PostListItem } from "@/lib/posts/postLists";
 import range from "lodash/range";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
-import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
 import TextLinkButton from "../TextLinkButton";
@@ -69,7 +68,6 @@ export default function HomePageFeaturedTab({
   return (
     <HomePageFeaturedTabLayout
       view={view}
-      viewPicker={<PostsListViewPicker />}
       posts={postNodes}
       loadMorePosts={
         loadingFeaturedPosts ? (

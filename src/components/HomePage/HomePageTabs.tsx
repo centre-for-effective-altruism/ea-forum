@@ -21,9 +21,14 @@ import {
   featuredViewTypeCookie,
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
+import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { renderHomePageContentAction } from "./homePageActions";
 import { useTracking } from "@/lib/analyticsEvents";
 import HomePageTabSkeleton from "./HomePageTabSkeleton";
+import PostsListViewPicker from "../PostsList/PostsListViewPicker";
+import InformationCircleIcon from "@heroicons/react/24/solid/InformationCircleIcon";
+import ControlledTooltip from "../ControlledTooltip";
+import Link from "../Link";
 import Type from "../Type";
 import clsx from "clsx";
 
@@ -44,6 +49,50 @@ export function HomePageTabsSkeleton({
         </Type>
       ))}
     </div>
+  );
+}
+
+const tabsWithViewPicker = new Set<HomePageTabName>(["featured", "marginalFunding"]);
+
+const featuredPageUrl = "/posts/nx2wA6u8uS9qRorTD/the-featured-page";
+
+function FeaturedTabInfo({ isCurrentTab }: Readonly<{ isCurrentTab: boolean }>) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <ControlledTooltip
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      interactable
+      title={
+        <Type style="bodySmall" className="max-w-[260px]">
+          Selected posts to help us answer: How can we do the most good with our
+          resources?{" "}
+          <Link
+            href={featuredPageUrl}
+            className="text-tooltip-text-dim underline hover:text-tooltip-text"
+          >
+            Read more
+          </Link>
+        </Type>
+      }
+      className={clsx(
+        "absolute -top-1.5 left-full pl-0.5 opacity-0",
+        "transition-opacity duration-150",
+        "group-hover:opacity-100 focus-within:opacity-100",
+        isOpen && "opacity-100",
+        isCurrentTab
+          ? "[@media(hover:none)]:opacity-100"
+          : "[@media(hover:none)]:pointer-events-none",
+      )}
+    >
+      <Link
+        href={featuredPageUrl}
+        className="block text-gray-500 hover:text-gray-1000 focus-visible:text-gray-1000"
+      >
+        <InformationCircleIcon className="w-[15px]" />
+        <span className="sr-only">About the Featured page</span>
+      </Link>
+    </ControlledTooltip>
   );
 }
 
@@ -80,12 +129,36 @@ export default function HomePageTabs({
   const [pending, startTransition] = useTransition();
   const requestId = useRef(0);
 
+  const scrollWindowRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Record<HomePageTabName, HTMLElement | null>>({
     featured: null,
     magic: null,
     marginalFunding: null,
   });
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollFades = useCallback(() => {
+    const scrollWindow = scrollWindowRef.current;
+    if (scrollWindow) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollWindow;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+    }
+  }, []);
+
+  useEffect(() => {
+    const scrollWindow = scrollWindowRef.current;
+    const container = containerRef.current;
+    if (!scrollWindow || !container) {
+      return;
+    }
+    const observer = new ResizeObserver(updateScrollFades);
+    observer.observe(scrollWindow);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [updateScrollFades]);
 
   useEffect(() => {
     const activeTab = tabRefs.current[currentTab];
@@ -97,34 +170,6 @@ export default function HomePageTabs({
       });
     }
   }, [currentTab]);
-
-  const [isScrolledAllTheWayLeft, setIsScrolledAllTheWayLeft] = useState(true);
-  const [isScrolledAllTheWayRight, setIsScrolledAllTheWayRight] = useState(true);
-
-  const updateScrollBounds = useCallback(() => {
-    const container = containerRef.current;
-    if (container) {
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-      setIsScrolledAllTheWayLeft(scrollLeft <= 0);
-      setIsScrolledAllTheWayRight(scrollLeft + clientWidth >= scrollWidth - 1);
-    }
-  }, []);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-    updateScrollBounds();
-    const observer = new ResizeObserver(updateScrollBounds);
-    observer.observe(container);
-    for (const tab of Object.values(tabRefs.current)) {
-      if (tab) {
-        observer.observe(tab);
-      }
-    }
-    return () => observer.disconnect();
-  }, [updateScrollBounds]);
 
   useEffect(() => {
     const updateUnderline = () => {
@@ -169,6 +214,11 @@ export default function HomePageTabs({
         setCookie(preMarginalFundingHomePageTabCookie, currentTab);
       }
       rawSetCurrentTab(tab);
+      tabRefs.current[tab]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
       setCookie(homePageTabCookie, tab);
       captureEvent("setFrontpageTab", { tab });
       loadTabContent(tab);
@@ -183,68 +233,75 @@ export default function HomePageTabs({
       : undefined;
 
   return (
-    <div data-component="HomePageTabs">
-      <div className={clsx("relative", className)}>
-        <div
-          className="relative flex gap-6 overflow-x-auto overflow-y-hidden no-scrollbars"
-          ref={containerRef}
-          onScroll={updateScrollBounds}
-        >
-          {homePageTabs.map(({ label, name }) => (
-            <Type
-              key={name}
-              As="button"
-              style="homePageTab"
-              onClick={() => setCurrentTab(name)}
-              innerRef={(el: HTMLButtonElement | null) => {
-                tabRefs.current[name] = el;
-              }}
-              className={clsx(
-                "cursor-pointer relative pb-2 flex-none whitespace-nowrap",
-                name === currentTab
-                  ? "text-gray-1000"
-                  : "text-gray-400 hover:text-gray-500 transition-all",
-              )}
-              cssStyle={
-                name === currentTab && activeColor
-                  ? { color: activeColor }
-                  : undefined
-              }
-            >
-              {label}
-            </Type>
-          ))}
-          <span
-            aria-hidden
-            style={{ ...underlineStyle, backgroundColor: activeColor }}
-            className="
-              absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
-              transition-all duration-300 ease-in-out
-            "
-          />
+    <PostsListViewProvider
+      cookieName={featuredViewTypeCookie}
+      defaultValue={defaultFeaturedViewType}
+    >
+      <div data-component="HomePageTabs">
+        <div className={clsx("flex gap-6", className)}>
+          <div
+            ref={scrollWindowRef}
+            onScroll={updateScrollFades}
+            className={clsx(
+              "min-w-0 overflow-x-auto no-scrollbars -mt-1.5 pt-1.5",
+              canScrollLeft && "mask-l-from-[calc(100%-2rem)]",
+              canScrollRight && "mask-r-from-[calc(100%-2rem)]",
+            )}
+          >
+            <div className="relative flex gap-6 w-max" ref={containerRef}>
+              {homePageTabs.map(({ label, name }) => (
+                <div
+                  key={name}
+                  ref={(el: HTMLDivElement | null) => {
+                    tabRefs.current[name] = el;
+                  }}
+                  className="relative group"
+                >
+                  <Type
+                    As="button"
+                    style="homePageTab"
+                    onClick={() => setCurrentTab(name)}
+                    className={clsx(
+                      "cursor-pointer relative pb-2 whitespace-nowrap",
+                      name === currentTab
+                        ? "text-gray-1000"
+                        : "text-gray-400 hover:text-gray-500 transition-all",
+                    )}
+                    cssStyle={
+                      name === currentTab && activeColor
+                        ? { color: activeColor }
+                        : undefined
+                    }
+                  >
+                    {label}
+                  </Type>
+                  {name === "featured" && (
+                    <FeaturedTabInfo isCurrentTab={name === currentTab} />
+                  )}
+                </div>
+              ))}
+              <span
+                aria-hidden
+                style={{ ...underlineStyle, backgroundColor: activeColor }}
+                className="
+                  absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
+                  transition-all duration-300 ease-in-out
+                "
+              />
+            </div>
+          </div>
+          {tabsWithViewPicker.has(currentTab) && (
+            <div className="flex-none ml-auto self-start -mt-1 -mb-4">
+              <PostsListViewPicker />
+            </div>
+          )}
         </div>
-        <div
-          aria-hidden
-          className={clsx(
-            "absolute inset-y-0 left-0 w-8 pointer-events-none",
-            "bg-linear-to-r from-background to-transparent transition-opacity",
-            isScrolledAllTheWayLeft ? "opacity-0" : "opacity-100",
-          )}
-        />
-        <div
-          aria-hidden
-          className={clsx(
-            "absolute inset-y-0 right-0 w-8 pointer-events-none",
-            "bg-linear-to-l from-background to-transparent transition-opacity",
-            isScrolledAllTheWayRight ? "opacity-0" : "opacity-100",
-          )}
-        />
+        {pending || !content ? (
+          <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
+        ) : (
+          content
+        )}
       </div>
-      {pending || !content ? (
-        <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
-      ) : (
-        content
-      )}
-    </div>
+    </PostsListViewProvider>
   );
 }

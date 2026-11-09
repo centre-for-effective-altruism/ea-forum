@@ -25,7 +25,6 @@ export default function HomePageTabSkeleton({
       return (
         <HomePageFeaturedTabLayout
           view={featuredView}
-          viewPicker={<div className="bg-gray-200 rounded w-[56px] h-[32px]" />}
           posts={range(11).map((i) => (
             <FeaturedPostSkeleton key={i} large={i === 0} />
           ))}
@@ -54,7 +53,6 @@ export default function HomePageTabSkeleton({
       return (
         <HomePageMarginalFundingTabLayout
           view={featuredView}
-          viewPicker={<div className="bg-gray-200 rounded w-[56px] h-[32px]" />}
           explainerPost={<FeaturedPostSkeleton />}
           posts={range(MARGINAL_FUNDING_CARD_COUNT).map((i) => (
             <FeaturedPostSkeleton key={i} />

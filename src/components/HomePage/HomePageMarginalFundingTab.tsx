@@ -8,7 +8,6 @@ import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import type { PostListItem } from "@/lib/posts/postLists";
 import HomePageMarginalFundingTabLayout from "./HomePageMarginalFundingTabLayout";
-import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
 import TextLinkButton from "../TextLinkButton";
@@ -76,7 +75,6 @@ export default function HomePageMarginalFundingTab({
   return (
     <HomePageMarginalFundingTabLayout
       view={view}
-      viewPicker={<PostsListViewPicker />}
       explainerPost={
         explainerPost && (
           <FeaturedPost
