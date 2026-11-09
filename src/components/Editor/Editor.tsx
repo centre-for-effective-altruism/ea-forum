@@ -3,6 +3,7 @@
 import {
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   useImperativeHandle,
   forwardRef,
@@ -141,6 +142,10 @@ const Editor = forwardRef<
       setContents("ckEditorMarkup", getValue());
     }, autosaveIntervalMs),
   ).current;
+
+  // A layout effect, so the pending change is read before CkEditor is
+  // destroyed and reaches the parent before its passive effects clean up
+  useLayoutEffect(() => () => throttledSetCkEditor.flush(), [throttledSetCkEditor]);
 
   const debouncedValidateEditor = useRef(
     debounce((doc: EditorDocument) => {

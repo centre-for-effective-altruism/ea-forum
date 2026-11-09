@@ -1328,6 +1328,7 @@ export const conversations = pgTable(
 );
 
 export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
 
 export const debouncerEvents = pgTable(
   "DebouncerEvents",
@@ -1554,6 +1555,7 @@ export const messages = pgTable(
 );
 
 export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
 
 export const migrations = pgTable(
   "Migrations",
@@ -1571,6 +1573,39 @@ export const migrations = pgTable(
     ),
   ],
 );
+
+export const moderationTemplates = pgTable(
+  "ModerationTemplates",
+  {
+    ...universalFields,
+    contents: denormalizedRevision(),
+    contentsLatest: text("contents_latest"),
+    name: text().notNull(),
+    collectionName: text().notNull(),
+    order: doublePrecision().default(10).notNull(),
+    deleted: boolean().default(false).notNull(),
+  },
+  (table) => [
+    index("idx_ModerationTemplates_schemaVersion").using(
+      "btree",
+      table.schemaVersion.asc().nullsLast(),
+    ),
+    index("idx_ModerationTemplates_deleted_order").using(
+      "btree",
+      table.deleted.asc().nullsLast(),
+      table.order.asc().nullsLast(),
+    ),
+    index("idx_ModerationTemplates_collectionName_deleted_order").using(
+      "btree",
+      table.collectionName.asc().nullsLast(),
+      table.deleted.asc().nullsLast(),
+      table.order.asc().nullsLast(),
+    ),
+  ],
+);
+
+export type ModerationTemplate = typeof moderationTemplates.$inferSelect;
+export type InsertModerationTemplate = typeof moderationTemplates.$inferInsert;
 
 export const moderatorActions = pgTable(
   "ModeratorActions",

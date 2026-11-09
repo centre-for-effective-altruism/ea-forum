@@ -219,7 +219,7 @@ export const userProgramParticipation = [
   { value: "80k", label: "Received career coaching from 80,000 Hours" },
 ];
 
-type UserDisplayNameInfo = {
+export type UserDisplayNameInfo = {
   username: string | null;
   fullName?: string | null;
   displayName: string | null;

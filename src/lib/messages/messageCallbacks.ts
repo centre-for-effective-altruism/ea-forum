@@ -1,10 +1,16 @@
 import { waitUntil } from "@vercel/functions";
+import difference from "lodash/difference";
+import escape from "lodash/escape";
+import isEqual from "lodash/isEqual";
 import { eq } from "drizzle-orm";
+import { ORPCError } from "@orpc/server";
 import { moderatorActionType } from "../moderatorActions/moderatorActionHelpers";
 import { createModeratorAction } from "../moderatorActions/moderatorActionMutations";
 import { createNotifications } from "../notifications/notificationMutations";
 import { users, Conversation, Message } from "../schema";
-import { userIsAdmin } from "../users/userHelpers";
+import { userGetDisplayName, userIsAdmin } from "../users/userHelpers";
+import { fetchAdminAccount } from "../users/adminAccount";
+import { createMessage } from "./messageMutations";
 import { filterNonNull } from "../typeHelpers";
 import { db, DbOrTransaction } from "../db";
 import type { CurrentUser } from "../users/currentUser";
@@ -39,8 +45,13 @@ export const flagOrBlockUserOnManyDMs = async ({
   if (currentUser.reviewedByUserId && !currentUser.snoozedUntilContentCount) {
     return;
   }
-  // If the participants didn't change we can ignore it
-  if (!currentConversation.participantIds) {
+  if (
+    oldConversation &&
+    isEqual(
+      new Set(oldConversation.participantIds),
+      new Set(currentConversation.participantIds),
+    )
+  ) {
     return;
   }
 
@@ -88,9 +99,9 @@ export const flagOrBlockUserOnManyDMs = async ({
     allUsersEverContacted.length > MAX_ALLOWED_CONTACTS_BEFORE_BLOCK &&
     !currentUser.reviewedAt
   ) {
-    throw new Error(
-      `You cannot message more than ${MAX_ALLOWED_CONTACTS_BEFORE_BLOCK} users before your account has been reviewed. Please contact us if you'd like to message more people.`,
-    );
+    throw new ORPCError("FORBIDDEN", {
+      message: `You cannot message more than ${MAX_ALLOWED_CONTACTS_BEFORE_BLOCK} users before your account has been reviewed. Please contact us if you'd like to message more people.`,
+    });
   }
 };
 
@@ -141,10 +152,6 @@ export const sendMessageNotifications = async (
   conversation: Conversation,
   message: Message,
 ) => {
-  // For on-site notifications, notify everyone except the sender of the
-  // message. For email notifications, notify everyone including the sender
-  // (since if there's a back-and-forth in the grouped notifications, you want
-  // to see your own messages).
   const recipientIds = conversation.participantIds.filter(
     (id) => id !== message.userId,
   );
@@ -156,4 +163,72 @@ export const sendMessageNotifications = async (
     documentId: message._id,
     noEmail: message.noEmail,
   });
+};
+
+export const sendUserLeftConversationMessages = async (
+  conversation: Conversation,
+  oldConversation: Conversation,
+) => {
+  const leftUserIds = difference(
+    oldConversation.participantIds,
+    conversation.participantIds,
+  );
+  if (!leftUserIds.length) {
+    return;
+  }
+  const [admin, leftUsers] = await Promise.all([
+    fetchAdminAccount(),
+    db.query.users.findMany({
+      columns: { _id: true, displayName: true, username: true },
+      where: { _id: { in: leftUserIds } },
+    }),
+  ]);
+  for (const leftUser of leftUsers) {
+    await createMessage({
+      user: admin,
+      editorData: {
+        originalContents: {
+          type: "html",
+          data: `<p>User ${escape(userGetDisplayName(leftUser))} left the conversation.</p>`,
+        },
+        updateType: "initial",
+        commitMessage: "",
+      },
+      conversation,
+      noEmail: true,
+    });
+  }
+};
+
+/**
+ * Notify newly added participants (other than the user who added them) of the
+ * latest message. If there are no messages yet they'll be notified when the
+ * first one is sent.
+ */
+export const notifyNewConversationParticipants = async (
+  conversation: Conversation,
+  oldConversation: Conversation,
+  currentUser: CurrentUser,
+) => {
+  const newParticipantIds = difference(
+    conversation.participantIds,
+    oldConversation.participantIds,
+  ).filter((id) => id !== currentUser._id);
+  if (!newParticipantIds.length) {
+    return;
+  }
+  const latestMessage = await db.query.messages.findFirst({
+    columns: { _id: true, noEmail: true },
+    where: { conversationId: conversation._id },
+    orderBy: { createdAt: "desc" },
+  });
+  if (latestMessage) {
+    await createNotifications({
+      userIds: newParticipantIds,
+      notificationType: "newMessage",
+      documentType: "message",
+      documentId: latestMessage._id,
+      noEmail: latestMessage.noEmail,
+    });
+  }
 };
