@@ -48,7 +48,7 @@ const SPRING_SETTLE_MS = 900;
 const SPRING_DAMPING = 0.5;
 const SPRING_STIFFNESS = 16;
 
-const GAP = 26;
+const GAP = 20;
 const PITCH = 20;
 const TEXT_SOFTNESS = 18;
 const MERGE_SOFTNESS = 80;
