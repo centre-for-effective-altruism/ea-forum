@@ -6,19 +6,49 @@ type DrawArgs = {
   colors: BannerLineColors;
 };
 
+type Rgb = [number, number, number];
+
+type LinesState = {
+  width: number;
+  height: number;
+  rects: Float32Array;
+  rectCount: number;
+  deep: Rgb;
+  lead: Rgb;
+  tint: Rgb;
+};
+
 export type BannerLinesRenderer = {
-  draw: (args: DrawArgs) => void;
+  /**
+   * With `animate`, the lines and colours move from their previous state to
+   * the new one rather than snapping.
+   */
+  draw: (args: DrawArgs, options?: { animate?: boolean }) => void;
   dispose: () => void;
 };
 
 const MAX_DPR = 2;
 const MAX_TEXT_RECTS = 32;
+const TRANSITION_MS = 200;
 
 const vertexShaderSource = `
 attribute vec2 aPosition;
 void main() {
   gl_Position = vec4(aPosition, 0.0, 1.0);
 }
+`;
+
+const textDistanceLoop = (name: "From" | "To") => `
+  float soft${name} = 1e9;
+  float hard${name} = 1e9;
+  for (int i = 0; i < MAX_TEXT_RECTS; i++) {
+    if (i >= u${name}RectCount) {
+      break;
+    }
+    float distance = rectDistance(u${name}Rects[i], p);
+    hard${name} = min(hard${name}, distance);
+    soft${name} = i == 0 ? distance : softMin(soft${name}, distance, TEXT_SOFTNESS);
+  }
 `;
 
 const fragmentShaderSource = `
@@ -45,8 +75,11 @@ const float MASK_OUT = 34.0;
 
 uniform vec2 uSize;
 uniform float uDpr;
-uniform vec4 uTextRects[MAX_TEXT_RECTS];
-uniform int uTextRectCount;
+uniform vec4 uFromRects[MAX_TEXT_RECTS];
+uniform int uFromRectCount;
+uniform vec4 uToRects[MAX_TEXT_RECTS];
+uniform int uToRectCount;
+uniform float uProgress;
 uniform vec3 uDeep;
 uniform vec3 uLead;
 uniform vec3 uTint;
@@ -56,22 +89,23 @@ float softMin(float a, float b, float k) {
   return m - k * log(exp(-(a - m) / k) + exp(-(b - m) / k));
 }
 
+float rectDistance(vec4 rect, vec2 p) {
+  return length(max(max(rect.xy - p, p - rect.zw), 0.0));
+}
+
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uSize.y * uDpr - gl_FragCoord.y) / uDpr;
 
-  float softTextDistance = 1e9;
-  float hardTextDistance = 1e9;
-  for (int i = 0; i < MAX_TEXT_RECTS; i++) {
-    if (i >= uTextRectCount) {
-      break;
-    }
-    vec4 rect = uTextRects[i];
-    float distance = length(max(max(rect.xy - p, p - rect.zw), 0.0));
-    hardTextDistance = min(hardTextDistance, distance);
-    softTextDistance = i == 0
-      ? distance
-      : softMin(softTextDistance, distance, TEXT_SOFTNESS);
+  ${textDistanceLoop("To")}
+  float softTextDistance = softTo;
+  float hardTextDistance = hardTo;
+  if (uProgress < 1.0) {
+    ${textDistanceLoop("From")}
+    softTextDistance = mix(softFrom, softTo, uProgress);
+    // The new text is already on screen, so it's masked from the start
+    hardTextDistance = min(mix(hardFrom, hardTo, uProgress), hardTo);
   }
+
   float textDistance = max(0.0, softTextDistance);
   float ringDistance = max(0.0, length(p - (uSize + RING_OFFSET)) - RING_RADIUS);
   float field =
@@ -104,11 +138,22 @@ void main() {
 }
 `;
 
-const hexToRgb = (hex: string) => [
+const hexToRgb = (hex: string): Rgb => [
   parseInt(hex.slice(1, 3), 16) / 255,
   parseInt(hex.slice(3, 5), 16) / 255,
   parseInt(hex.slice(5, 7), 16) / 255,
 ];
+
+const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+  a[2] + (b[2] - a[2]) * t,
+];
+
+const easeInOut = (t: number) => t * t * (3 - 2 * t);
+
+const prefersReducedMotion = () =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const getTextRects = (text: HTMLElement, container: HTMLElement) => {
   const rects = new Float32Array(MAX_TEXT_RECTS * 4);
@@ -134,6 +179,19 @@ const getTextRects = (text: HTMLElement, container: HTMLElement) => {
     }
   }
   return { rects, count };
+};
+
+const measureLinesState = ({ container, text, colors }: DrawArgs): LinesState => {
+  const { rects, count } = getTextRects(text, container);
+  return {
+    width: container.clientWidth,
+    height: container.clientHeight,
+    rects,
+    rectCount: count,
+    deep: hexToRgb(colors.deep),
+    lead: hexToRgb(colors.lead),
+    tint: hexToRgb(colors.tint),
+  };
 };
 
 const compileShader = (gl: WebGLRenderingContext, type: number, source: string) => {
@@ -176,8 +234,11 @@ const createProgram = (gl: WebGLRenderingContext) => {
   return {
     size: gl.getUniformLocation(program, "uSize"),
     dpr: gl.getUniformLocation(program, "uDpr"),
-    textRects: gl.getUniformLocation(program, "uTextRects"),
-    textRectCount: gl.getUniformLocation(program, "uTextRectCount"),
+    fromRects: gl.getUniformLocation(program, "uFromRects"),
+    fromRectCount: gl.getUniformLocation(program, "uFromRectCount"),
+    toRects: gl.getUniformLocation(program, "uToRects"),
+    toRectCount: gl.getUniformLocation(program, "uToRectCount"),
+    progress: gl.getUniformLocation(program, "uProgress"),
     deep: gl.getUniformLocation(program, "uDeep"),
     lead: gl.getUniformLocation(program, "uLead"),
     tint: gl.getUniformLocation(program, "uTint"),
@@ -201,41 +262,64 @@ export const createBannerLinesRenderer = (
     return null;
   }
   let uniforms = createProgram(gl);
-  let lastDrawArgs: DrawArgs | null = null;
+  let from: LinesState | null = null;
+  let to: LinesState | null = null;
+  let transitionStart = -Infinity;
+  let frame = 0;
 
-  const draw = (args: DrawArgs) => {
-    lastDrawArgs = args;
-    const { container, text, colors } = args;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    if (!uniforms || gl.isContextLost() || !width || !height) {
+  const renderFrame = (progress: number) => {
+    if (!uniforms || !from || !to || gl.isContextLost() || !to.width || !to.height) {
       return;
     }
     const dpr = Math.min(MAX_DPR, window.devicePixelRatio || 1);
-    const pixelWidth = Math.round(width * dpr);
-    const pixelHeight = Math.round(height * dpr);
+    const pixelWidth = Math.round(to.width * dpr);
+    const pixelHeight = Math.round(to.height * dpr);
     if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
       canvas.width = pixelWidth;
       canvas.height = pixelHeight;
     }
-    const { rects, count } = getTextRects(text, container);
+    const eased = easeInOut(progress);
     gl.viewport(0, 0, pixelWidth, pixelHeight);
-    gl.uniform2f(uniforms.size, width, height);
+    gl.uniform2f(uniforms.size, to.width, to.height);
     gl.uniform1f(uniforms.dpr, dpr);
-    gl.uniform4fv(uniforms.textRects, rects);
-    gl.uniform1i(uniforms.textRectCount, count);
-    gl.uniform3fv(uniforms.deep, hexToRgb(colors.deep));
-    gl.uniform3fv(uniforms.lead, hexToRgb(colors.lead));
-    gl.uniform3fv(uniforms.tint, hexToRgb(colors.tint));
+    gl.uniform4fv(uniforms.fromRects, from.rects);
+    gl.uniform1i(uniforms.fromRectCount, from.rectCount);
+    gl.uniform4fv(uniforms.toRects, to.rects);
+    gl.uniform1i(uniforms.toRectCount, to.rectCount);
+    gl.uniform1f(uniforms.progress, eased);
+    gl.uniform3fv(uniforms.deep, mixRgb(from.deep, to.deep, eased));
+    gl.uniform3fv(uniforms.lead, mixRgb(from.lead, to.lead, eased));
+    gl.uniform3fv(uniforms.tint, mixRgb(from.tint, to.tint, eased));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const render = () => {
+    const progress = Math.min(
+      1,
+      (performance.now() - transitionStart) / TRANSITION_MS,
+    );
+    renderFrame(progress);
+    frame = progress < 1 ? requestAnimationFrame(render) : 0;
+  };
+
+  const draw = (args: DrawArgs, { animate = false } = {}) => {
+    const next = measureLinesState(args);
+    const isTransitioning = performance.now() - transitionStart < TRANSITION_MS;
+    if (animate && to && !prefersReducedMotion()) {
+      from = to;
+      transitionStart = performance.now();
+    } else if (!isTransitioning) {
+      from = next;
+    }
+    to = next;
+    cancelAnimationFrame(frame);
+    render();
   };
 
   const onContextLost = (event: Event) => event.preventDefault();
   const onContextRestored = () => {
     uniforms = createProgram(gl);
-    if (lastDrawArgs) {
-      draw(lastDrawArgs);
-    }
+    render();
   };
   canvas.addEventListener("webglcontextlost", onContextLost);
   canvas.addEventListener("webglcontextrestored", onContextRestored);
@@ -243,6 +327,7 @@ export const createBannerLinesRenderer = (
   return {
     draw,
     dispose: () => {
+      cancelAnimationFrame(frame);
       canvas.removeEventListener("webglcontextlost", onContextLost);
       canvas.removeEventListener("webglcontextrestored", onContextRestored);
     },

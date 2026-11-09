@@ -47,7 +47,7 @@ export default function GivingSeasonBannerLines({
 
     const observer = new ResizeObserver(draw);
     observer.observe(container);
-    draw();
+    rendererRef.current?.draw({ container, text, colors }, { animate: true });
     if (document.fonts.status !== "loaded") {
       void document.fonts.ready.then(draw);
     }

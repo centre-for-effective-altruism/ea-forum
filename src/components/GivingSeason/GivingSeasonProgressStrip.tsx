@@ -102,6 +102,7 @@ export default function GivingSeasonProgressStrip({
       className="
         relative h-13 flex items-center gap-[10px] px-[26px] overflow-x-auto
         bg-(--week-strip) border-t border-white/8
+        transition-colors duration-200 motion-reduce:transition-none
       "
     >
       {givingSeasonWeeks.map((week, i) => (
