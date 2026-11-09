@@ -449,6 +449,25 @@ suite("Inbox", () => {
       expect((await fetchConversation(conversation._id))?.title).toBe("Admin");
     });
 
+    test("users who have blocked the editor can't be added", async () => {
+      const [editor, participant] = await Promise.all([
+        createTestUser(),
+        createTestUser(),
+      ]);
+      const blocker = await createTestUser({ blockedUserIds: [editor._id] });
+      const conversation = await createConversationWithMessage({
+        participantIds: [editor._id, participant._id],
+      });
+
+      loginAs(editor);
+      await expect(
+        call(messagesRouter.updateConversation, {
+          conversationId: conversation._id,
+          participantIds: [editor._id, participant._id, blocker._id],
+        }),
+      ).rejects.toThrow("You can't add users who have blocked you");
+    });
+
     test("removed participants get a left message and added participants are notified", async () => {
       const [admin, editor, leaver, added] = await Promise.all([
         fetchAdminUser(),

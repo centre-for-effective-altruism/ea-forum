@@ -1,4 +1,5 @@
 import { waitUntil } from "@vercel/functions";
+import difference from "lodash/difference";
 import uniq from "lodash/uniq";
 import { ORPCError } from "@orpc/server";
 import { captureException } from "@sentry/nextjs";
@@ -265,6 +266,24 @@ export const updateConversation = async (
   }
   if (moderator !== undefined && !userIsAdminOrMod(user)) {
     throw new Error("Only moderators can change the moderator status");
+  }
+  const addedParticipantIds = difference(
+    participantIds ?? [],
+    oldConversation.participantIds,
+  );
+  if (addedParticipantIds.length) {
+    const blockingUser = await db.query.users.findFirst({
+      columns: { _id: true },
+      where: {
+        _id: { in: addedParticipantIds },
+        blockedUserIds: { arrayContains: [user._id] },
+      },
+    });
+    if (blockingUser) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "You can't add users who have blocked you",
+      });
+    }
   }
 
   const updatedConversation = await db.transaction(async (txn) => {
