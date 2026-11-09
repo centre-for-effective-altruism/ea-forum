@@ -5,6 +5,7 @@ import {
   getCurrentGivingSeasonWeek,
   GivingSeasonWeek,
   givingSeasonGapStripColor,
+  givingSeasonWeeks,
 } from "@/lib/givingSeason/givingSeason2026";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useDismissable } from "@/lib/hooks/useDismissable";
@@ -14,9 +15,45 @@ import GivingSeasonProgressStrip from "./GivingSeasonProgressStrip";
 import GivingSeasonBannerLines from "./GivingSeasonBannerLines";
 import Link from "../Link";
 import Type from "../Type";
+import clsx from "clsx";
 
 const dismissCookie =
   `${HIDE_FORUM_EVENT_BANNER_PREFIX}giving_season_2026` as CookieName;
+
+const colorTransition =
+  "transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none";
+
+const textBlockClassName =
+  "relative col-start-1 row-start-1 max-w-120 p-[30px] pb-2.5 max-sm:pr-11 max-sm:pb-[30px] flex flex-col";
+
+function WeekText({ week }: Readonly<{ week: GivingSeasonWeek }>) {
+  return (
+    <>
+      <Type
+        style="bodyMedium"
+        className={clsx("text-[15px]! text-(--week-tint)", colorTransition)}
+      >
+        {week.bannerDate}
+      </Type>
+      <Type
+        As="h2"
+        style="bannerTitle"
+        className={clsx(
+          "leading-[1.2]! mt-[6px] mb-2 text-(--week-lead)",
+          colorTransition,
+        )}
+      >
+        {week.title}
+      </Type>
+      <Type style="body" className="font-[400]! leading-[1.5] text-white">
+        {week.description}{" "}
+        <Link href={week.postUrl} className="underline underline-offset-2">
+          Read the announcement post.
+        </Link>
+      </Type>
+    </>
+  );
+}
 
 function WeekBanner({
   week,
@@ -26,31 +63,26 @@ function WeekBanner({
   onDismiss: () => void;
 }>) {
   return (
-    <div className="relative min-h-45 overflow-hidden bg-(--week-deep) transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none">
-      <GivingSeasonBannerLines
-        colors={week.colors}
-        className="relative max-w-120 p-[30px] max-sm:pr-11 flex flex-col"
-      >
-        <Type
-          style="bodyMedium"
-          className="text-[15px]! text-(--week-tint) transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none"
-        >
-          {week.bannerDate}
-        </Type>
-        <Type
-          As="h2"
-          style="bannerTitle"
-          className="leading-[1.2]! mt-[6px] mb-2 text-(--week-lead) transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none"
-        >
-          {week.title}
-        </Type>
-        <Type style="body" className="font-[400]! leading-[1.5] text-white">
-          {week.description}{" "}
-          <Link href={week.postUrl} className="underline underline-offset-2">
-            Read the announcement post.
-          </Link>
-        </Type>
+    <div
+      className={clsx(
+        "relative grid min-h-45 overflow-hidden bg-(--week-deep)",
+        colorTransition,
+      )}
+    >
+      <GivingSeasonBannerLines colors={week.colors} className={textBlockClassName}>
+        <WeekText week={week} />
       </GivingSeasonBannerLines>
+      {givingSeasonWeeks
+        .filter(({ id }) => id !== week.id)
+        .map((sizingWeek) => (
+          <div
+            key={sizingWeek.id}
+            aria-hidden
+            className={clsx(textBlockClassName, "invisible")}
+          >
+            <WeekText week={sizingWeek} />
+          </div>
+        ))}
       <button
         type="button"
         aria-label="Hide banner"
