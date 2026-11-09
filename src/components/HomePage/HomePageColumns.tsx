@@ -17,7 +17,7 @@ export default function HomePageColumns({
         {banner}
         <div
           className="
-            max-mobile-nav:block max-mobile-nav:w-[780px]
+            max-mobile-nav:block
             grid grid-cols-[min-content_1fr] justify-between gap-10
             max-w-full mx-auto px-2 py-4 sm:p-4 md:p-8
           "
