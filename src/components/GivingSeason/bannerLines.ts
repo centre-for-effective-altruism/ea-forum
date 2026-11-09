@@ -150,7 +150,8 @@ const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [
   a[2] + (b[2] - a[2]) * t,
 ];
 
-const easeInOut = (t: number) => t * t * (3 - 2 * t);
+/** Matches the CSS `cubic-bezier(0.65, 0, 0.35, 1)` used by the banner text */
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 const prefersReducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;

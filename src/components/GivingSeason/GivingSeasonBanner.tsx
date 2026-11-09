@@ -26,21 +26,21 @@ function WeekBanner({
   onDismiss: () => void;
 }>) {
   return (
-    <div className="relative min-h-45 overflow-hidden bg-(--week-deep) transition-colors duration-200 motion-reduce:transition-none">
+    <div className="relative min-h-45 overflow-hidden bg-(--week-deep) transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none">
       <GivingSeasonBannerLines
         colors={week.colors}
         className="relative max-w-120 p-[30px] max-sm:pr-11 flex flex-col"
       >
         <Type
           style="bodyMedium"
-          className="text-[15px]! text-(--week-tint) transition-colors duration-200 motion-reduce:transition-none"
+          className="text-[15px]! text-(--week-tint) transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none"
         >
           {week.bannerDate}
         </Type>
         <Type
           As="h2"
           style="bannerTitle"
-          className="leading-[1.2]! mt-[6px] mb-2 text-(--week-lead) transition-colors duration-200 motion-reduce:transition-none"
+          className="leading-[1.2]! mt-[6px] mb-2 text-(--week-lead) transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none"
         >
           {week.title}
         </Type>
