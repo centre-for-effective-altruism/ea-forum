@@ -29,6 +29,13 @@ import {
 } from "./messageCallbacks";
 import { fetchConversationByParticipants } from "./messageQueries";
 
+const MAX_CONVERSATION_PARTICIPANTS = 50;
+
+const tooManyParticipantsError = () =>
+  new ORPCError("FORBIDDEN", {
+    message: `Conversations can't have more than ${MAX_CONVERSATION_PARTICIPANTS} participants`,
+  });
+
 export const createConversation = async (
   user: CurrentUser,
   args: Pick<Conversation, "participantIds" | "title"> & { moderator?: boolean },
@@ -74,6 +81,9 @@ export const findOrCreateConversation = async (
     });
   }
   const participantIds = uniq([...userIds, user._id]);
+  if (participantIds.length > MAX_CONVERSATION_PARTICIPANTS) {
+    throw tooManyParticipantsError();
+  }
   const existingConversationId = await fetchConversationByParticipants(
     participantIds,
     moderator,
@@ -267,8 +277,16 @@ export const updateConversation = async (
   if (moderator !== undefined && !userIsAdminOrMod(user)) {
     throw new Error("Only moderators can change the moderator status");
   }
+  const newParticipantIds = participantIds && uniq(participantIds);
+  if (
+    newParticipantIds &&
+    newParticipantIds.length > MAX_CONVERSATION_PARTICIPANTS &&
+    newParticipantIds.length > oldConversation.participantIds.length
+  ) {
+    throw tooManyParticipantsError();
+  }
   const addedParticipantIds = difference(
-    participantIds ?? [],
+    newParticipantIds ?? [],
     oldConversation.participantIds,
   );
   if (addedParticipantIds.length) {
@@ -291,7 +309,7 @@ export const updateConversation = async (
       .update(conversations)
       .set({
         ...(title !== undefined && { title: title || null }),
-        ...(participantIds && { participantIds: uniq(participantIds) }),
+        ...(newParticipantIds && { participantIds: newParticipantIds }),
         ...(moderator !== undefined && { moderator }),
       })
       .where(eq(conversations._id, conversationId))

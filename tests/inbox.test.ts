@@ -449,6 +449,23 @@ suite("Inbox", () => {
       expect((await fetchConversation(conversation._id))?.title).toBe("Admin");
     });
 
+    test("participants can't be added beyond the limit", async () => {
+      const editor = await createTestUser();
+      const conversation = await createTestConversation({
+        participantIds: [editor._id],
+      });
+      loginAs(editor);
+      await expect(
+        call(messagesRouter.updateConversation, {
+          conversationId: conversation._id,
+          participantIds: [
+            editor._id,
+            ...Array.from({ length: 50 }, () => randomId()),
+          ],
+        }),
+      ).rejects.toThrow("Conversations can't have more than 50 participants");
+    });
+
     test("users who have blocked the editor can't be added", async () => {
       const [editor, participant] = await Promise.all([
         createTestUser(),
@@ -560,6 +577,20 @@ suite("Inbox", () => {
       await expect(
         call(messagesRouter.createConversation, { userIds: [recipient._id] }),
       ).rejects.toThrow("You are not allowed to send messages");
+    });
+
+    test("can't have more than 50 participants", async () => {
+      const user = await createTestUser({ karma: 100 });
+      loginAs(user);
+      const create = (otherUserCount: number) =>
+        call(messagesRouter.createConversation, {
+          userIds: Array.from({ length: otherUserCount }, () => randomId()),
+        });
+      await expect(create(50)).rejects.toThrow(
+        "Conversations can't have more than 50 participants",
+      );
+      await expect(create(49)).resolves.toBeTypeOf("string");
+      await flushBackgroundWork();
     });
 
     test("only moderators can start moderator conversations", async () => {
