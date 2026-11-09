@@ -1,3 +1,5 @@
+import { CookieName, HIDE_FORUM_EVENT_BANNER_PREFIX } from "../cookies/cookies";
+
 export type GivingSeasonWeekColors = {
   lead: string;
   deep: string;
@@ -23,6 +25,9 @@ export const givingSeasonAnnouncementPostId = "yYPtDPwFhinYmGuSR";
 const announcementPostUrl = `/posts/${givingSeasonAnnouncementPostId}/giving-season-on-the-forum-2026`;
 
 export const givingSeasonGapStripColor = "#121212";
+
+export const givingSeasonBannerDismissCookie =
+  `${HIDE_FORUM_EVENT_BANNER_PREFIX}giving_season_2026` as CookieName;
 
 export const givingSeasonWeeks: GivingSeasonWeek[] = [
   {

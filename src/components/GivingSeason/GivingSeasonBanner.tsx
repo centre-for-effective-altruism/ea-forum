@@ -1,16 +1,18 @@
 "use client";
 
-import { CSSProperties, useCallback, useState } from "react";
+import { CSSProperties, useCallback, useState, useSyncExternalStore } from "react";
 import {
   getCurrentGivingSeasonWeek,
   GivingSeasonWeek,
   givingSeasonAnnouncementPostId,
+  givingSeasonBannerDismissCookie,
   givingSeasonGapStripColor,
   givingSeasonWeeks,
+  isGivingSeasonOver,
 } from "@/lib/givingSeason/givingSeason2026";
 import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useDismissable } from "@/lib/hooks/useDismissable";
-import { CookieName, HIDE_FORUM_EVENT_BANNER_PREFIX } from "@/lib/cookies/cookies";
+import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
 import GivingSeasonProgressStrip from "./GivingSeasonProgressStrip";
 import GivingSeasonBannerLines from "./GivingSeasonBannerLines";
@@ -18,9 +20,6 @@ import LazyPostsTooltip from "../LazyPostsTooltip";
 import Link from "../Link";
 import Type from "../Type";
 import clsx from "clsx";
-
-const dismissCookie =
-  `${HIDE_FORUM_EVENT_BANNER_PREFIX}giving_season_2026` as CookieName;
 
 const colorTransition =
   "transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none";
@@ -62,6 +61,20 @@ function WeekText({ week }: Readonly<{ week: GivingSeasonWeek }>) {
   );
 }
 
+function WeekSizers({ exclude }: Readonly<{ exclude?: GivingSeasonWeek }>) {
+  return givingSeasonWeeks
+    .filter(({ id }) => id !== exclude?.id)
+    .map((week) => (
+      <div
+        key={week.id}
+        aria-hidden
+        className={clsx(textBlockClassName, "invisible")}
+      >
+        <WeekText week={week} />
+      </div>
+    ));
+}
+
 function WeekBanner({
   week,
   onDismiss,
@@ -79,17 +92,7 @@ function WeekBanner({
       <GivingSeasonBannerLines colors={week.colors} className={textBlockClassName}>
         <WeekText week={week} />
       </GivingSeasonBannerLines>
-      {givingSeasonWeeks
-        .filter(({ id }) => id !== week.id)
-        .map((sizingWeek) => (
-          <div
-            key={sizingWeek.id}
-            aria-hidden
-            className={clsx(textBlockClassName, "invisible")}
-          >
-            <WeekText week={sizingWeek} />
-          </div>
-        ))}
+      <WeekSizers exclude={week} />
       <button
         type="button"
         aria-label="Hide banner"
@@ -109,7 +112,7 @@ export default function GivingSeasonBanner({
 }>) {
   const now = new Date(nowMs);
   const { captureEvent } = useTracking();
-  const { dismissed, dismiss } = useDismissable(dismissCookie);
+  const { dismissed, dismiss } = useDismissable(givingSeasonBannerDismissCookie);
   const [selectedWeek, setSelectedWeek] = useState(() =>
     getCurrentGivingSeasonWeek(now),
   );
@@ -152,5 +155,39 @@ export default function GivingSeasonBanner({
         />
       </section>
     </AnalyticsContext>
+  );
+}
+
+const subscribeToNothing = () => () => {};
+
+/**
+ * The skeleton is part of the static shell, so the dismissal cookie and the
+ * current date are only checked once hydrated. Until then it assumes the
+ * banner will be shown, as it is for most users.
+ */
+export function GivingSeasonBannerSkeleton() {
+  const isHydrated = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const [cookies] = useCookiesWithConsent([givingSeasonBannerDismissCookie]);
+  const now = isHydrated ? new Date() : null;
+  if (now && isGivingSeasonOver(now)) {
+    return null;
+  }
+  const showBanner =
+    !now ||
+    (!!getCurrentGivingSeasonWeek(now) &&
+      cookies[givingSeasonBannerDismissCookie] !== "true");
+  return (
+    <div aria-hidden data-component="GivingSeasonBannerSkeleton">
+      {showBanner && (
+        <div className="grid min-h-45 bg-gray-200">
+          <WeekSizers />
+        </div>
+      )}
+      <div className="h-13 box-content border-t border-transparent bg-gray-300" />
+    </div>
   );
 }
