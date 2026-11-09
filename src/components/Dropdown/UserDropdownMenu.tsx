@@ -49,6 +49,7 @@ export default function UserDropdownMenu({
     <>
       <DropdownMenu
         placement="bottom-end"
+        closeOnItemClick
         className="w-[214px] max-w-full"
         items={[
           {

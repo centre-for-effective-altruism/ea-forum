@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, ComponentType, FC, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  ComponentType,
+  FC,
+  ReactNode,
+} from "react";
 import {
   autoUpdate,
   flip,
@@ -23,6 +31,8 @@ import Type from "../Type";
 import Link from "../Link";
 
 export type DropdownMenuItem = DropdownItemProps | ReactNode | "divider";
+
+export const DropdownItemClickContext = createContext<(() => void) | null>(null);
 
 export type DropdownItemProps = {
   title: string;
@@ -86,7 +96,12 @@ const DropdownItemWrapper: FC<{
   submenu?: DropdownMenuItem[];
   className?: string;
   children: ReactNode;
-}> = ({ href, onClick, submenu, className, children }) => {
+}> = ({ href, onClick: onClick_, submenu, className, children }) => {
+  const onItemClick = useContext(DropdownItemClickContext);
+  const onClick = useCallback(() => {
+    onItemClick?.();
+    return onClick_?.();
+  }, [onItemClick, onClick_]);
   if (submenu) {
     return (
       <SubmenuItemWrapper submenu={submenu} className={className}>
