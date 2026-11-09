@@ -289,6 +289,19 @@ export const updateConversation = async (
     newParticipantIds ?? [],
     oldConversation.participantIds,
   );
+  if (
+    userHasMessagingDisabled(user) &&
+    (title !== undefined || addedParticipantIds.length)
+  ) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You are not allowed to send messages",
+    });
+  }
+  if (addedParticipantIds.length && !userCanInitiateConversations(user)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You must earn 10 karma to add people to a conversation",
+    });
+  }
   if (addedParticipantIds.length) {
     const blockingUser = await db.query.users.findFirst({
       columns: { _id: true },

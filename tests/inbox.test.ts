@@ -449,6 +449,39 @@ suite("Inbox", () => {
       expect((await fetchConversation(conversation._id))?.title).toBe("Admin");
     });
 
+    test("users who can't start conversations can only remove participants", async () => {
+      const [, lowKarmaUser, disabledUser, other, added] = await Promise.all([
+        fetchAdminUser(),
+        createTestUser({ karma: 0 }),
+        createTestUser({ karma: 100, conversationsDisabled: true }),
+        createTestUser(),
+        createTestUser(),
+      ]);
+      const conversation = await createConversationWithMessage({
+        participantIds: [lowKarmaUser._id, disabledUser._id, other._id],
+      });
+      const update = (updates: { title?: string; participantIds?: string[] }) =>
+        call(messagesRouter.updateConversation, {
+          conversationId: conversation._id,
+          ...updates,
+        });
+
+      loginAs(lowKarmaUser);
+      await expect(
+        update({ participantIds: [...conversation.participantIds, added._id] }),
+      ).rejects.toThrow("You must earn 10 karma to add people to a conversation");
+
+      loginAs(disabledUser);
+      await expect(update({ title: "Renamed" })).rejects.toThrow(
+        "You are not allowed to send messages",
+      );
+      await update({ participantIds: [lowKarmaUser._id, other._id] });
+      await flushBackgroundWork();
+      expect(
+        (await fetchConversation(conversation._id))?.participantIds,
+      ).not.toContain(disabledUser._id);
+    });
+
     test("participants can't be added beyond the limit", async () => {
       const editor = await createTestUser();
       const conversation = await createTestConversation({
@@ -468,7 +501,7 @@ suite("Inbox", () => {
 
     test("users who have blocked the editor can't be added", async () => {
       const [editor, participant] = await Promise.all([
-        createTestUser(),
+        createTestUser({ karma: 100 }),
         createTestUser(),
       ]);
       const blocker = await createTestUser({ blockedUserIds: [editor._id] });
@@ -488,7 +521,7 @@ suite("Inbox", () => {
     test("removed participants get a left message and added participants are notified", async () => {
       const [admin, editor, leaver, added] = await Promise.all([
         fetchAdminUser(),
-        createTestUser(),
+        createTestUser({ karma: 100 }),
         createTestUser({ displayName: "Leaving <User>" }),
         createTestUser(),
       ]);
