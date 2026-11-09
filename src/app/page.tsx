@@ -10,6 +10,7 @@ import {
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
 import ForumEventHomePageBanner from "@/components/ForumEvents/ForumEventHomePageBanner";
+import GivingSeasonHomePageBanner from "@/components/GivingSeason/GivingSeasonHomePageBanner";
 import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
 import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
@@ -76,6 +77,7 @@ export default function HomePage() {
       banner={
         <Suspense>
           <RequestCookiesProvider>
+            <GivingSeasonHomePageBanner />
             <ForumEventHomePageBanner />
           </RequestCookiesProvider>
         </Suspense>
