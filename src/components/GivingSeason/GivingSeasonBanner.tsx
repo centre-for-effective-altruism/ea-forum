@@ -94,7 +94,7 @@ function WeekBanner({
         type="button"
         aria-label="Hide banner"
         onClick={onDismiss}
-        className="absolute top-3 right-3 cursor-pointer text-white"
+        className="absolute top-3 right-3 cursor-pointer text-white hover:opacity-70 transition-opacity"
       >
         <XMarkIcon className="w-5" />
       </button>
