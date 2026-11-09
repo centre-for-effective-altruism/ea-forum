@@ -26,7 +26,7 @@ import { useTracking } from "@/lib/analyticsEvents";
 import HomePageTabSkeleton from "./HomePageTabSkeleton";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import InformationCircleIcon from "@heroicons/react/24/solid/InformationCircleIcon";
-import Tooltip from "../Tooltip";
+import ControlledTooltip from "../ControlledTooltip";
 import Link from "../Link";
 import Type from "../Type";
 import clsx from "clsx";
@@ -47,33 +47,45 @@ export function HomePageTabsSkeleton({
   );
 }
 
+const featuredPageUrl = "/posts/nx2wA6u8uS9qRorTD/the-featured-page";
+
 function FeaturedTabInfo({ isCurrentTab }: Readonly<{ isCurrentTab: boolean }>) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <Tooltip
+    <ControlledTooltip
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      interactable
       title={
         <Type style="bodySmall" className="max-w-[260px]">
           Selected posts to help us answer: How can we do the most good with our
           resources?{" "}
-          <span className="text-tooltip-text-dim">Click to read more.</span>
+          <Link
+            href={featuredPageUrl}
+            className="text-tooltip-text-dim underline hover:text-tooltip-text"
+          >
+            Read more
+          </Link>
         </Type>
       }
       className={clsx(
-        "absolute -top-1.5 -right-[17px] opacity-0",
+        "absolute -top-1.5 left-full pl-0.5 opacity-0",
         "transition-opacity duration-150",
         "group-hover:opacity-100 focus-within:opacity-100",
+        isOpen && "opacity-100",
         isCurrentTab
           ? "[@media(hover:none)]:opacity-100"
           : "[@media(hover:none)]:pointer-events-none",
       )}
     >
       <Link
-        href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
+        href={featuredPageUrl}
         className="block text-gray-500 hover:text-gray-1000 focus-visible:text-gray-1000"
       >
         <InformationCircleIcon className="w-[15px]" />
         <span className="sr-only">About the Featured page</span>
       </Link>
-    </Tooltip>
+    </ControlledTooltip>
   );
 }
 
