@@ -1,6 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 import uniq from "lodash/uniq";
 import { ORPCError } from "@orpc/server";
+import { captureException } from "@sentry/nextjs";
 import type { CurrentUser } from "../users/currentUser";
 import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
@@ -153,9 +154,9 @@ export const createMessage = async ({
           latestActivity: new Date().toISOString(),
           messageCount: sql`${conversations.messageCount} + 1`,
           archivedByIds: [],
-          ...(!userIsParticipant
-            ? { participantIds: [...conversation.participantIds, user._id] }
-            : {}),
+          ...(!userIsParticipant && {
+            participantIds: sql`fm_add_to_set(${conversations.participantIds}, ${user._id})`,
+          }),
         })
         .where(eq(conversations._id, conversation._id))
         .returning(),
@@ -285,12 +286,17 @@ export const updateConversation = async (
     return updatedConversation;
   });
 
-  await sendUserLeftConversationMessages(updatedConversation, oldConversation);
-  await notifyNewConversationParticipants(
-    updatedConversation,
-    oldConversation,
-    user,
-  );
+  try {
+    await sendUserLeftConversationMessages(updatedConversation, oldConversation);
+    await notifyNewConversationParticipants(
+      updatedConversation,
+      oldConversation,
+      user,
+    );
+  } catch (e) {
+    console.error("Error notifying conversation participants:", e);
+    captureException(e);
+  }
 
   return updatedConversation;
 };

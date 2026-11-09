@@ -51,6 +51,7 @@ export default function Inbox({
     initialSelectedConversation,
   );
   const [loadError, setLoadError] = useState<LoadError | null>(null);
+  const latestLoadRequestId = useRef(0);
 
   const {
     conversations,
@@ -63,9 +64,13 @@ export default function Inbox({
 
   const loadConversation = useCallback(
     async (conversationId: string) => {
+      const requestId = ++latestLoadRequestId.current;
+      const isStale = () =>
+        requestId !== latestLoadRequestId.current ||
+        selectedConversationIdRef.current !== conversationId;
       try {
         const result = await rpc.messages.getConversation({ conversationId });
-        if (selectedConversationIdRef.current !== conversationId) {
+        if (isStale()) {
           return;
         }
         if (!result) {
@@ -85,7 +90,7 @@ export default function Inbox({
       } catch (e) {
         captureException(e);
         console.error("Error loading conversation:", e);
-        if (selectedConversationIdRef.current === conversationId) {
+        if (!isStale()) {
           setLoadError({ conversationId, reason: "error" });
         }
       }

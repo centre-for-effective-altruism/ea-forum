@@ -92,7 +92,7 @@ export const useMessageEditor = ({
   const throttledSaveBackup = useDebouncedCallback(saveBackup, {
     rateLimitMs: autosaveIntervalMs,
     callOnLeadingEdge: false,
-    onUnmount: "cancelPending",
+    onUnmount: "callIfScheduled",
     allowExplicitCallAfterUnmount: false,
   });
 
