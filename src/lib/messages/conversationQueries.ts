@@ -18,6 +18,7 @@ export const userCanViewAllConversations = (user: CurrentUser | null) =>
 const unreadMessageNotificationFilter = (userId: string) =>
   and(
     eq(notifications.userId, userId),
+    eq(notifications.type, "newMessage"),
     eq(notifications.documentType, "message"),
     ne(notifications.emailed, true),
     ne(notifications.waitingForBatch, true),
@@ -224,7 +225,6 @@ export const unreadConversationMessageNotificationIds = (
     .where(
       and(
         eq(messages.conversationId, conversationId),
-        eq(notifications.type, "newMessage"),
         unreadMessageNotificationFilter(userId),
       ),
     );

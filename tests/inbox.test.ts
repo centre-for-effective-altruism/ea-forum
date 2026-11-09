@@ -10,7 +10,7 @@ import {
 import { isNewSiteAllowed } from "@/lib/proxy/legacySiteRedirect";
 import type { EditorData } from "@/lib/ckeditor/editorHelpers";
 import { eq } from "drizzle-orm";
-import { messages, type User } from "@/lib/schema";
+import { messages, notifications, type User } from "@/lib/schema";
 import { flagOrBlockUserOnManyDMs } from "@/lib/messages/messageCallbacks";
 import { sendModerationPM } from "@/lib/messages/sendModerationPM";
 import { fetchCommentsListItem } from "@/lib/comments/commentLists";
@@ -291,6 +291,24 @@ suite("Inbox", () => {
       expect(await call(messagesRouter.unreadCount, undefined)).toBe(1);
 
       await db.delete(messages).where(eq(messages.conversationId, conversation._id));
+      expect(await call(messagesRouter.unreadCount, undefined)).toBe(0);
+    });
+
+    test("only new message notifications count as unread", async () => {
+      const [sender, recipient] = await Promise.all([
+        createTestUser({ karma: 100 }),
+        createTestUser(),
+      ]);
+      const conversation = await createTestConversation({
+        participantIds: [sender._id, recipient._id],
+      });
+      await sendMessageAs(sender, conversation._id);
+      await db
+        .update(notifications)
+        .set({ type: "newMention" })
+        .where(eq(notifications.userId, recipient._id));
+
+      loginAs(recipient);
       expect(await call(messagesRouter.unreadCount, undefined)).toBe(0);
     });
   });
