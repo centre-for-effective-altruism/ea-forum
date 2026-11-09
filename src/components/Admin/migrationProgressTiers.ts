@@ -38,10 +38,6 @@ export const migrationProgressTiers: MigrationTier[] = [
       { paths: ["/emailToken/:token"], notes: "Handles email action tokens" },
       { paths: ["/resendVerificationEmail"], notes: "Small form" },
       {
-        paths: ["/login"],
-        notes: "Page wrapper around the existing LoginInput/LoginPopover",
-      },
-      {
         paths: ["/resetPassword/:token", "/setPassword"],
         notes: "Auth0 password flows",
       },
@@ -52,10 +48,6 @@ export const migrationProgressTiers: MigrationTier[] = [
       {
         paths: ["/allComments", "/users/:slug/replies", "/moderatorComments"],
         notes: "Reuse CommentsList",
-      },
-      {
-        paths: ["/notifications"],
-        notes: "Notifications components already exist",
       },
       {
         paths: ["/my-stats"],
