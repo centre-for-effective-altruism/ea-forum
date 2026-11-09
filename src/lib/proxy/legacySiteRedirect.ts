@@ -96,6 +96,7 @@ const newSitePatterns = [
   /^\/(groupsAndEvents|community)$/, // Groups (legacy paths, redirect to /groups)
   /^\/bookmarks$/, // Saved (legacy path, redirect to /saved)
   /^\/privacyPolicy$/, // Privacy policy (redirect to ev.org)
+  /^\/login$/, // Login page
 ];
 // ...
 // Lowest precedence: Route to the *old* site if neither of the above match
