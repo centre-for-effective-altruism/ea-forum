@@ -27,7 +27,6 @@ export default function ClientFrontpagePostsList({
     <PostsList
       key={stringifiedViewWithFilterSettings}
       posts={isInitialView ? posts : []}
-      viewType="fromContext"
       loadMoreView={viewWithFilterSettings}
       maxOffset={200}
       bottomRightNode={bottomRightNode}

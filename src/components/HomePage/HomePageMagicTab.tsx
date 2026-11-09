@@ -81,9 +81,7 @@ export default function HomePageMagicTab({
         </div>
         <div className="mb-2">{stickyPostsList}</div>
         <div className="mb-10">
-          <Suspense
-            fallback={<PostsListSkeleton count={12} viewType="fromContext" />}
-          >
+          <Suspense fallback={<PostsListSkeleton count={12} />}>
             {frontpagePostsList}
           </Suspense>
         </div>
