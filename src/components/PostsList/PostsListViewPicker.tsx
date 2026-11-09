@@ -14,7 +14,11 @@ import Type from "../Type";
 
 const Check = () => <CheckIcon className="w-4 text-primary" />;
 
-export default function PostsListViewPicker() {
+export default function PostsListViewPicker({
+  labelClassName,
+}: Readonly<{
+  labelClassName?: string;
+}>) {
   const { captureEvent } = useTracking();
   const { view, setView } = usePostsListView();
   const dismissRef = useRef<() => void>(null);
@@ -55,13 +59,15 @@ export default function PostsListViewPicker() {
           aria-label={`Change post view (${currentLabel})`}
           data-component="PostsListViewPicker"
           className="
-            text-gray-600 flex items-center gap-1.5 py-1.5 pr-2 pl-2.5
+            text-gray-1000 flex items-center gap-1.5 py-1.5 pr-2 pl-2.5
             rounded border-1 border-gray-200 bg-surface-floating
             hover:bg-surface-floating-hover cursor-pointer
           "
         >
           <CurrentIcon className="w-4" />
-          <Type As="span">{currentLabel}</Type>
+          <Type As="span" className={labelClassName}>
+            {currentLabel}
+          </Type>
           <ChevronDownIcon className="w-4" />
         </button>
       </Tooltip>

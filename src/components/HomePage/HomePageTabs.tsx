@@ -154,8 +154,10 @@ export default function HomePageTabs({
       ssrValue={featuredView}
     >
       <div data-component="HomePageTabs">
-        <div className={clsx("flex flex-wrap gap-y-3", className)}>
-          <div className="relative flex gap-6" ref={containerRef}>
+        <div
+          className={clsx("@container flex flex-wrap gap-x-6 gap-y-3", className)}
+        >
+          <div className="relative flex gap-6 shrink-0" ref={containerRef}>
             {homePageTabs.map(({ label, name }) => (
               <div
                 key={name}
@@ -224,10 +226,11 @@ export default function HomePageTabs({
             <div
               className="
                 ml-auto h-6 flex items-center
-                max-sm:w-full max-sm:h-auto max-sm:justify-end
+                @max-[374px]:w-full @max-[374px]:h-auto
+                @max-[374px]:justify-end @max-[374px]:-mb-4
               "
             >
-              <PostsListViewPicker />
+              <PostsListViewPicker labelClassName="@max-[456px]:hidden" />
             </div>
           )}
         </div>
