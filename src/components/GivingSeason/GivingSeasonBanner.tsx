@@ -62,7 +62,7 @@ function WeekText({ week }: Readonly<{ week: GivingSeasonBannerContent }>) {
             more info
           </Link>
         </LazyPostsTooltip>
-        ){week.description.endsWith("?") ? "" : "."}
+        )
       </Type>
     </>
   );

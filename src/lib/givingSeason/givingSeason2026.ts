@@ -20,7 +20,6 @@ export type GivingSeasonBannerContent = {
   id: string;
   bannerDate: string;
   title: string;
-  /** "(more info)" is appended, so this has no trailing full stop */
   description: string;
   postUrl: string;
   colors: GivingSeasonWeekColors | GivingSeasonGeneralColors;
@@ -52,7 +51,7 @@ export const givingSeasonGeneralBanner: GivingSeasonBannerContent & {
   bannerDate: "16 November – end of year",
   title: "Giving Season 2026",
   description:
-    "A series of events focused on big questions in effective giving and the EA funding ecosystem",
+    "A series of events focused on big questions in effective giving and the EA funding ecosystem.",
   postUrl: announcementPostUrl,
   colors: {
     deep: "#0D0B10",
@@ -77,7 +76,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     bannerDate: "16 – 22 November",
     title: "Marginal Funding Week",
     description:
-      "EA organisations share their funding gaps, and what they could do with extra funding",
+      "EA organisations share their funding gaps, and what they could do with extra funding.",
     postUrl: `${announcementPostUrl}#Marginal_Funding_Week`,
     stripLabel: "Marginal Funding",
     stripDate: "Nov 16–22",
@@ -95,7 +94,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     bannerDate: "23 – 29 November",
     title: "Funding Strategy Week",
     description:
-      "A week to discuss cruxy questions about how EA resources are being spent, and how they should be",
+      "A week to discuss cruxy questions about how EA resources are being spent, and how they should be.",
     postUrl: `${announcementPostUrl}#Funding_Strategy_Week`,
     stripLabel: "Funding Strategy",
     stripDate: "Nov 23–29",
@@ -130,7 +129,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     end: new Date("2026-12-21T00:00:00Z"),
     bannerDate: "14 – 20 December",
     title: "‘Why I Donate’ Week",
-    description: "Writing about why we donate to impactful charities",
+    description: "Writing about why we donate to impactful charities.",
     postUrl: `${announcementPostUrl}#_Why_I_Donate__Week`,
     stripLabel: "Why I Donate",
     stripDate: "Dec 14–20",
@@ -147,7 +146,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     end: new Date("2027-01-01T00:00:00Z"),
     bannerDate: "28 December – end of year",
     title: "Donation Celebration",
-    description: "A week to publicly celebrate our year’s donations",
+    description: "A week to publicly celebrate our year’s donations.",
     postUrl: `${announcementPostUrl}#Donation_Celebration`,
     stripLabel: "Donation Celebration",
     stripDate: "From Dec 28",
