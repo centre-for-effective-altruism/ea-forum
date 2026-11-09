@@ -51,10 +51,28 @@ export const useInboxConversationList = ({
     }
   }, [fetchConversations]);
 
-  const conversations = useMemo(
-    () => uniqBy([...refreshedConversations, ...items], ({ _id }) => _id),
-    [refreshedConversations, items],
+  const [removedConversationIds, setRemovedConversationIds] = useState<Set<string>>(
+    () => new Set(),
   );
 
-  return { conversations, loading, canLoadMore, onLoadMore, refresh };
+  const removeConversation = useCallback((conversationId: string) => {
+    setRemovedConversationIds((ids) => new Set(ids).add(conversationId));
+  }, []);
+
+  const conversations = useMemo(
+    () =>
+      uniqBy([...refreshedConversations, ...items], ({ _id }) => _id).filter(
+        ({ _id }) => !removedConversationIds.has(_id),
+      ),
+    [refreshedConversations, items, removedConversationIds],
+  );
+
+  return {
+    conversations,
+    loading,
+    canLoadMore,
+    onLoadMore,
+    refresh,
+    removeConversation,
+  };
 };

@@ -72,7 +72,7 @@ function LoadedConversation({
   templateHtml?: string;
   onBack: () => void;
   onMessageSent: () => void;
-  onConversationUpdated: (conversation: InboxConversation) => void;
+  onConversationUpdated: (conversation: InboxConversation | null) => void;
 }>) {
   const from = useSearchParams().get("from") ?? undefined;
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -159,7 +159,7 @@ export default function ConversationView({
   onBack: () => void;
   onNewConversation: () => void;
   onMessageSent: () => void;
-  onConversationUpdated: (conversation: InboxConversation) => void;
+  onConversationUpdated: (conversation: InboxConversation | null) => void;
 }>) {
   if (!selectedConversationId) {
     return <ConversationEmptyState onNewConversation={onNewConversation} />;

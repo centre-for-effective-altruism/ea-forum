@@ -52,8 +52,14 @@ export default function Inbox({
   );
   const [loadError, setLoadError] = useState<LoadError | null>(null);
 
-  const { conversations, loading, canLoadMore, onLoadMore, refresh } =
-    useInboxConversationList({ initialConversations, isModInbox, userIdFilter });
+  const {
+    conversations,
+    loading,
+    canLoadMore,
+    onLoadMore,
+    refresh,
+    removeConversation,
+  } = useInboxConversationList({ initialConversations, isModInbox, userIdFilter });
 
   const loadConversation = useCallback(
     async (conversationId: string) => {
@@ -63,6 +69,9 @@ export default function Inbox({
           return;
         }
         if (!result) {
+          setLoadedConversation((loaded) =>
+            loaded?.conversation._id === conversationId ? null : loaded,
+          );
           setLoadError({ conversationId, reason: "notFound" });
           return;
         }
@@ -149,15 +158,21 @@ export default function Inbox({
   }, [selectedConversationId, loadConversation]);
 
   const onConversationUpdated = useCallback(
-    (conversation: InboxConversation) => {
-      setLoadedConversation((loaded) =>
-        loaded?.conversation._id === conversation._id
-          ? { ...loaded, conversation }
-          : loaded,
-      );
+    (conversation: InboxConversation | null) => {
+      if (conversation) {
+        setLoadedConversation((loaded) =>
+          loaded?.conversation._id === conversation._id
+            ? { ...loaded, conversation }
+            : loaded,
+        );
+      } else if (selectedConversationIdRef.current) {
+        removeConversation(selectedConversationIdRef.current);
+        setLoadedConversation(null);
+        selectConversation(null);
+      }
       void refresh();
     },
-    [refresh],
+    [refresh, removeConversation, selectConversation],
   );
 
   const openNewConversation = useCallback(() => setNewConversationOpen(true), []);

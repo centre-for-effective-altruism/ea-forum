@@ -18,7 +18,7 @@ type ConversationOptionsDialogProps = {
   open: boolean;
   onClose: () => void;
   conversation: InboxConversation;
-  onUpdated: (conversation: InboxConversation) => void;
+  onUpdated: (conversation: InboxConversation | null) => void;
 };
 
 const haveSameIds = (a: string[], b: string[]) =>
@@ -61,9 +61,7 @@ const ConversationOptionsForm = ({
           conversationId: conversation._id,
           ...updates,
         });
-        if (updated) {
-          onUpdated(updated);
-        }
+        onUpdated(updated);
         onClose();
       } catch (e) {
         captureException(e);
