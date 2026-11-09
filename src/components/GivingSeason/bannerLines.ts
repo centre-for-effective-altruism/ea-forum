@@ -1,4 +1,6 @@
-export type BannerLineColors = { lead: string; deep: string; tint: string };
+export type BannerLineColors =
+  | { lead: string; deep: string; tint: string }
+  | { deep: string; stops: [number, string][] };
 
 type DrawArgs = {
   container: HTMLElement;
@@ -14,8 +16,8 @@ type LinesState = {
   rects: Float32Array;
   rectCount: number;
   deep: Rgb;
-  lead: Rgb;
-  tint: Rgb;
+  stops: Float32Array;
+  stopCount: number;
 };
 
 type PointerSample = { x: number; y: number; time: number };
@@ -39,6 +41,7 @@ export type BannerLinesRenderer = {
 
 const MAX_DPR = 2;
 const MAX_TEXT_RECTS = 32;
+const MAX_COLOR_STOPS = 5;
 const TRANSITION_MS = 200;
 
 const GAP = 26;
@@ -136,6 +139,7 @@ const fragmentShaderSource = (maxPlucks: number) => `
 precision highp float;
 
 const int MAX_TEXT_RECTS = ${MAX_TEXT_RECTS};
+const int MAX_COLOR_STOPS = ${MAX_COLOR_STOPS};
 const float GAP = ${glslFloat(GAP)};
 const float PITCH = ${glslFloat(PITCH)};
 const float LINE_WIDTH_MID = 2.0;
@@ -147,7 +151,6 @@ const float TEXT_SOFTNESS = ${glslFloat(TEXT_SOFTNESS)};
 const vec2 RING_OFFSET = vec2(${glslFloat(RING_OFFSET_X)}, ${glslFloat(RING_OFFSET_Y)});
 const float RING_RADIUS = ${glslFloat(RING_RADIUS)};
 const float COLOR_REACH = 750.0;
-const float TINT_TO_LEAD = 0.3;
 const float FADE_START = 300.0;
 const float FADE_END = 1000.0;
 const float FADE_MIN = 0.3;
@@ -162,8 +165,10 @@ uniform vec4 uToRects[MAX_TEXT_RECTS];
 uniform int uToRectCount;
 uniform float uProgress;
 uniform vec3 uDeep;
-uniform vec3 uLead;
-uniform vec3 uTint;
+uniform vec4 uFromStops[MAX_COLOR_STOPS];
+uniform int uFromStopCount;
+uniform vec4 uToStops[MAX_COLOR_STOPS];
+uniform int uToStopCount;
 ${pluckUniforms(maxPlucks)}
 
 float softMin(float a, float b, float k) {
@@ -173,6 +178,18 @@ float softMin(float a, float b, float k) {
 
 float rectDistance(vec4 rect, vec2 p) {
   return length(max(max(rect.xy - p, p - rect.zw), 0.0));
+}
+
+// Each stop is (r, g, b, position)
+vec3 gradient(vec4 stops[MAX_COLOR_STOPS], int count, float position) {
+  vec3 color = stops[0].rgb;
+  for (int i = 1; i < MAX_COLOR_STOPS; i++) {
+    if (i >= count) {
+      break;
+    }
+    color = mix(color, stops[i].rgb, smoothstep(stops[i - 1].a, stops[i].a, position));
+  }
+  return color;
 }
 
 void main() {
@@ -219,9 +236,11 @@ void main() {
   }
 
   float colorPosition = clamp((textDistance - GAP) / COLOR_REACH, 0.0, 1.0);
-  vec3 color = colorPosition < TINT_TO_LEAD
-    ? mix(uTint, uLead, smoothstep(0.0, TINT_TO_LEAD, colorPosition))
-    : mix(uLead, uDeep, 0.55 * smoothstep(TINT_TO_LEAD, 1.0, colorPosition));
+  vec3 color = mix(
+    gradient(uFromStops, uFromStopCount, colorPosition),
+    gradient(uToStops, uToStopCount, colorPosition),
+    uProgress
+  );
   gl_FragColor = vec4(mix(uDeep, color, alpha), 1.0);
 }
 `;
@@ -305,16 +324,38 @@ const getTextRects = (text: HTMLElement, container: HTMLElement) => {
   return { rects, count };
 };
 
+const TINT_TO_LEAD = 0.3;
+const LEAD_TO_DEEP = 0.55;
+
+/**
+ * Week lines go from tint to lead, then part of the way to the background
+ * colour. Other banners give their own stops.
+ */
+const getColorStops = (colors: BannerLineColors): [number, Rgb][] => {
+  if ("stops" in colors) {
+    return colors.stops.map(([position, hex]) => [position, hexToRgb(hex)]);
+  }
+  const lead = hexToRgb(colors.lead);
+  return [
+    [0, hexToRgb(colors.tint)],
+    [TINT_TO_LEAD, lead],
+    [1, mixRgb(lead, hexToRgb(colors.deep), LEAD_TO_DEEP)],
+  ];
+};
+
 const measureLinesState = ({ container, text, colors }: DrawArgs): LinesState => {
   const { rects, count } = getTextRects(text, container);
+  const colorStops = getColorStops(colors).slice(0, MAX_COLOR_STOPS);
+  const stops = new Float32Array(MAX_COLOR_STOPS * 4);
+  colorStops.forEach(([position, rgb], i) => stops.set([...rgb, position], i * 4));
   return {
     width: container.clientWidth,
     height: container.clientHeight,
     rects,
     rectCount: count,
     deep: hexToRgb(colors.deep),
-    lead: hexToRgb(colors.lead),
-    tint: hexToRgb(colors.tint),
+    stops,
+    stopCount: colorStops.length,
   };
 };
 
@@ -323,7 +364,8 @@ const measureLinesState = ({ container, text, colors }: DrawArgs): LinesState =>
  * on GPUs that can't fit the extra uniforms.
  */
 const getMaxPlucks = (gl: WebGLRenderingContext) => {
-  const requiredUniformVectors = MAX_TEXT_RECTS * 2 + MAX_PLUCKS * 2 + 16;
+  const requiredUniformVectors =
+    MAX_TEXT_RECTS * 2 + MAX_COLOR_STOPS * 2 + MAX_PLUCKS * 2 + 16;
   const canPluck =
     window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
     !prefersReducedMotion() &&
@@ -381,8 +423,10 @@ const createProgram = (gl: WebGLRenderingContext, maxPlucks: number) => {
     toRectCount: gl.getUniformLocation(program, "uToRectCount"),
     progress: gl.getUniformLocation(program, "uProgress"),
     deep: gl.getUniformLocation(program, "uDeep"),
-    lead: gl.getUniformLocation(program, "uLead"),
-    tint: gl.getUniformLocation(program, "uTint"),
+    fromStops: gl.getUniformLocation(program, "uFromStops"),
+    fromStopCount: gl.getUniformLocation(program, "uFromStopCount"),
+    toStops: gl.getUniformLocation(program, "uToStops"),
+    toStopCount: gl.getUniformLocation(program, "uToStopCount"),
     plucks: gl.getUniformLocation(program, "uPlucks"),
     pluckAmplitudes: gl.getUniformLocation(program, "uPluckAmplitudes"),
     pluckCount: gl.getUniformLocation(program, "uPluckCount"),
@@ -457,8 +501,10 @@ export const createBannerLinesRenderer = (
     gl.uniform1i(uniforms.toRectCount, to.rectCount);
     gl.uniform1f(uniforms.progress, eased);
     gl.uniform3fv(uniforms.deep, mixRgb(from.deep, to.deep, eased));
-    gl.uniform3fv(uniforms.lead, mixRgb(from.lead, to.lead, eased));
-    gl.uniform3fv(uniforms.tint, mixRgb(from.tint, to.tint, eased));
+    gl.uniform4fv(uniforms.fromStops, from.stops);
+    gl.uniform1i(uniforms.fromStopCount, from.stopCount);
+    gl.uniform4fv(uniforms.toStops, to.stops);
+    gl.uniform1i(uniforms.toStopCount, to.stopCount);
     updatePluckUniforms(now);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };

@@ -3,10 +3,11 @@
 import { CSSProperties, useCallback, useState, useSyncExternalStore } from "react";
 import {
   getCurrentGivingSeasonWeek,
+  GivingSeasonBannerContent,
   GivingSeasonWeek,
   givingSeasonAnnouncementPostId,
   givingSeasonBannerDismissCookie,
-  givingSeasonGapStripColor,
+  givingSeasonGeneralBanner,
   givingSeasonWeeks,
   isGivingSeasonOver,
 } from "@/lib/givingSeason/givingSeason2026";
@@ -27,12 +28,17 @@ const colorTransition =
 const textBlockClassName =
   "relative col-start-1 row-start-1 max-w-120 p-[30px] pb-2.5 max-sm:pr-11 max-sm:pb-[30px] flex flex-col";
 
-function WeekText({ week }: Readonly<{ week: GivingSeasonWeek }>) {
+const allBanners: GivingSeasonBannerContent[] = [
+  givingSeasonGeneralBanner,
+  ...givingSeasonWeeks,
+];
+
+function WeekText({ week }: Readonly<{ week: GivingSeasonBannerContent }>) {
   return (
     <>
       <Type
         style="bodyMedium"
-        className={clsx("text-[15px]! text-(--week-tint)", colorTransition)}
+        className={clsx("text-[15px]! text-(--week-date)", colorTransition)}
       >
         {week.bannerDate}
       </Type>
@@ -40,29 +46,30 @@ function WeekText({ week }: Readonly<{ week: GivingSeasonWeek }>) {
         As="h2"
         style="bannerTitle"
         className={clsx(
-          "leading-[1.2]! mt-[6px] mb-2 text-(--week-lead)",
+          "leading-[1.2]! mt-[6px] mb-2 text-(--week-title)",
           colorTransition,
         )}
       >
         {week.title}
       </Type>
       <Type style="body" className="font-[400]! leading-[1.5] text-white">
-        {week.description}{" "}
+        {week.description} (
         <LazyPostsTooltip postId={givingSeasonAnnouncementPostId} As="span">
           <Link
             href={week.postUrl}
             className="underline underline-offset-2 hover:opacity-70 transition-opacity"
           >
-            Read the announcement post.
+            more info
           </Link>
         </LazyPostsTooltip>
+        ){week.description.endsWith("?") ? "" : "."}
       </Type>
     </>
   );
 }
 
-function WeekSizers({ exclude }: Readonly<{ exclude?: GivingSeasonWeek }>) {
-  return givingSeasonWeeks
+function WeekSizers({ exclude }: Readonly<{ exclude?: GivingSeasonBannerContent }>) {
+  return allBanners
     .filter(({ id }) => id !== exclude?.id)
     .map((week) => (
       <div
@@ -79,7 +86,7 @@ function WeekBanner({
   week,
   onDismiss,
 }: Readonly<{
-  week: GivingSeasonWeek;
+  week: GivingSeasonBannerContent;
   onDismiss: () => void;
 }>) {
   return (
@@ -120,11 +127,15 @@ export default function GivingSeasonBanner({
 
   const onSelect = useCallback(
     (week: GivingSeasonWeek) => {
-      setSelectedWeek(week);
+      const deselect = week.id === selectedWeek?.id;
+      setSelectedWeek(deselect ? null : week);
       setShownAfterDismissal(true);
-      captureEvent("givingSeasonWeekSelected", { week: week.id });
+      captureEvent(
+        deselect ? "givingSeasonWeekDeselected" : "givingSeasonWeekSelected",
+        { week: week.id },
+      );
     },
-    [captureEvent],
+    [captureEvent, selectedWeek],
   );
 
   const onDismiss = useCallback(() => {
@@ -132,12 +143,15 @@ export default function GivingSeasonBanner({
     dismiss();
   }, [dismiss]);
 
-  const showBanner = selectedWeek && (!dismissed || shownAfterDismissal);
+  const showBanner = !dismissed || shownAfterDismissal;
+  const banner = selectedWeek ?? givingSeasonGeneralBanner;
   const colorVariables = {
     "--week-lead": selectedWeek?.colors.lead,
-    "--week-deep": selectedWeek?.colors.deep,
     "--week-tint": selectedWeek?.colors.tint,
-    "--week-strip": selectedWeek?.colors.strip ?? givingSeasonGapStripColor,
+    "--week-deep": banner.colors.deep,
+    "--week-strip": banner.colors.strip,
+    "--week-title": banner.colors.title,
+    "--week-date": banner.colors.date,
   } as CSSProperties;
 
   return (
@@ -147,7 +161,7 @@ export default function GivingSeasonBanner({
         aria-label="Giving Season"
         style={colorVariables}
       >
-        {showBanner && <WeekBanner week={selectedWeek} onDismiss={onDismiss} />}
+        {showBanner && <WeekBanner week={banner} onDismiss={onDismiss} />}
         <GivingSeasonProgressStrip
           now={now}
           selectedWeek={selectedWeek}
@@ -176,10 +190,7 @@ export function GivingSeasonBannerSkeleton() {
   if (now && isGivingSeasonOver(now)) {
     return null;
   }
-  const showBanner =
-    !now ||
-    (!!getCurrentGivingSeasonWeek(now) &&
-      cookies[givingSeasonBannerDismissCookie] !== "true");
+  const showBanner = !now || cookies[givingSeasonBannerDismissCookie] !== "true";
   return (
     <div aria-hidden data-component="GivingSeasonBannerSkeleton">
       {showBanner && (
