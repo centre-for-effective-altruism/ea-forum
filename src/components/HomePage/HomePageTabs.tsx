@@ -26,6 +26,9 @@ import { renderHomePageContentAction } from "./homePageActions";
 import { useTracking } from "@/lib/analyticsEvents";
 import HomePageTabSkeleton from "./HomePageTabSkeleton";
 import PostsListViewPicker from "../PostsList/PostsListViewPicker";
+import InformationCircleIcon from "@heroicons/react/24/solid/InformationCircleIcon";
+import Tooltip from "../Tooltip";
+import Link from "../Link";
 import Type from "../Type";
 import clsx from "clsx";
 
@@ -153,23 +156,56 @@ export default function HomePageTabs({
       <div data-component="HomePageTabs">
         <div className={clsx("relative flex gap-6", className)} ref={containerRef}>
           {homePageTabs.map(({ label, name }) => (
-            <Type
+            <div
               key={name}
-              As="button"
-              style="homePageTab"
-              onClick={() => setCurrentTab(name)}
-              innerRef={(el: HTMLButtonElement | null) => {
+              ref={(el: HTMLDivElement | null) => {
                 tabRefs.current[name] = el;
               }}
-              className={clsx(
-                "cursor-pointer relative pb-2",
-                name === currentTab
-                  ? "text-gray-1000"
-                  : "text-gray-400 hover:text-gray-500 transition-all",
-              )}
+              className="relative group"
             >
-              {label}
-            </Type>
+              <Type
+                As="button"
+                style="homePageTab"
+                onClick={() => setCurrentTab(name)}
+                className={clsx(
+                  "cursor-pointer relative pb-2",
+                  name === currentTab
+                    ? "text-gray-1000"
+                    : "text-gray-400 hover:text-gray-500 transition-all",
+                )}
+              >
+                {label}
+              </Type>
+              {name === "featured" && (
+                <Tooltip
+                  title={
+                    <Type style="bodySmall" className="max-w-[260px]">
+                      Selected posts to help us answer: How can we do the most good
+                      with our resources?{" "}
+                      <span className="text-tooltip-text-dim">
+                        Click to read more.
+                      </span>
+                    </Type>
+                  }
+                  className="
+                    absolute -top-1.5 -right-[17px] opacity-0
+                    transition-opacity duration-150
+                    group-hover:opacity-100 focus-within:opacity-100
+                  "
+                >
+                  <Link
+                    href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
+                    className="
+                      block text-gray-500 hover:text-gray-1000
+                      focus-visible:text-gray-1000
+                    "
+                  >
+                    <InformationCircleIcon className="w-[15px]" />
+                    <span className="sr-only">About the Featured page</span>
+                  </Link>
+                </Tooltip>
+              )}
+            </div>
           ))}
           <span
             aria-hidden
