@@ -121,11 +121,35 @@ export default function HomePageTabs({
   const [pending, startTransition] = useTransition();
   const requestId = useRef(0);
 
+  const scrollWindowRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Record<HomePageTabName, HTMLElement | null>>({
     featured: null,
     magic: null,
   });
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollFades = useCallback(() => {
+    const scrollWindow = scrollWindowRef.current;
+    if (scrollWindow) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollWindow;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+    }
+  }, []);
+
+  useEffect(() => {
+    const scrollWindow = scrollWindowRef.current;
+    const container = containerRef.current;
+    if (!scrollWindow || !container) {
+      return;
+    }
+    const observer = new ResizeObserver(updateScrollFades);
+    observer.observe(scrollWindow);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [updateScrollFades]);
 
   useEffect(() => {
     const activeTab = tabRefs.current[currentTab];
@@ -174,6 +198,11 @@ export default function HomePageTabs({
   const setCurrentTab = useCallback(
     (tab: HomePageTabName) => {
       rawSetCurrentTab(tab);
+      tabRefs.current[tab]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
       setCookie(homePageTabCookie, tab);
       captureEvent("setFrontpageTab", { tab });
       loadTabContent(tab);
@@ -187,45 +216,55 @@ export default function HomePageTabs({
       defaultValue={defaultFeaturedViewType}
     >
       <div data-component="HomePageTabs">
-        <div className={clsx("flex flex-wrap gap-x-6 gap-y-3", className)}>
-          <div className="relative flex gap-6" ref={containerRef}>
-            {homePageTabs.map(({ label, name }) => (
-              <div
-                key={name}
-                ref={(el: HTMLDivElement | null) => {
-                  tabRefs.current[name] = el;
-                }}
-                className="relative group"
-              >
-                <Type
-                  As="button"
-                  style="homePageTab"
-                  onClick={() => setCurrentTab(name)}
-                  className={clsx(
-                    "cursor-pointer relative pb-2",
-                    name === currentTab
-                      ? "text-gray-1000"
-                      : "text-gray-400 hover:text-gray-500 transition-all",
-                  )}
+        <div className={clsx("flex gap-6", className)}>
+          <div
+            ref={scrollWindowRef}
+            onScroll={updateScrollFades}
+            className={clsx(
+              "min-w-0 overflow-x-auto no-scrollbars -mt-1.5 pt-1.5",
+              canScrollLeft && "mask-l-from-[calc(100%-2rem)]",
+              canScrollRight && "mask-r-from-[calc(100%-2rem)]",
+            )}
+          >
+            <div className="relative flex gap-6 w-max" ref={containerRef}>
+              {homePageTabs.map(({ label, name }) => (
+                <div
+                  key={name}
+                  ref={(el: HTMLDivElement | null) => {
+                    tabRefs.current[name] = el;
+                  }}
+                  className="relative group"
                 >
-                  {label}
-                </Type>
-                {name === "featured" && (
-                  <FeaturedTabInfo isCurrentTab={name === currentTab} />
-                )}
-              </div>
-            ))}
-            <span
-              aria-hidden
-              style={underlineStyle}
-              className="
+                  <Type
+                    As="button"
+                    style="homePageTab"
+                    onClick={() => setCurrentTab(name)}
+                    className={clsx(
+                      "cursor-pointer relative pb-2",
+                      name === currentTab
+                        ? "text-gray-1000"
+                        : "text-gray-400 hover:text-gray-500 transition-all",
+                    )}
+                  >
+                    {label}
+                  </Type>
+                  {name === "featured" && (
+                    <FeaturedTabInfo isCurrentTab={name === currentTab} />
+                  )}
+                </div>
+              ))}
+              <span
+                aria-hidden
+                style={underlineStyle}
+                className="
               absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
               transition-all duration-300 ease-in-out
             "
-            />
+              />
+            </div>
           </div>
           {currentTab === "featured" && (
-            <div className="ml-auto self-start -mt-1 -mb-4">
+            <div className="flex-none ml-auto self-start -mt-1 -mb-4">
               <PostsListViewPicker />
             </div>
           )}
