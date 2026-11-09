@@ -154,69 +154,76 @@ export default function HomePageTabs({
       ssrValue={featuredView}
     >
       <div data-component="HomePageTabs">
-        <div className={clsx("relative flex gap-6", className)} ref={containerRef}>
-          {homePageTabs.map(({ label, name }) => (
-            <div
-              key={name}
-              ref={(el: HTMLDivElement | null) => {
-                tabRefs.current[name] = el;
-              }}
-              className="relative group"
-            >
-              <Type
-                As="button"
-                style="homePageTab"
-                onClick={() => setCurrentTab(name)}
-                className={clsx(
-                  "cursor-pointer relative pb-2",
-                  name === currentTab
-                    ? "text-gray-1000"
-                    : "text-gray-400 hover:text-gray-500 transition-all",
-                )}
+        <div className={clsx("flex flex-wrap gap-y-3", className)}>
+          <div className="relative flex gap-6" ref={containerRef}>
+            {homePageTabs.map(({ label, name }) => (
+              <div
+                key={name}
+                ref={(el: HTMLDivElement | null) => {
+                  tabRefs.current[name] = el;
+                }}
+                className="relative group"
               >
-                {label}
-              </Type>
-              {name === "featured" && (
-                <Tooltip
-                  title={
-                    <Type style="bodySmall" className="max-w-[260px]">
-                      Selected posts to help us answer: How can we do the most good
-                      with our resources?{" "}
-                      <span className="text-tooltip-text-dim">
-                        Click to read more.
-                      </span>
-                    </Type>
-                  }
-                  className="
+                <Type
+                  As="button"
+                  style="homePageTab"
+                  onClick={() => setCurrentTab(name)}
+                  className={clsx(
+                    "cursor-pointer relative pb-2",
+                    name === currentTab
+                      ? "text-gray-1000"
+                      : "text-gray-400 hover:text-gray-500 transition-all",
+                  )}
+                >
+                  {label}
+                </Type>
+                {name === "featured" && (
+                  <Tooltip
+                    title={
+                      <Type style="bodySmall" className="max-w-[260px]">
+                        Selected posts to help us answer: How can we do the most good
+                        with our resources?{" "}
+                        <span className="text-tooltip-text-dim">
+                          Click to read more.
+                        </span>
+                      </Type>
+                    }
+                    className="
                     absolute -top-1.5 -right-[17px] opacity-0
                     transition-opacity duration-150
                     group-hover:opacity-100 focus-within:opacity-100
                   "
-                >
-                  <Link
-                    href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
-                    className="
+                  >
+                    <Link
+                      href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
+                      className="
                       block text-gray-500 hover:text-gray-1000
                       focus-visible:text-gray-1000
                     "
-                  >
-                    <InformationCircleIcon className="w-[15px]" />
-                    <span className="sr-only">About the Featured page</span>
-                  </Link>
-                </Tooltip>
-              )}
-            </div>
-          ))}
-          <span
-            aria-hidden
-            style={underlineStyle}
-            className="
+                    >
+                      <InformationCircleIcon className="w-[15px]" />
+                      <span className="sr-only">About the Featured page</span>
+                    </Link>
+                  </Tooltip>
+                )}
+              </div>
+            ))}
+            <span
+              aria-hidden
+              style={underlineStyle}
+              className="
               absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
               transition-all duration-300 ease-in-out
             "
-          />
+            />
+          </div>
           {currentTab === "featured" && (
-            <div className="ml-auto h-6 flex items-center">
+            <div
+              className="
+                ml-auto h-6 flex items-center
+                max-sm:w-full max-sm:h-auto max-sm:justify-end
+              "
+            >
               <PostsListViewPicker />
             </div>
           )}
