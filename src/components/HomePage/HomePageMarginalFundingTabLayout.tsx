@@ -1,6 +1,10 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
-import { marginalFundingWeekListenUrl } from "@/lib/marginalFundingWeek";
+import {
+  marginalFundingWeekBorderColor,
+  marginalFundingWeekListenUrl,
+  marginalFundingWeekThemeColor,
+} from "@/lib/marginalFundingWeek";
 import Type from "../Type";
 import Link from "../Link";
 
@@ -20,6 +24,12 @@ export default function HomePageMarginalFundingTabLayout({
     <AnalyticsContext homePageTab="marginalFunding">
       <div
         data-component="HomePageMarginalFundingTabLayout"
+        style={
+          {
+            "--marginal-funding-theme": marginalFundingWeekThemeColor,
+            "--marginal-funding-border": marginalFundingWeekBorderColor,
+          } as CSSProperties
+        }
         className="flex flex-col gap-4 pb-20"
       >
         <section className="grid grid-cols-1 md:grid-cols-3 gap-1">

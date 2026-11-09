@@ -1,6 +1,6 @@
 import type { FC, ReactNode, SyntheticEvent } from "react";
 import { PostListItem } from "@/lib/posts/postLists";
-import { useItemsRead } from "@/lib/hooks/useItemsRead";
+import { useItemsRead, usePostIsRead } from "@/lib/hooks/useItemsRead";
 import { AnalyticsContext } from "@/lib/analyticsEvents";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useClickableCell } from "@/lib/hooks/useClickableCell";
@@ -50,14 +50,17 @@ const Chip: FC<{ href: string; className: string; children: ReactNode }> = ({
 export default function FeaturedPost({
   post,
   large,
+  readClassName,
   className,
 }: Readonly<{
   post: PostListItem;
   large?: boolean;
+  readClassName?: string;
   className?: string;
 }>) {
   const { currentUser } = useCurrentUser();
   const { postsRead } = useItemsRead();
+  const isRead = usePostIsRead(post);
   const { _id, title, curatedDate, tags, commentCount } = post;
 
   const isNew =
@@ -91,10 +94,11 @@ export default function FeaturedPost({
         <article
           data-component="FeaturedPost"
           onClick={onClick}
-          className="
-            cursor-pointer flex flex-col gap-3 p-5 rounded border-1 border-gray-200
-            relative bg-surface-floating hover:bg-surface-floating-hover h-full
-          "
+          className={clsx(
+            "cursor-pointer flex flex-col gap-3 p-5 rounded border-1 border-gray-200",
+            "relative bg-surface-floating hover:bg-surface-floating-hover h-full",
+            isRead && readClassName,
+          )}
         >
           {isNew && (
             <div className="absolute -inset-y-px -left-px w-1.5 bg-primary rounded-l" />

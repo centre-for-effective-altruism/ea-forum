@@ -43,6 +43,7 @@ export default function PostsItem({
   curatedIconLeft = false,
   underNode,
   onArchivedChange,
+  readClassName,
   className,
 }: Readonly<{
   post: PostListItem;
@@ -52,6 +53,7 @@ export default function PostsItem({
   curatedIconLeft?: boolean;
   underNode?: ReactNode;
   onArchivedChange?: (archived: boolean) => void;
+  readClassName?: string;
   className?: string;
 }>) {
   const cardView = viewType === "card";
@@ -121,6 +123,7 @@ export default function PostsItem({
           "w-full max-w-full rounded bg-postitem",
           "flex flex-col hover:bg-postitemhover",
           cardView ? "justify-between" : "justify-center",
+          isRead && readClassName,
           className,
         )}
       >

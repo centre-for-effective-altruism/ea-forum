@@ -1,7 +1,9 @@
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { CookieName, cookieName } from "@/lib/cookies/cookies";
-import { marginalFundingEvent } from "@/lib/sequences/sequenceEvents";
-import { marginalFundingWeekEnabled } from "@/lib/marginalFundingWeek";
+import {
+  marginalFundingWeekEnabled,
+  marginalFundingWeekThemeColor,
+} from "@/lib/marginalFundingWeek";
 
 const allHomePageTabs = [
   {
@@ -15,7 +17,7 @@ const allHomePageTabs = [
   {
     label: "Marginal Funding Week",
     name: "marginalFunding",
-    activeColor: marginalFundingEvent.themeColor,
+    activeColor: marginalFundingWeekThemeColor,
   },
 ] as const;
 

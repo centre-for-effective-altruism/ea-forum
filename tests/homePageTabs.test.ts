@@ -2,7 +2,10 @@ import { expect, suite, test, vi } from "vitest";
 
 const loadGetCurrentHomePageTab = async (marginalFundingWeekEnabled: boolean) => {
   vi.resetModules();
-  vi.doMock("@/lib/marginalFundingWeek", () => ({ marginalFundingWeekEnabled }));
+  vi.doMock("@/lib/marginalFundingWeek", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/lib/marginalFundingWeek")>()),
+    marginalFundingWeekEnabled,
+  }));
   const { getCurrentHomePageTab } =
     await import("@/components/HomePage/homePageHelpers");
   return getCurrentHomePageTab;
