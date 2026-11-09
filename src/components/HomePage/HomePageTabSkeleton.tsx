@@ -46,6 +46,8 @@ export default function HomePageTabSkeleton({
           <PostsListSkeleton count={30} />
         </div>
       );
+    case "marginalFunding":
+      return null;
     default:
       console.error("Invalid home page tab name:", tab);
       return null;

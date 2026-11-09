@@ -13,6 +13,7 @@ import {
   homePageTabCookie,
   HomePageTabName,
   homePageTabs,
+  preMarginalFundingHomePageTabCookie,
 } from "./homePageHelpers";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import {
@@ -32,9 +33,13 @@ export function HomePageTabsSkeleton({
   className?: string;
 }>) {
   return (
-    <div className={clsx("flex gap-6", className)}>
+    <div className={clsx("flex gap-6 overflow-hidden", className)}>
       {homePageTabs.map(({ label, name }) => (
-        <Type key={name} style="homePageTab" className="pb-2">
+        <Type
+          key={name}
+          style="homePageTab"
+          className="pb-2 flex-none whitespace-nowrap"
+        >
           <span className="rounded bg-gray-200 text-transparent">{label}</span>
         </Type>
       ))}
@@ -56,6 +61,7 @@ export default function HomePageTabs({
   const [cookies, setCookie] = useCookiesWithConsent([
     homePageTabCookie,
     featuredViewTypeCookie,
+    preMarginalFundingHomePageTabCookie,
   ]);
   const initialTab = getCurrentHomePageTab(cookies);
   const featuredViewCookie = cookies.featured_view_type ?? "";
@@ -78,6 +84,7 @@ export default function HomePageTabs({
   const tabRefs = useRef<Record<HomePageTabName, HTMLElement | null>>({
     featured: null,
     magic: null,
+    marginalFunding: null,
   });
 
   useEffect(() => {
@@ -126,17 +133,36 @@ export default function HomePageTabs({
 
   const setCurrentTab = useCallback(
     (tab: HomePageTabName) => {
+      if (
+        tab === "marginalFunding" &&
+        currentTab !== "marginalFunding" &&
+        !cookies[preMarginalFundingHomePageTabCookie]
+      ) {
+        setCookie(preMarginalFundingHomePageTabCookie, currentTab);
+      }
       rawSetCurrentTab(tab);
       setCookie(homePageTabCookie, tab);
       captureEvent("setFrontpageTab", { tab });
       loadTabContent(tab);
     },
-    [setCookie, captureEvent, loadTabContent],
+    [currentTab, cookies, setCookie, captureEvent, loadTabContent],
   );
+
+  const currentTabConfig = homePageTabs.find(({ name }) => name === currentTab);
+  const activeColor =
+    currentTabConfig && "activeColor" in currentTabConfig
+      ? currentTabConfig.activeColor
+      : undefined;
 
   return (
     <div data-component="HomePageTabs">
-      <div className={clsx("relative flex gap-6", className)} ref={containerRef}>
+      <div
+        className={clsx(
+          "relative flex gap-6 overflow-x-auto overflow-y-hidden no-scrollbars",
+          className,
+        )}
+        ref={containerRef}
+      >
         {homePageTabs.map(({ label, name }) => (
           <Type
             key={name}
@@ -147,18 +173,21 @@ export default function HomePageTabs({
               tabRefs.current[name] = el;
             }}
             className={clsx(
-              "cursor-pointer relative pb-2",
+              "cursor-pointer relative pb-2 flex-none whitespace-nowrap",
               name === currentTab
                 ? "text-gray-1000"
                 : "text-gray-400 hover:text-gray-500 transition-all",
             )}
+            cssStyle={
+              name === currentTab && activeColor ? { color: activeColor } : undefined
+            }
           >
             {label}
           </Type>
         ))}
         <span
           aria-hidden
-          style={underlineStyle}
+          style={{ ...underlineStyle, backgroundColor: activeColor }}
           className="
             absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
             transition-all duration-300 ease-in-out

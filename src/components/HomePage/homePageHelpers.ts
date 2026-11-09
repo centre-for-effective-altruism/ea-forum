@@ -1,5 +1,6 @@
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { CookieName, cookieName } from "@/lib/cookies/cookies";
+import { marginalFundingEvent } from "@/lib/sequences/sequenceEvents";
 
 export const homePageTabs = [
   {
@@ -10,11 +11,20 @@ export const homePageTabs = [
     label: "New & upvoted",
     name: "magic",
   },
+  {
+    label: "Marginal Funding Week",
+    name: "marginalFunding",
+    activeColor: marginalFundingEvent.themeColor,
+  },
 ] as const;
 
 export type HomePageTabName = (typeof homePageTabs)[number]["name"];
 
 export const homePageTabCookie = cookieName("last_frontpage_tab");
+
+export const preMarginalFundingHomePageTabCookie = cookieName(
+  "pre_marginal_funding_frontpage_tab",
+);
 
 const isHomePageTabName = (value?: string | null): value is HomePageTabName =>
   !!value && homePageTabs.some(({ name }) => name === value);
