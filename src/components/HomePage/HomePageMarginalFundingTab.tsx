@@ -1,9 +1,19 @@
-import { AnalyticsContext } from "@/lib/analyticsEvents";
+"use client";
 
-export default function HomePageMarginalFundingTab() {
+import type { PostListItem } from "@/lib/posts/postLists";
+import HomePageMarginalFundingTabLayout from "./HomePageMarginalFundingTabLayout";
+import FeaturedPost from "../FeaturedCards/FeaturedPost";
+
+export default function HomePageMarginalFundingTab({
+  explainerPost,
+}: Readonly<{
+  explainerPost: PostListItem | null;
+}>) {
   return (
-    <AnalyticsContext homePageTab="marginalFunding">
-      <div data-component="HomePageMarginalFundingTab" className="pb-20" />
-    </AnalyticsContext>
+    <HomePageMarginalFundingTabLayout
+      explainerPost={
+        explainerPost && <FeaturedPost post={explainerPost} className="h-full" />
+      }
+    />
   );
 }

@@ -1,7 +1,7 @@
 import type { HomePageTabName } from "./homePageHelpers";
 import HomePageFeaturedRoute from "./HomePageFeaturedRoute";
 import HomePageMagicRoute from "./HomePageMagicRoute";
-import HomePageMarginalFundingTab from "./HomePageMarginalFundingTab";
+import HomePageMarginalFundingRoute from "./HomePageMarginalFundingRoute";
 
 export default function HomePageTabContent({
   tab,
@@ -14,7 +14,7 @@ export default function HomePageTabContent({
     case "magic":
       return <HomePageMagicRoute />;
     case "marginalFunding":
-      return <HomePageMarginalFundingTab />;
+      return <HomePageMarginalFundingRoute />;
     default:
       console.error("Invalid home page tab name:", tab);
       return null;

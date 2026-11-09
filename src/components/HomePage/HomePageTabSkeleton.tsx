@@ -6,6 +6,7 @@ import {
 } from "@/lib/posts/postsListView";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
+import HomePageMarginalFundingTabLayout from "./HomePageMarginalFundingTabLayout";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 
@@ -47,7 +48,9 @@ export default function HomePageTabSkeleton({
         </div>
       );
     case "marginalFunding":
-      return null;
+      return (
+        <HomePageMarginalFundingTabLayout explainerPost={<FeaturedPostSkeleton />} />
+      );
     default:
       console.error("Invalid home page tab name:", tab);
       return null;
