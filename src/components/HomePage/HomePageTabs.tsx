@@ -17,12 +17,15 @@ import {
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import {
   defaultFeaturedViewType,
+  defaultPostsViewType,
   featuredViewTypeCookie,
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
+import { PostsListViewProvider } from "@/lib/hooks/usePostsListView";
 import { renderHomePageContentAction } from "./homePageActions";
 import { useTracking } from "@/lib/analyticsEvents";
 import HomePageTabSkeleton from "./HomePageTabSkeleton";
+import PostsListViewPicker from "../PostsList/PostsListViewPicker";
 import Type from "../Type";
 import clsx from "clsx";
 
@@ -134,42 +137,62 @@ export default function HomePageTabs({
     [setCookie, captureEvent, loadTabContent],
   );
 
+  const tabContent =
+    pending || !content ? (
+      <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
+    ) : (
+      content
+    );
+
   return (
-    <div data-component="HomePageTabs">
-      <div className={clsx("relative flex gap-6", className)} ref={containerRef}>
-        {homePageTabs.map(({ label, name }) => (
-          <Type
-            key={name}
-            As="button"
-            style="homePageTab"
-            onClick={() => setCurrentTab(name)}
-            innerRef={(el: HTMLButtonElement | null) => {
-              tabRefs.current[name] = el;
-            }}
-            className={clsx(
-              "cursor-pointer relative pb-2",
-              name === currentTab
-                ? "text-gray-1000"
-                : "text-gray-400 hover:text-gray-500 transition-all",
-            )}
-          >
-            {label}
-          </Type>
-        ))}
-        <span
-          aria-hidden
-          style={underlineStyle}
-          className="
-            absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
-            transition-all duration-300 ease-in-out
-          "
-        />
+    <PostsListViewProvider
+      cookieName={featuredViewTypeCookie}
+      defaultValue={defaultFeaturedViewType}
+      ssrValue={featuredView}
+    >
+      <div data-component="HomePageTabs">
+        <div className={clsx("relative flex gap-6", className)} ref={containerRef}>
+          {homePageTabs.map(({ label, name }) => (
+            <Type
+              key={name}
+              As="button"
+              style="homePageTab"
+              onClick={() => setCurrentTab(name)}
+              innerRef={(el: HTMLButtonElement | null) => {
+                tabRefs.current[name] = el;
+              }}
+              className={clsx(
+                "cursor-pointer relative pb-2",
+                name === currentTab
+                  ? "text-gray-1000"
+                  : "text-gray-400 hover:text-gray-500 transition-all",
+              )}
+            >
+              {label}
+            </Type>
+          ))}
+          <span
+            aria-hidden
+            style={underlineStyle}
+            className="
+              absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
+              transition-all duration-300 ease-in-out
+            "
+          />
+          {currentTab === "featured" && (
+            <div className="ml-auto h-6 flex items-center">
+              <PostsListViewPicker />
+            </div>
+          )}
+        </div>
+        {currentTab === "featured" ? (
+          tabContent
+        ) : (
+          <PostsListViewProvider ssrValue={defaultPostsViewType}>
+            {tabContent}
+          </PostsListViewProvider>
+        )}
       </div>
-      {pending || !content ? (
-        <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
-      ) : (
-        content
-      )}
-    </div>
+    </PostsListViewProvider>
   );
 }

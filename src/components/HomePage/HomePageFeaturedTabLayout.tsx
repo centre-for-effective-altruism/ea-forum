@@ -6,8 +6,6 @@ import {
   defaultFeaturedViewType,
   PostsListViewType,
 } from "@/lib/posts/postsListView";
-import Type from "../Type";
-import Link from "../Link";
 import clsx from "clsx";
 
 export default function HomePageFeaturedTabLayout({
@@ -16,14 +14,12 @@ export default function HomePageFeaturedTabLayout({
   listSection,
   commentsSection,
   view = defaultFeaturedViewType,
-  viewPicker,
 }: Readonly<{
   posts: ReactNode[];
   loadMorePosts?: ReactNode;
   listSection?: ReactNode;
   commentsSection: ReactNode;
   view?: PostsListViewType;
-  viewPicker?: ReactNode;
 }>) {
   // The main post only spans two rows on large screens, so on smaller screens
   // we hide the last two posts to keep the grid rows full.
@@ -40,18 +36,6 @@ export default function HomePageFeaturedTabLayout({
           view === "list" && "max-w-[1000px]",
         )}
       >
-        <div className="flex items-center justify-between gap-4 -my-3">
-          <Type className="text-gray-600">
-            <Link
-              href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
-              className="underline hover:text-gray-1000"
-            >
-              Selected posts
-            </Link>{" "}
-            to help us answer: How can we do the most good with our resources?
-          </Type>
-          {viewPicker && <div className="flex-none">{viewPicker}</div>}
-        </div>
         {view === "list" ? (
           listSection
         ) : (
