@@ -17,7 +17,6 @@ import {
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import {
   defaultFeaturedViewType,
-  defaultPostsViewType,
   featuredViewTypeCookie,
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
@@ -45,6 +44,36 @@ export function HomePageTabsSkeleton({
         </Type>
       ))}
     </div>
+  );
+}
+
+function FeaturedTabInfo({ isCurrentTab }: Readonly<{ isCurrentTab: boolean }>) {
+  return (
+    <Tooltip
+      title={
+        <Type style="bodySmall" className="max-w-[260px]">
+          Selected posts to help us answer: How can we do the most good with our
+          resources?{" "}
+          <span className="text-tooltip-text-dim">Click to read more.</span>
+        </Type>
+      }
+      className={clsx(
+        "absolute -top-1.5 -right-[17px] opacity-0",
+        "transition-opacity duration-150",
+        "group-hover:opacity-100 focus-within:opacity-100",
+        isCurrentTab
+          ? "[@media(hover:none)]:opacity-100"
+          : "[@media(hover:none)]:pointer-events-none",
+      )}
+    >
+      <Link
+        href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
+        className="block text-gray-500 hover:text-gray-1000 focus-visible:text-gray-1000"
+      >
+        <InformationCircleIcon className="w-[15px]" />
+        <span className="sr-only">About the Featured page</span>
+      </Link>
+    </Tooltip>
   );
 }
 
@@ -140,24 +169,14 @@ export default function HomePageTabs({
     [setCookie, captureEvent, loadTabContent],
   );
 
-  const tabContent =
-    pending || !content ? (
-      <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
-    ) : (
-      content
-    );
-
   return (
     <PostsListViewProvider
       cookieName={featuredViewTypeCookie}
       defaultValue={defaultFeaturedViewType}
-      ssrValue={featuredView}
     >
       <div data-component="HomePageTabs">
-        <div
-          className={clsx("@container flex flex-wrap gap-x-6 gap-y-3", className)}
-        >
-          <div className="relative flex gap-6 shrink-0" ref={containerRef}>
+        <div className={clsx("flex flex-wrap gap-x-6 gap-y-3", className)}>
+          <div className="relative flex gap-6" ref={containerRef}>
             {homePageTabs.map(({ label, name }) => (
               <div
                 key={name}
@@ -180,36 +199,7 @@ export default function HomePageTabs({
                   {label}
                 </Type>
                 {name === "featured" && (
-                  <Tooltip
-                    title={
-                      <Type style="bodySmall" className="max-w-[260px]">
-                        Selected posts to help us answer: How can we do the most good
-                        with our resources?{" "}
-                        <span className="text-tooltip-text-dim">
-                          Click to read more.
-                        </span>
-                      </Type>
-                    }
-                    className={clsx(
-                      "absolute -top-1.5 -right-[17px] opacity-0",
-                      "transition-opacity duration-150",
-                      "group-hover:opacity-100 focus-within:opacity-100",
-                      name === currentTab
-                        ? "[@media(hover:none)]:opacity-100"
-                        : "[@media(hover:none)]:pointer-events-none",
-                    )}
-                  >
-                    <Link
-                      href="/posts/nx2wA6u8uS9qRorTD/the-featured-page"
-                      className="
-                      block text-gray-500 hover:text-gray-1000
-                      focus-visible:text-gray-1000
-                    "
-                    >
-                      <InformationCircleIcon className="w-[15px]" />
-                      <span className="sr-only">About the Featured page</span>
-                    </Link>
-                  </Tooltip>
+                  <FeaturedTabInfo isCurrentTab={name === currentTab} />
                 )}
               </div>
             ))}
@@ -223,23 +213,15 @@ export default function HomePageTabs({
             />
           </div>
           {currentTab === "featured" && (
-            <div
-              className="
-                ml-auto h-6 flex items-center
-                @max-[374px]:w-full @max-[374px]:h-auto
-                @max-[374px]:justify-end @max-[374px]:-mb-4
-              "
-            >
-              <PostsListViewPicker labelClassName="max-sm:hidden" />
+            <div className="ml-auto self-start -mt-1 -mb-4">
+              <PostsListViewPicker />
             </div>
           )}
         </div>
-        {currentTab === "featured" ? (
-          tabContent
+        {pending || !content ? (
+          <HomePageTabSkeleton tab={currentTab} featuredView={featuredView} />
         ) : (
-          <PostsListViewProvider ssrValue={defaultPostsViewType}>
-            {tabContent}
-          </PostsListViewProvider>
+          content
         )}
       </div>
     </PostsListViewProvider>
