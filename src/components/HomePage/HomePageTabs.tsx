@@ -230,7 +230,7 @@ export default function HomePageTabs({
                 @max-[374px]:justify-end @max-[374px]:-mb-4
               "
             >
-              <PostsListViewPicker labelClassName="@max-[456px]:hidden" />
+              <PostsListViewPicker labelClassName="max-sm:hidden" />
             </div>
           )}
         </div>
