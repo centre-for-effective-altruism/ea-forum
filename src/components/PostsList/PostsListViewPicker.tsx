@@ -29,6 +29,7 @@ export default function PostsListViewPicker() {
   );
 
   const CurrentIcon = view === "list" ? ListViewIcon : CardViewIcon;
+  const currentLabel = view === "list" ? "List view" : "Card view";
   return (
     <DropdownMenu
       placement="bottom-end"
@@ -51,14 +52,16 @@ export default function PostsListViewPicker() {
       <Tooltip title={<Type style="bodySmall">Change post view</Type>} offsetPx={8}>
         <button
           type="button"
-          aria-label="Change post view"
+          aria-label={`Change post view (${currentLabel})`}
           data-component="PostsListViewPicker"
           className="
-            text-gray-600 flex items-center p-2 rounded-sm
-            hover:bg-item-hover cursor-pointer
+            text-gray-600 flex items-center gap-1.5 py-1.5 pr-2 pl-2.5
+            rounded border-1 border-gray-200 bg-surface-floating
+            hover:bg-surface-floating-hover cursor-pointer
           "
         >
-          <CurrentIcon className="w-6" />
+          <CurrentIcon className="w-4" />
+          <Type As="span">{currentLabel}</Type>
           <ChevronDownIcon className="w-4" />
         </button>
       </Tooltip>
