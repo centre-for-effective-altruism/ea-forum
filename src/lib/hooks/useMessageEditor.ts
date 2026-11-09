@@ -51,6 +51,7 @@ export const useMessageEditor = ({
   const { currentUser } = useCurrentUser();
   const { captureEvent } = useTracking();
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
   const [noEmail, setNoEmail] = useState(false);
   const hasUnsavedDataRef = useRef(false);
   const editorRef = useRef<EditorAPI>(null);
@@ -130,16 +131,17 @@ export const useMessageEditor = ({
     async (ev?: SubmitEvent<HTMLFormElement>) => {
       ev?.preventDefault();
       const editorApi = editorRef.current;
-      if (!currentUser || !editorApi || loading) {
+      if (!currentUser || !editorApi || submittingRef.current) {
         return;
       }
-      const editorData = await editorApi.getSubmitData();
-      if (!editorData.originalContents.data.trim()) {
-        toast.error("Message is empty");
-        return;
-      }
+      submittingRef.current = true;
       setLoading(true);
       try {
+        const editorData = await editorApi.getSubmitData();
+        if (!editorData.originalContents.data.trim()) {
+          toast.error("Message is empty");
+          return;
+        }
         const message = await rpc.messages.sendMessage({
           conversationId,
           editorData,
@@ -166,12 +168,12 @@ export const useMessageEditor = ({
             : "An error occurred - please try again",
         );
       } finally {
+        submittingRef.current = false;
         setLoading(false);
       }
     },
     [
       currentUser,
-      loading,
       conversationId,
       noEmail,
       captureEvent,
