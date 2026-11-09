@@ -66,6 +66,11 @@ export const findOrCreateConversation = async (
       message: "You must earn 10 karma to start a conversation",
     });
   }
+  if (moderator && !userIsAdminOrMod(user)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "Only moderators can start moderator conversations",
+    });
+  }
   const participantIds = uniq([...userIds, user._id]);
   const existingConversationId = await fetchConversationByParticipants(
     participantIds,

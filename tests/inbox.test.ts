@@ -525,9 +525,23 @@ suite("Inbox", () => {
       ).rejects.toThrow("You are not allowed to send messages");
     });
 
-    test("reuses an existing conversation with the same participants", async () => {
+    test("only moderators can start moderator conversations", async () => {
       const [user, recipient] = await Promise.all([
         createTestUser({ karma: 100 }),
+        createTestUser(),
+      ]);
+      loginAs(user);
+      await expect(
+        call(messagesRouter.createConversation, {
+          userIds: [recipient._id],
+          includeModerators: true,
+        }),
+      ).rejects.toThrow("Only moderators can start moderator conversations");
+    });
+
+    test("reuses an existing conversation with the same participants", async () => {
+      const [user, recipient] = await Promise.all([
+        createTestUser({ karma: 100, groups: ["sunshineRegiment"] }),
         createTestUser(),
       ]);
       loginAs(user);
