@@ -1005,12 +1005,14 @@ export const fetchTagPostsList = async ({
   currentUser,
   tagId,
   sortedBy,
+  excludePostId,
   limit,
   offset,
 }: {
   currentUser: CurrentUser | null;
   tagId: string;
   sortedBy: TopicPostsSortedBy;
+  excludePostId?: string;
   limit?: number;
   offset?: number;
 }): Promise<PostListItem[]> => {
@@ -1018,6 +1020,7 @@ export const fetchTagPostsList = async ({
     currentUserId: currentUser?._id ?? null,
     where: {
       groupId: { isNull: true },
+      ...(excludePostId ? { _id: { ne: excludePostId } } : null),
       RAW: onlyTagFilter(tagId),
     },
     orderBy:

@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife } from "next/cache";
 import type { CurrentUser } from "../users/currentUser";
 import type { PostsListView } from "./postsHelpers";
+import type { TopicPostsSortedBy } from "../tags/topicPageParams";
 import { shortCacheLife } from "../cacheLifetimes";
 import {
   fetchFeaturedFrontpagePosts,
@@ -10,6 +11,7 @@ import {
   fetchMostRecentlyCuratedPost,
   fetchPostsListById,
   fetchPostsListFromView,
+  fetchTagPostsList,
 } from "./postLists";
 
 // Post lists include data that's specific to the current user (read statuses,
@@ -25,6 +27,19 @@ const fetchLoggedOutPostsListById = async (postId: string) => {
   "use cache";
   cacheLife(shortCacheLife);
   return fetchPostsListById(null, postId);
+};
+
+type TagPostsListArgs = {
+  tagId: string;
+  sortedBy: TopicPostsSortedBy;
+  excludePostId?: string;
+  limit?: number;
+};
+
+const fetchLoggedOutTagPostsList = async (args: TagPostsListArgs) => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  return fetchTagPostsList({ currentUser: null, ...args });
 };
 
 const fetchLoggedOutFrontpageCuratedPostsList = async () => {
@@ -66,6 +81,14 @@ export const fetchCachedPostsListById = (
   currentUserId
     ? fetchPostsListById(currentUserId, postId)
     : fetchLoggedOutPostsListById(postId);
+
+export const fetchCachedTagPostsList = (
+  currentUser: CurrentUser | null,
+  args: TagPostsListArgs,
+) =>
+  currentUser
+    ? fetchTagPostsList({ currentUser, ...args })
+    : fetchLoggedOutTagPostsList(args);
 
 export const fetchCachedFrontpageCuratedPostsList = (
   currentUserId: string | null,

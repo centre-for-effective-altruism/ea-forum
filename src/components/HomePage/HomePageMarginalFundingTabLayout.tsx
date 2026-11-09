@@ -4,14 +4,24 @@ import { marginalFundingWeekListenUrl } from "@/lib/marginalFundingWeek";
 import Type from "../Type";
 import Link from "../Link";
 
+export const MARGINAL_FUNDING_CARD_COUNT = 9;
+export const MARGINAL_FUNDING_LIST_INITIAL_COUNT = 15;
+
 export default function HomePageMarginalFundingTabLayout({
   explainerPost,
+  posts,
+  listSection,
 }: Readonly<{
   explainerPost?: ReactNode;
+  posts: ReactNode[];
+  listSection?: ReactNode;
 }>) {
   return (
     <AnalyticsContext homePageTab="marginalFunding">
-      <div data-component="HomePageMarginalFundingTabLayout" className="pb-20">
+      <div
+        data-component="HomePageMarginalFundingTabLayout"
+        className="flex flex-col gap-4 pb-20"
+      >
         <section className="grid grid-cols-1 md:grid-cols-3 gap-1">
           <div
             className="
@@ -36,7 +46,13 @@ export default function HomePageMarginalFundingTabLayout({
             </Type>
           </div>
           {explainerPost && <div className="h-full">{explainerPost}</div>}
+          {posts.map((post, i) => (
+            <div key={i} className="h-full">
+              {post}
+            </div>
+          ))}
         </section>
+        {listSection}
       </div>
     </AnalyticsContext>
   );
