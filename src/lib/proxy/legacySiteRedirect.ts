@@ -63,6 +63,8 @@ const newSitePatterns = [
   /^\/recommendations$/, // Recommendations
   /^\/drafts$/, // Drafts page
   /^\/saved$/, // Saved & read page
+  /^\/keywords$/, // Keyword alerts
+  /^\/keywords\/[^/]+$/, // Keyword alert results: /keywords/[keyword]
   /^\/inbox$/, // Inbox
   /^\/inbox\/[^/]+$/, // Inbox conversation: /inbox/[_id]
   /^\/moderatorInbox$/, // Moderator inbox

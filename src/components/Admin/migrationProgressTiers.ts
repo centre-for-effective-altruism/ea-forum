@@ -53,7 +53,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/my-stats"],
         notes: "Thin wrapper around the user stats page",
       },
-      { paths: ["/keywords/:keyword"], notes: "Keyword results page" },
       {
         paths: ["/debug/emailHistory", "/debug/notificationEmailPreview"],
         notes: "Admin debug pages",
@@ -115,7 +114,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/manageSubscriptions"],
         notes: "lib/subscriptions exists",
       },
-      { paths: ["/keywords"], notes: "Keyword alerts management" },
       { paths: ["/digests/:num"], notes: "Public digest page" },
       { paths: ["/admin/digests"], notes: "Digest list" },
       {
