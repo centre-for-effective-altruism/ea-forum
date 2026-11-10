@@ -15,6 +15,7 @@ import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useDismissable } from "@/lib/hooks/useDismissable";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
+import ChevronDownIcon from "@heroicons/react/24/solid/ChevronDownIcon";
 import GivingSeasonProgressStrip, {
   colorTransition,
 } from "./GivingSeasonProgressStrip";
@@ -119,7 +120,9 @@ export default function GivingSeasonBanner({
 }>) {
   const now = new Date(nowMs);
   const { captureEvent } = useTracking();
-  const { dismissed, dismiss } = useDismissable(givingSeasonBannerDismissCookie);
+  const { dismissed, dismiss, undismiss } = useDismissable(
+    givingSeasonBannerDismissCookie,
+  );
   const [selectedWeek, setSelectedWeek] = useState(() =>
     getCurrentGivingSeasonWeek(now),
   );
@@ -166,7 +169,18 @@ export default function GivingSeasonBanner({
           now={now}
           selectedWeek={selectedWeek}
           onSelect={onSelect}
-        />
+        >
+          {!showBanner && (
+            <button
+              type="button"
+              aria-label="Show banner"
+              onClick={undismiss}
+              className="shrink-0 mr-3 cursor-pointer text-white/50 hover:text-white transition-colors"
+            >
+              <ChevronDownIcon className="w-5" />
+            </button>
+          )}
+        </GivingSeasonProgressStrip>
       </section>
     </AnalyticsContext>
   );

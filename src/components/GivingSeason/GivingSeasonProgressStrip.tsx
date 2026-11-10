@@ -1,6 +1,13 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   GivingSeasonWeek,
   givingSeasonWeeks,
@@ -82,10 +89,12 @@ export default function GivingSeasonProgressStrip({
   now,
   selectedWeek,
   onSelect,
+  children,
 }: Readonly<{
   now: Date;
   selectedWeek: GivingSeasonWeek | null;
   onSelect: (week: GivingSeasonWeek) => void;
+  children?: ReactNode;
 }>) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -147,7 +156,10 @@ export default function GivingSeasonProgressStrip({
 
   return (
     <div
-      className={clsx("bg-(--week-strip) border-t border-white/8", colorTransition)}
+      className={clsx(
+        "flex items-center bg-(--week-strip) border-t border-white/8",
+        colorTransition,
+      )}
     >
       <div
         ref={scrollerRef}
@@ -157,7 +169,7 @@ export default function GivingSeasonProgressStrip({
             fadeStart ? EDGE_FADE_PX : 0
           }px, black calc(100% - ${fadeEnd ? EDGE_FADE_PX : 0}px), transparent)`,
         }}
-        className="relative h-13 flex items-center gap-[10px] px-[26px] overflow-x-auto no-scrollbars"
+        className="relative h-13 flex-1 min-w-0 flex items-center gap-[10px] px-[26px] overflow-x-auto no-scrollbars"
       >
         {givingSeasonWeeks.map((week, i) => (
           <Fragment key={week.id}>
@@ -177,6 +189,7 @@ export default function GivingSeasonProgressStrip({
           </Fragment>
         ))}
       </div>
+      {children}
     </div>
   );
 }
