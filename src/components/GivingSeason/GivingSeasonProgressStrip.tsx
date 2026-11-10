@@ -39,7 +39,7 @@ function StripItem({
     >
       <span
         className={clsx(
-          "flex items-center gap-2 px-3 py-[5px] rounded-full border whitespace-nowrap",
+          "flex items-baseline gap-2 px-3 py-[5px] rounded-full border whitespace-nowrap",
           selected
             ? "border-(--week-lead) bg-(--week-deep) shadow-[0_0_12px_color-mix(in_srgb,var(--week-lead)_45%,transparent)]"
             : "border-transparent group-hover:border-white/40 group-focus-visible:border-white/40",
@@ -65,7 +65,7 @@ function StripItem({
               As="span"
               style="bodySmall"
               className={clsx(
-                "font-[400]! group-hover:text-white/55 group-focus-visible:text-white/55",
+                "font-[400]! leading-[17px] group-hover:text-white/55 group-focus-visible:text-white/55",
                 past ? "text-white/55" : "text-white/35",
               )}
             >
