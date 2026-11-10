@@ -10,6 +10,8 @@ import {
   isPostsListViewType,
 } from "@/lib/posts/postsListView";
 import ForumEventHomePageBanner from "@/components/ForumEvents/ForumEventHomePageBanner";
+import GivingSeasonHomePageBanner from "@/components/GivingSeason/GivingSeasonHomePageBanner";
+import { GivingSeasonBannerSkeleton } from "@/components/GivingSeason/GivingSeasonBanner";
 import HomePageTabSkeleton from "@/components/HomePage/HomePageTabSkeleton";
 import HomePageTabContent from "@/components/HomePage/HomePageTabContent";
 import HomePageColumns from "@/components/HomePage/HomePageColumns";
@@ -74,11 +76,18 @@ export default function HomePage() {
     <HomePageColumns
       pageContext="homePage"
       banner={
-        <Suspense>
-          <RequestCookiesProvider>
-            <ForumEventHomePageBanner />
-          </RequestCookiesProvider>
-        </Suspense>
+        <>
+          <Suspense fallback={<GivingSeasonBannerSkeleton />}>
+            <RequestCookiesProvider>
+              <GivingSeasonHomePageBanner />
+            </RequestCookiesProvider>
+          </Suspense>
+          <Suspense>
+            <RequestCookiesProvider>
+              <ForumEventHomePageBanner />
+            </RequestCookiesProvider>
+          </Suspense>
+        </>
       }
     >
       <StructuredData data={structuredData} />
