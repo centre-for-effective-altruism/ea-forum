@@ -42,10 +42,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         notes: "Auth0 password flows",
       },
       {
-        paths: ["/questions"],
-        notes: "Reuses PostsList with a question filter",
-      },
-      {
         paths: ["/allComments", "/users/:slug/replies", "/moderatorComments"],
         notes: "Reuse CommentsList",
       },

@@ -704,6 +704,10 @@ export const fetchPostsListFromView = (
       return fetchOrgUpdatesPostsList({ currentUserId, ...props });
     case "curated":
       return fetchCuratedPostsList({ currentUserId, ...props });
+    case "topQuestions":
+      return fetchTopQuestionsPostsList({ currentUserId, ...props });
+    case "recentQuestionActivity":
+      return fetchRecentQuestionActivityPostsList({ currentUserId, ...props });
     case "userProfile":
       if (!userId) {
         throw new Error("User profile view requires user id");
@@ -867,6 +871,47 @@ export const fetchCuratedPostsList = ({
     offset,
     limit,
   });
+
+const TOP_QUESTIONS_MIN_BASE_SCORE = 40;
+
+const fetchQuestionsPostsList = ({
+  currentUserId,
+  minBaseScore,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  minBaseScore?: number;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      question: true,
+      hiddenRelatedQuestion: undefined,
+      groupId: { isNull: true },
+      baseScore: minBaseScore === undefined ? undefined : { gte: minBaseScore },
+    },
+    orderBy: {
+      lastCommentedAt: "desc",
+      _id: "desc",
+    },
+    offset,
+    limit,
+  });
+
+export const fetchTopQuestionsPostsList = (props: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchQuestionsPostsList({
+    ...props,
+    minBaseScore: TOP_QUESTIONS_MIN_BASE_SCORE,
+  });
+
+export const fetchRecentQuestionActivityPostsList = fetchQuestionsPostsList;
 
 const FORUM_FAVORITES_MIN_BASE_SCORE = 50;
 
