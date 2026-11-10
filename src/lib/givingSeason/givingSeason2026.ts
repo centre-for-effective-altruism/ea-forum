@@ -76,7 +76,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     bannerDate: "16 – 22 November",
     title: "Marginal Funding Week",
     description:
-      "EA organisations share their funding gaps, and what they could do with extra funding.",
+      "Effective organisations share their funding gaps, and what they could do with extra funding.",
     postUrl: `${announcementPostUrl}#Marginal_Funding_Week`,
     stripLabel: "Marginal Funding",
     stripDate: "Nov 16–22",
@@ -146,7 +146,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     end: new Date("2027-01-01T00:00:00Z"),
     bannerDate: "28 December – end of year",
     title: "Donation Celebration",
-    description: "A week to publicly celebrate our year’s donations.",
+    description: "A week to publicly celebrate our annual donations.",
     postUrl: `${announcementPostUrl}#Donation_Celebration`,
     stripLabel: "Donation Celebration",
     stripDate: "From Dec 28",
