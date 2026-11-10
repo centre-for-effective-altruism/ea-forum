@@ -60,9 +60,11 @@ export default function AllTimePostsList({
 
   return (
     <div data-component="AllTimePostsList">
-      {posts.map((post) => (
-        <PostsItem key={post._id} post={post} />
-      ))}
+      <div className="max-w-full space-y-0.5 mb-0.5">
+        {posts.map((post) => (
+          <PostsItem key={post._id} post={post} />
+        ))}
+      </div>
       {loading && <PostsListSkeleton count={10} />}
       <TextLinkButton variant="primary" onClick={loadMore.bind(null, posts.length)}>
         Load more

@@ -76,6 +76,7 @@ const newSitePatterns = [
   /^\/marginal-funding$/, // Marginal Funding Week sequence event
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
+  /^\/questions$/, // Questions page
   /^\/admin$/, // Admin
   /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
