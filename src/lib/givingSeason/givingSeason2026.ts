@@ -1,18 +1,18 @@
 import { CookieName, HIDE_FORUM_EVENT_BANNER_PREFIX } from "../cookies/cookies";
 
-export type GivingSeasonBannerColors = {
+type GivingSeasonBannerColors = {
   deep: string;
   strip: string;
   title: string;
   date: string;
 };
 
-export type GivingSeasonWeekColors = GivingSeasonBannerColors & {
+type GivingSeasonWeekColors = GivingSeasonBannerColors & {
   lead: string;
   tint: string;
 };
 
-export type GivingSeasonGeneralColors = GivingSeasonBannerColors & {
+type GivingSeasonGeneralColors = GivingSeasonBannerColors & {
   stops: [number, string][];
 };
 
@@ -161,9 +161,6 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
 
 export const isGivingSeasonOver = (now: Date) =>
   now >= givingSeasonWeeks[givingSeasonWeeks.length - 1].end;
-
-export const isGivingSeasonWeekPast = (week: GivingSeasonWeek, now: Date) =>
-  now >= week.end;
 
 /** Returns null before the season starts and during the gaps between weeks */
 export const getCurrentGivingSeasonWeek = (now: Date): GivingSeasonWeek | null => {

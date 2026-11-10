@@ -4,32 +4,32 @@ import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   GivingSeasonWeek,
   givingSeasonWeeks,
-  isGivingSeasonWeekPast,
 } from "@/lib/givingSeason/givingSeason2026";
+import { getClamper } from "@/lib/utils/mathHelpers";
 import Type from "../Type";
 import clsx from "clsx";
 
 const EDGE_FADE_PX = 40;
+
+export const colorTransition =
+  "transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none";
 
 function StripItem({
   week,
   selected,
   past,
   onSelect,
-  innerRef,
 }: Readonly<{
   week: GivingSeasonWeek;
   selected: boolean;
   past: boolean;
   onSelect: (week: GivingSeasonWeek, item: HTMLButtonElement) => void;
-  innerRef?: (el: HTMLButtonElement | null) => void;
 }>) {
   return (
     <button
       type="button"
       aria-pressed={selected}
       onClick={(event) => onSelect(week, event.currentTarget)}
-      ref={innerRef}
       className={clsx(
         "group shrink-0 cursor-pointer rounded-full p-[3px] border outline-none",
         selected
@@ -88,7 +88,6 @@ export default function GivingSeasonProgressStrip({
   onSelect: (week: GivingSeasonWeek) => void;
 }>) {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const selectedItemRef = useRef<HTMLButtonElement | null>(null);
 
   const [fadeStart, setFadeStart] = useState(false);
   const [fadeEnd, setFadeEnd] = useState(false);
@@ -104,10 +103,12 @@ export default function GivingSeasonProgressStrip({
 
   useEffect(() => {
     const scroller = scrollerRef.current;
-    const selectedItem = selectedItemRef.current;
     if (!scroller) {
       return;
     }
+    const selectedItem = scroller.querySelector<HTMLElement>(
+      '[aria-pressed="true"]',
+    );
     if (selectedItem) {
       scroller.scrollLeft =
         selectedItem.offsetLeft -
@@ -130,7 +131,7 @@ export default function GivingSeasonProgressStrip({
         const minScroll =
           item.offsetLeft + item.offsetWidth + EDGE_FADE_PX - scroller.clientWidth;
         const maxScroll = item.offsetLeft - EDGE_FADE_PX;
-        const target = Math.min(Math.max(scroller.scrollLeft, minScroll), maxScroll);
+        const target = getClamper(minScroll, maxScroll)(scroller.scrollLeft);
         if (target !== scroller.scrollLeft) {
           scroller.scrollTo({
             left: target,
@@ -146,10 +147,7 @@ export default function GivingSeasonProgressStrip({
 
   return (
     <div
-      className="
-        bg-(--week-strip) border-t border-white/8
-        transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none
-      "
+      className={clsx("bg-(--week-strip) border-t border-white/8", colorTransition)}
     >
       <div
         ref={scrollerRef}
@@ -173,15 +171,8 @@ export default function GivingSeasonProgressStrip({
             <StripItem
               week={week}
               selected={week.id === selectedWeek?.id}
-              past={isGivingSeasonWeekPast(week, now)}
+              past={now >= week.end}
               onSelect={onSelectItem}
-              innerRef={
-                week.id === selectedWeek?.id
-                  ? (el) => {
-                      selectedItemRef.current = el;
-                    }
-                  : undefined
-              }
             />
           </Fragment>
         ))}

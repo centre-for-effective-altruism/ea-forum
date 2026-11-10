@@ -1,3 +1,5 @@
+import { getClamper } from "@/lib/utils/mathHelpers";
+
 export type BannerLineColors =
   | { lead: string; deep: string; tint: string }
   | { deep: string; stops: [number, string][] };
@@ -262,9 +264,6 @@ const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [
   a[2] + (b[2] - a[2]) * t,
 ];
 
-const clamp = (x: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, x));
-
 /** Matches the CSS `cubic-bezier(0.65, 0, 0.35, 1)` used by the banner text */
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
@@ -298,10 +297,9 @@ const getFieldAt = (
 ) => {
   let softTextDistance = 1e9;
   for (let i = 0; i < rectCount; i++) {
-    const [x0, y0, x1, y1] = rects.subarray(i * 4, i * 4 + 4);
     const distance = Math.hypot(
-      Math.max(x0 - x, 0, x - x1),
-      Math.max(y0 - y, 0, y - y1),
+      Math.max(rects[i * 4] - x, 0, x - rects[i * 4 + 2]),
+      Math.max(rects[i * 4 + 1] - y, 0, y - rects[i * 4 + 3]),
     );
     softTextDistance =
       i === 0 ? distance : softMin(softTextDistance, distance, TEXT_SOFTNESS);
@@ -321,9 +319,9 @@ const getTextRects = (text: HTMLElement, container: HTMLElement) => {
   const rects = new Float32Array(MAX_TEXT_RECTS * 4);
   const bounds = container.getBoundingClientRect();
   const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
   let count = 0;
   while (walker.nextNode()) {
-    const range = document.createRange();
     range.selectNodeContents(walker.currentNode);
     for (const rect of range.getClientRects()) {
       if (rect.width > 1 && count < MAX_TEXT_RECTS) {
@@ -475,29 +473,49 @@ export const createBannerLinesRenderer = (
   let to: LinesState | null = null;
   let transitionStart = -Infinity;
   let frame = 0;
-  let plucks: Pluck[] = [];
+  const plucks: Pluck[] = [];
   let lastPointer: PointerSample | null = null;
   const pluckData = new Float32Array(MAX_PLUCKS * 4);
   const pluckAmplitudes = new Float32Array(MAX_PLUCKS);
+  const deep = new Float32Array(3);
 
   const updatePluckUniforms = (now: number) => {
-    plucks = plucks.filter(({ start, amplitude }) => {
-      const age = (now - start) / 1000;
-      return (
-        amplitude * Math.exp(-age / PLUCK_DECAY_SECONDS) > PLUCK_CUTOFF_AMPLITUDE
-      );
-    });
+    let count = 0;
+    for (const pluck of plucks) {
+      const age = (now - pluck.start) / 1000;
+      const amplitude = pluck.amplitude * Math.exp(-age / PLUCK_DECAY_SECONDS);
+      if (amplitude > PLUCK_CUTOFF_AMPLITUDE) {
+        plucks[count] = pluck;
+        pluckData[count * 4] = pluck.x;
+        pluckData[count * 4 + 1] = pluck.y;
+        pluckData[count * 4 + 2] = pluck.line;
+        pluckData[count * 4 + 3] = age;
+        pluckAmplitudes[count] = amplitude;
+        count++;
+      }
+    }
+    plucks.length = count;
     if (!uniforms || !maxPlucks) {
       return;
     }
-    plucks.forEach(({ x, y, line, start, amplitude }, i) => {
-      const age = (now - start) / 1000;
-      pluckData.set([x, y, line, age], i * 4);
-      pluckAmplitudes[i] = amplitude * Math.exp(-age / PLUCK_DECAY_SECONDS);
-    });
     gl.uniform4fv(uniforms.plucks, pluckData);
     gl.uniform1fv(uniforms.pluckAmplitudes, pluckAmplitudes);
     gl.uniform1i(uniforms.pluckCount, plucks.length);
+  };
+
+  const uploadLinesState = () => {
+    if (!uniforms || !from || !to) {
+      return;
+    }
+    gl.uniform2f(uniforms.size, to.width, to.height);
+    gl.uniform4fv(uniforms.fromRects, from.rects);
+    gl.uniform1i(uniforms.fromRectCount, from.rectCount);
+    gl.uniform4fv(uniforms.toRects, to.rects);
+    gl.uniform1i(uniforms.toRectCount, to.rectCount);
+    gl.uniform4fv(uniforms.fromStops, from.stops);
+    gl.uniform1i(uniforms.fromStopCount, from.stopCount);
+    gl.uniform4fv(uniforms.toStops, to.stops);
+    gl.uniform1i(uniforms.toStopCount, to.stopCount);
   };
 
   const renderFrame = (now: number, elapsed: number) => {
@@ -514,19 +532,13 @@ export const createBannerLinesRenderer = (
     const eased = easeInOut(Math.min(1, elapsed / TRANSITION_MS));
     const sprung = elapsed < SPRING_SETTLE_MS ? spring(elapsed / 1000) : 1;
     gl.viewport(0, 0, pixelWidth, pixelHeight);
-    gl.uniform2f(uniforms.size, to.width, to.height);
     gl.uniform1f(uniforms.dpr, dpr);
-    gl.uniform4fv(uniforms.fromRects, from.rects);
-    gl.uniform1i(uniforms.fromRectCount, from.rectCount);
-    gl.uniform4fv(uniforms.toRects, to.rects);
-    gl.uniform1i(uniforms.toRectCount, to.rectCount);
     gl.uniform1f(uniforms.progress, sprung);
     gl.uniform1f(uniforms.colorProgress, eased);
-    gl.uniform3fv(uniforms.deep, mixRgb(from.deep, to.deep, eased));
-    gl.uniform4fv(uniforms.fromStops, from.stops);
-    gl.uniform1i(uniforms.fromStopCount, from.stopCount);
-    gl.uniform4fv(uniforms.toStops, to.stops);
-    gl.uniform1i(uniforms.toStopCount, to.stopCount);
+    for (let i = 0; i < 3; i++) {
+      deep[i] = from.deep[i] + (to.deep[i] - from.deep[i]) * eased;
+    }
+    gl.uniform3fv(uniforms.deep, deep);
     updatePluckUniforms(now);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
@@ -551,6 +563,7 @@ export const createBannerLinesRenderer = (
       from = next;
     }
     to = next;
+    uploadLinesState();
     cancelAnimationFrame(frame);
     render();
   };
@@ -570,11 +583,10 @@ export const createBannerLinesRenderer = (
       (Math.hypot(b.x - a.x, b.y - a.y) / Math.max(1, b.time - a.time)) * 1000;
     const amplitude =
       PLUCK_AMPLITUDE *
-      clamp(
-        PLUCK_MIN_STRENGTH + speed / PLUCK_FULL_STRENGTH_SPEED,
+      getClamper(
         PLUCK_MIN_STRENGTH,
         1,
-      );
+      )(PLUCK_MIN_STRENGTH + speed / PLUCK_FULL_STRENGTH_SPEED);
     const start = performance.now();
     for (let line = first; line <= last; line++) {
       const t = (line - lineA) / (lineB - lineA || 1);
@@ -586,7 +598,9 @@ export const createBannerLinesRenderer = (
         amplitude,
       });
     }
-    plucks = plucks.slice(-MAX_PLUCKS);
+    if (plucks.length > MAX_PLUCKS) {
+      plucks.splice(0, plucks.length - MAX_PLUCKS);
+    }
     if (!frame) {
       frame = requestAnimationFrame(render);
     }
@@ -619,6 +633,7 @@ export const createBannerLinesRenderer = (
   const onContextLost = (event: Event) => event.preventDefault();
   const onContextRestored = () => {
     uniforms = createProgram(gl, maxPlucks);
+    uploadLinesState();
     render();
   };
   canvas.addEventListener("webglcontextlost", onContextLost);

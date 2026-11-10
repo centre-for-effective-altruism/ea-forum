@@ -15,15 +15,14 @@ import { AnalyticsContext, useTracking } from "@/lib/analyticsEvents";
 import { useDismissable } from "@/lib/hooks/useDismissable";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import XMarkIcon from "@heroicons/react/24/solid/XMarkIcon";
-import GivingSeasonProgressStrip from "./GivingSeasonProgressStrip";
+import GivingSeasonProgressStrip, {
+  colorTransition,
+} from "./GivingSeasonProgressStrip";
 import GivingSeasonBannerLines from "./GivingSeasonBannerLines";
 import LazyPostsTooltip from "../LazyPostsTooltip";
 import Link from "../Link";
 import Type from "../Type";
 import clsx from "clsx";
-
-const colorTransition =
-  "transition-colors duration-200 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none";
 
 const textBlockClassName =
   "relative col-start-1 row-start-1 max-w-120 p-[30px] pb-2.5 max-sm:pr-11 max-sm:pb-[30px] flex flex-col";
@@ -33,7 +32,10 @@ const allBanners: GivingSeasonBannerContent[] = [
   ...givingSeasonWeeks,
 ];
 
-function WeekText({ week }: Readonly<{ week: GivingSeasonBannerContent }>) {
+function WeekText({
+  week,
+  sizer,
+}: Readonly<{ week: GivingSeasonBannerContent; sizer?: boolean }>) {
   return (
     <>
       <Type
@@ -54,32 +56,30 @@ function WeekText({ week }: Readonly<{ week: GivingSeasonBannerContent }>) {
       </Type>
       <Type style="body" className="font-[400]! leading-[1.5] text-white">
         {week.description} (
-        <LazyPostsTooltip postId={givingSeasonAnnouncementPostId} As="span">
-          <Link
-            href={week.postUrl}
-            className="underline underline-offset-2 hover:opacity-70 transition-opacity"
-          >
-            more info
-          </Link>
-        </LazyPostsTooltip>
+        {sizer ? (
+          "more info"
+        ) : (
+          <LazyPostsTooltip postId={givingSeasonAnnouncementPostId} As="span">
+            <Link
+              href={week.postUrl}
+              className="underline underline-offset-2 hover:opacity-70 transition-opacity"
+            >
+              more info
+            </Link>
+          </LazyPostsTooltip>
+        )}
         )
       </Type>
     </>
   );
 }
 
-function WeekSizers({ exclude }: Readonly<{ exclude?: GivingSeasonBannerContent }>) {
-  return allBanners
-    .filter(({ id }) => id !== exclude?.id)
-    .map((week) => (
-      <div
-        key={week.id}
-        aria-hidden
-        className={clsx(textBlockClassName, "invisible")}
-      >
-        <WeekText week={week} />
-      </div>
-    ));
+function WeekSizers() {
+  return allBanners.map((week) => (
+    <div key={week.id} aria-hidden className={clsx(textBlockClassName, "invisible")}>
+      <WeekText week={week} sizer />
+    </div>
+  ));
 }
 
 function WeekBanner({
@@ -99,7 +99,7 @@ function WeekBanner({
       <GivingSeasonBannerLines colors={week.colors} className={textBlockClassName}>
         <WeekText week={week} />
       </GivingSeasonBannerLines>
-      <WeekSizers exclude={week} />
+      <WeekSizers />
       <button
         type="button"
         aria-label="Hide banner"

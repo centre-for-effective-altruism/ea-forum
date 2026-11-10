@@ -7,10 +7,7 @@ import {
   createBannerLinesRenderer,
 } from "./bannerLines";
 
-/**
- * Draws the background lines into the parent element, flowing around the
- * text. The parent must be positioned. The lines fade in when they first appear.
- */
+/** The lines fade in when they first appear. */
 export default function GivingSeasonBannerCanvas({
   colors,
   text,
@@ -20,6 +17,7 @@ export default function GivingSeasonBannerCanvas({
 }>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<BannerLinesRenderer | null>(null);
+  const colorsRef = useRef(colors);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -39,16 +37,24 @@ export default function GivingSeasonBannerCanvas({
     if (!container) {
       return;
     }
-    const draw = () => rendererRef.current?.draw({ container, text, colors });
+    const draw = () =>
+      rendererRef.current?.draw({ container, text, colors: colorsRef.current });
 
     const observer = new ResizeObserver(draw);
     observer.observe(container);
-    rendererRef.current?.draw({ container, text, colors }, { animate: true });
     if (document.fonts.status !== "loaded") {
       void document.fonts.ready.then(draw);
     }
 
     return () => observer.disconnect();
+  }, [text]);
+
+  useLayoutEffect(() => {
+    colorsRef.current = colors;
+    const container = canvasRef.current?.parentElement;
+    if (container) {
+      rendererRef.current?.draw({ container, text, colors }, { animate: true });
+    }
   }, [colors, text]);
 
   return (
