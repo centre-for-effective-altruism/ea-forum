@@ -21,6 +21,7 @@ export type GivingSeasonBannerContent = {
   bannerDate: string;
   title: string;
   description: string;
+  postId: string;
   postUrl: string;
   colors: GivingSeasonWeekColors | GivingSeasonGeneralColors;
 };
@@ -52,6 +53,7 @@ export const givingSeasonGeneralBanner: GivingSeasonBannerContent & {
   title: "Giving Season 2026",
   description:
     "A series of events focused on big questions in effective giving and the EA funding ecosystem.",
+  postId: givingSeasonAnnouncementPostId,
   postUrl: announcementPostUrl,
   colors: {
     deep: "#0D0B10",
@@ -77,6 +79,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     title: "Marginal Funding Week",
     description:
       "Effective organisations share their funding gaps, and what they could do with extra funding.",
+    postId: givingSeasonAnnouncementPostId,
     postUrl: `${announcementPostUrl}#Marginal_Funding_Week`,
     stripLabel: "Marginal Funding",
     stripDate: "Nov 16–22",
@@ -95,6 +98,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     title: "Funding Strategy Week",
     description:
       "A week to discuss cruxy questions about how EA resources are being spent, and how they should be.",
+    postId: givingSeasonAnnouncementPostId,
     postUrl: `${announcementPostUrl}#Funding_Strategy_Week`,
     stripLabel: "Funding Strategy",
     stripDate: "Nov 23–29",
@@ -113,7 +117,8 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     title: "EA and AI: Debate Week",
     description:
       "A debate week on the question: what % of EA resources should go to making AI go well?",
-    postUrl: `${announcementPostUrl}#EA_and_AI__Debate_Week`,
+    postId: "xa5DeE8MfgYNBKvYm",
+    postUrl: "/posts/xa5DeE8MfgYNBKvYm/announcing-ea-and-ai-debate-week",
     stripLabel: "EA and AI Debate",
     stripDate: "Nov 30 – Dec 6",
     colors: weekColors({
@@ -130,6 +135,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     bannerDate: "14 – 20 December",
     title: "‘Why I Donate’ Week",
     description: "Writing about why we donate to impactful charities.",
+    postId: givingSeasonAnnouncementPostId,
     postUrl: `${announcementPostUrl}#_Why_I_Donate__Week`,
     stripLabel: "Why I Donate",
     stripDate: "Dec 14–20",
@@ -147,6 +153,7 @@ export const givingSeasonWeeks: GivingSeasonWeek[] = [
     bannerDate: "28 December – end of year",
     title: "Donation Celebration",
     description: "A week to publicly celebrate our annual donations.",
+    postId: givingSeasonAnnouncementPostId,
     postUrl: `${announcementPostUrl}#Donation_Celebration`,
     stripLabel: "Donation Celebration",
     stripDate: "From Dec 28",

@@ -5,7 +5,6 @@ import {
   getCurrentGivingSeasonWeek,
   GivingSeasonBannerContent,
   GivingSeasonWeek,
-  givingSeasonAnnouncementPostId,
   givingSeasonBannerDismissCookie,
   givingSeasonGeneralBanner,
   givingSeasonWeeks,
@@ -60,7 +59,7 @@ function WeekText({
         {sizer ? (
           "more info"
         ) : (
-          <LazyPostsTooltip postId={givingSeasonAnnouncementPostId} As="span">
+          <LazyPostsTooltip postId={week.postId} As="span">
             <Link
               href={week.postUrl}
               className="underline underline-offset-2 hover:opacity-70 transition-opacity"
