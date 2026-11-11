@@ -303,6 +303,24 @@ export const fetchStickyPostsList = ({
   });
 };
 
+export const fetchCurrentOpenThread = () =>
+  db.query.posts.findFirst({
+    columns: {
+      _id: true,
+      slug: true,
+      isEvent: true,
+      groupId: true,
+    },
+    where: {
+      ...viewablePostFilter,
+      sticky: true,
+      RAW: onlyTagFilter(process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID),
+    },
+    orderBy: {
+      postedAt: "desc",
+    },
+  });
+
 export const fetchPostsListById = async (
   currentUserId: string | null,
   postId: string,

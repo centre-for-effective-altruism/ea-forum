@@ -26,7 +26,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/topics/random"],
         notes: "Server-side redirect to a random topic",
       },
-      { paths: ["/open-thread"], notes: "Redirects to the current open thread" },
       {
         paths: ["/:section?/:subreddit?/ea/:id/:slug?(/:commentId)"],
         notes: "Legacy ID lookup, then redirect",
