@@ -82,6 +82,7 @@ const newSitePatterns = [
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
   /^\/questions$/, // Questions page
+  /^\/open-thread$/, // Current open thread (redirect to the post)
   /^\/admin$/, // Admin
   /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test
