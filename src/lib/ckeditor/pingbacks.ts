@@ -1,6 +1,9 @@
 import type { CurrentUser } from "../users/currentUser";
 import type { EditorDocument } from "./editorHelpers";
-import { userMentionQuery, userMentionValue } from "./mentionsConfig";
+
+export const userMentionQuery = "mention";
+export const userMentionValue = "user";
+export const userMentionQueryString = `${userMentionQuery}=${userMentionValue}`;
 
 const isMention = (href: string) => {
   try {

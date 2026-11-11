@@ -8,6 +8,7 @@ import { dataToHtml } from "../conversionUtils/dataToHtml";
 import { dataToWordCount } from "../conversionUtils/dataToWordCount";
 import { htmlToChangeMetrics } from "./htmlToChangeMetrics";
 import { upvoteOwnTagRevision } from "./revisionCallbacks";
+import { denormalizeRevision, getNextVersion } from "./revisionHelpers";
 
 export const createRevision = async (
   txn: DbOrTransaction,
@@ -69,6 +70,42 @@ type NormalizedFieldRevision<T extends string> = {
 
 type DenormalizedFieldRevision<T extends string> = NormalizedFieldRevision<T> & {
   [K in T]: Revision;
+};
+
+export const getDenormalizedContentsUpdate = async (
+  txn: DbOrTransaction,
+  user: Pick<User, "_id" | "isAdmin">,
+  contents: EditorData | null | undefined,
+  {
+    documentId,
+    collectionName,
+    previousVersion,
+  }: {
+    documentId: string;
+    collectionName: string;
+    previousVersion: string | null;
+  },
+) => {
+  if (contents === undefined) {
+    return {};
+  }
+  if (contents === null) {
+    return { contents: null, contentsLatest: null };
+  }
+  const revision = await createRevision(txn, user, contents, {
+    documentId,
+    collectionName,
+    fieldName: "contents",
+    draft: false,
+    version: getNextVersion(
+      previousVersion ? { version: previousVersion } : null,
+      contents.updateType,
+    ),
+  });
+  return {
+    contents: denormalizeRevision(revision),
+    contentsLatest: revision._id,
+  };
 };
 
 export const createRevisionForDenormalizedEditableField = async <T extends string>(

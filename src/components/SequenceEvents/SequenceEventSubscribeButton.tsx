@@ -1,11 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
-import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
-import { useLoginPopoverContext } from "@/lib/hooks/useLoginPopoverContext";
-import { useSubscription } from "@/lib/hooks/useSubscriptions";
-import { subscriptionTypes } from "@/lib/subscriptions/subscriptionTypes";
-import { useTracking } from "@/lib/analyticsEvents";
+import { useSequenceSubscription } from "@/lib/hooks/useSubscriptions";
 import BellOutlineIcon from "@heroicons/react/24/outline/BellIcon";
 import BellSolidIcon from "@heroicons/react/24/solid/BellIcon";
 import ArrowPathIcon from "@heroicons/react/24/solid/ArrowPathIcon";
@@ -20,28 +15,9 @@ export default function SequenceEventSubscribeButton({
   sequenceId: string;
   className?: string;
 }>) {
-  const { currentUser } = useCurrentUser();
-  const { onSignup } = useLoginPopoverContext();
-  const { captureEvent } = useTracking();
-  const { data, loading, error, update } = useSubscription({
-    collectionName: "Sequences",
-    documentId: sequenceId,
-    type: subscriptionTypes.newSequencePosts,
-  });
-  const subscribed = data?.subscribed ?? false;
-  const onClick = useCallback(() => {
-    captureEvent("subscribeClick");
-    if (!currentUser) {
-      onSignup();
-      return;
-    }
-    if (data) {
-      update(!subscribed);
-    }
-  }, [captureEvent, currentUser, onSignup, data, update, subscribed]);
-
+  const { subscribed, onClick, error, isLoading } =
+    useSequenceSubscription(sequenceId);
   const BellIcon = subscribed ? BellSolidIcon : BellOutlineIcon;
-  const isLoading = !!currentUser && !error && (loading || !data);
   return (
     <button
       type="button"

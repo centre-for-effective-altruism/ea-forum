@@ -65,6 +65,14 @@ export const getBlankEditorContents = (
   editorType: EditorTypeString,
 ): EditorContents => ({ type: editorType, data: "" });
 
+export const editorContentsChanged = (a: EditorContents, b: EditorContents) =>
+  a.type !== b.type || a.data !== b.data;
+
+export const toEditorData = (contents: EditorContents): EditorData | null =>
+  contents.data.length
+    ? { originalContents: contents, updateType: "patch", commitMessage: "" }
+    : null;
+
 export const getCKEditorDocumentId = (
   documentId: string | null,
   userId: string | null,

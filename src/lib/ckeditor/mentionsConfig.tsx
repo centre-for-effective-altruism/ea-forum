@@ -14,10 +14,8 @@ import { getSearchIndexName } from "../search/elastic/elasticIndexes";
 import UserMentionHit from "@/components/Search/UserMentionHit";
 import PostMentionHit from "@/components/Search/PostMentionHit";
 import TagMentionHit from "@/components/Search/TagMentionHit";
+import { userMentionQueryString } from "./pingbacks";
 
-export const userMentionQuery = "mention";
-export const userMentionValue = "user";
-export const userMentionQueryString = `${userMentionQuery}=${userMentionValue}`;
 const MARKER = "@";
 
 const formatSearchHit = (hit: SearchUser | SearchPost | SearchTag) => {

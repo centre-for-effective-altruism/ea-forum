@@ -3,6 +3,7 @@ import { withPostHogConfig } from "@posthog/nextjs-config";
 import { withSentryConfig } from "@sentry/nextjs";
 import { execSync } from "node:child_process";
 import { legacyRedirects } from "./src/lib/proxy/legacyRedirects";
+import { sequenceEvents } from "./src/lib/sequences/sequenceEvents";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -63,6 +64,21 @@ const nextConfig: NextConfig = {
       destination: "/library",
       permanent: true,
     },
+    {
+      source: "/sequences/:_id",
+      destination: "/s/:_id",
+      permanent: true,
+    },
+    {
+      source: "/sequencesEdit/:_id",
+      destination: "/s/:_id/edit",
+      permanent: true,
+    },
+    ...sequenceEvents.map(({ sequenceId, path }) => ({
+      source: `/s/${sequenceId}`,
+      destination: path,
+      permanent: true,
+    })),
     {
       source: "/user/:slug/overview",
       destination: "/users/:slug",

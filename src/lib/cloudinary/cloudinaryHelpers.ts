@@ -30,11 +30,17 @@ export const getCloudinaryCloudName = () => {
   return cloudName;
 };
 
+/**
+ * By default the image is first cropped to the region chosen when it was
+ * uploaded. Pass `preCrop: false` to transform the full original instead, so
+ * that the region only acts as the focus for `g_custom`.
+ */
 export const makeCloudinaryImageUrl = (
   publicId: string,
   cloudinaryProps: CloudinaryPropsType,
+  { preCrop = true }: { preCrop?: boolean } = {},
 ) =>
-  `https://res.cloudinary.com/${getCloudinaryCloudName()}/image/upload/c_crop,g_custom/${cloudinaryPropsToString(cloudinaryProps)}/${publicId}`;
+  `https://res.cloudinary.com/${getCloudinaryCloudName()}/image/upload/${preCrop ? "c_crop,g_custom/" : ""}${cloudinaryPropsToString(cloudinaryProps)}/${publicId}`;
 
 export const getSiteOgImageUrl = () =>
   combineUrls(getSiteUrl(), "/og-image-1200x630.png");

@@ -20,7 +20,7 @@ import TopicQuickTakesSkeleton from "./TopicQuickTakesSkeleton";
 import TopicPostsList from "./TopicPostsList";
 import TopicPostsListSkeleton from "./TopicPostsListSkeleton";
 import TopicTabs from "./TopicTabs";
-import CloudinaryImage from "../CloudinaryImage";
+import CloudinaryBanner from "../CloudinaryBanner";
 import Type from "../Type";
 
 export default function CoreTopicLayout({
@@ -37,22 +37,17 @@ export default function CoreTopicLayout({
       <div data-component="CoreTopicLayout" className="w-full pb-16">
         <header className="relative overflow-hidden bg-always-black">
           {tag.bannerImageId && (
-            <div aria-hidden className="absolute inset-0 pointer-events-none">
-              <CloudinaryImage
-                publicId={tag.bannerImageId}
-                height={245}
-                fullWidthHeader
-                loading="eager"
-                wrapperClassName="block h-full"
-                className="w-full h-full! object-cover"
-              />
+            <CloudinaryBanner
+              publicId={tag.bannerImageId}
+              className="absolute inset-0 pointer-events-none"
+            >
               <div
                 className="
                   absolute inset-0
                   bg-[linear-gradient(to_top,rgb(0_0_0/0.7)_0%,rgb(0_0_0/0.3)_60%,rgb(0_0_0/0.15)_100%)]
                 "
               />
-            </div>
+            </CloudinaryBanner>
           )}
           <div
             className="

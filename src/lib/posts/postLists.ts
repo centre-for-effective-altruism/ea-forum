@@ -49,6 +49,12 @@ export const viewablePostFilter = {
   status: postStatuses.STATUS_APPROVED,
 } as const;
 
+export const sequenceViewablePostFilter = {
+  ...viewablePostFilter,
+  unlisted: undefined,
+  hiddenRelatedQuestion: undefined,
+};
+
 /** Create a filter to return _only_ posts with a particular tag */
 export const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`;

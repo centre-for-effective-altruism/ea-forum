@@ -11,6 +11,8 @@ import {
   fetchContinueReading,
   updateContinueReading,
 } from "./continueReading";
+import { sequenceEditDataSchema } from "./sequenceHelpers";
+import { editSequence } from "./sequenceMutations";
 
 export const sequencesRouter = {
   listById: os
@@ -64,5 +66,20 @@ export const sequencesRouter = {
         throw new Error("Please login");
       }
       await dismissContinueReading({ currentUser, postId });
+    }),
+  edit: os
+    .input(
+      z.object({
+        sequenceId: z.string().nonempty(),
+        data: sequenceEditDataSchema,
+      }),
+    )
+    .handler(async ({ input: { sequenceId, data } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await editSequence(currentUser, sequenceId, data);
+      return { sequenceId };
     }),
 };

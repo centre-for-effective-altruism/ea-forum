@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import type { EditorContents } from "../ckeditor/editorHelpers";
 import type { Revision } from "../schema";
 
@@ -68,3 +69,16 @@ export const getNextVersion = (
   const version = previousRevision?.version || "1.0.0";
   return getNextVersionAfterSemver(version, updateType, isDraft);
 };
+
+export const ckEditorOriginalContents = () =>
+  sql<EditorContents | null>`
+    CASE
+      WHEN contents->'originalContents'->>'type' = 'ckEditorMarkup'
+        THEN contents->'originalContents'
+      WHEN contents->>'html' IS NOT NULL
+        THEN jsonb_build_object('type', 'ckEditorMarkup', 'data', contents->>'html')
+    END
+  `.as("originalContents");
+
+export const denormalizedContentsVersion = () =>
+  sql<string | null>`contents->>'version'`.as("contentsVersion");

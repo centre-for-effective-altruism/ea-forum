@@ -6,6 +6,8 @@ export type EditorCollectionName =
   | "Spotlights"
   | "Collections"
   | "Books"
+  | "Sequences"
+  | "Chapters"
   | "Messages";
 
 export const ckEditorBundleVersion = "43.1.6";

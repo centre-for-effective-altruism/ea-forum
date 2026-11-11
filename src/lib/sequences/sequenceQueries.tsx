@@ -1,8 +1,15 @@
+import { cache } from "react";
+import { cacheLife } from "next/cache";
+import { sql } from "drizzle-orm";
 import type { CurrentUser } from "../users/currentUser";
 import type { RelationalProjection } from "../utils/queryHelpers";
 import { userBaseProjection } from "../users/userQueries";
 import { db } from "../db";
+import { shortCacheLife } from "../cacheLifetimes";
+import { postsListProjection, sequenceViewablePostFilter } from "../posts/postLists";
 import sortBy from "lodash/sortBy";
+import { ckEditorOriginalContents } from "../revisions/revisionHelpers";
+import { userCanEditSequence } from "./sequenceHelpers";
 
 export type SequenceRelationalProjection = RelationalProjection<
   typeof db.query.sequences
@@ -35,18 +42,15 @@ export type SequenceBase = SequenceFromProjection<typeof sequenceBaseProjection>
 
 export const sequencePermissionFilter = (currentUser: CurrentUser | null) => {
   if (currentUser?.isAdmin) {
-    return {};
+    return { isDeleted: false };
   }
-  const publicFilter = {
-    isDeleted: false,
-    draft: false,
-  };
   if (currentUser) {
     return {
-      OR: [{ userId: currentUser._id }, publicFilter],
+      isDeleted: false,
+      OR: [{ userId: currentUser._id }, { draft: false }],
     };
   }
-  return publicFilter;
+  return { isDeleted: false, draft: false };
 };
 
 export const fetchSequenceById = async ({
@@ -238,3 +242,182 @@ export const fetchSequencePosts = async ({
 };
 
 export type SequencePost = Awaited<ReturnType<typeof fetchSequencePosts>>[number];
+
+const fetchSequencePagePosts = async (
+  currentUserId: string | null,
+  postIds: string[],
+) => {
+  if (!postIds.length) {
+    return [];
+  }
+  return await db.query.posts.findMany({
+    ...postsListProjection(currentUserId),
+    where: {
+      ...sequenceViewablePostFilter,
+      _id: { in: postIds },
+    },
+  });
+};
+
+export const fetchSequencePage = cache(
+  async (currentUser: CurrentUser | null, sequenceId: string) => {
+    const sequence = await db.query.sequences.findFirst({
+      columns: {
+        _id: true,
+        title: true,
+        userId: true,
+        draft: true,
+        noindex: true,
+        createdAt: true,
+        bannerImageId: true,
+        gridImageId: true,
+      },
+      extras: {
+        html: sql<string | null>`contents->>'html'`.as("html"),
+      },
+      with: {
+        user: userBaseProjection,
+        chapters: {
+          columns: {
+            _id: true,
+            title: true,
+            subtitle: true,
+            postIds: true,
+          },
+          extras: {
+            html: (chapters, { sql }) =>
+              sql<string | null>`${chapters}."contents"->>'html'`,
+          },
+          orderBy: {
+            number: "asc",
+            createdAt: "asc",
+          },
+        },
+      },
+      where: {
+        _id: sequenceId,
+        ...sequencePermissionFilter(currentUser),
+      },
+    });
+    if (!sequence) {
+      return null;
+    }
+    const postIds = sequence.chapters.flatMap(({ postIds }) =>
+      postIds.filter(Boolean),
+    );
+    const posts = await fetchSequencePagePosts(currentUser?._id ?? null, postIds);
+    const postsById = new Map(posts.map((post) => [post._id, post]));
+    return {
+      ...sequence,
+      chapters: sequence.chapters.map(({ postIds, ...chapter }) => ({
+        ...chapter,
+        posts: postIds.flatMap((postId) => postsById.get(postId) ?? []),
+      })),
+    };
+  },
+);
+
+const fetchLoggedOutSequencePage = async (sequenceId: string) => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  return fetchSequencePage(null, sequenceId);
+};
+
+export const fetchCachedSequencePage = (
+  currentUser: CurrentUser | null,
+  sequenceId: string,
+) =>
+  currentUser
+    ? fetchSequencePage(currentUser, sequenceId)
+    : fetchLoggedOutSequencePage(sequenceId);
+
+export type SequencePageData = NonNullable<
+  Awaited<ReturnType<typeof fetchSequencePage>>
+>;
+export type SequencePageChapter = SequencePageData["chapters"][number];
+
+export const fetchSequenceEditPage = cache(
+  async (currentUser: CurrentUser | null, sequenceId: string) => {
+    const sequence = await db.query.sequences.findFirst({
+      columns: {
+        _id: true,
+        title: true,
+        userId: true,
+        bannerImageId: true,
+        gridImageId: true,
+        hideFromAuthorPage: true,
+        draft: true,
+        userProfileOrder: true,
+        hidden: true,
+        noindex: true,
+        curatedOrder: true,
+        canonicalCollectionSlug: true,
+      },
+      extras: {
+        originalContents: ckEditorOriginalContents(),
+      },
+      with: {
+        user: {
+          columns: {
+            _id: true,
+            displayName: true,
+          },
+        },
+        chapters: {
+          columns: {
+            _id: true,
+            title: true,
+            subtitle: true,
+            number: true,
+            postIds: true,
+          },
+          extras: {
+            originalContents: ckEditorOriginalContents(),
+          },
+          orderBy: {
+            number: "asc",
+            createdAt: "asc",
+          },
+        },
+      },
+      where: {
+        _id: sequenceId,
+        isDeleted: false,
+      },
+    });
+    if (!sequence || !userCanEditSequence(currentUser, sequence)) {
+      return null;
+    }
+
+    const postIds = sequence.chapters.flatMap(({ postIds }) =>
+      postIds.filter(Boolean),
+    );
+    const posts = postIds.length
+      ? await db.query.posts.findMany({
+          columns: {
+            _id: true,
+            title: true,
+            slug: true,
+            draft: true,
+          },
+          where: {
+            _id: { in: postIds },
+          },
+        })
+      : [];
+    const postsById = new Map(posts.map((post) => [post._id, post]));
+
+    const { chapters, ...sequenceFields } = sequence;
+    return {
+      sequence: sequenceFields,
+      chapters: chapters.map(({ postIds, ...chapter }) => ({
+        ...chapter,
+        posts: postIds.flatMap((postId) => postsById.get(postId) ?? []),
+      })),
+    };
+  },
+);
+
+export type SequenceEditPageData = NonNullable<
+  Awaited<ReturnType<typeof fetchSequenceEditPage>>
+>;
