@@ -2,6 +2,7 @@ import "server-only";
 
 import { bookmarksRouter } from "./bookmarks/bookmarksRouter";
 import { booksRouter } from "./books/booksRouter";
+import { chaptersRouter } from "./chapters/chaptersRouter";
 import { collectionsRouter } from "./collections/collectionsRouter";
 import { commentAwardsRouter } from "./commentAwards/commentAwardsRouter";
 import { commentsRouter } from "./comments/commentsRouter";
@@ -29,6 +30,7 @@ import { votesRouter } from "./votes/voteRouter";
 export const router = {
   bookmarks: bookmarksRouter,
   books: booksRouter,
+  chapters: chaptersRouter,
   collections: collectionsRouter,
   commentAwards: commentAwardsRouter,
   comments: commentsRouter,

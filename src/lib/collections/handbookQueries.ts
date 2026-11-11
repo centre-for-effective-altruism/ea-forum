@@ -3,11 +3,11 @@ import { cacheLife } from "next/cache";
 import { sql } from "drizzle-orm";
 import sortBy from "lodash/sortBy";
 import { db } from "../db";
+import { ckEditorOriginalContents } from "../revisions/revisionHelpers";
 import { shortCacheLife } from "../cacheLifetimes";
 import type { CurrentUser } from "../users/currentUser";
 import { userIsAdmin } from "../users/userHelpers";
 import { getPostReadTimeMinutes, postStatuses } from "../posts/postsHelpers";
-import type { EditorContents } from "../ckeditor/editorHelpers";
 
 const fetchHandbookBookRow = async (collectionId: string) => {
   return await db.query.books.findFirst({
@@ -193,16 +193,6 @@ export type HandbookBook = NonNullable<HandbookPageData["book"]>;
 export type HandbookSequence = HandbookBook["sequences"][number];
 export type HandbookChapter = HandbookSequence["chapters"][number];
 export type HandbookPost = HandbookChapter["posts"][number];
-
-const ckEditorOriginalContents = () =>
-  sql<EditorContents | null>`
-    CASE
-      WHEN contents->'originalContents'->>'type' = 'ckEditorMarkup'
-        THEN contents->'originalContents'
-      WHEN contents->>'html' IS NOT NULL
-        THEN jsonb_build_object('type', 'ckEditorMarkup', 'data', contents->>'html')
-    END
-  `.as("originalContents");
 
 export const fetchHandbookEditData = async (currentUser: CurrentUser | null) => {
   const collectionId = process.env.HANDBOOK_COLLECTION_ID;

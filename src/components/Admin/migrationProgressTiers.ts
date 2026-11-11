@@ -23,10 +23,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         notes: "Post page focused on one comment",
       },
       {
-        paths: ["/sequences/:_id"],
-        notes: "Alias for /s/:_id once that page exists",
-      },
-      {
         paths: ["/topics/random"],
         notes: "Server-side redirect to a random topic",
       },
@@ -78,13 +74,8 @@ export const migrationProgressTiers: MigrationTier[] = [
         notes: "Map pages (CommunityMap, about 300 lines)",
       },
       {
-        paths: ["/s/:_id"],
-        notes:
-          "Sequence page (SequencesPage, about 370 lines; lib/sequences exists)",
-      },
-      {
-        paths: ["/sequencesNew", "/sequencesEdit/:_id", "/chaptersEdit/:_id"],
-        notes: "SequencesForm and ChaptersForm",
+        paths: ["/sequencesNew"],
+        notes: "SequencesForm",
       },
       { paths: ["/topics/:slug/discussion"], notes: "Comments on a topic" },
       {

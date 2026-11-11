@@ -32,7 +32,12 @@ const newSitePatterns = [
   /^\/$/, // Home page
   /^\/posts\/[^/]+\/[^/]+$/, // Post pages: /posts/[id]/[slug]
   /^\/posts\/[^/]+$/, // Post pages without slug: /posts/[id]
+  /^\/s\/[A-Za-z0-9]+$/, // Sequence page
+  /^\/s\/[A-Za-z0-9]+\/edit$/, // Sequence edit page
   /^\/s\/[A-Za-z0-9]+\/p\/[A-Za-z0-9]+$/, // Sequence posts
+  /^\/sequences\/[^/]+$/, // Sequence page (legacy path, redirect to /s/[_id])
+  /^\/sequencesEdit\/[^/]+$/, // Sequence edit page (legacy path, redirect to /s/[_id]/edit)
+  /^\/chaptersEdit\/[^/]+$/, // Chapter edit page (legacy path, redirect to /s/[sequenceId]/edit)
   /^\/(users|user|u)\/[^/]+$/, // User profiles
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)

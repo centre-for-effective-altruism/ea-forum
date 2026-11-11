@@ -17,6 +17,8 @@ import type { PostDisplay } from "../posts/postQueries";
 import type { CurrentUser } from "../users/currentUser";
 import { rpc } from "../rpc";
 import { useCurrentUser, useCurrentUserIfLoaded } from "./useCurrentUser";
+import { useLoginPopoverContext } from "./useLoginPopoverContext";
+import { useTracking } from "../analyticsEvents";
 import { userGetDisplayName } from "../users/userHelpers";
 import {
   SubscriptionType,
@@ -217,6 +219,34 @@ const getPostSubscriptionItems = (
     subscriptionType: subscriptionTypes.newComments,
   },
 ];
+
+export const useSequenceSubscription = (sequenceId: string) => {
+  const { currentUser } = useCurrentUser();
+  const { onSignup } = useLoginPopoverContext();
+  const { captureEvent } = useTracking();
+  const { data, loading, error, update } = useSubscription({
+    collectionName: "Sequences",
+    documentId: sequenceId,
+    type: subscriptionTypes.newSequencePosts,
+  });
+  const subscribed = data?.subscribed ?? false;
+  const onClick = useCallback(() => {
+    captureEvent("subscribeClick");
+    if (!currentUser) {
+      onSignup();
+      return;
+    }
+    if (data) {
+      update(!subscribed);
+    }
+  }, [captureEvent, currentUser, onSignup, data, update, subscribed]);
+  return {
+    subscribed,
+    onClick,
+    error,
+    isLoading: !!currentUser && !error && (loading || !data),
+  };
+};
 
 export const usePostSubscriptions = (post: PostDisplay | PostListItem) => {
   const { currentUser } = useCurrentUser();

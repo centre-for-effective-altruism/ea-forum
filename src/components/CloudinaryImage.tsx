@@ -6,8 +6,6 @@ import {
   makeCloudinaryImageUrl,
 } from "@/lib/cloudinary/cloudinaryHelpers";
 
-const DEFAULT_HEADER_HEIGHT = 300;
-
 export default function CloudinaryImage({
   width,
   height,
@@ -15,24 +13,22 @@ export default function CloudinaryImage({
   publicId,
   darkPublicId,
   imgProps,
+  preCrop,
   alt = "",
-  fullWidthHeader,
   loading,
   onLoaded,
   style,
   className = "",
   wrapperClassName = "",
 }: Readonly<{
-  /** Overridden if fullWidthHeader is true */
   width?: number | string;
   height?: number;
   objectFit?: "fill" | "contain" | "cover" | "none" | "scale-down";
   publicId: string;
   darkPublicId?: string | null;
   imgProps?: CloudinaryPropsType;
+  preCrop?: boolean;
   alt?: string;
-  /** Overrides width */
-  fullWidthHeader?: boolean;
   loading?: "lazy" | "eager";
   onLoaded?: () => void;
   style?: CSSProperties;
@@ -70,15 +66,6 @@ export default function CloudinaryImage({
     imageStyle.height = height + "px";
   }
 
-  // Ignore input width if we're told we have a fullWidthHeader
-  if (fullWidthHeader) {
-    // Cloudinary props will be used for src, but srcset will effectively
-    // overwrite these, unless client is IE
-    cloudinaryProps.h = ((height || DEFAULT_HEADER_HEIGHT) * 2).toString();
-    cloudinaryProps.w = "iw";
-    imageStyle.width = "100%";
-  }
-
   if (objectFit) {
     imageStyle.objectFit = objectFit;
   }
@@ -103,24 +90,11 @@ export default function CloudinaryImage({
   const basicImageUrl = makeCloudinaryImageUrl(
     shouldUseDarkImage === "yes" ? darkPublicId! : publicId,
     cloudinaryProps,
+    { preCrop },
   );
   const darkImageUrl =
-    darkPublicId && makeCloudinaryImageUrl(darkPublicId, cloudinaryProps);
-
-  // fullWidthHeader images are big and so need srcsets
-  let srcSetFunc: ((publicId: string) => string) | null = null;
-  if (fullWidthHeader) {
-    // We always double the height, to account for high dpi screens. We can't
-    // combine srcset width-checking with DPI-checking unfortunately.
-    const srcSetHeight = cloudinaryProps.h || (DEFAULT_HEADER_HEIGHT * 2).toString();
-    // NB: we lie about the final width here, we don't know it
-    srcSetFunc = (imgId) => `
-      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "450", h: srcSetHeight } })} 450w,
-      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "900", h: srcSetHeight } })} 900w,
-      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "1500", h: srcSetHeight } })} 1500w,
-      ${makeCloudinaryImageUrl(imgId, { ...cloudinaryProps, ...{ w: "iw", h: srcSetHeight } })} 3000w,
-    `;
-  }
+    darkPublicId &&
+    makeCloudinaryImageUrl(darkPublicId, cloudinaryProps, { preCrop });
 
   return (
     <picture
@@ -128,21 +102,6 @@ export default function CloudinaryImage({
       className={wrapperClassName}
       data-component="CloudinaryImage"
     >
-      {srcSetFunc &&
-        (shouldUseDarkImage === "maybe" ? (
-          <source
-            // Cast is safe for similar reasons to above
-            srcSet={srcSetFunc(darkPublicId!)}
-            media="(min-width: 600px) and (prefers-color-scheme: dark)"
-          />
-        ) : (
-          <source
-            srcSet={srcSetFunc(
-              shouldUseDarkImage === "yes" ? darkPublicId! : publicId,
-            )}
-            media="(min-width: 600px)"
-          />
-        ))}
       {shouldUseDarkImage === "maybe" && (
         <source
           // Cast is safe for similar reasons to above
