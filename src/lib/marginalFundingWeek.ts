@@ -3,11 +3,11 @@ import { isProduction } from "./environment";
 export const marginalFundingWeekEnabled = true;
 
 export const marginalFundingWeekExplainerPostId = isProduction
-  ? "DME72eCe7GBnrnM93"
+  ? "En8fuG2xSYEvSidnh"
   : "B5hnpo2yDv9Hstpka";
 
 export const marginalFundingWeekTagSlug = isProduction
-  ? "marginal-funding-week-2025"
+  ? "marginal-funding-week-2026"
   : "draft-amnesty-day";
 
 export const marginalFundingWeekListenUrl =
