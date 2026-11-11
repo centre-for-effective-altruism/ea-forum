@@ -1114,6 +1114,30 @@ export const commentAwards = pgTable(
   ],
 );
 
+export const userTwoFactorAuths = pgTable(
+  "UserTwoFactorAuths",
+  {
+    ...universalFields,
+    userId: varchar({ length: 27 }).notNull(),
+    encryptedSecret: text().notNull(),
+    enabledAt: timestamp(),
+    lastUsedTimeStep: doublePrecision(),
+    recoveryCodeHashes: text().array().default([]).notNull(),
+    failedAttempts: doublePrecision().default(0).notNull(),
+    lastFailedAttemptAt: timestamp(),
+  },
+  (table) => [
+    index("idx_UserTwoFactorAuths_schemaVersion").using(
+      "btree",
+      table.schemaVersion.asc().nullsLast(),
+    ),
+    uniqueIndex("idx_UserTwoFactorAuths_userId").using(
+      "btree",
+      table.userId.asc().nullsLast(),
+    ),
+  ],
+);
+
 export const clientIds = pgTable(
   "ClientIds",
   {

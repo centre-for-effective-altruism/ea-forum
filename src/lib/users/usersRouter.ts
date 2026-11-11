@@ -57,10 +57,13 @@ export const usersRouter = {
     .handler(async ({ input: { email, password, isSignup } }) => {
       try {
         const cookieStore = await cookies();
-        const hashedToken = isSignup
+        const result = isSignup
           ? await signupWithPassword(cookieStore, email, password)
           : await loginWithPassword(cookieStore, email, password);
-        const currentUser = await fetchCurrentUserByHashedToken(hashedToken);
+        if (result.twoFactorRequired) {
+          return { twoFactorRequired: true };
+        }
+        const currentUser = await fetchCurrentUserByHashedToken(result.hashedToken);
         return { ok: true, currentUser };
       } catch (e) {
         if (e instanceof UserIsBannedError) {

@@ -9,6 +9,7 @@ export default function LoginInput({
   placeholder,
   name,
   autoFocus,
+  autoComplete,
   secure,
   onToggleRevealed,
 }: Readonly<{
@@ -18,6 +19,7 @@ export default function LoginInput({
   placeholder: string;
   name?: string;
   autoFocus?: boolean;
+  autoComplete?: string;
   secure?: "revealed" | "hidden";
   onToggleRevealed?: () => void;
 }>) {
@@ -36,6 +38,7 @@ export default function LoginInput({
         onChange={onChange}
         data-testid={testId}
         autoFocus={autoFocus}
+        autoComplete={autoComplete}
         className={`
           grow py-[15px] text-gray-1000 text-[14px] font-sans font-[500]
           placeholder:text-gray-600 outline-none

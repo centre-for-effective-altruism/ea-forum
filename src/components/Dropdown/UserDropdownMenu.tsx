@@ -16,6 +16,7 @@ import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import UserProfileImage from "../UserProfileImage";
 import DropdownMenu from "./DropdownMenu";
 import QuickTakePopover from "../QuickTakes/QuickTakePopover";
+import TwoFactorAuthPopover from "../Auth/TwoFactorAuthPopover";
 
 const Check = () => <CheckIcon className="w-4 text-primary" />;
 
@@ -27,6 +28,7 @@ export default function UserDropdownMenu({
   const { currentUser } = useCurrentUser();
   const { theme, updateTheme } = useTheme();
   const [quickTakeOpen, setQuickTakeOpen] = useState(false);
+  const [twoFactorAuthOpen, setTwoFactorAuthOpen] = useState(false);
 
   const ProfileImageIcon = useCallback(() => {
     return <UserProfileImage user={currentUser} size={24} />;
@@ -34,6 +36,8 @@ export default function UserDropdownMenu({
 
   const onOpenQuickTake = useCallback(() => setQuickTakeOpen(true), []);
   const onCloseQuickTake = useCallback(() => setQuickTakeOpen(false), []);
+  const onOpenTwoFactorAuth = useCallback(() => setTwoFactorAuthOpen(true), []);
+  const onCloseTwoFactorAuth = useCallback(() => setTwoFactorAuthOpen(false), []);
 
   const onLogout = useCallback(async () => {
     await rpc.users.logout();
@@ -131,6 +135,10 @@ export default function UserDropdownMenu({
             : []),
           "divider",
           {
+            title: "Setup 2FA",
+            onClick: onOpenTwoFactorAuth,
+          },
+          {
             title: "Logout",
             onClick: onLogout,
           },
@@ -139,6 +147,10 @@ export default function UserDropdownMenu({
         <div data-component="UserDropdownMenu">{children}</div>
       </DropdownMenu>
       <QuickTakePopover open={quickTakeOpen} onClose={onCloseQuickTake} />
+      <TwoFactorAuthPopover
+        open={twoFactorAuthOpen}
+        onClose={onCloseTwoFactorAuth}
+      />
     </>
   );
 }

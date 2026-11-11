@@ -47,6 +47,7 @@ import {
   userLoginTokens,
   userRateLimits,
   userTagRels,
+  userTwoFactorAuths,
   users,
   votes,
 } from "./schema";
@@ -88,6 +89,7 @@ const relations = defineRelations(
     userRateLimits,
     userTagRels,
     userLoginTokens,
+    userTwoFactorAuths,
   },
   (r) => ({
     posts: {

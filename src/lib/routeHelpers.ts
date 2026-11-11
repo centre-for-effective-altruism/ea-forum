@@ -11,6 +11,14 @@ export const getSiteUrl = () => {
 export const combineUrls = (baseUrl: string, path: string) =>
   path ? baseUrl.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "") : baseUrl;
 
+/**
+ * Only allow same-origin relative paths so that we can't be used as an open
+ * redirect. Browsers treat backslashes like forward slashes and strip tabs and
+ * newlines, so "/\\" and "/\t/" can also be protocol-relative.
+ */
+export const sanitizeReturnTo = (returnTo: unknown): string =>
+  typeof returnTo === "string" && /^\/(?![/\\])\S*$/.test(returnTo) ? returnTo : "/";
+
 export const appendQueryParams = (url: string, params: Record<string, string>) => {
   // We add a dummy base for relative URLs - this is removed later before returning
   const isRelative = !/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(url);
