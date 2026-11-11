@@ -47,7 +47,7 @@ const usePageVisibility = () => {
       captureEvent("pageVisibilityChange", { isVisible, visibilityState });
     };
     window.addEventListener("visibilitychange", handler);
-    return () => window.addEventListener("visibilitychange", handler);
+    return () => window.removeEventListener("visibilitychange", handler);
   }, [doc, captureEvent]);
 
   return { pageIsVisible, pageVisibilityState };
@@ -75,11 +75,11 @@ const useIdlenessDetection = (timeoutInSeconds = 60) => {
 
   useEffect(() => {
     const events = ["mousemove", "keypress", "scroll"] as const;
-    for (const event in events) {
+    for (const event of events) {
       window.addEventListener(event, reset);
     }
     return () => {
-      for (const event in events) {
+      for (const event of events) {
         window.removeEventListener(event, reset);
       }
     };
