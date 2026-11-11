@@ -967,6 +967,35 @@ export const fetchUpcomingEventsPostsList = ({
     limit,
   });
 
+export const fetchEventsInTimeRange = ({
+  currentUserId,
+  before,
+  after,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  before: Date;
+  after: Date;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      ...nonGroupEventsFilter,
+      startTime: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
+    },
+    orderBy: {
+      startTime: "desc",
+      _id: "desc",
+    },
+    offset,
+    limit,
+  });
+
 const FORUM_FAVORITES_MIN_BASE_SCORE = 50;
 
 /**

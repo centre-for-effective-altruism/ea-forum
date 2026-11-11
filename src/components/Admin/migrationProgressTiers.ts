@@ -63,10 +63,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/events/:_id/:slug?", "/g/:groupId/p/:_id"],
         notes: "Event posts; PostsDisplay already handles isEvent",
       },
-      {
-        paths: ["/pastEvents"],
-        notes: "Posts grouped by day (PostsTimeBlock)",
-      },
       { paths: ["/allgroups"], notes: "Groups list" },
       {
         paths: ["/groups-map", "/community/map"],
