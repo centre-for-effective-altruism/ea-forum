@@ -939,11 +939,6 @@ export const fetchTopQuestionsPostsList = (props: {
 
 export const fetchRecentQuestionActivityPostsList = fetchQuestionsPostsList;
 
-const nonGroupEventsFilter = {
-  isEvent: true,
-  groupId: { isNull: true },
-} as const;
-
 export const fetchUpcomingEventsPostsList = ({
   currentUserId,
   offset,
@@ -956,7 +951,7 @@ export const fetchUpcomingEventsPostsList = ({
   fetchPostsList({
     currentUserId,
     where: {
-      ...nonGroupEventsFilter,
+      isEvent: true,
       startTime: { gte: new Date().toISOString() },
     },
     orderBy: {
@@ -983,7 +978,7 @@ export const fetchEventsInTimeRange = ({
   fetchPostsList({
     currentUserId,
     where: {
-      ...nonGroupEventsFilter,
+      isEvent: true,
       startTime: {
         AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
       },

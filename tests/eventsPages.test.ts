@@ -15,7 +15,7 @@ const createEvent = (
 ) => createTestPost({ isEvent: true, startTime, ...data });
 
 suite("Events pages", () => {
-  test("Upcoming events are future non-group events, soonest first", async () => {
+  test("Upcoming events are future events, including group events, soonest first", async () => {
     const later = await createEvent(daysFromNow(20));
     const sooner = await createEvent(daysFromNow(10));
     const past = await createEvent(daysFromNow(-1));
@@ -32,7 +32,7 @@ suite("Events pages", () => {
     );
     expect(
       posts.map(({ _id }) => _id).filter((id) => candidateIds.includes(id)),
-    ).toEqual([sooner._id, later._id]);
+    ).toEqual([groupEvent._id, sooner._id, later._id]);
   });
 
   test("Upcoming events are served by the new site", () => {
@@ -40,7 +40,7 @@ suite("Events pages", () => {
     expect(isNewSiteAllowed("/upcomingEvents")).toBe(true);
   });
 
-  test("Past events are non-group events that start in the time range", async () => {
+  test("Past events are events, including group events, that start in the time range", async () => {
     const after = new Date(Date.UTC(2090, 0, 1));
     const before = new Date(Date.UTC(2090, 0, 2));
     const atStart = await createEvent(after.toISOString());
@@ -52,7 +52,10 @@ suite("Events pages", () => {
       new Date(Date.UTC(2089, 11, 31)).toISOString(),
     );
     const group = await createTestGroup({});
-    const groupEvent = await createEvent(midday.startTime!, { groupId: group._id });
+    const groupEvent = await createEvent(
+      new Date(Date.UTC(2090, 0, 1, 18)).toISOString(),
+      { groupId: group._id },
+    );
 
     const posts = await fetchEventsInTimeRange({
       currentUserId: null,
@@ -65,7 +68,7 @@ suite("Events pages", () => {
     );
     expect(
       posts.map(({ _id }) => _id).filter((id) => candidateIds.includes(id)),
-    ).toEqual([midday._id, atStart._id]);
+    ).toEqual([groupEvent._id, midday._id, atStart._id]);
   });
 
   test("Past events are served by the new site", () => {
