@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
 } from "react";
 import posthog from "posthog-js";
@@ -107,15 +108,9 @@ type TrackingContext = Record<string, unknown>;
 
 const trackingContext = createContext<TrackingContext>({});
 
-// An empty object, used as an argument default value. If the argument default
-// value were set to {} in the usual way, it would be a new instance of {} each
-// time; this way, it's the same {}, which in turn matters for making
-// useCallback return the same thing each tie.
-const emptyEventProps: EventProps = {};
-
 export const useTracking = ({
   eventType = "unnamed",
-  eventProps = emptyEventProps,
+  eventProps = {},
 }: {
   eventType?: string;
   eventProps?: EventProps;
@@ -123,8 +118,31 @@ export const useTracking = ({
   const getCurrentUser = useCurrentUserGetter();
   const { clientId } = useClientId();
   const localTrackingContext = useContext(trackingContext);
+  const latestRef = useRef({
+    getCurrentUser,
+    clientId,
+    localTrackingContext,
+    eventProps,
+    eventType,
+  });
+  useLayoutEffect(() => {
+    latestRef.current = {
+      getCurrentUser,
+      clientId,
+      localTrackingContext,
+      eventProps,
+      eventType,
+    };
+  });
   const track = useCallback(
     (type?: string | undefined, trackingData?: Record<string, Json>) => {
+      const {
+        getCurrentUser,
+        clientId,
+        localTrackingContext,
+        eventProps,
+        eventType,
+      } = latestRef.current;
       const eventName = type || eventType;
       const timestamp = new Date();
       const path = window.location.pathname;
@@ -148,7 +166,7 @@ export const useTracking = ({
         posthog.capture(eventName, props);
       });
     },
-    [getCurrentUser, clientId, localTrackingContext, eventProps, eventType],
+    [],
   );
   return { captureEvent: track };
 };

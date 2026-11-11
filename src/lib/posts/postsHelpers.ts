@@ -29,6 +29,7 @@ export const postsListViewSchema = z.object({
     "userProfile",
     "topQuestions",
     "recentQuestionActivity",
+    "upcomingEvents",
   ]),
   offset: z.int().gte(0).optional(),
   limit: z.int().gt(0),

@@ -732,6 +732,8 @@ export const fetchPostsListFromView = (
       return fetchTopQuestionsPostsList({ currentUserId, ...props });
     case "recentQuestionActivity":
       return fetchRecentQuestionActivityPostsList({ currentUserId, ...props });
+    case "upcomingEvents":
+      return fetchUpcomingEventsPostsList({ currentUserId, ...props });
     case "userProfile":
       if (!userId) {
         throw new Error("User profile view requires user id");
@@ -936,6 +938,58 @@ export const fetchTopQuestionsPostsList = (props: {
   });
 
 export const fetchRecentQuestionActivityPostsList = fetchQuestionsPostsList;
+
+export const fetchUpcomingEventsPostsList = ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: true,
+      startTime: { gte: new Date().toISOString() },
+    },
+    orderBy: {
+      startTime: "asc",
+      _id: "asc",
+    },
+    offset,
+    limit,
+  });
+
+export const fetchEventsInTimeRange = ({
+  currentUserId,
+  before,
+  after,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  before: Date;
+  after: Date;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: true,
+      startTime: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
+    },
+    orderBy: {
+      startTime: "desc",
+      _id: "desc",
+    },
+    offset,
+    limit,
+  });
 
 const FORUM_FAVORITES_MIN_BASE_SCORE = 50;
 

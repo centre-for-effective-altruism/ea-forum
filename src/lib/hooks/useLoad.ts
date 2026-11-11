@@ -40,6 +40,7 @@ export const useLoad = <T>(
   const [loading, setLoading] = useState(initial.length === 0 && !disabled);
   const [canLoadMore, setCanLoadMore] = useState(true);
   const loadingRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   const memoizedLoad = useCallback(load, dependencies);
@@ -52,10 +53,15 @@ export const useLoad = <T>(
       if (disabled || loadingRef.current) {
         return;
       }
+      const requestId = requestIdRef.current;
+      const isCurrentRequest = () => requestId === requestIdRef.current;
       loadingRef.current = true;
       setLoading(true);
       try {
         const newValues = await memoizedLoad({ rpc, limit: pageSize, offset });
+        if (!isCurrentRequest()) {
+          return;
+        }
         setValue((values) => [...values, ...newValues]);
         if (newValues.length < pageSize) {
           setCanLoadMore(false);
@@ -67,12 +73,17 @@ export const useLoad = <T>(
           });
         }
       } catch (e) {
+        if (!isCurrentRequest()) {
+          return;
+        }
         console.error("Error loading:", e);
         captureException(e);
         setCanLoadMore(false);
       } finally {
-        loadingRef.current = false;
-        setLoading(false);
+        if (isCurrentRequest()) {
+          loadingRef.current = false;
+          setLoading(false);
+        }
       }
     },
     [disabled, captureEvent, memoizedLoad, pageSize, eventName, memoizedEventProps],
@@ -85,6 +96,7 @@ export const useLoad = <T>(
 
   useEffect(() => {
     if (!disabled && initial.length === 0) {
+      requestIdRef.current++;
       setValue([]);
       setCanLoadMore(true);
       loadingRef.current = false;
