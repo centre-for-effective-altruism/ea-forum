@@ -21,7 +21,16 @@ export const postStatuses = {
 };
 
 export const postsListViewSchema = z.object({
-  view: z.enum(["frontpage", "sticky", "orgUpdates", "curated", "userProfile"]),
+  view: z.enum([
+    "frontpage",
+    "sticky",
+    "orgUpdates",
+    "curated",
+    "userProfile",
+    "topQuestions",
+    "recentQuestionActivity",
+    "upcomingEvents",
+  ]),
   offset: z.int().gte(0).optional(),
   limit: z.int().gt(0),
   excludeTagId: z.union([z.string(), z.array(z.string()).max(10)]).optional(),

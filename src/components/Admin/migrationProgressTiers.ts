@@ -23,14 +23,9 @@ export const migrationProgressTiers: MigrationTier[] = [
         notes: "Post page focused on one comment",
       },
       {
-        paths: ["/sequences/:_id"],
-        notes: "Alias for /s/:_id once that page exists",
-      },
-      {
         paths: ["/topics/random"],
         notes: "Server-side redirect to a random topic",
       },
-      { paths: ["/open-thread"], notes: "Redirects to the current open thread" },
       {
         paths: ["/:section?/:subreddit?/ea/:id/:slug?(/:commentId)"],
         notes: "Legacy ID lookup, then redirect",
@@ -42,10 +37,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         notes: "Auth0 password flows",
       },
       {
-        paths: ["/questions"],
-        notes: "Reuses PostsList with a question filter",
-      },
-      {
         paths: ["/allComments", "/users/:slug/replies", "/moderatorComments"],
         notes: "Reuse CommentsList",
       },
@@ -53,7 +44,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/my-stats"],
         notes: "Thin wrapper around the user stats page",
       },
-      { paths: ["/keywords/:keyword"], notes: "Keyword results page" },
       {
         paths: ["/debug/emailHistory", "/debug/notificationEmailPreview"],
         notes: "Admin debug pages",
@@ -73,23 +63,14 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/events/:_id/:slug?", "/g/:groupId/p/:_id"],
         notes: "Event posts; PostsDisplay already handles isEvent",
       },
-      {
-        paths: ["/pastEvents", "/upcomingEvents"],
-        notes: "Posts grouped by day (PostsTimeBlock)",
-      },
       { paths: ["/allgroups"], notes: "Groups list" },
       {
         paths: ["/groups-map", "/community/map"],
         notes: "Map pages (CommunityMap, about 300 lines)",
       },
       {
-        paths: ["/s/:_id"],
-        notes:
-          "Sequence page (SequencesPage, about 370 lines; lib/sequences exists)",
-      },
-      {
-        paths: ["/sequencesNew", "/sequencesEdit/:_id", "/chaptersEdit/:_id"],
-        notes: "SequencesForm and ChaptersForm",
+        paths: ["/sequencesNew"],
+        notes: "SequencesForm",
       },
       { paths: ["/topics/:slug/discussion"], notes: "Comments on a topic" },
       {
@@ -115,7 +96,6 @@ export const migrationProgressTiers: MigrationTier[] = [
         paths: ["/manageSubscriptions"],
         notes: "lib/subscriptions exists",
       },
-      { paths: ["/keywords"], notes: "Keyword alerts management" },
       { paths: ["/digests/:num"], notes: "Public digest page" },
       { paths: ["/admin/digests"], notes: "Digest list" },
       {

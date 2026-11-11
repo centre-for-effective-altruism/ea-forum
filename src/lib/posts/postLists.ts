@@ -49,6 +49,12 @@ export const viewablePostFilter = {
   status: postStatuses.STATUS_APPROVED,
 } as const;
 
+export const sequenceViewablePostFilter = {
+  ...viewablePostFilter,
+  unlisted: undefined,
+  hiddenRelatedQuestion: undefined,
+};
+
 /** Create a filter to return _only_ posts with a particular tag */
 export const onlyTagFilter = (tagId: string) => (postsTable: typeof posts) =>
   sql`(${postsTable.tagRelevance} ->> ${tagId})::FLOAT >= 1`;
@@ -296,6 +302,24 @@ export const fetchStickyPostsList = ({
     limit,
   });
 };
+
+export const fetchCurrentOpenThread = () =>
+  db.query.posts.findFirst({
+    columns: {
+      _id: true,
+      slug: true,
+      isEvent: true,
+      groupId: true,
+    },
+    where: {
+      ...viewablePostFilter,
+      sticky: true,
+      RAW: onlyTagFilter(process.env.NEXT_PUBLIC_OPEN_THREAD_TAG_ID),
+    },
+    orderBy: {
+      postedAt: "desc",
+    },
+  });
 
 export const fetchPostsListById = async (
   currentUserId: string | null,
@@ -704,6 +728,12 @@ export const fetchPostsListFromView = (
       return fetchOrgUpdatesPostsList({ currentUserId, ...props });
     case "curated":
       return fetchCuratedPostsList({ currentUserId, ...props });
+    case "topQuestions":
+      return fetchTopQuestionsPostsList({ currentUserId, ...props });
+    case "recentQuestionActivity":
+      return fetchRecentQuestionActivityPostsList({ currentUserId, ...props });
+    case "upcomingEvents":
+      return fetchUpcomingEventsPostsList({ currentUserId, ...props });
     case "userProfile":
       if (!userId) {
         throw new Error("User profile view requires user id");
@@ -863,6 +893,99 @@ export const fetchCuratedPostsList = ({
       sticky: "desc",
       curatedDate: "desc",
       postedAt: "desc",
+    },
+    offset,
+    limit,
+  });
+
+const TOP_QUESTIONS_MIN_BASE_SCORE = 40;
+
+const fetchQuestionsPostsList = ({
+  currentUserId,
+  minBaseScore,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  minBaseScore?: number;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      question: true,
+      hiddenRelatedQuestion: undefined,
+      groupId: { isNull: true },
+      baseScore: minBaseScore === undefined ? undefined : { gte: minBaseScore },
+    },
+    orderBy: {
+      lastCommentedAt: "desc",
+      _id: "desc",
+    },
+    offset,
+    limit,
+  });
+
+export const fetchTopQuestionsPostsList = (props: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchQuestionsPostsList({
+    ...props,
+    minBaseScore: TOP_QUESTIONS_MIN_BASE_SCORE,
+  });
+
+export const fetchRecentQuestionActivityPostsList = fetchQuestionsPostsList;
+
+export const fetchUpcomingEventsPostsList = ({
+  currentUserId,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: true,
+      startTime: { gte: new Date().toISOString() },
+    },
+    orderBy: {
+      startTime: "asc",
+      _id: "asc",
+    },
+    offset,
+    limit,
+  });
+
+export const fetchEventsInTimeRange = ({
+  currentUserId,
+  before,
+  after,
+  offset,
+  limit,
+}: {
+  currentUserId: string | null;
+  before: Date;
+  after: Date;
+  offset?: number;
+  limit: number;
+}) =>
+  fetchPostsList({
+    currentUserId,
+    where: {
+      isEvent: true,
+      startTime: {
+        AND: [{ lt: before.toISOString() }, { gte: after.toISOString() }],
+      },
+    },
+    orderBy: {
+      startTime: "desc",
+      _id: "desc",
     },
     offset,
     limit,

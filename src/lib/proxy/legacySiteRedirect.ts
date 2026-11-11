@@ -32,7 +32,12 @@ const newSitePatterns = [
   /^\/$/, // Home page
   /^\/posts\/[^/]+\/[^/]+$/, // Post pages: /posts/[id]/[slug]
   /^\/posts\/[^/]+$/, // Post pages without slug: /posts/[id]
+  /^\/s\/[A-Za-z0-9]+$/, // Sequence page
+  /^\/s\/[A-Za-z0-9]+\/edit$/, // Sequence edit page
   /^\/s\/[A-Za-z0-9]+\/p\/[A-Za-z0-9]+$/, // Sequence posts
+  /^\/sequences\/[^/]+$/, // Sequence page (legacy path, redirect to /s/[_id])
+  /^\/sequencesEdit\/[^/]+$/, // Sequence edit page (legacy path, redirect to /s/[_id]/edit)
+  /^\/chaptersEdit\/[^/]+$/, // Chapter edit page (legacy path, redirect to /s/[sequenceId]/edit)
   /^\/(users|user|u)\/[^/]+$/, // User profiles
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
@@ -63,6 +68,8 @@ const newSitePatterns = [
   /^\/recommendations$/, // Recommendations
   /^\/drafts$/, // Drafts page
   /^\/saved$/, // Saved & read page
+  /^\/keywords$/, // Keyword alerts
+  /^\/keywords\/[^/]+$/, // Keyword alert results: /keywords/[keyword]
   /^\/inbox$/, // Inbox
   /^\/inbox\/[^/]+$/, // Inbox conversation: /inbox/[_id]
   /^\/moderatorInbox$/, // Moderator inbox
@@ -74,6 +81,12 @@ const newSitePatterns = [
   /^\/marginal-funding$/, // Marginal Funding Week sequence event
   /^\/quicktakes$/, // Quick takes page
   /^\/shortform$/, // Quick takes (legacy path, redirect to /quicktakes)
+  /^\/questions$/, // Questions page
+  /^\/open-thread$/, // Current open thread (redirect to the post)
+  /^\/upcoming-events$/, // Upcoming events
+  /^\/upcomingEvents$/, // Upcoming events (legacy path, redirect to /upcoming-events)
+  /^\/past-events$/, // Past events
+  /^\/pastEvents$/, // Past events (legacy path, redirect to /past-events)
   /^\/admin$/, // Admin
   /^\/admin\/featured$/, // Admin featured queue
   /^\/admin\/onboarding$/, // Admin onboarding test

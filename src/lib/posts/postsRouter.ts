@@ -11,6 +11,7 @@ import { draftsListSettingsSchema } from "./draftsListSettings";
 import {
   fetchAllPosts,
   fetchDraftsListPosts,
+  fetchEventsInTimeRange,
   fetchFeaturedFrontpagePosts,
   fetchPostsListById,
   fetchPostsListByIds,
@@ -79,6 +80,22 @@ export const postsRouter = {
     .handler(async ({ input }) => {
       const currentUser = await getCurrentUser();
       return await fetchAllPosts({ currentUser, ...input });
+    }),
+  listEventsInTimeRange: os
+    .input(
+      z.object({
+        before: z.coerce.date(),
+        after: z.coerce.date(),
+        offset: z.number().int().nonnegative().max(5000).optional(),
+        limit: z.number().int().positive().max(50).default(14),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const currentUser = await getCurrentUser();
+      return await fetchEventsInTimeRange({
+        currentUserId: currentUser?._id ?? null,
+        ...input,
+      });
     }),
   listForTag: os
     .input(

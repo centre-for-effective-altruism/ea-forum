@@ -2,11 +2,13 @@ import "server-only";
 
 import { bookmarksRouter } from "./bookmarks/bookmarksRouter";
 import { booksRouter } from "./books/booksRouter";
+import { chaptersRouter } from "./chapters/chaptersRouter";
 import { collectionsRouter } from "./collections/collectionsRouter";
 import { commentAwardsRouter } from "./commentAwards/commentAwardsRouter";
 import { commentsRouter } from "./comments/commentsRouter";
 import { featuredQueueRouter } from "./featuredQueue/featuredQueueRouter";
 import { forumEventsRouter } from "./forumEvents/forumEventsRouter";
+import { keywordAlertsRouter } from "./keywordAlerts/keywordAlertsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
 import { moderationRouter } from "./moderation/moderationRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
@@ -28,11 +30,13 @@ import { votesRouter } from "./votes/voteRouter";
 export const router = {
   bookmarks: bookmarksRouter,
   books: booksRouter,
+  chapters: chaptersRouter,
   collections: collectionsRouter,
   commentAwards: commentAwardsRouter,
   comments: commentsRouter,
   featuredQueue: featuredQueueRouter,
   forumEvents: forumEventsRouter,
+  keywordAlerts: keywordAlertsRouter,
   lwEvents: lwEventRouter,
   moderation: moderationRouter,
   notifications: notificationsRouter,

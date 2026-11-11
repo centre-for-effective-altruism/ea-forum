@@ -5,7 +5,7 @@ import { db } from "../db";
 import { shortCacheLife } from "../cacheLifetimes";
 import type { CurrentUser } from "../users/currentUser";
 import { sequencePermissionFilter } from "./sequenceQueries";
-import { postsListProjection, viewablePostFilter } from "../posts/postLists";
+import { postsListProjection, sequenceViewablePostFilter } from "../posts/postLists";
 import {
   orderSequenceEventPosts,
   type SequenceEventPostOrder,
@@ -32,9 +32,7 @@ const fetchSequenceEventPosts = async (
   const posts = await db.query.posts.findMany({
     ...sequenceEventPostsProjection(currentUserId),
     where: {
-      ...viewablePostFilter,
-      unlisted: undefined,
-      hiddenRelatedQuestion: undefined,
+      ...sequenceViewablePostFilter,
       _id: { in: postIds },
     },
   });
