@@ -102,7 +102,6 @@ export const postsRouter = {
       z.object({
         tagId: z.string(),
         sortedBy: topicPostsSortedBySchema,
-        excludePostId: z.string().optional(),
         offset: z.number().int().nonnegative().max(5000).optional(),
         limit: z.number().int().positive().max(50).default(15),
       }),

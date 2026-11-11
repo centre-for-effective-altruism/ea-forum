@@ -8,7 +8,7 @@ import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
 import HomePageMarginalFundingTabLayout, {
   MARGINAL_FUNDING_CARD_COUNT,
-  MARGINAL_FUNDING_LIST_INITIAL_COUNT,
+  MARGINAL_FUNDING_LIST_SKELETON_COUNT,
 } from "./HomePageMarginalFundingTabLayout";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
@@ -63,8 +63,8 @@ export default function HomePageTabSkeleton({
                 featuredView === "list"
                   ? 1 +
                     MARGINAL_FUNDING_CARD_COUNT +
-                    MARGINAL_FUNDING_LIST_INITIAL_COUNT
-                  : MARGINAL_FUNDING_LIST_INITIAL_COUNT
+                    MARGINAL_FUNDING_LIST_SKELETON_COUNT
+                  : MARGINAL_FUNDING_LIST_SKELETON_COUNT
               }
               viewType="list"
             />

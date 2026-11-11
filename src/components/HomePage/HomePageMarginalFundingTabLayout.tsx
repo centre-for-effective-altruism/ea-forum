@@ -14,7 +14,7 @@ import Link from "../Link";
 import clsx from "clsx";
 
 export const MARGINAL_FUNDING_CARD_COUNT = 9;
-export const MARGINAL_FUNDING_LIST_INITIAL_COUNT = 15;
+export const MARGINAL_FUNDING_LIST_SKELETON_COUNT = 15;
 
 export default function HomePageMarginalFundingTabLayout({
   explainerPost,

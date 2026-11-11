@@ -1,16 +1,11 @@
 "use client";
 
-import { useLoadMore } from "@/lib/hooks/useLoadMore";
-import { useTracking } from "@/lib/analyticsEvents";
 import { usePostsListView } from "@/lib/hooks/usePostsListView";
 import { filterNonNull } from "@/lib/typeHelpers";
-import { rpc } from "@/lib/rpc";
 import clsx from "clsx";
 import type { PostListItem } from "@/lib/posts/postLists";
 import HomePageMarginalFundingTabLayout from "./HomePageMarginalFundingTabLayout";
-import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import FeaturedPost from "../FeaturedCards/FeaturedPost";
-import TextLinkButton from "../TextLinkButton";
 import PostsItem from "../PostsList/PostsItem";
 
 // Read posts keep dark text on the orange background in both light and dark mode
@@ -33,44 +28,18 @@ const readListItemClassName = clsx(
 
 export default function HomePageMarginalFundingTab({
   explainerPost,
-  tagId,
   cardPosts,
-  initialListPosts,
-  initialListLimit,
-  loadMoreLimit,
+  listPosts,
 }: Readonly<{
   explainerPost: PostListItem | null;
-  tagId: string | null;
   cardPosts: PostListItem[];
-  initialListPosts: PostListItem[];
-  initialListLimit: number;
-  loadMoreLimit: number;
+  listPosts: PostListItem[];
 }>) {
-  const { captureEvent } = useTracking();
   const { view } = usePostsListView();
-  const { items, loading, limit, canLoadMore, onLoadMore } = useLoadMore({
-    initialItems: initialListPosts,
-    limit: loadMoreLimit,
-    fetchMore: async (limit, offset) => {
-      if (!tagId) {
-        return { items: [] };
-      }
-      const listOffset = cardPosts.length + offset;
-      captureEvent("marginalFundingPostsLoadMore", { offset: listOffset });
-      const items = await rpc.posts.listForTag({
-        tagId,
-        sortedBy: "top",
-        excludePostId: explainerPost?._id,
-        offset: listOffset,
-        limit,
-      });
-      return { items };
-    },
-  });
-  const showLoadMore = initialListPosts.length >= initialListLimit && canLoadMore;
-
-  const listPosts =
-    view === "list" ? filterNonNull([explainerPost, ...cardPosts, ...items]) : items;
+  const visibleListPosts =
+    view === "list"
+      ? filterNonNull([explainerPost, ...cardPosts, ...listPosts])
+      : listPosts;
 
   return (
     <HomePageMarginalFundingTabLayout
@@ -93,31 +62,16 @@ export default function HomePageMarginalFundingTab({
         />
       ))}
       listSection={
-        listPosts.length > 0 && (
-          <section className="max-w-full">
-            <div className="space-y-0.5">
-              {listPosts.map((post) => (
-                <PostsItem
-                  key={post._id}
-                  post={post}
-                  viewType="list"
-                  readClassName={readListItemClassName}
-                />
-              ))}
-            </div>
-            {loading && (
-              <PostsListSkeleton count={limit} viewType="list" className="mt-0.5" />
-            )}
-            {showLoadMore && (
-              <TextLinkButton
-                variant="primary"
-                onClick={onLoadMore}
-                disabled={loading}
-                className="mt-2"
-              >
-                Load more
-              </TextLinkButton>
-            )}
+        visibleListPosts.length > 0 && (
+          <section className="max-w-full space-y-0.5">
+            {visibleListPosts.map((post) => (
+              <PostsItem
+                key={post._id}
+                post={post}
+                viewType="list"
+                readClassName={readListItemClassName}
+              />
+            ))}
           </section>
         )
       }
