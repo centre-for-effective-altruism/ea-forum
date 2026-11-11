@@ -10,13 +10,15 @@ import {
   useMemo,
 } from "react";
 
-export type LoginAction = "login" | "signup";
+export type LoginAction = "login" | "signup" | "twoFactor";
 
 type LoginPopoverContext = {
   loginAction: LoginAction | null;
   setLoginAction: (action: LoginAction | null) => void;
   onLogin: () => void;
   onSignup: () => void;
+  returnTo: string | null;
+  setReturnTo: (returnTo: string | null) => void;
 };
 
 const loginPopoverContext = createContext<LoginPopoverContext | null>(null);
@@ -25,6 +27,7 @@ export const LoginPopoverContextProvider: FC<{
   children?: ReactNode;
 }> = ({ children }) => {
   const [loginAction, setLoginAction] = useState<LoginAction | null>(null);
+  const [returnTo, setReturnTo] = useState<string | null>(null);
   const onLogin = useCallback(() => setLoginAction("login"), []);
   const onSignup = useCallback(() => setLoginAction("signup"), []);
 
@@ -34,8 +37,10 @@ export const LoginPopoverContextProvider: FC<{
       setLoginAction,
       onLogin,
       onSignup,
+      returnTo,
+      setReturnTo,
     }),
-    [loginAction, setLoginAction, onLogin, onSignup],
+    [loginAction, setLoginAction, onLogin, onSignup, returnTo],
   );
 
   return (

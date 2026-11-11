@@ -5,6 +5,7 @@ import {
   loginUserFromIdToken,
   UserIsBannedError,
 } from "@/lib/authHelpers";
+import { appendQueryParams, sanitizeReturnTo } from "@/lib/routeHelpers";
 
 // Decode the return URL from the state we passed into Auth0.
 // Be careful making changes as security is _very important here.
@@ -15,23 +16,10 @@ const getReturnTo = (state: string | null): string => {
 
   try {
     const decoded = Buffer.from(state, "base64").toString("utf8");
-    const parsed = JSON.parse(decoded);
-    const returnTo = parsed.returnTo;
-
-    // Only allow same-origin relative paths
-    if (
-      returnTo &&
-      typeof returnTo === "string" &&
-      returnTo.startsWith("/") &&
-      !returnTo.startsWith("//")
-    ) {
-      return returnTo;
-    }
+    return sanitizeReturnTo(JSON.parse(decoded).returnTo);
   } catch {
-    // Swallow all errors — fallback below
+    return "/";
   }
-
-  return "/";
 };
 
 // Callback handler for Google login through Auth0
@@ -61,11 +49,15 @@ export const GET = async (req: NextRequest) => {
       throw new Error("Missing id token");
     }
 
-    const response = NextResponse.redirect(
-      new URL(getReturnTo(state), process.env.NEXT_PUBLIC_SITE_URL),
-    );
+    const { twoFactorRequired, cookie } = await loginUserFromIdToken(id_token);
 
-    const { cookie } = await loginUserFromIdToken(id_token);
+    const returnTo = getReturnTo(state);
+    const redirectTo = twoFactorRequired
+      ? appendQueryParams("/login", { twoFactor: "true", returnTo })
+      : returnTo;
+    const response = NextResponse.redirect(
+      new URL(redirectTo, process.env.NEXT_PUBLIC_SITE_URL),
+    );
     response.cookies.set(cookie.name, cookie.value, cookie.options);
 
     return response;

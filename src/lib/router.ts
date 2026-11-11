@@ -24,6 +24,7 @@ import { sequencesRouter } from "./sequences/sequencesRouter";
 import { spotlightsRouter } from "./spotlights/spotlightsRouter";
 import { subscriptionsRouter } from "./subscriptions/subscriptionsRouter";
 import { tagsRouter } from "./tags/tagsRouter";
+import { twoFactorAuthRouter } from "./twoFactorAuth/twoFactorAuthRouter";
 import { usersRouter } from "./users/usersRouter";
 import { votesRouter } from "./votes/voteRouter";
 
@@ -52,6 +53,7 @@ export const router = {
   spotlights: spotlightsRouter,
   subscriptions: subscriptionsRouter,
   tags: tagsRouter,
+  twoFactorAuth: twoFactorAuthRouter,
   users: usersRouter,
   votes: votesRouter,
 };

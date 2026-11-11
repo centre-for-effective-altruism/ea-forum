@@ -12,6 +12,12 @@ import { isProduction } from "./environment";
 import { captureServerEvent } from "./analytics/captureServerEvent";
 import { userIsBanned } from "./users/userHelpers";
 import { isBannedEmailDomain } from "./users/bannedEmailDomains";
+import { userHasTwoFactorAuthEnabled } from "./twoFactorAuth/twoFactorAuthQueries";
+import {
+  createPendingTwoFactorLoginToken,
+  PENDING_TWO_FACTOR_LOGIN_COOKIE_NAME,
+  PENDING_TWO_FACTOR_LOGIN_TTL_SECONDS,
+} from "./twoFactorAuth/twoFactorAuthHelpers";
 
 export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
 
@@ -183,7 +189,21 @@ export const getOrCreateUser = async (
   return user;
 };
 
-export const loginUserFromIdToken = async (idToken: string) => {
+const createAuthCookie = (name: string, value: string, maxAge: number) => ({
+  name,
+  value,
+  options: { httpOnly: true, maxAge, path: "/", secure: isProduction },
+});
+
+type LoginCookie = ReturnType<typeof createAuthCookie>;
+
+type LoginResult =
+  | { twoFactorRequired: false; hashedToken: string; cookie: LoginCookie }
+  | { twoFactorRequired: true; cookie: LoginCookie };
+
+export const loginUserFromIdToken = async (
+  idToken: string,
+): Promise<LoginResult> => {
   const profile = auth0IdTokenToProfile(idToken);
   const clientId = await getCurrentClientId();
   const user = await getOrCreateUser(clientId, profile);
@@ -191,6 +211,21 @@ export const loginUserFromIdToken = async (idToken: string) => {
     throw new Error("User not found");
   }
 
+  if (await userHasTwoFactorAuthEnabled(user._id)) {
+    return {
+      twoFactorRequired: true,
+      cookie: createAuthCookie(
+        PENDING_TWO_FACTOR_LOGIN_COOKIE_NAME,
+        createPendingTwoFactorLoginToken(user._id),
+        PENDING_TWO_FACTOR_LOGIN_TTL_SECONDS,
+      ),
+    };
+  }
+
+  return { twoFactorRequired: false, ...(await createLoginSession(user._id)) };
+};
+
+export const createLoginSession = async (userId: string) => {
   const token = generateLoginToken();
 
   const hashedToken = hashLoginToken(token);
@@ -208,22 +243,13 @@ export const loginUserFromIdToken = async (idToken: string) => {
         )
       `,
     })
-    .where(sql`${users._id} = ${user._id}`);
+    .where(sql`${users._id} = ${userId}`);
 
-  captureServerEvent("userLoggedIn", { userId: user._id }, user._id);
+  captureServerEvent("userLoggedIn", { userId }, userId);
 
   return {
     hashedToken,
-    cookie: {
-      name: LOGIN_TOKEN_COOKIE_NAME,
-      value: token,
-      options: {
-        httpOnly: true,
-        maxAge: 315360000, // 10 years
-        path: "/",
-        secure: isProduction,
-      },
-    },
+    cookie: createAuthCookie(LOGIN_TOKEN_COOKIE_NAME, token, 315360000), // 10 years
   };
 };
 
@@ -246,9 +272,9 @@ export const loginWithPassword = async (
     throw new Error("Incorrect email or password");
   }
 
-  const { hashedToken, cookie } = await loginUserFromIdToken(auth0IdToken);
-  cookieStore.set(cookie.name, cookie.value, cookie.options);
-  return hashedToken;
+  const result = await loginUserFromIdToken(auth0IdToken);
+  cookieStore.set(result.cookie.name, result.cookie.value, result.cookie.options);
+  return result;
 };
 
 export const signupWithPassword = async (

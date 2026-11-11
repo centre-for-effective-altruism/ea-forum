@@ -23,6 +23,9 @@ declare namespace NodeJS {
     AUTH0_ORIGINAL_DOMAIN: string;
     AUTH0_SCOPE: string;
 
+    // Two-factor auth
+    TWO_FACTOR_SECRET_KEY: string;
+
     // Search
     NEXT_PUBLIC_SEARCH_INDEX_PREFIX?: string;
     ELASTIC_CLOUD_ID: string;

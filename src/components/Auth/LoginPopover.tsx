@@ -11,13 +11,17 @@ import Popover from "../Popover";
 import LightbulbIcon from "../Icons/LightbulbIcon";
 import PasswordPolicy from "./PasswordPolicy";
 import LoginInput from "./LoginInput";
+import TwoFactorLoginForm from "./TwoFactorLoginForm";
 import Button from "../Button";
 import Type from "../Type";
 import Link from "../Link";
 
 export default function LoginPopover() {
-  const { loginAction: action, setLoginAction: setAction } =
-    useLoginPopoverContext();
+  const {
+    loginAction: action,
+    setLoginAction: setAction,
+    returnTo,
+  } = useLoginPopoverContext();
   const open = !!action;
   const isSignup = action === "signup";
 
@@ -96,6 +100,8 @@ export default function LoginPopover() {
         const data = await rpc.users.login({ email, password, isSignup });
         if (data?.redirect) {
           window.location.href = data.redirect;
+        } else if (data?.twoFactorRequired) {
+          setAction("twoFactor");
         } else if (!data?.ok || !data?.currentUser) {
           console.error("Login error:", data);
           setError(data?.error ?? "Something went wrong");
@@ -139,12 +145,12 @@ export default function LoginPopover() {
       connection: "google-oauth2",
       state: btoa(
         JSON.stringify({
-          returnTo: window.location.pathname + window.location.search,
+          returnTo: returnTo ?? window.location.pathname + window.location.search,
         }),
       ),
     });
     window.location.href = `https://${domain}/authorize?${params}`;
-  }, []);
+  }, [returnTo]);
 
   const onForgotPassword = useCallback(() => {
     setIsResettingPassword(true);
@@ -173,6 +179,14 @@ export default function LoginPopover() {
       setIsResettingPassword(false);
     }
   }, [open]);
+
+  if (action === "twoFactor") {
+    return (
+      <Popover open onClose={onClose} background="blurred" className="w-[386px]">
+        <TwoFactorLoginForm onClose={onClose} onBackToLogin={onLinkToLogin} />
+      </Popover>
+    );
+  }
 
   const title = isSignup ? "Sign up to get more from the EA Forum" : "Welcome back";
 
