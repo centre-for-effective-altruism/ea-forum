@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
 
   const collectionName = req.headers.get("collection-name");
   const documentId = req.headers.get("document-id");
-  const userId = req.headers.get("user-id");
   const formType = req.headers.get("form-type");
   const linkSharingKey = req.headers.get("link-sharing-key");
 
@@ -40,21 +39,24 @@ export async function POST(req: NextRequest) {
         })
       : null;
 
-    const access: CollaborativeEditingAccessLevel = documentId
-      ? await getCollaborativeEditorAccess({
-          formType,
-          post: post ?? null,
-          user: currentUser,
-          linkSharingKey,
-          useAdminPowers: true,
-        })
-      : "edit";
+    const access: CollaborativeEditingAccessLevel =
+      await getCollaborativeEditorAccess({
+        formType,
+        post: post ?? null,
+        user: currentUser,
+        linkSharingKey,
+        useAdminPowers: true,
+      });
 
     if (access === "none") {
       return new NextResponse("Access denied", { status: 403 });
     }
 
-    const ckEditorId = getCKEditorDocumentId(documentId, userId, formType);
+    const ckEditorId = getCKEditorDocumentId(
+      documentId,
+      currentUser?._id ?? null,
+      formType,
+    );
     const payload = {
       aud: environmentId,
       iat: Math.floor(Date.now() / 1000),
