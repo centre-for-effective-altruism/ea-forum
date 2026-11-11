@@ -74,6 +74,11 @@ const nextConfig: NextConfig = {
       destination: "/s/:_id/edit",
       permanent: true,
     },
+    {
+      source: "/upcomingEvents",
+      destination: "/upcoming-events",
+      permanent: true,
+    },
     ...sequenceEvents.map(({ sequenceId, path }) => ({
       source: `/s/${sequenceId}`,
       destination: path,
