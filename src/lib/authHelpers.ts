@@ -2,9 +2,10 @@ import { eq, sql } from "drizzle-orm";
 import { captureException } from "@sentry/nextjs";
 import z from "zod/v4";
 import { createHash, randomBytes } from "node:crypto";
-import { AuthenticationClient } from "auth0";
+import { AuthenticationClient, ManagementClient } from "auth0";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-import { users } from "@/lib/schema";
+import { User, users } from "@/lib/schema";
+import type { Json } from "./typeHelpers";
 import { db } from "@/lib/db";
 import { createUser } from "./users/userMutations";
 import { getCurrentClientId } from "./clientIds/currentClientId";
@@ -55,13 +56,43 @@ export const getAuth0Client = (domain: "public" | "original"): Auth0Client => {
   };
 };
 
+const auth0ProfileSchema = z.object({
+  id: z.string().optional(),
+  user_id: z.string().optional(),
+  provider: z.string().optional(),
+});
+
+const getAuth0Profile = (services: Record<string, Json> | null) => {
+  const result = auth0ProfileSchema.safeParse(services?.auth0);
+  return result.success ? result.data : null;
+};
+
+export const userCanChangeEmail = (user: Pick<User, "services">) =>
+  getAuth0Profile(user.services)?.provider === "auth0";
+
+export const updateAuth0Email = async (
+  user: Pick<User, "_id" | "services">,
+  email: string,
+) => {
+  const profile = getAuth0Profile(user.services);
+  const auth0UserId = profile?.id ?? profile?.user_id;
+  if (profile?.provider !== "auth0" || !auth0UserId) {
+    throw new Error(
+      "Cannot update email for user that doesn't use username/password login",
+    );
+  }
+  const { domain, clientId, clientSecret } = getAuth0Client("original");
+  const management = new ManagementClient({ domain, clientId, clientSecret });
+  await management.users.update(auth0UserId, { email });
+};
+
 export class UserIsBannedError extends Error {
   constructor() {
     super("User is banned");
   }
 }
 
-const getAllUsersByEmail = async (email: string) => {
+export const getAllUsersByEmail = async (email: string) => {
   const results = await db.execute<{
     _id: string;
     banned: string | null;

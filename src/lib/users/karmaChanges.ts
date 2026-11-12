@@ -1,5 +1,11 @@
 import type { CurrentUser } from "./currentUser";
-import { addTime, earliest, nDaysAgo, subtractTime } from "../timeUtils";
+import {
+  addTime,
+  type DayOfWeek,
+  earliest,
+  nDaysAgo,
+  subtractTime,
+} from "../timeUtils";
 import { htmlToTextDefault } from "../utils/htmlToText";
 import { fetchKarmaChanges } from "./userQueries";
 import {
@@ -11,11 +17,10 @@ import {
   PostKarmaChange,
   RevisionsKarmaChange,
   UserKarmaChanges,
-  KarmaChangeDayOfWeek,
   KarmaChangeUpdateFrequency,
 } from "./karmaChangesTypes";
 
-const dayOfWeekMap: Record<KarmaChangeDayOfWeek, number> = {
+const dayOfWeekMap: Record<DayOfWeek, number> = {
   Sunday: 0,
   Monday: 1,
   Tuesday: 2,

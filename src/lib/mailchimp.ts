@@ -1,7 +1,7 @@
 import md5 from "md5";
 import { z } from "zod/v4";
 import { db } from "./db";
-import { users } from "./schema";
+import { type User, users } from "./schema";
 import { userGetLocation } from "./users/userHelpers";
 import { updateWithFieldChanges } from "./fieldChanges";
 import type { CurrentUser } from "./users/currentUser";
@@ -70,12 +70,12 @@ export const updateMailchimpSubscription = async ({
   }
 };
 
-export const updateUserMailchimpSubscription = async ({
+export const syncUserMailchimpSubscription = async ({
   user,
   list,
   status,
 }: {
-  user: CurrentUser;
+  user: Pick<User, "email" | "displayName" | "mongoLocation">;
   list: MailchimpList;
   status: MailchimpStatus;
 }) => {
@@ -92,6 +92,18 @@ export const updateUserMailchimpSubscription = async ({
     displayName: user.displayName,
     location: known ? { latitude, longitude } : undefined,
   });
+};
+
+export const updateUserMailchimpSubscription = async ({
+  user,
+  list,
+  status,
+}: {
+  user: CurrentUser;
+  list: MailchimpList;
+  status: MailchimpStatus;
+}) => {
+  await syncUserMailchimpSubscription({ user, list, status });
 
   const update =
     status === "subscribed"

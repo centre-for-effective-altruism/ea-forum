@@ -27,6 +27,12 @@ import {
   userCheckNotifications,
 } from "./userMutations";
 import { themeSchema } from "../themes";
+import { userSettingsSchema } from "./userSettings";
+import {
+  setAccountDeletionRequested,
+  setUserDeactivated,
+  updateUserSettings,
+} from "./userSettingsMutations";
 import {
   mailchimpListSchema,
   updateMailchimpSubscription,
@@ -209,6 +215,33 @@ export const usersRouter = {
       await updateWithFieldChanges(db, currentUser, users, currentUser._id, {
         sendMarketingEmails: value,
       });
+    }),
+  updateSettings: os
+    .input(z.object({ userId: z.string().nonempty(), data: userSettingsSchema }))
+    .handler(async ({ input: { userId, data } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      return await updateUserSettings(currentUser, userId, data);
+    }),
+  setDeactivated: os
+    .input(z.object({ userId: z.string().nonempty(), deactivated: z.boolean() }))
+    .handler(async ({ input: { userId, deactivated } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await setUserDeactivated(currentUser, userId, deactivated);
+    }),
+  setDeletionRequested: os
+    .input(z.object({ userId: z.string().nonempty(), requested: z.boolean() }))
+    .handler(async ({ input: { userId, requested } }) => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        throw new Error("Please login");
+      }
+      await setAccountDeletionRequested(currentUser, userId, requested);
     }),
   completeUserProfile: os
     .input(

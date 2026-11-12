@@ -64,7 +64,7 @@ export default function CollapsedFootnotes({
         open={!collapsed}
         onEntered={fullyExpand}
         timeout={TRANSITION_DURATION}
-        className={clsx(collapsed && "-mt-3", fullyExpanded && "overflow-visible!")}
+        className={clsx(collapsed && "-mt-3")}
       >
         {rest}
       </Collapse>

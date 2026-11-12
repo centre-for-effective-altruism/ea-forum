@@ -184,6 +184,16 @@
     }
   }
 
+  --animate-highlight-fade: highlight-fade 3s ease-in-out;
+  @keyframes highlight-fade {
+    from {
+      background-color: var(--color-primary-light);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+
   --animate-poll-results-fade-in: poll-results-fade-in 2s ease;
   @keyframes poll-results-fade-in {
     0% {
