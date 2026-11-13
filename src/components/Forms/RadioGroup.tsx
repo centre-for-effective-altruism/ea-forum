@@ -35,7 +35,7 @@ export function RadioGroup<T extends string>({
         <label
           key={option.value}
           className={clsx(
-            "flex items-center gap-2 cursor-pointer select-none",
+            "relative flex items-center gap-2 cursor-pointer select-none",
             disabled && "cursor-not-allowed opacity-50",
           )}
         >
