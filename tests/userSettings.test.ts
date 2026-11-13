@@ -144,6 +144,12 @@ suite("User settings", () => {
     await expect(
       updateSettings(other._id, { slug: "retired-slug" }),
     ).rejects.toThrow("already taken");
+
+    await updateSettings(other._id, { slug: "NEW SLUG" });
+    expect(await fetchUser(other._id)).toMatchObject({
+      slug: "new-slug",
+      oldSlugs: [other.slug],
+    });
   });
 
   test("setting the location stores a geo point", async () => {

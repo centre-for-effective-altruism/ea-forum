@@ -137,19 +137,18 @@ const toUserUpdate = async (user: User, data: UserSettings): Promise<UserUpdate>
     update.emails = [{ address: newEmail, verified: false }, ...otherEmails];
   }
 
-  if (data.slug !== undefined && data.slug !== user.slug) {
+  if (data.slug !== undefined) {
     const slug = slugify(data.slug);
-    if (!slug) {
-      throw new Error("Invalid slug");
-    }
-    if (await isSlugTaken(slug, user._id)) {
-      throw new Error(`Slug ${slug} is already taken`);
-    }
     update.slug = slug;
-    update.oldSlugs = [
-      ...user.oldSlugs.filter((oldSlug) => oldSlug !== slug),
-      user.slug,
-    ];
+    if (slug !== user.slug) {
+      if (await isSlugTaken(slug, user._id)) {
+        throw new Error(`Slug ${slug} is already taken`);
+      }
+      update.oldSlugs = [
+        ...user.oldSlugs.filter((oldSlug) => oldSlug !== slug),
+        user.slug,
+      ];
+    }
   }
 
   if (data.unsubscribeFromAll && !user.unsubscribeFromAll) {
