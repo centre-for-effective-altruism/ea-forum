@@ -28,6 +28,8 @@ export default function DatePicker({
   showTimeInput,
   onCalendarOpen,
   onCalendarClose,
+  onClear,
+  onBlur,
   className,
 }: Readonly<
   {
@@ -37,18 +39,24 @@ export default function DatePicker({
     showTimeInput?: boolean;
     onCalendarOpen?: () => void;
     onCalendarClose?: () => void;
+    /** Called when the clear button is clicked, after setValue(null) */
+    onClear?: () => void;
+    onBlur?: () => void;
     className?: string;
   } & DatePickerValue
 >) {
   const id = useId();
   const onChange = useCallback(
-    (date: Date | null) => {
+    (date: Date | null, event?: { type: string }) => {
       if (!clearable && !date) {
         throw new Error("Missing date value");
       }
       setValue(date!);
+      if (!date && event?.type === "click") {
+        onClear?.();
+      }
     },
-    [setValue, clearable],
+    [setValue, clearable, onClear],
   );
   return (
     <div
@@ -70,6 +78,7 @@ export default function DatePicker({
         showTimeInput={showTimeInput}
         onCalendarOpen={onCalendarOpen}
         onCalendarClose={onCalendarClose}
+        onBlur={onBlur}
         className="
           px-1 py-2 outline-none bg-gray-0 border-b-2 border-gray-400 w-full
           disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed

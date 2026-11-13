@@ -39,10 +39,11 @@ export default function SettingDatePicker({
     <DatePicker
       label={label}
       value={draft}
-      setValue={(date) => {
-        updateDraft(date);
-        if (!date && !calendarOpenRef.current) {
-          commit(null);
+      setValue={updateDraft}
+      onClear={() => commit(null)}
+      onBlur={() => {
+        if (!calendarOpenRef.current) {
+          commit(draftRef.current);
         }
       }}
       onCalendarOpen={() => {
