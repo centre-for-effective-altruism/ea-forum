@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
+import { hashLoginToken, LOGIN_TOKEN_COOKIE_NAME } from "../loginTokens";
 import { db } from "@/lib/db";
 import type { UserRelationalProjection } from "./userQueries";
 

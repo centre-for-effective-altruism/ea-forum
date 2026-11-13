@@ -39,11 +39,11 @@ import {
   updateUserMailchimpSubscription,
 } from "../mailchimp";
 import {
-  LOGIN_TOKEN_COOKIE_NAME,
   loginWithPassword,
   signupWithPassword,
   UserIsBannedError,
 } from "../authHelpers";
+import { LOGIN_TOKEN_COOKIE_NAME } from "../loginTokens";
 import {
   fetchCurrentUserByHashedToken,
   getCurrentUser,

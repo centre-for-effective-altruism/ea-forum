@@ -1,7 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { captureException } from "@sentry/nextjs";
 import z from "zod/v4";
-import { createHash, randomBytes } from "node:crypto";
 import { AuthenticationClient, ManagementClient } from "auth0";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { User, users } from "@/lib/schema";
@@ -13,16 +12,11 @@ import { isProduction } from "./environment";
 import { captureServerEvent } from "./analytics/captureServerEvent";
 import { userIsBanned } from "./users/userHelpers";
 import { isBannedEmailDomain } from "./users/bannedEmailDomains";
-
-export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
-
-const generateLoginToken = () => randomBytes(32).toString("hex");
-
-export const hashLoginToken = (loginToken: string) => {
-  const hash = createHash("sha256");
-  hash.update(loginToken);
-  return hash.digest("base64");
-};
+import {
+  generateLoginToken,
+  hashLoginToken,
+  LOGIN_TOKEN_COOKIE_NAME,
+} from "./loginTokens";
 
 const parseJwt = (token: string) =>
   JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
