@@ -16,6 +16,9 @@ import {
   elasticSyncDocuments,
 } from "../search/elastic/elasticSync";
 import { commentIncludedInCounts } from "../comments/commentHelpers";
+import { newCommentNotifications } from "../comments/commentCallbacks";
+import { newPostNotifications } from "../posts/postCallbacks";
+import { captureException } from "@sentry/nextjs";
 import { updateMailchimpSubscription } from "../mailchimp";
 import {
   dailyEmailBatchNotificationSettings,
@@ -156,6 +159,15 @@ export const approveUnreviewedSubmissions = async (userId: string) => {
       ["Posts", approvedPosts.map(({ _id }) => _id)],
       ["Comments", approvedComments.map(({ _id }) => _id)],
     ]),
+  );
+  waitUntil(
+    Promise.all([
+      ...approvedPosts.map(({ _id }) => newPostNotifications(_id)),
+      ...approvedComments.map(({ _id }) => newCommentNotifications(_id)),
+    ]).catch((e) => {
+      console.error(e);
+      captureException(e);
+    }),
   );
 };
 

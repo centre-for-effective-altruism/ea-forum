@@ -320,6 +320,11 @@ export const users = pgTable(
     allCommentingDisabled: boolean(),
     commentingOnOtherUsersDisabled: boolean(),
     hideFromPeopleDirectory: boolean().notNull().default(false),
+    nearbyEventsNotificationsMongoLocation: jsonb<{
+      type: "Point";
+      coordinates: [number, number];
+    }>(),
+    nearbyEventsNotificationsRadius: doublePrecision(),
 
     /*
   "postGlossariesPinned" BOOL NOT NULL DEFAULT FALSE,
@@ -356,8 +361,6 @@ export const users = pgTable(
   "htmlMapMarkerText" TEXT,
   "nearbyEventsNotifications" BOOL NOT NULL DEFAULT FALSE,
   "nearbyEventsNotificationsLocation" JSONB,
-  "nearbyEventsNotificationsMongoLocation" JSONB,
-  "nearbyEventsNotificationsRadius" DOUBLE PRECISION,
   "nearbyPeopleNotificationThreshold" DOUBLE PRECISION,
   "hideFrontpageMap" BOOL,
   "hideTaggingProgressBar" BOOL,
