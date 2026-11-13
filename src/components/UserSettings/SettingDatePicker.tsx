@@ -55,6 +55,7 @@ export default function SettingDatePicker({
       }}
       clearable
       showTimeInput
+      shouldCloseOnSelect={false}
       dateFormat="Pp"
     />
   );

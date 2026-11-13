@@ -26,6 +26,7 @@ export default function DatePicker({
   disabled,
   dateFormat,
   showTimeInput,
+  shouldCloseOnSelect,
   onCalendarOpen,
   onCalendarClose,
   onClear,
@@ -37,6 +38,7 @@ export default function DatePicker({
     disabled?: boolean;
     dateFormat?: string;
     showTimeInput?: boolean;
+    shouldCloseOnSelect?: boolean;
     onCalendarOpen?: () => void;
     onCalendarClose?: () => void;
     /** Called when the clear button is clicked, after setValue(null) */
@@ -76,6 +78,7 @@ export default function DatePicker({
         disabled={disabled}
         dateFormat={dateFormat}
         showTimeInput={showTimeInput}
+        shouldCloseOnSelect={shouldCloseOnSelect}
         onCalendarOpen={onCalendarOpen}
         onCalendarClose={onCalendarClose}
         onBlur={onBlur}
