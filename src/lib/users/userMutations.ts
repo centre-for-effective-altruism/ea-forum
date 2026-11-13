@@ -1,6 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import groupBy from "lodash/groupBy";
+import maxBy from "lodash/maxBy";
 import type { CurrentUser } from "./currentUser";
 import type { JsonRecord } from "../typeHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
@@ -144,11 +145,23 @@ export const approveUnreviewedSubmissions = async (userId: string) => {
       const topLevelCount = postComments.filter(
         ({ parentCommentId }) => !parentCommentId,
       ).length;
+      const latestPostedAt = (comments: typeof postComments) =>
+        maxBy(comments, ({ postedAt }) => new Date(postedAt).getTime())?.postedAt;
+      const lastCommentedAt = latestPostedAt(postComments);
+      const lastReplyAt = latestPostedAt(
+        postComments.filter(({ parentCommentId }) => parentCommentId),
+      );
       await txn
         .update(posts)
         .set({
           commentCount: sql<number>`${posts.commentCount} + ${postComments.length}`,
           topLevelCommentCount: sql<number>`${posts.topLevelCommentCount} + ${topLevelCount}`,
+          lastCommentedAt: sql`GREATEST(${posts.lastCommentedAt}, ${lastCommentedAt}::TIMESTAMPTZ)`,
+          ...(lastReplyAt
+            ? {
+                lastCommentReplyAt: sql`GREATEST(${posts.lastCommentReplyAt}, ${lastReplyAt}::TIMESTAMPTZ)`,
+              }
+            : null),
         })
         .where(eq(posts._id, postId));
     }

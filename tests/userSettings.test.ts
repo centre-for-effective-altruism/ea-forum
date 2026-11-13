@@ -358,11 +358,13 @@ suite("User settings", () => {
     const commentedPost = await createTestPost({
       commentCount: 5,
       topLevelCommentCount: 3,
+      lastCommentedAt: "2024-01-01T00:00:00.000Z",
     });
     const comment = await createTestComment({
       userId: other._id,
       postId: commentedPost._id,
       authorIsUnreviewed: true,
+      postedAt: "2024-02-01T00:00:00.000Z",
     });
     await Promise.all([
       createTestComment({
@@ -370,6 +372,7 @@ suite("User settings", () => {
         postId: commentedPost._id,
         parentCommentId: comment._id,
         authorIsUnreviewed: true,
+        postedAt: "2024-03-01T00:00:00.000Z",
       }),
       createTestComment({
         userId: other._id,
@@ -391,6 +394,12 @@ suite("User settings", () => {
       commentCount: 7,
       topLevelCommentCount: 4,
     });
+    expect(new Date(updatedCommentedPost!.lastCommentedAt!).toISOString()).toBe(
+      "2024-03-01T00:00:00.000Z",
+    );
+    expect(new Date(updatedCommentedPost!.lastCommentReplyAt!).toISOString()).toBe(
+      "2024-03-01T00:00:00.000Z",
+    );
   });
 
   test("the quick takes feed must be the user's own published post", async () => {
