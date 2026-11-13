@@ -283,6 +283,13 @@ export default function LocationInput({
   };
 
   const onKeyDown = (ev: KeyboardEvent<HTMLInputElement>) => {
+    if (ev.key === "Escape") {
+      if (listOpen) {
+        ev.preventDefault();
+      }
+      clearPredictions();
+      return;
+    }
     if (!listOpen) {
       return;
     }
@@ -300,10 +307,6 @@ export default function LocationInput({
           ev.preventDefault();
           selectPrediction(predictions[activeIndex]);
         }
-        break;
-      case "Escape":
-        ev.preventDefault();
-        clearPredictions();
         break;
     }
   };
