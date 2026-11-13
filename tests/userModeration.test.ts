@@ -1,4 +1,4 @@
-import { beforeAll, expect, suite, test } from "vitest";
+import { beforeAll, expect, suite, test, vi } from "vitest";
 import { eq, sql } from "drizzle-orm";
 import {
   createTestComment,
@@ -9,7 +9,15 @@ import {
   createTestUser,
 } from "./testHelpers";
 import { db } from "@/lib/db";
-import { bans, lwEvents, notifications, reports, tags, users } from "@/lib/schema";
+import {
+  bans,
+  lwEvents,
+  notifications,
+  reports,
+  revisions,
+  tags,
+  users,
+} from "@/lib/schema";
 import { randomId } from "@/lib/utils/random";
 import { performVote } from "@/lib/votes/voteMutations";
 import { postStatuses } from "@/lib/posts/postsHelpers";
@@ -18,6 +26,9 @@ import {
   deleteUserContent,
   nullifyVotesForUser,
 } from "@/lib/users/userModeration";
+import { akismetReportSpam } from "@/lib/akismet";
+
+vi.mock("@/lib/akismet", () => ({ akismetReportSpam: vi.fn() }));
 
 const fetchUser = async (_id: string) =>
   (await db.query.users.findFirst({ where: { _id } }))!;
@@ -291,6 +302,26 @@ suite("User moderation", () => {
       ]);
       expect(updatedComment!.deletedDate).toBe(deletedDate);
       expect(updatedPost!.commentCount).toBe(1);
+    });
+
+    test("Reports the purged posts' contents as spam", async () => {
+      const [moderator, spammer] = await Promise.all([
+        createTestUser({ isAdmin: true }),
+        createTestUser(),
+      ]);
+      const post = await createTestPost({ userId: spammer._id });
+      await db
+        .update(revisions)
+        .set({ html: "<p>Buy now</p>" })
+        .where(eq(revisions._id, post.contentsLatest!));
+
+      await deleteUserContent(moderator, spammer._id);
+
+      const [, reportedUser, reportedContents] = vi
+        .mocked(akismetReportSpam)
+        .mock.calls.at(-1)!;
+      expect(reportedUser._id).toBe(spammer._id);
+      expect(reportedContents.map(({ html }) => html)).toEqual(["<p>Buy now</p>"]);
     });
   });
 

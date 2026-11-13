@@ -261,23 +261,22 @@ const softDeleteComments = async (
   return commentIds;
 };
 
+type PurgedPost = {
+  _id: string;
+  slug: string;
+  contents: { html: string | null } | null;
+};
+
 const reportPurgedContentAsSpam = async (
   userId: string,
-  postIds: string[],
+  purgedPosts: PurgedPost[],
   commentIds: string[],
 ) => {
-  const [user, purgedPosts, purgedComments] = await Promise.all([
+  const [user, purgedComments] = await Promise.all([
     db.query.users.findFirst({
       columns: { _id: true, displayName: true, email: true },
       where: { _id: userId },
     }),
-    postIds.length
-      ? db.query.posts.findMany({
-          columns: { _id: true, slug: true },
-          with: { contents: { columns: { html: true } } },
-          where: { _id: { in: postIds } },
-        })
-      : [],
     commentIds.length
       ? db.query.comments.findMany({
           columns: {},
@@ -314,12 +313,13 @@ export const deleteUserContent = async (
   currentUser: CurrentUser,
   userId: string,
 ) => {
-  const { postIds, deletedCommentIds, sequenceIds, deletedTagIds } =
+  const { userPosts, postIds, deletedCommentIds, sequenceIds, deletedTagIds } =
     await db.transaction(async (txn) => {
-      const userPosts = await txn
-        .select({ _id: posts._id, status: posts.status })
-        .from(posts)
-        .where(eq(posts.userId, userId));
+      const userPosts = await txn.query.posts.findMany({
+        columns: { _id: true, slug: true, status: true },
+        with: { contents: { columns: { html: true } } },
+        where: { userId },
+      });
       const postIds = userPosts.map(({ _id }) => _id);
       if (postIds.length) {
         await txn
@@ -411,7 +411,7 @@ export const deleteUserContent = async (
         })
         .where(eq(users._id, userId));
 
-      return { postIds, deletedCommentIds, sequenceIds, deletedTagIds };
+      return { userPosts, postIds, deletedCommentIds, sequenceIds, deletedTagIds };
     });
 
   await Promise.all([
@@ -421,7 +421,7 @@ export const deleteUserContent = async (
       ["Sequences", sequenceIds],
       ["Tags", deletedTagIds],
     ]),
-    reportPurgedContentAsSpam(userId, postIds, deletedCommentIds),
+    reportPurgedContentAsSpam(userId, userPosts, deletedCommentIds),
   ]);
 };
 
