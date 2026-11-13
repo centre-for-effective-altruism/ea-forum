@@ -76,8 +76,10 @@ const validateShortformPost = async (postId: string, userId: string) => {
   }
 };
 
+type MailchimpUser = Pick<User, "email" | "displayName" | "mongoLocation">;
+
 const syncDigestSubscription = async (
-  user: User,
+  user: MailchimpUser,
   subscribed: boolean,
   { ignoreErrors }: { ignoreErrors: boolean },
 ) => {
@@ -97,6 +99,57 @@ const syncDigestSubscription = async (
 
 const getChangedEmail = (user: User, data: UserSettings) =>
   data.email !== undefined && data.email !== user.email ? data.email : null;
+
+/**
+ * Applies the email and digest subscription parts of an update to Auth0 and
+ * Mailchimp before writing to the database, so no row lock is held during the
+ * external calls. Each external change is undone if a later step fails.
+ */
+const withExternalAccountSync = async <T>(
+  user: User,
+  update: UserUpdate,
+  write: () => Promise<T>,
+) => {
+  const undoSteps: (() => Promise<unknown>)[] = [];
+  try {
+    const oldEmail = user.email;
+    const newEmail = update.email;
+    if (newEmail && newEmail !== oldEmail) {
+      await updateAuth0Email(user, newEmail);
+      if (oldEmail) {
+        undoSteps.push(() => updateAuth0Email(user, oldEmail));
+      }
+    }
+
+    const nextUser: MailchimpUser = { ...user, ...update };
+    const wasSubscribed = user.subscribedToDigest;
+    const isSubscribed = update.subscribedToDigest ?? wasSubscribed;
+    const addressChanged = nextUser.email !== oldEmail;
+    if (wasSubscribed && (!isSubscribed || addressChanged)) {
+      await syncDigestSubscription(user, false, { ignoreErrors: false });
+      undoSteps.push(() =>
+        syncDigestSubscription(user, true, { ignoreErrors: false }),
+      );
+    }
+    if (isSubscribed && (!wasSubscribed || addressChanged)) {
+      await syncDigestSubscription(nextUser, true, { ignoreErrors: false });
+      undoSteps.push(() =>
+        syncDigestSubscription(nextUser, false, { ignoreErrors: false }),
+      );
+    }
+
+    return await write();
+  } catch (e) {
+    for (const undo of undoSteps.reverse()) {
+      try {
+        await undo();
+      } catch (undoError) {
+        captureException(undoError);
+      }
+    }
+    throw e;
+  }
+};
 
 const toUserUpdate = async (user: User, data: UserSettings): Promise<UserUpdate> => {
   const { location, reviewedAt, banned, groups, ...rest } = data;
@@ -194,39 +247,9 @@ export const updateUserSettings = async (
   }
 
   const update = await toUserUpdate(user, data);
-  const newEmail = getChangedEmail(user, data);
-  const updatedUser = await db.transaction(async (txn) => {
-    const updatedUser = await updateWithFieldChanges(
-      txn,
-      currentUser,
-      users,
-      userId,
-      update,
-    );
-    if (newEmail) {
-      await updateAuth0Email(user, newEmail);
-    }
-    const wasSubscribed = user.subscribedToDigest;
-    const isSubscribed = updatedUser.subscribedToDigest;
-    try {
-      if (isSubscribed && (!wasSubscribed || newEmail)) {
-        await syncDigestSubscription(updatedUser, true, { ignoreErrors: false });
-      }
-      if (wasSubscribed && (!isSubscribed || newEmail)) {
-        await syncDigestSubscription(user, false, { ignoreErrors: false });
-      }
-    } catch (e) {
-      if (newEmail && user.email) {
-        try {
-          await updateAuth0Email(user, user.email);
-        } catch (revertError) {
-          captureException(revertError);
-        }
-      }
-      throw e;
-    }
-    return updatedUser;
-  });
+  const updatedUser = await withExternalAccountSync(user, update, () =>
+    updateWithFieldChanges(db, currentUser, users, userId, update),
+  );
 
   if (updatedUser.reviewedByUserId && !user.reviewedByUserId) {
     await approveUnreviewedSubmissions(userId);

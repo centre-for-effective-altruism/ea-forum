@@ -223,9 +223,40 @@ suite("User settings", () => {
       status,
     ]);
     expect(digestCalls).toEqual([
-      [newEmail, "subscribed"],
       [oldEmail, "unsubscribed"],
+      [newEmail, "subscribed"],
     ]);
+  });
+
+  test("changing only the email's case keeps the digest subscription", async () => {
+    const oldEmail = `${randomId()}@example.com`;
+    const user = await loginAs({ email: oldEmail, subscribedToDigest: true });
+    await updateSettings(user._id, { email: oldEmail.toUpperCase() });
+    expect(mockMailchimp.mock.lastCall?.[0].status).toBe("subscribed");
+  });
+
+  test("a failed move of the digest subscription restores the old one", async () => {
+    const [oldEmail, newEmail] = [
+      `${randomId()}@example.com`,
+      `${randomId()}@example.com`,
+    ];
+    const user = await loginAs({ email: oldEmail, subscribedToDigest: true });
+    mockMailchimp
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("Mailchimp down"));
+    await expect(updateSettings(user._id, { email: newEmail })).rejects.toThrow(
+      "Mailchimp down",
+    );
+    const digestCalls = mockMailchimp.mock.calls.map(([{ user, status }]) => [
+      user.email,
+      status,
+    ]);
+    expect(digestCalls.at(-1)).toEqual([oldEmail, "subscribed"]);
+    expect(mockUpdateAuth0Email).toHaveBeenLastCalledWith(
+      expect.objectContaining({ _id: user._id }),
+      oldEmail,
+    );
+    expect((await fetchUser(user._id))?.email).toBe(oldEmail);
   });
 
   test("changing the email while unsubscribing unsubscribes the old address", async () => {
