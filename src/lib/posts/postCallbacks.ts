@@ -16,7 +16,7 @@ export const updatePostUser = async (txn: DbOrTransaction, post: Post) => {
   await txn
     .update(users)
     .set({
-      postCount: sql<number>`${users.commentCount} + 1`,
+      postCount: sql<number>`${users.postCount} + 1`,
       maxPostCount: sql<number>`GREATEST(${users.maxPostCount}, ${users.maxPostCount} + 1)`,
       ...(post.frontpageDate
         ? { frontpagePostCount: sql<number>`${users.frontpagePostCount} + 1` }
