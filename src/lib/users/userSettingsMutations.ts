@@ -194,28 +194,36 @@ export const updateUserSettings = async (
   }
 
   const update = await toUserUpdate(user, data);
-  const digestChanged =
-    update.subscribedToDigest !== undefined &&
-    update.subscribedToDigest !== user.subscribedToDigest;
-  if (digestChanged) {
-    await syncDigestSubscription(
-      { ...user, email: update.email ?? user.email },
-      !!update.subscribedToDigest,
-      { ignoreErrors: false },
-    );
-  }
   const newEmail = getChangedEmail(user, data);
-  if (newEmail) {
-    await updateAuth0Email(user, newEmail);
-  }
-
-  const updatedUser = await updateWithFieldChanges(
-    db,
-    currentUser,
-    users,
-    userId,
-    update,
-  );
+  const updatedUser = await db.transaction(async (txn) => {
+    const updatedUser = await updateWithFieldChanges(
+      txn,
+      currentUser,
+      users,
+      userId,
+      update,
+    );
+    if (newEmail) {
+      await updateAuth0Email(user, newEmail);
+    }
+    if (updatedUser.subscribedToDigest !== user.subscribedToDigest) {
+      try {
+        await syncDigestSubscription(updatedUser, updatedUser.subscribedToDigest, {
+          ignoreErrors: false,
+        });
+      } catch (e) {
+        if (newEmail && user.email) {
+          try {
+            await updateAuth0Email(user, user.email);
+          } catch (revertError) {
+            captureException(revertError);
+          }
+        }
+        throw e;
+      }
+    }
+    return updatedUser;
+  });
 
   if (updatedUser.reviewedByUserId && !user.reviewedByUserId) {
     await approveUnreviewedSubmissions(userId);

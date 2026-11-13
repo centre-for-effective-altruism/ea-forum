@@ -1,6 +1,7 @@
 import { beforeEach, expect, suite, test, vi } from "vitest";
 import { call } from "@orpc/server";
 import { db } from "@/lib/db";
+import { randomId } from "@/lib/utils/random";
 import { getCurrentUser } from "@/lib/users/currentUser";
 import { usersRouter } from "@/lib/users/usersRouter";
 import { isNewSiteAllowed } from "@/lib/proxy/legacySiteRedirect";
@@ -208,6 +209,46 @@ suite("User settings", () => {
       email: "new@example.com",
       emails: [{ address: "new@example.com", verified: false }],
     });
+  });
+
+  test("a rejected Auth0 email change leaves Mailchimp and the database alone", async () => {
+    const [oldEmail, newEmail] = [
+      `${randomId()}@example.com`,
+      `${randomId()}@example.com`,
+    ];
+    const user = await loginAs({ email: oldEmail });
+    mockUpdateAuth0Email.mockRejectedValueOnce(new Error("Auth0 down"));
+    await expect(
+      updateSettings(user._id, {
+        email: newEmail,
+        subscribedToDigest: true,
+      }),
+    ).rejects.toThrow("Auth0 down");
+    expect(mockMailchimp).not.toHaveBeenCalled();
+    expect(await fetchUser(user._id)).toMatchObject({
+      email: oldEmail,
+      subscribedToDigest: false,
+    });
+  });
+
+  test("a failed digest subscription reverts the Auth0 email change", async () => {
+    const [oldEmail, newEmail] = [
+      `${randomId()}@example.com`,
+      `${randomId()}@example.com`,
+    ];
+    const user = await loginAs({ email: oldEmail });
+    mockMailchimp.mockRejectedValueOnce(new Error("Mailchimp down"));
+    await expect(
+      updateSettings(user._id, {
+        email: newEmail,
+        subscribedToDigest: true,
+      }),
+    ).rejects.toThrow("Mailchimp down");
+    expect(mockUpdateAuth0Email).toHaveBeenLastCalledWith(
+      expect.objectContaining({ _id: user._id }),
+      oldEmail,
+    );
+    expect((await fetchUser(user._id))?.email).toBe(oldEmail);
   });
 
   test("changing the karma update frequency resets the batch", async () => {
