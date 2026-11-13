@@ -1,7 +1,7 @@
 import { suite, test, expect, beforeEach, vi } from "vitest";
 import { createTestComment, createTestPost, createTestUser } from "./testHelpers";
 import { triggerReviewIfNeeded } from "@/lib/users/userReview";
-import { approveNewUser } from "@/lib/users/userMutations";
+import { approveNewUser } from "@/lib/users/userApproval";
 import { newPostNotifications } from "@/lib/posts/postCallbacks";
 import { Revision, subscriptions, users } from "@/lib/schema";
 import { randomId } from "@/lib/utils/random";

@@ -13,7 +13,7 @@ import { objectKeys } from "../typeHelpers";
 import { userCanEditUser, userIsBanned } from "./userHelpers";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { getUserSettings, isEditableUserGroup } from "./userSettingsQueries";
-import { approveUnreviewedSubmissions } from "./userMutations";
+import { approveUnreviewedSubmissions } from "./userApproval";
 import { getUpdatableUserSettings, type UserSettings } from "./userSettings";
 import {
   banUserIpsAndResetLoginTokens,

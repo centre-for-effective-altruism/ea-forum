@@ -21,11 +21,11 @@ import {
   updateWork,
 } from "./userQueries";
 import {
-  approveNewUser,
   completeUserProfile,
   swapUserEmails,
   userCheckNotifications,
 } from "./userMutations";
+import { approveNewUser } from "./userApproval";
 import { themeSchema } from "../themes";
 import { userSettingsSchema } from "./userSettings";
 import {
