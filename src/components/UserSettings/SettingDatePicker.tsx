@@ -22,7 +22,7 @@ export default function SettingDatePicker({
     setDraft(date);
   };
 
-  if (value !== lastValue) {
+  if (value?.getTime() !== lastValue?.getTime()) {
     setLastValue(value);
     draftRef.current = value;
     setDraft(value);
