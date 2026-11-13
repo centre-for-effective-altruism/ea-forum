@@ -26,6 +26,7 @@ export default function DatePicker({
   disabled,
   dateFormat,
   showTimeInput,
+  onCalendarOpen,
   onCalendarClose,
   className,
 }: Readonly<
@@ -34,6 +35,7 @@ export default function DatePicker({
     disabled?: boolean;
     dateFormat?: string;
     showTimeInput?: boolean;
+    onCalendarOpen?: () => void;
     onCalendarClose?: () => void;
     className?: string;
   } & DatePickerValue
@@ -66,6 +68,7 @@ export default function DatePicker({
         disabled={disabled}
         dateFormat={dateFormat}
         showTimeInput={showTimeInput}
+        onCalendarOpen={onCalendarOpen}
         onCalendarClose={onCalendarClose}
         className="
           px-1 py-2 outline-none bg-gray-0 border-b-2 border-gray-400 w-full
