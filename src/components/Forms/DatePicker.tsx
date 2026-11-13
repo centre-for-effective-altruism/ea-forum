@@ -30,6 +30,7 @@ export default function DatePicker({
   onCalendarOpen,
   onCalendarClose,
   onClear,
+  onClearMouseDown,
   onBlur,
   className,
 }: Readonly<
@@ -43,6 +44,11 @@ export default function DatePicker({
     onCalendarClose?: () => void;
     /** Called when the clear button is clicked, after setValue(null) */
     onClear?: () => void;
+    /**
+     * Called when the mouse is pressed on the clear button. This happens before
+     * the press closes an open calendar, whereas onClear fires after it.
+     */
+    onClearMouseDown?: () => void;
     onBlur?: () => void;
     className?: string;
   } & DatePickerValue
@@ -64,6 +70,14 @@ export default function DatePicker({
     <div
       data-component="DatePicker"
       className={clsx("w-full [&>div]:w-full", className)}
+      onMouseDownCapture={(ev) => {
+        if (
+          ev.target instanceof Element &&
+          ev.target.closest(".react-datepicker__close-icon")
+        ) {
+          onClearMouseDown?.();
+        }
+      }}
     >
       {label && (
         <Label htmlFor={id} className="mb-0!">

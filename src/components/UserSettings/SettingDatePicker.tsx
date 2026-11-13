@@ -15,6 +15,7 @@ export default function SettingDatePicker({
   const [draft, setDraft] = useState(value);
   const draftRef = useRef(value);
   const calendarOpenRef = useRef(false);
+  const clearPressedRef = useRef(false);
   const [lastValue, setLastValue] = useState(value);
 
   const updateDraft = (date: Date | null) => {
@@ -40,7 +41,13 @@ export default function SettingDatePicker({
       label={label}
       value={draft}
       setValue={updateDraft}
-      onClear={() => commit(null)}
+      onClear={() => {
+        clearPressedRef.current = false;
+        commit(null);
+      }}
+      onClearMouseDown={() => {
+        clearPressedRef.current = calendarOpenRef.current;
+      }}
       onBlur={() => {
         if (!calendarOpenRef.current) {
           commit(draftRef.current);
@@ -51,6 +58,10 @@ export default function SettingDatePicker({
       }}
       onCalendarClose={() => {
         calendarOpenRef.current = false;
+        if (clearPressedRef.current) {
+          clearPressedRef.current = false;
+          return;
+        }
         commit(draftRef.current);
       }}
       clearable
