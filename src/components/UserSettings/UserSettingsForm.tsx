@@ -22,10 +22,10 @@ import AccountManagementSection from "./AccountManagementSection";
 import HighlightableSetting from "./HighlightableSetting";
 import ConfirmationPopover from "./ConfirmationPopover";
 import SettingTextInput from "./SettingTextInput";
+import SettingDatePicker from "./SettingDatePicker";
 import CollapsibleFormGroup from "../Forms/CollapsibleFormGroup";
 import UserMultiSelect, { UserMultiSelectUser } from "../Inbox/UserMultiSelect";
 import LocationInput from "../Forms/LocationInput";
-import DatePicker from "../Forms/DatePicker";
 import Checkbox from "../Forms/Checkbox";
 import Select from "../Forms/Select";
 import Tooltip from "../Tooltip";
@@ -503,13 +503,10 @@ export default function UserSettingsForm({
             value={settings.reviewedByUserId ?? ""}
             onCommit={(value) => saveSetting("reviewedByUserId", emptyToNull(value))}
           />
-          <DatePicker
+          <SettingDatePicker
             label="Reviewed at"
             value={settings.reviewedAt ?? null}
-            setValue={(date) => saveSetting("reviewedAt", date)}
-            clearable
-            showTimeInput
-            dateFormat="Pp"
+            onCommit={(date) => saveSetting("reviewedAt", date)}
           />
           <SettingTextInput
             label="Quick takes feed ID"
@@ -531,10 +528,10 @@ export default function UserSettingsForm({
         <>
           {banCheckboxes.map(renderCheckbox)}
           {settings.banned !== undefined && (
-            <DatePicker
+            <SettingDatePicker
               label="Ban user until"
               value={settings.banned}
-              setValue={(date) => {
+              onCommit={(date) => {
                 if (date && date > new Date()) {
                   setPendingConfirmation({
                     field: "banned",
@@ -544,9 +541,6 @@ export default function UserSettingsForm({
                   saveSetting("banned", date);
                 }
               }}
-              clearable
-              showTimeInput
-              dateFormat="Pp"
             />
           )}
         </>,
