@@ -5,19 +5,11 @@ import { commentGetPageUrl } from "../comments/commentHelpers";
 import { userGetProfileUrl } from "../users/userHelpers";
 import { postGetPageUrl } from "../posts/postsHelpers";
 import { TupleSet, UnionOf } from "../typeHelpers";
+import type { DayOfWeek } from "../timeUtils";
 
 export type NotificationChannel = "onsite" | "email";
 
 type NotificationBatchingFrequency = "realtime" | "daily" | "weekly";
-
-type DayOfWeek =
-  | "Monday"
-  | "Tuesday"
-  | "Wednesday"
-  | "Thursday"
-  | "Friday"
-  | "Saturday"
-  | "Sunday";
 
 export type NotificationChannelSettings = {
   enabled: boolean;

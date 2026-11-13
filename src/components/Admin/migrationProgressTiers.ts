@@ -177,11 +177,6 @@ export const migrationProgressTiers: MigrationTier[] = [
     description: "Major features with lots of settings and editor work.",
     routes: [
       {
-        paths: ["/account", "/users/:slug/edit"],
-        notes:
-          "UsersEditForm (~1,560 lines): every account setting, notification preferences and deletion",
-      },
-      {
         paths: ["/newPost", "/editPost"],
         notes:
           "The full post form: editor, metadata, events, co-authors, moderation guidelines, autosave; Editor/PostEditor is a starting point",

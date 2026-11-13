@@ -20,6 +20,9 @@ export const postStatuses = {
   STATUS_DELETED: 5,
 };
 
+export const postIsPublic = (post: Pick<Post, "draft" | "status" | "rejected">) =>
+  !post.draft && post.status === postStatuses.STATUS_APPROVED && !post.rejected;
+
 export const postsListViewSchema = z.object({
   view: z.enum([
     "frontpage",

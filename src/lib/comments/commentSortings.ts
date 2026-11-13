@@ -1,6 +1,7 @@
 import type { CurrentUser } from "@/lib/users/currentUser";
 import type { Comment } from "@/lib/schema";
 import { userIsAdmin } from "../users/userHelpers";
+import { objectKeys } from "../typeHelpers";
 
 export type SortableComment = Pick<
   Comment,
@@ -66,14 +67,26 @@ export type CommentSorting = keyof typeof commentSortings;
 
 const defaultCommentSorting: CommentSorting = "newAndUpvoted";
 
-const commentSortingSettings: Record<string, CommentSorting> = {
+const commentSortingSettings = {
   postCommentsMagic: "newAndUpvoted",
   postCommentsTop: "top",
   postCommentsNew: "new",
   postCommentsOld: "old",
   postCommentsRecentReplies: "latestReply",
   postCommentsDeleted: "deleted",
-};
+} as const satisfies Record<string, CommentSorting>;
+
+const isCommentSortingSetting = (
+  setting: string,
+): setting is keyof typeof commentSortingSettings =>
+  Object.hasOwn(commentSortingSettings, setting);
+
+export const userCommentSortingOptions = objectKeys(commentSortingSettings)
+  .filter((setting) => !commentSortings[commentSortingSettings[setting]].adminOnly)
+  .map((setting) => ({
+    value: setting,
+    label: commentSortings[commentSortingSettings[setting]].label,
+  }));
 
 export const getCommentSortings = (currentUser: CurrentUser | null) => {
   const sortings = Object.keys(commentSortings) as CommentSorting[];
@@ -85,9 +98,11 @@ export const getCommentSortings = (currentUser: CurrentUser | null) => {
 export const getDefaultCommentSortingForUser = (
   currentUser: CurrentUser | null,
 ): CommentSorting => {
-  const setting = currentUser?.commentSorting
-    ? commentSortingSettings[currentUser.commentSorting]
-    : null;
+  const setting =
+    currentUser?.commentSorting &&
+    isCommentSortingSetting(currentUser.commentSorting)
+      ? commentSortingSettings[currentUser.commentSorting]
+      : null;
   if (!setting) {
     return defaultCommentSorting;
   }

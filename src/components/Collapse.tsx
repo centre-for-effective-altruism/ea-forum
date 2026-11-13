@@ -89,8 +89,7 @@ export default function Collapse({
           data-component="Collapse"
           className={clsx(
             "transition-[height] duration-[300ms] ease-[cubic-bezier(.4,0,.2,1)]",
-            "overflow-hidden",
-            state !== "entered" && "h-0",
+            state === "entered" ? "overflow-visible" : "overflow-hidden h-0",
             className,
           )}
           style={{ minHeight: "0px" }}

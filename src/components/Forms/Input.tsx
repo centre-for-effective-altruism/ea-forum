@@ -2,6 +2,16 @@ import clsx from "clsx";
 import { ChangeEvent, useCallback, useId } from "react";
 import Label from "./Label";
 
+export const getInputClassName = (variant: "underline" | "filled") =>
+  clsx(
+    "w-full text-sm text-gray-900 outline-none cursor-text transition-all",
+    "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
+    "font-sans font-[400]",
+    variant === "filled"
+      ? "h-9 px-3 bg-gray-100 rounded border border-gray-300 focus:border-primary"
+      : "px-1 py-2 bg-gray-0 border-b-2 border-gray-400 focus:border-primary",
+  );
+
 export default function Input({
   value,
   setValue,
@@ -46,15 +56,7 @@ export default function Input({
         readOnly={readOnly}
         disabled={disabled}
         onClick={onClick}
-        className={clsx(
-          "w-full text-sm text-gray-900 outline-none cursor-text transition-all",
-          "disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed",
-          "font-sans font-[400]",
-          variant === "filled"
-            ? "h-9 px-3 bg-gray-100 rounded border border-gray-300 focus:border-primary"
-            : "px-1 py-2 bg-gray-0 border-b-2 border-gray-400 focus:border-primary",
-          inputClassName,
-        )}
+        className={clsx(getInputClassName(variant), inputClassName)}
       />
     </div>
   );

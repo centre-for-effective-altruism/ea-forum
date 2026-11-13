@@ -1,12 +1,11 @@
-import { expect, suite, test, vi } from "vitest";
-import { rpc } from "@/lib/rpc";
+import { beforeAll, expect, suite, test, vi } from "vitest";
+import type { rpc as rpcClient } from "@/lib/rpc";
 import { rpcHandler } from "@/lib/rpcHandler";
 import { createTestConversation, createTestUser } from "./testHelpers";
 
 const mockGetCurrentUser = vi.hoisted(() => vi.fn());
 
 vi.hoisted(() => {
-  vi.stubGlobal("window", { location: { origin: "http://localhost" } });
   globalThis.fetch = async (input, init) => {
     const { rpcHandler } = await import("@/lib/rpcHandler");
     const { response } = await rpcHandler.handle(new Request(input, init), {
@@ -21,6 +20,15 @@ vi.mock(import("@/lib/users/currentUser"), async (importOriginal) => ({
   ...(await importOriginal()),
   getCurrentUser: mockGetCurrentUser,
 }));
+
+let rpc: typeof rpcClient;
+
+// Stubbing window before the test DB has finished initialising breaks PGlite,
+// which detects a browser environment and reads window.location.pathname
+beforeAll(async () => {
+  vi.stubGlobal("window", { location: { origin: "http://localhost" } });
+  ({ rpc } = await import("@/lib/rpc"));
+});
 
 suite("RPC CSRF protection", () => {
   test("the RPC client can call procedures, including batched calls", async () => {

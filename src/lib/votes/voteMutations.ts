@@ -32,7 +32,7 @@ import {
   updatePostDenormalizedTags,
 } from "./voteCallbacks";
 
-const clearVotes = async ({
+export const clearVotes = async ({
   collectionName,
   schema,
   document,

@@ -1,0 +1,95 @@
+import { useCallback, useRef, useState } from "react";
+import { captureException } from "@sentry/nextjs";
+import isEqual from "lodash/isEqual";
+import toast from "react-hot-toast";
+import { rpc } from "@/lib/rpc";
+import { useTracking } from "@/lib/analyticsEvents";
+import type { UserSettingField, UserSettings } from "@/lib/users/userSettings";
+import Type from "../Type";
+
+export const autosaveToastId = "userSettingsAutosave";
+
+const getErrorMessage = (e: unknown) =>
+  e instanceof Error && e.message ? e.message : "Failed to save settings";
+
+type SaveUserSetting = <K extends UserSettingField>(
+  field: K,
+  value: UserSettings[K],
+) => void;
+
+export const useUserSettingsAutosave = (
+  userId: string,
+  initialSettings: UserSettings,
+  onSaved: (settings: UserSettings) => void,
+) => {
+  const { captureEvent } = useTracking();
+  const [settings, setSettings] = useState(initialSettings);
+  const savedRef = useRef(initialSettings);
+  const queueRef = useRef(Promise.resolve());
+  const pendingCountRef = useRef(0);
+  const saveCountRef = useRef(0);
+  const latestSaveIdsRef = useRef<Partial<Record<UserSettingField, number>>>({});
+  const batchRef = useRef<{ saving: boolean; error: string | null }>({
+    saving: false,
+    error: null,
+  });
+
+  const saveSetting: SaveUserSetting = useCallback(
+    (field, value) => {
+      setSettings((current) => ({ ...current, [field]: value }));
+      pendingCountRef.current++;
+      const saveId = ++saveCountRef.current;
+      latestSaveIdsRef.current[field] = saveId;
+      queueRef.current = queueRef.current.then(async () => {
+        try {
+          if (isEqual(savedRef.current[field], value)) {
+            return;
+          }
+          batchRef.current.saving = true;
+          toast.loading(<Type>Saving...</Type>, { id: autosaveToastId });
+          const saved = await rpc.users.updateSettings({
+            userId,
+            data: { [field]: value },
+          });
+          const serverChanges = Object.fromEntries(
+            Object.entries(saved).filter(([key, savedValue]) =>
+              key === field
+                ? latestSaveIdsRef.current[field] === saveId
+                : !isEqual(savedValue, savedRef.current[key as UserSettingField]),
+            ),
+          );
+          savedRef.current = saved;
+          setSettings((current) => ({ ...current, ...serverChanges }));
+          captureEvent("userSettingChanged", { field });
+          onSaved(saved);
+        } catch (e) {
+          console.error(e);
+          captureException(e);
+          batchRef.current.error = getErrorMessage(e);
+          toast.error(<Type>{batchRef.current.error}</Type>, {
+            id: autosaveToastId,
+          });
+          setSettings((current) =>
+            isEqual(current[field], value)
+              ? { ...current, [field]: savedRef.current[field] }
+              : current,
+          );
+        } finally {
+          pendingCountRef.current--;
+          if (pendingCountRef.current === 0) {
+            const { saving, error } = batchRef.current;
+            if (error) {
+              toast.error(<Type>{error}</Type>, { id: autosaveToastId });
+            } else if (saving) {
+              toast.success(<Type>Saved</Type>, { id: autosaveToastId });
+            }
+            batchRef.current = { saving: false, error: null };
+          }
+        }
+      });
+    },
+    [userId, captureEvent, onSaved],
+  );
+
+  return { settings, saveSetting };
+};

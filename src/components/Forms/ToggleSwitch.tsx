@@ -7,11 +7,13 @@ export default function ToggleSwitch({
   value,
   setValue,
   As = "button",
+  ariaLabel,
   className,
 }: Readonly<{
   value: boolean;
   setValue?: (value: boolean) => void;
   As?: ElementType;
+  ariaLabel?: string;
   className?: string;
 }>) {
   const onClick = useCallback(() => setValue?.(!value), [value, setValue]);
@@ -20,6 +22,7 @@ export default function ToggleSwitch({
       type="button"
       role="switch"
       aria-checked={value}
+      aria-label={ariaLabel}
       onClick={onClick}
       className={clsx(
         "relative w-[28px] min-w-[28px] h-[16px] rounded-full",

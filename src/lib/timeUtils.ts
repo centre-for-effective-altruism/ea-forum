@@ -1,3 +1,15 @@
+export const daysOfWeek = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+export type DayOfWeek = (typeof daysOfWeek)[number];
+
 const longRtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 const shortRtf = new Intl.RelativeTimeFormat("en", { style: "narrow" });
 

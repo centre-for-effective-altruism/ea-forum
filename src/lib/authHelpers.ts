@@ -1,10 +1,10 @@
 import { eq, sql } from "drizzle-orm";
 import { captureException } from "@sentry/nextjs";
 import z from "zod/v4";
-import { createHash, randomBytes } from "node:crypto";
-import { AuthenticationClient } from "auth0";
+import { AuthenticationClient, ManagementClient } from "auth0";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-import { users } from "@/lib/schema";
+import { User, users } from "@/lib/schema";
+import type { Json } from "./typeHelpers";
 import { db } from "@/lib/db";
 import { createUser } from "./users/userMutations";
 import { getCurrentClientId } from "./clientIds/currentClientId";
@@ -12,16 +12,11 @@ import { isProduction } from "./environment";
 import { captureServerEvent } from "./analytics/captureServerEvent";
 import { userIsBanned } from "./users/userHelpers";
 import { isBannedEmailDomain } from "./users/bannedEmailDomains";
-
-export const LOGIN_TOKEN_COOKIE_NAME = "loginToken";
-
-const generateLoginToken = () => randomBytes(32).toString("hex");
-
-export const hashLoginToken = (loginToken: string) => {
-  const hash = createHash("sha256");
-  hash.update(loginToken);
-  return hash.digest("base64");
-};
+import {
+  generateLoginToken,
+  hashLoginToken,
+  LOGIN_TOKEN_COOKIE_NAME,
+} from "./loginTokens";
 
 const parseJwt = (token: string) =>
   JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
@@ -55,13 +50,42 @@ export const getAuth0Client = (domain: "public" | "original"): Auth0Client => {
   };
 };
 
+const auth0ProfileSchema = z.object({
+  id: z.string().optional(),
+  user_id: z.string().optional(),
+});
+
+const getPasswordLoginAuth0UserId = (services: Record<string, Json> | null) => {
+  const result = auth0ProfileSchema.safeParse(services?.auth0);
+  const auth0UserId = result.data?.id ?? result.data?.user_id;
+  return auth0UserId?.startsWith("auth0|") ? auth0UserId : null;
+};
+
+export const userCanChangeEmail = (user: Pick<User, "services">) =>
+  !!getPasswordLoginAuth0UserId(user.services);
+
+export const updateAuth0Email = async (
+  user: Pick<User, "_id" | "services">,
+  email: string,
+) => {
+  const auth0UserId = getPasswordLoginAuth0UserId(user.services);
+  if (!auth0UserId) {
+    throw new Error(
+      "Cannot update email for user that doesn't use username/password login",
+    );
+  }
+  const { domain, clientId, clientSecret } = getAuth0Client("original");
+  const management = new ManagementClient({ domain, clientId, clientSecret });
+  await management.users.update(auth0UserId, { email });
+};
+
 export class UserIsBannedError extends Error {
   constructor() {
     super("User is banned");
   }
 }
 
-const getAllUsersByEmail = async (email: string) => {
+export const getAllUsersByEmail = async (email: string) => {
   const results = await db.execute<{
     _id: string;
     banned: string | null;
@@ -82,7 +106,7 @@ const getAllUsersByEmail = async (email: string) => {
   return results.rows;
 };
 
-const auth0IdTokenToProfile = (idToken: string) => {
+export const auth0IdTokenToProfile = (idToken: string) => {
   const { iss, aud, iat, exp, ...rawProfile } = parseJwt(idToken);
   const auth0UserId: string = rawProfile.sub;
   if (!auth0UserId) {
@@ -102,7 +126,7 @@ const auth0IdTokenToProfile = (idToken: string) => {
     picture: rawProfile.picture,
     displayName: rawProfile.email,
     nickname: rawProfile.nickname,
-    provider: "auth0",
+    provider: auth0UserId.split("|")[0],
   };
 };
 
@@ -128,17 +152,25 @@ export const getOrCreateUser = async (
   clientId: string,
   profile: Auth0UserProfile,
 ) => {
-  let user = await db.query.users.findFirst({
+  const existingUser = await db.query.users.findFirst({
     columns: {
       _id: true,
       email: true,
       banned: true,
+    },
+    extras: {
+      auth0Provider: (users, { sql }) =>
+        sql<string | null>`${users.services}->'auth0'->>'provider'`,
     },
     where: {
       RAW: (users, { sql }) =>
         sql`${users.services}->'auth0'->>'id' = ${profile.id}`,
     },
   });
+  if (existingUser && existingUser.auth0Provider !== profile.provider) {
+    await saveAuth0Profile(existingUser._id, profile);
+  }
+  let user: Pick<User, "_id" | "email" | "banned"> | undefined = existingUser;
 
   const email = profile.emails?.[0]?.value;
   const matchingUsers = email ? await getAllUsersByEmail(email) : [];

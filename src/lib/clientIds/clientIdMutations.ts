@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { captureException } from "@sentry/nextjs";
 import { LRUCache } from "lru-cache";
-import { LOGIN_TOKEN_COOKIE_NAME } from "../authHelpers";
+import { LOGIN_TOKEN_COOKIE_NAME } from "../loginTokens";
 import { isNotRandomId } from "../utils/random";
 import { getCurrentUserByLoginToken } from "../users/currentUser";
 import { insertClientId } from "./clientIdQueries";

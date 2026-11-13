@@ -114,6 +114,13 @@ export const commentIsPublic = (
   );
 };
 
+export const commentIncludedInCounts = (
+  comment: Pick<
+    Comment,
+    "draft" | "deleted" | "rejected" | "authorIsUnreviewed" | "debateResponse"
+  >,
+) => commentIsPublic(comment) && !comment.debateResponse;
+
 const commentCollapseKarmaThreshold = -4;
 
 export const commentIsCollapsedForLowKarma = (comment: Pick<Comment, "baseScore">) =>

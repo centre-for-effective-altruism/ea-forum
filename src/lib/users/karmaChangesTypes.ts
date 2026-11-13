@@ -1,4 +1,5 @@
 import type { TagCommentType } from "../tags/tagHelpers";
+import type { DayOfWeek } from "../timeUtils";
 
 export type ReactionChange =
   | number
@@ -61,19 +62,10 @@ export type KarmaChangeUpdateFrequency =
   | "weekly"
   | "realtime";
 
-export type KarmaChangeDayOfWeek =
-  | "Monday"
-  | "Tuesday"
-  | "Wednesday"
-  | "Thursday"
-  | "Friday"
-  | "Saturday"
-  | "Sunday";
-
 export type KarmaChangeSettings = {
   updateFrequency: KarmaChangeUpdateFrequency;
   timeOfDayGMT: number;
-  dayOfWeekGMT: KarmaChangeDayOfWeek;
+  dayOfWeekGMT: DayOfWeek;
   showNegativeKarma: boolean;
 };
 

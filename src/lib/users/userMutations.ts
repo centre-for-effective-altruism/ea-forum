@@ -6,7 +6,7 @@ import { updateWithFieldChanges } from "../fieldChanges";
 import { randomId } from "../utils/random";
 import { db } from "../db";
 import { User, users } from "../schema";
-import { userCanDo, userGetLocation } from "./userHelpers";
+import { userGetLocation } from "./userHelpers";
 import { getUniqueSlug } from "../slugs/uniqueSlug";
 import { isDisplayNameTaken } from "./userQueries";
 import { getDefaultFilterSettings } from "../filterSettings";
@@ -113,23 +113,6 @@ export const completeUserProfile = async (
     });
   });
   waitUntil(elasticSyncDocument("Users", currentUser._id));
-};
-
-export const approveNewUser = async (
-  currentUser: CurrentUser,
-  userIdToApprove: string,
-) => {
-  if (!userCanDo(currentUser, "posts.edit.all")) {
-    throw new Error("Permission denied");
-  }
-  await updateWithFieldChanges(db, currentUser, users, userIdToApprove, {
-    reviewedByUserId: currentUser._id,
-    sunshineFlagged: false,
-    reviewedAt: new Date().toISOString(),
-    needsReview: false,
-    snoozedUntilContentCount: null,
-  });
-  waitUntil(elasticSyncDocument("Users", userIdToApprove));
 };
 
 export const userCheckNotifications = async ({

@@ -39,6 +39,8 @@ const newSitePatterns = [
   /^\/sequencesEdit\/[^/]+$/, // Sequence edit page (legacy path, redirect to /s/[_id]/edit)
   /^\/chaptersEdit\/[^/]+$/, // Chapter edit page (legacy path, redirect to /s/[sequenceId]/edit)
   /^\/(users|user|u)\/[^/]+$/, // User profiles
+  /^\/users\/[^/]+\/edit$/, // Account settings
+  /^\/account$/, // Account settings (redirect to /users/[slug]/edit)
   /^\/auth\/auth0\/callback-v2$/, // Auth0 callback for new site
   /^\/api\//, // All /api/* routes (unless matched above)
   /^\/rpc\//, // All /rpc/* routes

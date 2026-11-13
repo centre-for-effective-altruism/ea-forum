@@ -1,5 +1,9 @@
 import { expect, suite, test, vi } from "vitest";
-import { getOrCreateUser } from "@/lib/authHelpers";
+import {
+  auth0IdTokenToProfile,
+  getOrCreateUser,
+  userCanChangeEmail,
+} from "@/lib/authHelpers";
 import { createTestUser } from "./testHelpers";
 import { nYearsFromNow } from "@/lib/timeUtils";
 import { randomId } from "@/lib/utils/random";
@@ -193,5 +197,45 @@ suite("Auth", () => {
         await getOrCreateUser("test-client-id", profile);
       }).rejects.toThrowError();
     });
+  });
+
+  test("only password logins can change their email", () => {
+    const withAuth0Id = (id: string) => ({
+      services: { auth0: { id, user_id: id, provider: "auth0" } },
+    });
+    expect(userCanChangeEmail(withAuth0Id("auth0|123"))).toBe(true);
+    expect(userCanChangeEmail(withAuth0Id("google-oauth2|123"))).toBe(false);
+    expect(userCanChangeEmail({ services: null })).toBe(false);
+  });
+
+  test("the stored provider comes from the Auth0 user id", () => {
+    const toIdToken = (sub: string) =>
+      `header.${Buffer.from(JSON.stringify({ sub })).toString("base64")}.signature`;
+    expect(auth0IdTokenToProfile(toIdToken("google-oauth2|123")).provider).toBe(
+      "google-oauth2",
+    );
+    expect(auth0IdTokenToProfile(toIdToken("auth0|123")).provider).toBe("auth0");
+  });
+
+  test("logging in corrects a wrongly stored provider", async () => {
+    const auth0UserId = `google-oauth2|${randomId()}`;
+    const profile = {
+      id: auth0UserId,
+      user_id: auth0UserId,
+      raw: "{}",
+      _json: {},
+      name: {},
+      emails: [{ value: `${randomId()}@example.com` }],
+      picture: "",
+      displayName: "Test user",
+      nickname: "Test user",
+      provider: "google-oauth2",
+    };
+    const user = await createTestUser({
+      services: { auth0: { ...profile, provider: "auth0" } },
+    });
+    await getOrCreateUser("test-client-id", profile);
+    const updated = await db.query.users.findFirst({ where: { _id: user._id } });
+    expect(updated?.services?.auth0).toMatchObject({ provider: "google-oauth2" });
   });
 });
