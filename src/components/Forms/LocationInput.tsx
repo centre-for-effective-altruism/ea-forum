@@ -185,6 +185,7 @@ export default function LocationInput({
   const [error, setError] = useState<string | null>(null);
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const requestIdRef = useRef(0);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const sessionTokenRef = useRef<AutocompleteSessionToken | null>(null);
 
   const services = useMemo(
@@ -204,7 +205,7 @@ export default function LocationInput({
     if (!query || query === currentLabel || !maps || !services) {
       return;
     }
-    const timeout = setTimeout(() => {
+    debounceTimeoutRef.current = setTimeout(() => {
       const requestId = ++requestIdRef.current;
       sessionTokenRef.current ??= new maps.places.AutocompleteSessionToken();
       services.autocomplete.getPlacePredictions(
@@ -223,7 +224,7 @@ export default function LocationInput({
         },
       );
     }, PREDICTIONS_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(debounceTimeoutRef.current);
   }, [query, currentLabel, maps, services]);
 
   const predictions = query && fetched ? fetched.predictions : [];
@@ -231,6 +232,7 @@ export default function LocationInput({
   const noResults = !!query && fetched?.query === query && !predictions.length;
 
   const clearPredictions = () => {
+    clearTimeout(debounceTimeoutRef.current);
     ++requestIdRef.current;
     setFetched(null);
   };
