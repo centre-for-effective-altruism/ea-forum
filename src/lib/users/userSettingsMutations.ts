@@ -1,10 +1,9 @@
 import { waitUntil } from "@vercel/functions";
 import { captureException } from "@sentry/nextjs";
 import { and, eq, ne, sql } from "drizzle-orm";
-import groupBy from "lodash/groupBy";
 import type { CurrentUser } from "./currentUser";
 import { db } from "../db";
-import { comments, posts, User, users } from "../schema";
+import { posts, User, users } from "../schema";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { getAllUsersByEmail, updateAuth0Email } from "../authHelpers";
 import { slugify } from "../slugs/slugify";
@@ -12,12 +11,9 @@ import { postStatuses } from "../posts/postsHelpers";
 import { syncUserMailchimpSubscription } from "../mailchimp";
 import { objectKeys } from "../typeHelpers";
 import { userCanEditUser, userIsBanned } from "./userHelpers";
-import {
-  elasticSyncDocument,
-  elasticSyncDocuments,
-} from "../search/elastic/elasticSync";
-import { commentIncludedInCounts } from "../comments/commentHelpers";
+import { elasticSyncDocument } from "../search/elastic/elasticSync";
 import { getUserSettings, isEditableUserGroup } from "./userSettingsQueries";
+import { approveUnreviewedSubmissions } from "./userMutations";
 import { getUpdatableUserSettings, type UserSettings } from "./userSettings";
 import {
   banUserIpsAndResetLoginTokens,
@@ -174,45 +170,6 @@ const toUserUpdate = async (user: User, data: UserSettings): Promise<UserUpdate>
   }
 
   return update;
-};
-
-const approveUnreviewedSubmissions = async (userId: string) => {
-  const { approvedPosts, approvedComments } = await db.transaction(async (txn) => {
-    const approvedPosts = await txn
-      .update(posts)
-      .set({ authorIsUnreviewed: false, postedAt: new Date().toISOString() })
-      .where(and(eq(posts.userId, userId), eq(posts.authorIsUnreviewed, true)))
-      .returning();
-    const approvedComments = await txn
-      .update(comments)
-      .set({ authorIsUnreviewed: false })
-      .where(and(eq(comments.userId, userId), eq(comments.authorIsUnreviewed, true)))
-      .returning();
-    const countedComments = approvedComments.filter(
-      (comment) => comment.postId && commentIncludedInCounts(comment),
-    );
-    for (const [postId, postComments] of Object.entries(
-      groupBy(countedComments, "postId"),
-    )) {
-      const topLevelCount = postComments.filter(
-        ({ parentCommentId }) => !parentCommentId,
-      ).length;
-      await txn
-        .update(posts)
-        .set({
-          commentCount: sql<number>`${posts.commentCount} + ${postComments.length}`,
-          topLevelCommentCount: sql<number>`${posts.topLevelCommentCount} + ${topLevelCount}`,
-        })
-        .where(eq(posts._id, postId));
-    }
-    return { approvedPosts, approvedComments };
-  });
-  runInBackground(() =>
-    elasticSyncDocuments([
-      ["Posts", approvedPosts.map(({ _id }) => _id)],
-      ["Comments", approvedComments.map(({ _id }) => _id)],
-    ]),
-  );
 };
 
 const setPostAsShortform = (postId: string) =>

@@ -1,16 +1,21 @@
 import { waitUntil } from "@vercel/functions";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import groupBy from "lodash/groupBy";
 import type { CurrentUser } from "./currentUser";
 import type { JsonRecord } from "../typeHelpers";
 import { updateWithFieldChanges } from "../fieldChanges";
 import { randomId } from "../utils/random";
 import { db } from "../db";
-import { User, users } from "../schema";
+import { comments, posts, User, users } from "../schema";
 import { userCanDo, userGetLocation } from "./userHelpers";
 import { getUniqueSlug } from "../slugs/uniqueSlug";
 import { isDisplayNameTaken } from "./userQueries";
 import { getDefaultFilterSettings } from "../filterSettings";
-import { elasticSyncDocument } from "../search/elastic/elasticSync";
+import {
+  elasticSyncDocument,
+  elasticSyncDocuments,
+} from "../search/elastic/elasticSync";
+import { commentIncludedInCounts } from "../comments/commentHelpers";
 import { updateMailchimpSubscription } from "../mailchimp";
 import {
   dailyEmailBatchNotificationSettings,
@@ -115,6 +120,45 @@ export const completeUserProfile = async (
   waitUntil(elasticSyncDocument("Users", currentUser._id));
 };
 
+export const approveUnreviewedSubmissions = async (userId: string) => {
+  const { approvedPosts, approvedComments } = await db.transaction(async (txn) => {
+    const approvedPosts = await txn
+      .update(posts)
+      .set({ authorIsUnreviewed: false, postedAt: new Date().toISOString() })
+      .where(and(eq(posts.userId, userId), eq(posts.authorIsUnreviewed, true)))
+      .returning();
+    const approvedComments = await txn
+      .update(comments)
+      .set({ authorIsUnreviewed: false })
+      .where(and(eq(comments.userId, userId), eq(comments.authorIsUnreviewed, true)))
+      .returning();
+    const countedComments = approvedComments.filter(
+      (comment) => comment.postId && commentIncludedInCounts(comment),
+    );
+    for (const [postId, postComments] of Object.entries(
+      groupBy(countedComments, "postId"),
+    )) {
+      const topLevelCount = postComments.filter(
+        ({ parentCommentId }) => !parentCommentId,
+      ).length;
+      await txn
+        .update(posts)
+        .set({
+          commentCount: sql<number>`${posts.commentCount} + ${postComments.length}`,
+          topLevelCommentCount: sql<number>`${posts.topLevelCommentCount} + ${topLevelCount}`,
+        })
+        .where(eq(posts._id, postId));
+    }
+    return { approvedPosts, approvedComments };
+  });
+  waitUntil(
+    elasticSyncDocuments([
+      ["Posts", approvedPosts.map(({ _id }) => _id)],
+      ["Comments", approvedComments.map(({ _id }) => _id)],
+    ]),
+  );
+};
+
 export const approveNewUser = async (
   currentUser: CurrentUser,
   userIdToApprove: string,
@@ -129,6 +173,7 @@ export const approveNewUser = async (
     needsReview: false,
     snoozedUntilContentCount: null,
   });
+  await approveUnreviewedSubmissions(userIdToApprove);
   waitUntil(elasticSyncDocument("Users", userIdToApprove));
 };
 

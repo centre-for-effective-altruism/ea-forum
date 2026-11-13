@@ -1,6 +1,7 @@
 import { suite, test, expect, beforeEach } from "vitest";
-import { createTestUser } from "./testHelpers";
+import { createTestComment, createTestPost, createTestUser } from "./testHelpers";
 import { triggerReviewIfNeeded } from "@/lib/users/userReview";
+import { approveNewUser } from "@/lib/users/userMutations";
 import { Revision, users } from "@/lib/schema";
 import { db } from "@/lib/db";
 
@@ -125,5 +126,25 @@ suite("triggerReviewIfNeeded (DB integration)", () => {
     });
     await triggerReviewIfNeeded(user);
     expect(await fetchNeedsReview(user._id)).toBe(false);
+  });
+});
+
+suite("approveNewUser", () => {
+  test("approves the user's waiting posts and comments", async () => {
+    const [admin, newUser] = await Promise.all([
+      createTestUser({ isAdmin: true }),
+      createTestUser({ reviewedByUserId: null }),
+    ]);
+    const [post, comment] = await Promise.all([
+      createTestPost({ userId: newUser._id, authorIsUnreviewed: true }),
+      createTestComment({ userId: newUser._id, authorIsUnreviewed: true }),
+    ]);
+    await approveNewUser(admin, newUser._id);
+    const [updatedPost, updatedComment] = await Promise.all([
+      db.query.posts.findFirst({ where: { _id: post._id } }),
+      db.query.comments.findFirst({ where: { _id: comment._id } }),
+    ]);
+    expect(updatedPost?.authorIsUnreviewed).toBe(false);
+    expect(updatedComment?.authorIsUnreviewed).toBe(false);
   });
 });
