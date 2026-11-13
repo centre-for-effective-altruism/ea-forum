@@ -21,13 +21,11 @@ import {
 import { randomId } from "../utils/random";
 import { filterNonNull } from "../typeHelpers";
 import { addTime } from "../timeUtils";
-import { mapInBatches } from "../utils/asyncUtils";
-import { commentIsPublic } from "../comments/commentHelpers";
+import { commentIncludedInCounts } from "../comments/commentHelpers";
 import { logFieldChanges } from "../fieldChanges";
 import { postGetPageUrl, postStatuses } from "../posts/postsHelpers";
 import { akismetReportSpam } from "../akismet";
-import { elasticSyncDocument } from "../search/elastic/elasticSync";
-import type { SearchIndexCollectionName } from "../search/elastic/elasticIndexes";
+import { elasticSyncDocuments } from "../search/elastic/elasticSync";
 import type { CurrentUser } from "./currentUser";
 import { clearVotes } from "../votes/voteMutations";
 import {
@@ -75,8 +73,6 @@ export const nullifyVotesForUser = async (userId: string) => {
     });
   }
 };
-
-const elasticSyncBatchSize = 20;
 
 const tagRevisionLatestColumns = {
   description: "descriptionLatest",
@@ -163,9 +159,6 @@ type PurgeableComment = Pick<
   | "authorIsUnreviewed"
   | "draft"
 >;
-
-const commentIncludedInCounts = (comment: PurgeableComment) =>
-  commentIsPublic(comment) && !comment.debateResponse;
 
 const softDeleteComments = async (
   txn: Transaction,
@@ -299,15 +292,6 @@ const reportPurgedContentAsSpam = async (
     ...purgedComments,
   ]);
 };
-
-const elasticSyncDocuments = (documents: [SearchIndexCollectionName, string[]][]) =>
-  mapInBatches(
-    documents.flatMap(([collectionName, ids]) =>
-      ids.map((id) => [collectionName, id] as const),
-    ),
-    elasticSyncBatchSize,
-    ([collectionName, id]) => elasticSyncDocument(collectionName, id),
-  );
 
 export const deleteUserContent = async (
   currentUser: CurrentUser,

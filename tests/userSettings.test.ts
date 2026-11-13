@@ -252,18 +252,42 @@ suite("User settings", () => {
       userId: other._id,
       authorIsUnreviewed: true,
     });
+    const commentedPost = await createTestPost({
+      commentCount: 5,
+      topLevelCommentCount: 3,
+    });
     const comment = await createTestComment({
       userId: other._id,
+      postId: commentedPost._id,
       authorIsUnreviewed: true,
     });
+    await Promise.all([
+      createTestComment({
+        userId: other._id,
+        postId: commentedPost._id,
+        parentCommentId: comment._id,
+        authorIsUnreviewed: true,
+      }),
+      createTestComment({
+        userId: other._id,
+        postId: commentedPost._id,
+        authorIsUnreviewed: true,
+        deleted: true,
+      }),
+    ]);
     const moderator = await loginAsModerator();
     await updateSettings(other._id, { reviewedByUserId: moderator._id });
-    const [updatedPost, updatedComment] = await Promise.all([
+    const [updatedPost, updatedComment, updatedCommentedPost] = await Promise.all([
       db.query.posts.findFirst({ where: { _id: post._id } }),
       db.query.comments.findFirst({ where: { _id: comment._id } }),
+      db.query.posts.findFirst({ where: { _id: commentedPost._id } }),
     ]);
     expect(updatedPost?.authorIsUnreviewed).toBe(false);
     expect(updatedComment?.authorIsUnreviewed).toBe(false);
+    expect(updatedCommentedPost).toMatchObject({
+      commentCount: 7,
+      topLevelCommentCount: 4,
+    });
   });
 
   test("the quick takes feed must be the user's own published post", async () => {
