@@ -12,9 +12,11 @@ export default function HighlightableSetting({
   children: ReactNode;
 }>) {
   const ref = useRef<HTMLDivElement>(null);
+  const scrolledRef = useRef(false);
   const groupExpanded = useFormGroupExpanded();
   useEffect(() => {
-    if (highlighted && groupExpanded) {
+    if (highlighted && groupExpanded && !scrolledRef.current) {
+      scrolledRef.current = true;
       ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [highlighted, groupExpanded]);
