@@ -1,4 +1,4 @@
-import { beforeEach, expect, suite, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, suite, test, vi } from "vitest";
 import { call } from "@orpc/server";
 import { db } from "@/lib/db";
 import { randomId } from "@/lib/utils/random";
@@ -63,6 +63,11 @@ const updateSettings = (userId: string, data: UserSettings) =>
 suite("User settings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("MAILCHIMP_DIGEST_LIST_ID", "digest-list");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   test("pages are served by the new site", () => {
@@ -226,6 +231,18 @@ suite("User settings", () => {
       [oldEmail, "unsubscribed"],
       [newEmail, "subscribed"],
     ]);
+  });
+
+  test("changing the email works when the digest list isn't configured", async () => {
+    vi.stubEnv("MAILCHIMP_DIGEST_LIST_ID", "");
+    const newEmail = `${randomId()}@example.com`;
+    const user = await loginAs({
+      email: `${randomId()}@example.com`,
+      subscribedToDigest: true,
+    });
+    await updateSettings(user._id, { email: newEmail });
+    expect(mockMailchimp).not.toHaveBeenCalled();
+    expect((await fetchUser(user._id))?.email).toBe(newEmail);
   });
 
   test("changing only the email's case keeps the digest subscription", async () => {

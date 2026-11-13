@@ -8,7 +8,10 @@ import { updateWithFieldChanges } from "../fieldChanges";
 import { getAllUsersByEmail, updateAuth0Email } from "../authHelpers";
 import { slugify } from "../slugs/slugify";
 import { postStatuses } from "../posts/postsHelpers";
-import { syncUserMailchimpSubscription } from "../mailchimp";
+import {
+  isMailchimpListConfigured,
+  syncUserMailchimpSubscription,
+} from "../mailchimp";
 import { objectKeys } from "../typeHelpers";
 import { userCanEditUser, userIsBanned } from "./userHelpers";
 import { elasticSyncDocument } from "../search/elastic/elasticSync";
@@ -125,6 +128,10 @@ const withExternalAccountSync = async <T>(
     const wasSubscribed = user.subscribedToDigest;
     const isSubscribed = update.subscribedToDigest ?? wasSubscribed;
     const addressChanged = nextUser.email !== oldEmail;
+    if (addressChanged && wasSubscribed && !isMailchimpListConfigured("digest")) {
+      console.error("Digest list not configured, not moving the subscription");
+      return await write();
+    }
     if (wasSubscribed && (!isSubscribed || addressChanged)) {
       await syncDigestSubscription(user, false, { ignoreErrors: false });
       undoSteps.push(() =>

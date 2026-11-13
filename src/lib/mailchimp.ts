@@ -10,11 +10,14 @@ export const mailchimpListSchema = z.enum(["eaForum", "digest", "newsletter"]);
 
 type MailchimpList = z.infer<typeof mailchimpListSchema>;
 
-const listIds: Record<MailchimpList, string | undefined> = {
-  eaForum: process.env.MAILCHIMP_EA_FORUM_LIST_ID,
-  digest: process.env.MAILCHIMP_DIGEST_LIST_ID,
-  newsletter: process.env.MAILCHIMP_EA_NEWSLETTER_LIST_ID,
-};
+const getListId = (list: MailchimpList) =>
+  ({
+    eaForum: process.env.MAILCHIMP_EA_FORUM_LIST_ID,
+    digest: process.env.MAILCHIMP_DIGEST_LIST_ID,
+    newsletter: process.env.MAILCHIMP_EA_NEWSLETTER_LIST_ID,
+  })[list];
+
+export const isMailchimpListConfigured = (list: MailchimpList) => !!getListId(list);
 
 type MailchimpStatus = "subscribed" | "unsubscribed";
 
@@ -31,7 +34,7 @@ export const updateMailchimpSubscription = async ({
   displayName?: string;
   location?: { longitude: number; latitude: number };
 }) => {
-  const listId = listIds[list];
+  const listId = getListId(list);
   if (!listId) {
     throw new Error("Mailchimp list id not configured");
   }
