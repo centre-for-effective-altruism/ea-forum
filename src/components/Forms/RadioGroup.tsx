@@ -1,3 +1,4 @@
+import { useId } from "react";
 import clsx from "clsx";
 
 type Option<T extends string> = {
@@ -22,6 +23,7 @@ export function RadioGroup<T extends string>({
   className,
   disabled = false,
 }: Readonly<RadioGroupProps<T>>) {
+  const name = useId();
   return (
     <div
       data-component="RadioGroup"
@@ -41,6 +43,7 @@ export function RadioGroup<T extends string>({
         >
           <input
             type="radio"
+            name={name}
             value={option.value}
             checked={value === option.value}
             onChange={() => onChange(option.value)}
