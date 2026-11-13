@@ -27,6 +27,8 @@ export const useUserSettingsAutosave = (
   const savedRef = useRef(initialSettings);
   const queueRef = useRef(Promise.resolve());
   const pendingCountRef = useRef(0);
+  const saveCountRef = useRef(0);
+  const latestSaveIdsRef = useRef<Partial<Record<UserSettingField, number>>>({});
   const batchRef = useRef<{ saving: boolean; error: string | null }>({
     saving: false,
     error: null,
@@ -36,6 +38,8 @@ export const useUserSettingsAutosave = (
     (field, value) => {
       setSettings((current) => ({ ...current, [field]: value }));
       pendingCountRef.current++;
+      const saveId = ++saveCountRef.current;
+      latestSaveIdsRef.current[field] = saveId;
       queueRef.current = queueRef.current.then(async () => {
         try {
           if (isEqual(savedRef.current[field], value)) {
@@ -48,10 +52,10 @@ export const useUserSettingsAutosave = (
             data: { [field]: value },
           });
           const serverChanges = Object.fromEntries(
-            Object.entries(saved).filter(
-              ([key, savedValue]) =>
-                key === field ||
-                !isEqual(savedValue, savedRef.current[key as UserSettingField]),
+            Object.entries(saved).filter(([key, savedValue]) =>
+              key === field
+                ? latestSaveIdsRef.current[field] === saveId
+                : !isEqual(savedValue, savedRef.current[key as UserSettingField]),
             ),
           );
           savedRef.current = saved;
