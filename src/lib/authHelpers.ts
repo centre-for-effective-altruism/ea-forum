@@ -59,24 +59,23 @@ export const getAuth0Client = (domain: "public" | "original"): Auth0Client => {
 const auth0ProfileSchema = z.object({
   id: z.string().optional(),
   user_id: z.string().optional(),
-  provider: z.string().optional(),
 });
 
-const getAuth0Profile = (services: Record<string, Json> | null) => {
+const getPasswordLoginAuth0UserId = (services: Record<string, Json> | null) => {
   const result = auth0ProfileSchema.safeParse(services?.auth0);
-  return result.success ? result.data : null;
+  const auth0UserId = result.data?.id ?? result.data?.user_id;
+  return auth0UserId?.startsWith("auth0|") ? auth0UserId : null;
 };
 
 export const userCanChangeEmail = (user: Pick<User, "services">) =>
-  getAuth0Profile(user.services)?.provider === "auth0";
+  !!getPasswordLoginAuth0UserId(user.services);
 
 export const updateAuth0Email = async (
   user: Pick<User, "_id" | "services">,
   email: string,
 ) => {
-  const profile = getAuth0Profile(user.services);
-  const auth0UserId = profile?.id ?? profile?.user_id;
-  if (profile?.provider !== "auth0" || !auth0UserId) {
+  const auth0UserId = getPasswordLoginAuth0UserId(user.services);
+  if (!auth0UserId) {
     throw new Error(
       "Cannot update email for user that doesn't use username/password login",
     );

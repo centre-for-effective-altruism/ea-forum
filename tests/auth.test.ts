@@ -1,5 +1,5 @@
 import { expect, suite, test, vi } from "vitest";
-import { getOrCreateUser } from "@/lib/authHelpers";
+import { getOrCreateUser, userCanChangeEmail } from "@/lib/authHelpers";
 import { createTestUser } from "./testHelpers";
 import { nYearsFromNow } from "@/lib/timeUtils";
 import { randomId } from "@/lib/utils/random";
@@ -193,5 +193,14 @@ suite("Auth", () => {
         await getOrCreateUser("test-client-id", profile);
       }).rejects.toThrowError();
     });
+  });
+
+  test("only password logins can change their email", () => {
+    const withAuth0Id = (id: string) => ({
+      services: { auth0: { id, user_id: id, provider: "auth0" } },
+    });
+    expect(userCanChangeEmail(withAuth0Id("auth0|123"))).toBe(true);
+    expect(userCanChangeEmail(withAuth0Id("google-oauth2|123"))).toBe(false);
+    expect(userCanChangeEmail({ services: null })).toBe(false);
   });
 });
