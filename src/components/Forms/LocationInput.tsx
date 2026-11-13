@@ -230,13 +230,18 @@ export default function LocationInput({
   const listOpen = predictions.length > 0;
   const noResults = !!query && fetched?.query === query && !predictions.length;
 
+  const clearPredictions = () => {
+    ++requestIdRef.current;
+    setFetched(null);
+  };
+
   const selectPrediction = (prediction: AutocompletePrediction) => {
     if (!maps || !services) {
       return;
     }
     setPendingLabel(prediction.description);
     setEditingText(null);
-    setFetched(null);
+    clearPredictions();
     setActiveIndex(-1);
     sessionTokenRef.current ??= new maps.places.AutocompleteSessionToken();
     services.places.getDetails(
@@ -296,14 +301,14 @@ export default function LocationInput({
         break;
       case "Escape":
         ev.preventDefault();
-        setFetched(null);
+        clearPredictions();
         break;
     }
   };
 
   const onBlur = () => {
     setEditingText(null);
-    setFetched(null);
+    clearPredictions();
     setActiveIndex(-1);
   };
 
