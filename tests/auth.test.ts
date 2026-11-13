@@ -1,5 +1,9 @@
 import { expect, suite, test, vi } from "vitest";
-import { getOrCreateUser, userCanChangeEmail } from "@/lib/authHelpers";
+import {
+  auth0IdTokenToProfile,
+  getOrCreateUser,
+  userCanChangeEmail,
+} from "@/lib/authHelpers";
 import { createTestUser } from "./testHelpers";
 import { nYearsFromNow } from "@/lib/timeUtils";
 import { randomId } from "@/lib/utils/random";
@@ -202,5 +206,14 @@ suite("Auth", () => {
     expect(userCanChangeEmail(withAuth0Id("auth0|123"))).toBe(true);
     expect(userCanChangeEmail(withAuth0Id("google-oauth2|123"))).toBe(false);
     expect(userCanChangeEmail({ services: null })).toBe(false);
+  });
+
+  test("the stored provider comes from the Auth0 user id", () => {
+    const toIdToken = (sub: string) =>
+      `header.${Buffer.from(JSON.stringify({ sub })).toString("base64")}.signature`;
+    expect(auth0IdTokenToProfile(toIdToken("google-oauth2|123")).provider).toBe(
+      "google-oauth2",
+    );
+    expect(auth0IdTokenToProfile(toIdToken("auth0|123")).provider).toBe("auth0");
   });
 });

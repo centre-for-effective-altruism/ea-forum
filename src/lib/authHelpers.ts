@@ -112,7 +112,7 @@ export const getAllUsersByEmail = async (email: string) => {
   return results.rows;
 };
 
-const auth0IdTokenToProfile = (idToken: string) => {
+export const auth0IdTokenToProfile = (idToken: string) => {
   const { iss, aud, iat, exp, ...rawProfile } = parseJwt(idToken);
   const auth0UserId: string = rawProfile.sub;
   if (!auth0UserId) {
@@ -132,7 +132,7 @@ const auth0IdTokenToProfile = (idToken: string) => {
     picture: rawProfile.picture,
     displayName: rawProfile.email,
     nickname: rawProfile.nickname,
-    provider: "auth0",
+    provider: auth0UserId.split("|")[0],
   };
 };
 
