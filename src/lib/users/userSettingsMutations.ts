@@ -248,7 +248,9 @@ export const updateUserSettings = async (
 
   const update = await toUserUpdate(user, data);
   const updatedUser = await withExternalAccountSync(user, update, () =>
-    updateWithFieldChanges(db, currentUser, users, userId, update),
+    db.transaction((txn) =>
+      updateWithFieldChanges(txn, currentUser, users, userId, update),
+    ),
   );
 
   if (updatedUser.reviewedByUserId && !user.reviewedByUserId) {
