@@ -27,6 +27,10 @@ export const useUserSettingsAutosave = (
   const savedRef = useRef(initialSettings);
   const queueRef = useRef(Promise.resolve());
   const pendingCountRef = useRef(0);
+  const batchRef = useRef<{ saving: boolean; error: string | null }>({
+    saving: false,
+    error: null,
+  });
 
   const saveSetting: SaveUserSetting = useCallback(
     (field, value) => {
@@ -37,6 +41,7 @@ export const useUserSettingsAutosave = (
           if (isEqual(savedRef.current[field], value)) {
             return;
           }
+          batchRef.current.saving = true;
           toast.loading(<Type>Saving...</Type>, { id: autosaveToastId });
           const saved = await rpc.users.updateSettings({
             userId,
@@ -53,13 +58,13 @@ export const useUserSettingsAutosave = (
           setSettings((current) => ({ ...current, ...serverChanges }));
           captureEvent("userSettingChanged", { field });
           onSaved(saved);
-          if (pendingCountRef.current === 1) {
-            toast.success(<Type>Saved</Type>, { id: autosaveToastId });
-          }
         } catch (e) {
           console.error(e);
           captureException(e);
-          toast.error(<Type>{getErrorMessage(e)}</Type>, { id: autosaveToastId });
+          batchRef.current.error = getErrorMessage(e);
+          toast.error(<Type>{batchRef.current.error}</Type>, {
+            id: autosaveToastId,
+          });
           setSettings((current) =>
             isEqual(current[field], value)
               ? { ...current, [field]: savedRef.current[field] }
@@ -67,6 +72,15 @@ export const useUserSettingsAutosave = (
           );
         } finally {
           pendingCountRef.current--;
+          if (pendingCountRef.current === 0) {
+            const { saving, error } = batchRef.current;
+            if (error) {
+              toast.error(<Type>{error}</Type>, { id: autosaveToastId });
+            } else if (saving) {
+              toast.success(<Type>Saved</Type>, { id: autosaveToastId });
+            }
+            batchRef.current = { saving: false, error: null };
+          }
         }
       });
     },
