@@ -41,10 +41,10 @@ const fetchUserIdsWithEventInNotificationRadius = async ({
       RAW: (users) => sql`
         EARTH_DISTANCE(
           LL_TO_EARTH(
-            (${users.nearbyEventsNotificationsMongoLocation}->'coordinates'->0)::FLOAT8,
-            (${users.nearbyEventsNotificationsMongoLocation}->'coordinates'->1)::FLOAT8
+            (${users.nearbyEventsNotificationsMongoLocation}->'coordinates'->1)::FLOAT8,
+            (${users.nearbyEventsNotificationsMongoLocation}->'coordinates'->0)::FLOAT8
           ),
-          LL_TO_EARTH(${longitude}, ${latitude})
+          LL_TO_EARTH(${latitude}, ${longitude})
         ) * ${MILES_PER_METER} < ${users.nearbyEventsNotificationsRadius}
       `,
     },

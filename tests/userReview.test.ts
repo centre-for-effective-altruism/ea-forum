@@ -236,4 +236,28 @@ suite("approveNewUser", () => {
     expect(notifiedUserIds).toContain(nearbyUser._id);
     expect(notifiedUserIds).not.toContain(distantUser._id);
   });
+
+  test("measures event distances with latitude and longitude the right way round", async () => {
+    // At 60°N one degree of longitude is about 34 miles, but about 69 miles
+    // if latitude and longitude are swapped
+    const point = (longitude: number, latitude: number) => ({
+      type: "Point" as const,
+      coordinates: [longitude, latitude] as [number, number],
+    });
+    const user = await createTestUser({
+      nearbyEventsNotificationsMongoLocation: point(0, 60),
+      nearbyEventsNotificationsRadius: 50,
+    });
+    const event = await createTestPost({
+      isEvent: true,
+      mongoLocation: point(1, 60),
+    });
+
+    await newPostNotifications(event._id);
+
+    const notification = await db.query.notifications.findFirst({
+      where: { documentId: event._id, type: "newEventInRadius", userId: user._id },
+    });
+    expect(notification).toBeTruthy();
+  });
 });
