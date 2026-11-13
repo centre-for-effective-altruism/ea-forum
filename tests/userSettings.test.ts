@@ -211,6 +211,37 @@ suite("User settings", () => {
     });
   });
 
+  test("changing the email moves the digest subscription to the new address", async () => {
+    const [oldEmail, newEmail] = [
+      `${randomId()}@example.com`,
+      `${randomId()}@example.com`,
+    ];
+    const user = await loginAs({ email: oldEmail, subscribedToDigest: true });
+    await updateSettings(user._id, { email: newEmail });
+    const digestCalls = mockMailchimp.mock.calls.map(([{ user, status }]) => [
+      user.email,
+      status,
+    ]);
+    expect(digestCalls).toEqual([
+      [newEmail, "subscribed"],
+      [oldEmail, "unsubscribed"],
+    ]);
+  });
+
+  test("changing the email while unsubscribing unsubscribes the old address", async () => {
+    const [oldEmail, newEmail] = [
+      `${randomId()}@example.com`,
+      `${randomId()}@example.com`,
+    ];
+    const user = await loginAs({ email: oldEmail, subscribedToDigest: true });
+    await updateSettings(user._id, { email: newEmail, subscribedToDigest: false });
+    const digestCalls = mockMailchimp.mock.calls.map(([{ user, status }]) => [
+      user.email,
+      status,
+    ]);
+    expect(digestCalls).toEqual([[oldEmail, "unsubscribed"]]);
+  });
+
   test("a rejected Auth0 email change leaves Mailchimp and the database alone", async () => {
     const [oldEmail, newEmail] = [
       `${randomId()}@example.com`,

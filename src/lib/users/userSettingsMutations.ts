@@ -206,21 +206,24 @@ export const updateUserSettings = async (
     if (newEmail) {
       await updateAuth0Email(user, newEmail);
     }
-    if (updatedUser.subscribedToDigest !== user.subscribedToDigest) {
-      try {
-        await syncDigestSubscription(updatedUser, updatedUser.subscribedToDigest, {
-          ignoreErrors: false,
-        });
-      } catch (e) {
-        if (newEmail && user.email) {
-          try {
-            await updateAuth0Email(user, user.email);
-          } catch (revertError) {
-            captureException(revertError);
-          }
-        }
-        throw e;
+    const wasSubscribed = user.subscribedToDigest;
+    const isSubscribed = updatedUser.subscribedToDigest;
+    try {
+      if (isSubscribed && (!wasSubscribed || newEmail)) {
+        await syncDigestSubscription(updatedUser, true, { ignoreErrors: false });
       }
+      if (wasSubscribed && (!isSubscribed || newEmail)) {
+        await syncDigestSubscription(user, false, { ignoreErrors: false });
+      }
+    } catch (e) {
+      if (newEmail && user.email) {
+        try {
+          await updateAuth0Email(user, user.email);
+        } catch (revertError) {
+          captureException(revertError);
+        }
+      }
+      throw e;
     }
     return updatedUser;
   });
