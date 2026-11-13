@@ -231,7 +231,7 @@ const groupFields = {
   ],
   privileges: fieldsOf(privilegeCheckboxes),
   banAndPurge: [...fieldsOf(banCheckboxes), "banned"],
-  moderation: fieldsOf(userIdsSettings),
+  moderation: ["previousDisplayName", ...fieldsOf(userIdsSettings)],
   admin: ["isAdmin", "groups"],
 } satisfies Record<string, UserSettingField[]>;
 
@@ -381,15 +381,6 @@ export default function UserSettingsForm({
             </Type>
           )}
         </div>
-      )}
-      {settings.previousDisplayName !== undefined && (
-        <SettingTextInput
-          label="Previous display name"
-          value={settings.previousDisplayName ?? ""}
-          onCommit={(value) =>
-            saveSetting("previousDisplayName", emptyToNull(value))
-          }
-        />
       )}
 
       {renderGroup(
@@ -564,7 +555,18 @@ export default function UserSettingsForm({
       {renderGroup(
         "Moderation",
         groupFields.moderation,
-        userIdsSettings.map(renderUserIds),
+        <>
+          {settings.previousDisplayName !== undefined && (
+            <SettingTextInput
+              label="Previous display name"
+              value={settings.previousDisplayName ?? ""}
+              onCommit={(value) =>
+                saveSetting("previousDisplayName", emptyToNull(value))
+              }
+            />
+          )}
+          {userIdsSettings.map(renderUserIds)}
+        </>,
       )}
 
       {renderGroup(
