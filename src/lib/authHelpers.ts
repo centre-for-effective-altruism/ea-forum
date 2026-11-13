@@ -158,17 +158,25 @@ export const getOrCreateUser = async (
   clientId: string,
   profile: Auth0UserProfile,
 ) => {
-  let user = await db.query.users.findFirst({
+  const existingUser = await db.query.users.findFirst({
     columns: {
       _id: true,
       email: true,
       banned: true,
+    },
+    extras: {
+      auth0Provider: (users, { sql }) =>
+        sql<string | null>`${users.services}->'auth0'->>'provider'`,
     },
     where: {
       RAW: (users, { sql }) =>
         sql`${users.services}->'auth0'->>'id' = ${profile.id}`,
     },
   });
+  if (existingUser && existingUser.auth0Provider !== profile.provider) {
+    await saveAuth0Profile(existingUser._id, profile);
+  }
+  let user: Pick<User, "_id" | "email" | "banned"> | undefined = existingUser;
 
   const email = profile.emails?.[0]?.value;
   const matchingUsers = email ? await getAllUsersByEmail(email) : [];

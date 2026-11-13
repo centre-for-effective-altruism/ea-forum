@@ -216,4 +216,26 @@ suite("Auth", () => {
     );
     expect(auth0IdTokenToProfile(toIdToken("auth0|123")).provider).toBe("auth0");
   });
+
+  test("logging in corrects a wrongly stored provider", async () => {
+    const auth0UserId = `google-oauth2|${randomId()}`;
+    const profile = {
+      id: auth0UserId,
+      user_id: auth0UserId,
+      raw: "{}",
+      _json: {},
+      name: {},
+      emails: [{ value: `${randomId()}@example.com` }],
+      picture: "",
+      displayName: "Test user",
+      nickname: "Test user",
+      provider: "google-oauth2",
+    };
+    const user = await createTestUser({
+      services: { auth0: { ...profile, provider: "auth0" } },
+    });
+    await getOrCreateUser("test-client-id", profile);
+    const updated = await db.query.users.findFirst({ where: { _id: user._id } });
+    expect(updated?.services?.auth0).toMatchObject({ provider: "google-oauth2" });
+  });
 });
