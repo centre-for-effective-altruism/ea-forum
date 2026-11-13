@@ -223,6 +223,23 @@ suite("User settings", () => {
     });
   });
 
+  test("legacy karma settings with missing keys are filled with defaults", async () => {
+    const user = await loginAs({
+      karmaChangeNotifierSettings: {
+        updateFrequency: "weekly",
+      } as InsertUser["karmaChangeNotifierSettings"],
+    });
+    const data = await fetchUserSettingsPageData(await getCurrentUser(), user.slug);
+    const { karmaChangeNotifierSettings } = data!.settings;
+    expect(karmaChangeNotifierSettings).toMatchObject({ updateFrequency: "weekly" });
+    await updateSettings(user._id, {
+      karmaChangeNotifierSettings: {
+        ...karmaChangeNotifierSettings!,
+        showNegativeKarma: true,
+      },
+    });
+  });
+
   test("reviewing a user approves their unreviewed content", async () => {
     const other = await createTestUser({ reviewedByUserId: null });
     const post = await createTestPost({

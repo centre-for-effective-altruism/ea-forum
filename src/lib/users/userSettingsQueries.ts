@@ -55,8 +55,10 @@ const toUserSettings = (user: User): Required<UserSettings> => ({
       ),
     ]),
   ) as Pick<Required<UserSettings>, NotificationSettingField>),
-  karmaChangeNotifierSettings:
-    user.karmaChangeNotifierSettings ?? defaultKarmaChangeSettings,
+  karmaChangeNotifierSettings: {
+    ...defaultKarmaChangeSettings,
+    ...user.karmaChangeNotifierSettings,
+  },
   subscribedToDigest: user.subscribedToDigest,
   sendMarketingEmails: user.sendMarketingEmails,
   sendInactiveSummaryEmail: user.sendInactiveSummaryEmail,
