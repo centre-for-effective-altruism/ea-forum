@@ -32,6 +32,10 @@ export default async function AdminPage() {
           },
           { title: "Digests", href: "/admin/digests" },
           { title: "Featured queue", href: "/admin/featured" },
+          {
+            title: "Marginal Funding Week sequence",
+            href: "/admin/marginal-funding-week",
+          },
           { title: "Twitter tools", href: "/admin/twitter" },
           { title: "Spotlights", href: "/admin/spotlights" },
           { title: "Forum events", href: "/adminForumEvents" },

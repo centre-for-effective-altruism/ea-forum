@@ -13,6 +13,7 @@ import {
   homePageTabCookie,
   HomePageTabName,
   homePageTabs,
+  preMarginalFundingHomePageTabCookie,
 } from "./homePageHelpers";
 import { useCookiesWithConsent } from "@/lib/cookies/useCookiesWithConsent";
 import {
@@ -37,15 +38,21 @@ export function HomePageTabsSkeleton({
   className?: string;
 }>) {
   return (
-    <div className={clsx("flex gap-6", className)}>
+    <div className={clsx("flex gap-6 overflow-hidden", className)}>
       {homePageTabs.map(({ label, name }) => (
-        <Type key={name} style="homePageTab" className="pb-2">
+        <Type
+          key={name}
+          style="homePageTab"
+          className="pb-2 flex-none whitespace-nowrap"
+        >
           <span className="rounded bg-gray-200 text-transparent">{label}</span>
         </Type>
       ))}
     </div>
   );
 }
+
+const tabsWithViewPicker = new Set<HomePageTabName>(["featured", "marginalFunding"]);
 
 const featuredPageUrl = "/posts/nx2wA6u8uS9qRorTD/the-featured-page";
 
@@ -103,6 +110,7 @@ export default function HomePageTabs({
   const [cookies, setCookie] = useCookiesWithConsent([
     homePageTabCookie,
     featuredViewTypeCookie,
+    preMarginalFundingHomePageTabCookie,
   ]);
   const initialTab = getCurrentHomePageTab(cookies);
   const featuredViewCookie = cookies.featured_view_type ?? "";
@@ -126,6 +134,7 @@ export default function HomePageTabs({
   const tabRefs = useRef<Record<HomePageTabName, HTMLElement | null>>({
     featured: null,
     magic: null,
+    marginalFunding: null,
   });
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -197,6 +206,13 @@ export default function HomePageTabs({
 
   const setCurrentTab = useCallback(
     (tab: HomePageTabName) => {
+      if (
+        tab === "marginalFunding" &&
+        currentTab !== "marginalFunding" &&
+        !cookies[preMarginalFundingHomePageTabCookie]
+      ) {
+        setCookie(preMarginalFundingHomePageTabCookie, currentTab);
+      }
       rawSetCurrentTab(tab);
       tabRefs.current[tab]?.scrollIntoView({
         behavior: "smooth",
@@ -207,8 +223,14 @@ export default function HomePageTabs({
       captureEvent("setFrontpageTab", { tab });
       loadTabContent(tab);
     },
-    [setCookie, captureEvent, loadTabContent],
+    [currentTab, cookies, setCookie, captureEvent, loadTabContent],
   );
+
+  const currentTabConfig = homePageTabs.find(({ name }) => name === currentTab);
+  const activeColor =
+    currentTabConfig && "activeColor" in currentTabConfig
+      ? currentTabConfig.activeColor
+      : undefined;
 
   return (
     <PostsListViewProvider
@@ -240,11 +262,16 @@ export default function HomePageTabs({
                     style="homePageTab"
                     onClick={() => setCurrentTab(name)}
                     className={clsx(
-                      "cursor-pointer relative pb-2",
+                      "cursor-pointer relative pb-2 whitespace-nowrap",
                       name === currentTab
                         ? "text-gray-1000"
                         : "text-gray-400 hover:text-gray-500 transition-all",
                     )}
+                    cssStyle={
+                      name === currentTab && activeColor
+                        ? { color: activeColor }
+                        : undefined
+                    }
                   >
                     {label}
                   </Type>
@@ -255,15 +282,15 @@ export default function HomePageTabs({
               ))}
               <span
                 aria-hidden
-                style={underlineStyle}
+                style={{ ...underlineStyle, backgroundColor: activeColor }}
                 className="
-              absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
-              transition-all duration-300 ease-in-out
-            "
+                  absolute bottom-0 h-0.5 bg-gray-1000 pointer-events-none
+                  transition-all duration-300 ease-in-out
+                "
               />
             </div>
           </div>
-          {currentTab === "featured" && (
+          {tabsWithViewPicker.has(currentTab) && (
             <div className="flex-none ml-auto self-start -mt-1 -mb-4">
               <PostsListViewPicker />
             </div>

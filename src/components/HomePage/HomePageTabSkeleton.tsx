@@ -6,6 +6,10 @@ import {
 } from "@/lib/posts/postsListView";
 import FeaturedPostSkeleton from "../FeaturedCards/FeaturedPostSkeleton";
 import HomePageFeaturedTabLayout from "./HomePageFeaturedTabLayout";
+import HomePageMarginalFundingTabLayout, {
+  MARGINAL_FUNDING_CARD_COUNT,
+  MARGINAL_FUNDING_LIST_SKELETON_COUNT,
+} from "./HomePageMarginalFundingTabLayout";
 import PostsListSkeleton from "../PostsList/PostsListSkeleton";
 import QuickTakesListSkeleton from "../QuickTakes/QuickTakesListSkeleton";
 
@@ -44,6 +48,28 @@ export default function HomePageTabSkeleton({
           <PostsListSkeleton count={1} className="mb-1" />
           <PostsListSkeleton count={30} />
         </div>
+      );
+    case "marginalFunding":
+      return (
+        <HomePageMarginalFundingTabLayout
+          view={featuredView}
+          explainerPost={<FeaturedPostSkeleton />}
+          posts={range(MARGINAL_FUNDING_CARD_COUNT).map((i) => (
+            <FeaturedPostSkeleton key={i} />
+          ))}
+          listSection={
+            <PostsListSkeleton
+              count={
+                featuredView === "list"
+                  ? 1 +
+                    MARGINAL_FUNDING_CARD_COUNT +
+                    MARGINAL_FUNDING_LIST_SKELETON_COUNT
+                  : MARGINAL_FUNDING_LIST_SKELETON_COUNT
+              }
+              viewType="list"
+            />
+          }
+        />
       );
     default:
       console.error("Invalid home page tab name:", tab);

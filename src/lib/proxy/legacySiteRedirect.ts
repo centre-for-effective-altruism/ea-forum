@@ -97,6 +97,7 @@ const newSitePatterns = [
   /^\/admin\/search-indexes$/, // Admin search index tools
   /^\/admin\/spotlights.*/, // Admin spotlights pages
   /^\/admin\/swap-user-emails$/, // Admin swap user emails page
+  /^\/admin\/marginal-funding-week$/, // Admin Marginal Funding Week sequence editor
   /^\/search$/, // Search page
   /^\/robots.txt$/, // robots.txt
   /^\/bestOf$/, // Best of (camelCase, redirect to kebab-case)

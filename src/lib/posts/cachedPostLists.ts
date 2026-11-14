@@ -8,6 +8,7 @@ import {
   fetchForumFavoritesPostsList,
   fetchFrontpageCuratedPostsList,
   fetchMostRecentlyCuratedPost,
+  fetchPostsListById,
   fetchPostsListFromView,
 } from "./postLists";
 
@@ -18,6 +19,12 @@ const fetchLoggedOutPostsListFromView = async (view: PostsListView) => {
   "use cache";
   cacheLife(shortCacheLife);
   return fetchPostsListFromView(null, view);
+};
+
+const fetchLoggedOutPostsListById = async (postId: string) => {
+  "use cache";
+  cacheLife(shortCacheLife);
+  return fetchPostsListById(null, postId);
 };
 
 const fetchLoggedOutFrontpageCuratedPostsList = async () => {
@@ -51,6 +58,14 @@ export const fetchCachedPostsListFromView = (
   currentUserId
     ? fetchPostsListFromView(currentUserId, view)
     : fetchLoggedOutPostsListFromView(view);
+
+export const fetchCachedPostsListById = (
+  currentUserId: string | null,
+  postId: string,
+) =>
+  currentUserId
+    ? fetchPostsListById(currentUserId, postId)
+    : fetchLoggedOutPostsListById(postId);
 
 export const fetchCachedFrontpageCuratedPostsList = (
   currentUserId: string | null,

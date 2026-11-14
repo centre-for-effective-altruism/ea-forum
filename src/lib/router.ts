@@ -10,6 +10,7 @@ import { featuredQueueRouter } from "./featuredQueue/featuredQueueRouter";
 import { forumEventsRouter } from "./forumEvents/forumEventsRouter";
 import { keywordAlertsRouter } from "./keywordAlerts/keywordAlertsRouter";
 import { lwEventRouter } from "./lwEvents/lwEventsRouter";
+import { marginalFundingWeekAdminRouter } from "./marginalFundingWeekAdmin/marginalFundingWeekAdminRouter";
 import { moderationRouter } from "./moderation/moderationRouter";
 import { notificationsRouter } from "./notifications/notificationsRouter";
 import { messagesRouter } from "./messages/messagesRouter";
@@ -38,6 +39,7 @@ export const router = {
   forumEvents: forumEventsRouter,
   keywordAlerts: keywordAlertsRouter,
   lwEvents: lwEventRouter,
+  marginalFundingWeekAdmin: marginalFundingWeekAdminRouter,
   moderation: moderationRouter,
   notifications: notificationsRouter,
   messages: messagesRouter,

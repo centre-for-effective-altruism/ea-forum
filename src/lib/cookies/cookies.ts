@@ -152,6 +152,12 @@ const allCookies = [
     description: "The last frontpage tab that you visited",
   },
   {
+    name: "pre_marginal_funding_frontpage_tab",
+    type: "necessary",
+    description:
+      "The frontpage tab you were using before Marginal Funding Week, so it can be restored afterwards",
+  },
+  {
     name: "posts_list_view_type",
     type: "necessary",
     description: "Whether to display post lists as list items or card items",
